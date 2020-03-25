@@ -1,0 +1,280 @@
+﻿<div class="assign-content">
+    <div class="main-container">
+        <div class="left-part">
+            <div class="left-title">
+                <h4>
+                    <img src="Areas/VA012/Images/lines.png" alt="lines"></h4>
+            </div>
+            <div class="left-content">
+                <div class="left-data">
+                    <label  id="@("VA012_lblBank_" + ViewBag.WindowNumber)" >Bank</label>
+                    <select id="@("VA012_cmbBank_" + ViewBag.WindowNumber)" ></select>
+                </div>
+                <!-- end of left-data -->
+
+                <div class="left-data">
+                    <label  id="@("VA012_lblBankAccount_" + ViewBag.WindowNumber)" >Bank Account</label>
+                    <select id="@("VA012_cmbBankAccount_" + ViewBag.WindowNumber)"   ></select>
+                </div>
+                <!-- end of left-data -->
+
+                <div class="left-data">
+                    <a id="@("VA012_btnLoadStatement_" + ViewBag.WindowNumber)">Load Statement</a>
+                    <a id="@("VA012_btnMatchStatement_" + ViewBag.WindowNumber)">Match Statement</a>
+                </div>
+                <!-- end of left-data -->
+            </div>
+            <!-- end of left-content -->
+        </div>
+        <!-- end of left-part -->
+
+        <div class="content-area">
+            <div class="middle-wrap">
+                <div class="mid-top-wrap" id="@("VA012_formBtnNewRecord_" + ViewBag.WindowNumber)">
+                    <div class="icons-wrap">
+                        <span>
+                            <img src="Areas/VA012/Images/add.png" alt="add" id="@("VA012_btnNewRecord_" + ViewBag.WindowNumber)"></span>
+                    </div>
+                    <!-- end of icons-wrap -->
+                </div>
+                <!-- end of mid-top-wrap -->
+
+                <div class="form-wrap" id="@("VA012_formNewRecord_" + ViewBag.WindowNumber)" data-uid="0">
+                    <div class="row fl-padd">
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <div class="form-group form-data">
+                                <label>Statement Number</label>
+                                <input id="@("VA012_txtStatementNo_" + ViewBag.WindowNumber)" type="text" class="input-size">
+                                <a id="@("VA012_btnStatementNo_" + ViewBag.WindowNumber)" class="add-icon"></a>
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <div class="form-group form-data">
+                                <label>Statement Page</label>
+                                <input id="@("VA012_txtStatementPage_" + ViewBag.WindowNumber)" type="text">
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <div class="form-group form-data">
+                                <label>Statement Line</label>
+                                <input id="@("VA012_txtStatementLine_" + ViewBag.WindowNumber)" type="text">
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                    </div>
+                    <!-- end of row -->
+
+                    <div class="row fl-padd">
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <div class="form-group form-data">
+                                <label>Statement Date</label>
+                                <input id="@("VA012_dtStatementDate_" + ViewBag.WindowNumber)" type="date">
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <div class="form-group form-data">
+                                <label>Payment Method</label>
+                                <select id="@("VA012_cmbPaymentMethod_" + ViewBag.WindowNumber)">
+                                </select>
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <div class="form-group form-data">
+                                <label>Voucher/Match</label>
+                                <select id="@("VA012_cmbVoucherMatch_" + ViewBag.WindowNumber)">
+                                </select>
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                    </div>
+                    <!-- end of row -->
+
+                    <div class="row fl-padd">
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <div class="form-group form-data">
+                                <label>Amount</label>
+                                <input id="@("VA012_txtAmount_" + ViewBag.WindowNumber)" type="number">
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-2 col-sm-2 padd-0">
+                            <div class="form-group form-data">
+                                <label>Currency</label>
+                                <select id="@("VA012_cmbCurrency_" + ViewBag.WindowNumber)">
+                                </select>
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-6 col-sm-6 padd-0">
+                            <div class="form-group form-data">
+                                <label>Description</label>
+                                <input id="@("VA012_txtDescription_" + ViewBag.WindowNumber)" type="text">
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                    </div>
+                    <!-- end of row -->
+
+                    <div class="row fl-padd">
+                        <div id="@("VA012_divVoucher_" + ViewBag.WindowNumber)" style="padding-left: 7px;padding-right: 7px;">
+                            <div class="col-md-4 col-sm-4 padd-0">
+                                <div class="form-group form-data">
+                                    <label>Charge</label>
+                                    <select id="@("VA012_cmbCharge_" + ViewBag.WindowNumber)">
+                                    </select>
+                                </div>
+                                <!-- end of form-group -->
+                            </div>
+                            <!-- end of col -->
+                            <div class="col-md-4 col-sm-4 padd-0">
+                                <div class="form-group form-data">
+                                    <label>Tax Rate</label>
+                                    <select id="@("VA012_cmbTaxRate_" + ViewBag.WindowNumber)">
+                                    </select>
+                                </div>
+                                <!-- end of form-group -->
+                            </div>
+                            <!-- end of col -->
+                            <div class="col-md-4 col-sm-4 padd-0">
+                                <div class="form-group form-data">
+                                    <label>Tax Amount</label>
+                                    <input id="@("VA012_txtTaxAmount_" + ViewBag.WindowNumber)" type="number">
+                                </div>
+                                <!-- end of form-group -->
+                            </div>
+                            <!-- end of col -->
+                        </div>
+                    </div>
+                    <!-- end of row -->
+
+                    <div class="row fl-padd">
+                        <div id="@("VA012_divMatch_" + ViewBag.WindowNumber)" style="display: none; padding-left: 7px;padding-right: 7px;">
+                            <div class="col-md-4 col-sm-4 padd-0">
+                                <div class="form-group form-data">
+                                    <label>Payment</label>
+                                    <div id="@("VA012_ctrlPayment_" + ViewBag.WindowNumber)" ></div>
+                                </div>
+                                <!-- end of form-group -->
+                            </div>
+                            <!-- end of col -->
+                            <div class="col-md-4 col-sm-4 padd-0">
+                                <div class="form-group form-data">
+                                    <label>Invoice</label>
+                                    <div id="@("VA012_ctrlInvoice_" + ViewBag.WindowNumber)" ></div>
+                                </div>
+                                <!-- end of form-group -->
+                            </div>
+                            <!-- end of col -->
+                            <div class="col-md-4 col-sm-4 padd-0">
+                                <div class="form-group form-data">
+                                    <label>Bussiness Partner</label>
+                                    <div id="@("VA012_ctrlBusinessPartner_" + ViewBag.WindowNumber)" ></div>
+                                </div>
+                                <!-- end of form-group -->
+                            </div>
+                            <!-- end of col -->
+                        </div>
+                    </div>
+                    <!-- end of row -->
+
+                    <div class="row fl-padd">
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <div class="form-data">
+                                <a href="#">More</a>
+                            </div>
+                            <!-- end of form-data -->
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <div class="form-group form-check">
+                                <input id="@("VA012_chkUseNextTime_" + ViewBag.WindowNumber)" type="checkbox">
+                                <label>Use Next Time</label>
+                            </div>
+                            <!-- end of form-group -->
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-4 col-sm-4 padd-0">
+                            <a id="@("VA012_btnSave_" + ViewBag.WindowNumber)" class="frm-btn btn-blue">Save and New</a>
+                        </div>
+                        <!-- end of col -->
+                    </div>
+                    <!-- end of row -->
+                </div>
+                <!-- end of form-wrap -->
+
+                <div class="payment-list">
+                    <div class="payment-wrap">
+                        <div class="pull-left">
+                            <a class="frm-btn btn-gray">Upcoming Transactions</a>
+                        </div>
+                        <div class="pull-right width-30">
+                            <select id="@("VA012_cmbSearchPaymentMethod_" + ViewBag.WindowNumber)">
+                            </select>
+                        </div>
+                    </div>
+                    <!-- end of payment-wrap -->
+
+                    <div class="payment-content" id="@("VA012_lstPayments_" + ViewBag.WindowNumber)">
+                    </div>
+                </div>
+                <!-- end of payment-list -->
+
+            </div>
+            <!-- end of middle-wrap -->
+            <div class="right-wrap">
+                <div class="right-top">
+                    <div class="row">
+                        <div class="col-md-4 col-sm-4">
+                            <div class="pay-text" id="@("VA012_secReconciled_" + ViewBag.WindowNumber)">
+                                
+                            </div>
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-4 col-sm-4">
+                            <div class="pay-text" id="@("VA012_secUnreconciled_" + ViewBag.WindowNumber)">
+                                
+                            </div>
+                        </div>
+                        <!-- end of col -->
+                        <div class="col-md-4 col-sm-4">
+                            <a id="@("VA012_btnUnmatch_" + ViewBag.WindowNumber)" class="frm-btn btn-blue">Unmatch</a>
+                        </div>
+                        <!-- end of col -->
+                    </div>
+                    <!-- end of row -->
+                </div>
+                <!-- end of right-top -->
+
+                <div class="right-search">
+                    <div class="search-wrap">
+                        <input id="@("VA012_txtSearch_" + ViewBag.WindowNumber)" value="" placeholder="Search..." type="text">
+                        <a id="@("VA012_btnSearch_" + ViewBag.WindowNumber)" class="search-icon"><span class="glyphicon glyphicon-search"></span></a>
+                    </div>
+                    <!-- end of search-wrap -->
+                </div>
+
+                <div class="right-content" id="@("VA012_lstStatement_" + ViewBag.WindowNumber)">
+                </div>
+                <!-- end of right-content -->
+            </div>
+            <!-- end of right-wrap -->
+        </div>
+        <!-- end of content-area -->
+    </div>
+    <!-- end of main-container -->
+
+</div>
+<!-- end of assign-content -->
