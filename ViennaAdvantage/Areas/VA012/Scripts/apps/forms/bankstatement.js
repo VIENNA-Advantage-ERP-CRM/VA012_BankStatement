@@ -525,6 +525,11 @@
                     _statementDate.addClass("va012-mandatory");
                 }
                 else {
+                    if (new Date(_statementDate.val()) > new Date()) {
+                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_StatementDateToday"), null, "", "");
+                        _statementDate.val("");
+                        return false;
+                    }
                     _statementDate.removeClass("va012-mandatory");
                 }
                 loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
@@ -554,19 +559,19 @@
                     + '              </div>'
                     + '              <div class="va012-left-content">'
                     + '                  <div class="va012-left-data">'
-                    + '                      <label  id="VA012_lblBank_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_Bank") + '</label>'
+                    + '                      <label  id="VA012_lblBank_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_Bank") + '<sup style="color: red;">*</sup></label>'
                     + '                      <select id="VA012_cmbBank_' + $self.windowNo + '" ></select>'
                     + '                  </div>'
                     + '                  <!-- end of left-data -->'
                     + '  '
                     + '                  <div class="va012-left-data">'
-                    + '                      <label  id="VA012_lblBankAccount_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_BankAccount") + '</label>'
+                    + '                      <label  id="VA012_lblBankAccount_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_BankAccount") + '<sup style="color: red;">*</sup></label>'
                     + '                      <select id="VA012_cmbBankAccount_' + $self.windowNo + '"   ></select>'
                     + '                  </div>'
                     + '                  <!-- end of left-data -->'
                     /*Added new parameter Statement Date*/
                     + '                  <div class="va012-left-data">'
-                    + '                      <label  id="VA012_lblStatementDate_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_StatementDate") + '</label>'
+                    + '                      <label  id="VA012_lblStatementDate_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
                     + '                      <input type="date" max="9999-12-31" id="VA012_statementDate_' + $self.windowNo + '"   >'
                     + '                  </div>'
                     + '                  <!-- end of left-data -->'
@@ -603,7 +608,7 @@
                     + '                      <div class="row va012-fl-padd">'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-data">'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementNumber") + '</label>'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementNumber") + ' <sup style="color: red;">*</sup></label>'
                     + '                                  <input  tabindex="1" id="VA012_txtStatementNo_' + $self.windowNo + '" type="text" class="va012-input-size">'
                     + '                                  <i  id="VA012_btnStatementNo_' + $self.windowNo + '" class="fa fa-plus va012-add-icon"></i>'
                     + '                              </div>'
@@ -632,7 +637,7 @@
                     + '                      <div class="row va012-fl-padd">'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-data">'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementDate") + '</label>'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
                     + '                                  <input tabindex="4" id="VA012_dtStatementDate_' + $self.windowNo + '" type="date">'
                     + '                              </div>'
                     + '                              <!-- end of form-group -->'
@@ -640,7 +645,7 @@
                     + '                          <!-- end of col -->'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-data" >'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_Amount") + '</label>'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_Amount") + '<sup style="color: red;">*</sup></label>'
                     + '                                  <a tabindex="5" id="VA012_btnIn_' + $self.windowNo + '" v_active="1" class="va012-inout-icon va012-active">In</a>'
                     + '                                  <a tabindex="6" id="VA012_btnOut_' + $self.windowNo + '" v_active="0" class="va012-inout-icon va012-inactive">Out</a>'
                     + '                                  <input tabindex="7" autofocus  value="0.00" id="VA012_txtAmount_' + $self.windowNo + '" type="number" class="va012-input-size-amt va012-right-align va012-txtamount">'
@@ -662,7 +667,7 @@
                     //+ '                          <!-- end of col -->'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-data">'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_VoucherMatch") + '</label>'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_VoucherMatch") + '<sup style="color: red;">*</sup></label>'
                     + '                                  <select tabindex="8" id="VA012_cmbVoucherMatch_' + $self.windowNo + '">'
                     + '                                  </select>'
                     + '                              </div>'
@@ -2512,7 +2517,7 @@
                     + '<input type=date max="9999-12-31" class=vis-ev-col-readonly disabled id=VA012_STAT_statementDate_' + $self.windowNo + '>'
                     + '</div>'
                     + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_ClassName") + "</label>"
+                    + "<label>" + VIS.Msg.getMsg("VA012_ClassName") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_STAT_cmbBankAccountClassName_" + $self.windowNo + "'>"
                     + "</select></div>"
 
@@ -2524,7 +2529,7 @@
 
 
                     + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_StatementNumber") + "</label>"
+                    + "<label>" + VIS.Msg.getMsg("VA012_StatementNumber") + '<sup style="color: red;">*</sup></label>'
                     + "<input type='text' id='VA012_STAT_txtStatementNo_" + $self.windowNo + "' /> </div>"
 
                     //+ "<div class='va012-popform-data'>"
@@ -2535,7 +2540,7 @@
                     //+ "</select></div>"
 
                     + "<div class='va012-popform-data va012-pop-file'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_SelectFile") + "</label>"
+                    + "<label>" + VIS.Msg.getMsg("VA012_SelectFile") + '<sup style="color: red;">*</sup></label>'
                     + "<input type='text' id='VA012_ctrlLoadFileTxt_" + $self.windowNo + "' disabled>"
                     + "<div class='va012-file-upload'>"
                     + "<label for='file-input' class='va012-file-label'>" + VIS.Msg.getMsg("VA012_Browse") + "</label>"
@@ -3483,12 +3488,12 @@
                 var _match = "";
                 _match =
                     "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_StatementNo") + "</label>"
+                + "<label>" + VIS.Msg.getMsg("VA012_StatementNo") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_cmbStatementNo_" + $self.windowNo + "'>"
                     + "</select></div> "
 
                     + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_MatchingBase") + "</label>"
+                + "<label>" + VIS.Msg.getMsg("VA012_MatchingBase") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_cmbMatchingBase_" + $self.windowNo + "'>"
                     //Commeted because now we laod this from database
                     //+ "<option value='0'></option>"
@@ -3505,7 +3510,7 @@
                     + "<div id='VA012_divMatchingBase_" + $self.windowNo + "' style='width:100%;border: 2px solid rgba(var(--v-c-primary), 1);padding: 10px; float: left; margin-bottom: 10px; min-height: 150px; max-height: 200px; overflow:auto'>"
                     + "</div>"
                     + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_MatchingCriteria") + "</label>"
+                + "<label>" + VIS.Msg.getMsg("VA012_MatchingCriteria") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_cmbMatchingCriteria_" + $self.windowNo + "'>"
                     + "<option value='0'></option>"
                     + "<option value='AT'>" + VIS.Msg.getMsg("VA012_MatchAnyTwo") + "</option>"
@@ -3515,12 +3520,12 @@
                     + "</select></div> "
 
                     + "<div class='va012-popform-data'>"
-                    + "<label title = '" + VIS.Msg.getMsg("VA012_SetChargeType") + "' > " + VIS.Msg.getMsg("VA012_Charge") + "</label>"
+                + "<label title = '" + VIS.Msg.getMsg("VA012_SetChargeType") + "' > " + VIS.Msg.getMsg("VA012_Charge") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_cmbChargeType_" + $self.windowNo + "'>"
                     + "</select></div> "
 
                     + "<div class='va012-popform-data'>"
-                    + "<label title =' " + VIS.Msg.getMsg("VA012_SetTaxRate") + "' >" + VIS.Msg.getMsg("VA012_TaxRate") + "</label>"
+                + "<label title =' " + VIS.Msg.getMsg("VA012_SetTaxRate") + "' >" + VIS.Msg.getMsg("VA012_TaxRate") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_cmbTaxRate_" + $self.windowNo + "'>"
                     + "</select></div> "
 
