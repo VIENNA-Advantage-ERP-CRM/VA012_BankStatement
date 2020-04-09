@@ -34,6 +34,8 @@ namespace VA012.Models
         int _C_BankAccount_ID = 0;
         //int Count = 0;
         int _c_bpartner_id = 0;
+        //to get charge id from Statement
+        int _C_Charge_ID = 0;
         int _C_Currency_ID = 0;
         decimal? _payAmt = 0;
         string _FileName = string.Empty, _doctype = string.Empty;
@@ -266,6 +268,12 @@ namespace VA012.Models
                                             {
                                                 _c_bpartner_id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BPartner_ID FROM C_BPartner WHERE LOWER(Value)= LOWER('" + (dt.Rows[i][6]) + "')"));
                                                 _BnkStmtLine.SetC_BPartner_ID(_c_bpartner_id);
+                                            }
+                                            //set charge id if charge value is available in Bank Statement 7 column
+                                            if (Util.GetValueOfString(dt.Rows[i][7]) != "")
+                                            {
+                                                _C_Charge_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_Charge_ID FROM C_Charge WHERE LOWER(Value)= LOWER('" + (dt.Rows[i][7]) + "')"));
+                                                _BnkStmtLine.SetC_Charge_ID(_C_Charge_ID);
                                             }
 
                                             if (_C_Currency_ID > 0)
