@@ -164,7 +164,8 @@
 
         var $divMatchStatementGridPopUp;
         var $GrdPayment;
-        var $CmbChargeType;
+       // var $CmbChargeType;
+        var _chargeSrch;
         var $CmbTaxRate;
         //  var cartGrid = null;
 
@@ -1043,14 +1044,18 @@
                     + '  '
                     ;
                 $divMatchStatementGridPopUp = $('<div  id="VA012_gridMatchStatePopUp_' + $self.windowNo + '"" style="display:block;width:auto;height:auto">'
-                    + '<div  style="    width: 50%;float: left;" ><label>' + VIS.Msg.getMsg("VA012_ChargeType") + '</label><select  id="VA012_cmbChargeType_' + $self.windowNo + '"></select></div>'
+                    + '<div  style="    width: 50%;float: left;" ><label>' + VIS.Msg.getMsg("VA012_ChargeType") + '</label><div  id="VA012_ChargeSrch_' + $self.windowNo + '"></div></div>'
                     + '<div ><label>' + VIS.Msg.getMsg("VA012_Taxrate") + '</label><select  id="VA012_cmbTaxRate_' + $self.windowNo + '"></select></div>'
                     + '<div style="width:auto;height:270px" id="VA012_gridMatchState_' + $self.windowNo + '""></div></div>');
 
                 $GrdPayment = $divMatchStatementGridPopUp.find("#VA012_gridMatchState_" + $self.windowNo);
-                $CmbChargeType = $divMatchStatementGridPopUp.find("#VA012_cmbChargeType_" + $self.windowNo);
+                _chargeSrch = $divMatchStatementGridPopUp.find("#VA012_ChargeSrch_" + $self.windowNo);
                 $CmbTaxRate = $divMatchStatementGridPopUp.find("#VA012_cmbTaxRate_" + $self.windowNo);
                 //_formDesign = _formDesign + $divMatchStatementGridPopUp;
+                //Added Charge Search Lookup
+                _ChargeLookUp = VIS.MLookupFactory.getMLookUp(VIS.Env.getCtx(), $self.windowNo, 3787, VIS.DisplayType.Search);
+                $ChargeControl = new VIS.Controls.VTextBoxButton("C_Charge_ID", true, false, true, VIS.DisplayType.Search, _ChargeLookUp);
+                _chargeSrch.append($ChargeControl.getControl().css('width', '93%')).append($ChargeControl.getBtn(0).css('width', '30px').css('height', '30px').css('padding', '0px').css('border-color', '#BBBBBB'));
 
                 return _formDesign;
             },
@@ -3040,11 +3045,21 @@
                             }
                             else {
                                 if (data[i].c_payment_id == null || data[i].c_payment_id == "0" || data[i].c_payment_id == 0) {
-                                    if ((data[i].c_charge_id != null || data[i].c_charge_id == "") && (data[i].trxno != null || data[i].trxno == "")) {
+
+                                    //Set Green Color if charge amount = Statement amount suggested by Ashish
+
+                                    //if ((data[i].c_charge_id != null || data[i].c_charge_id == "") && (data[i].trxno != null || data[i].trxno == "")) {
+                                    //    status = "va012-red-color";
+                                    //}
+                                    if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
                                         status = "va012-red-color";
                                     }
                                     else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
-                                        status = "va012-green-color";
+
+                                        if (data[i].STMTAMT == data[i].trxamount)
+                                            status = "va012-green-color";
+                                        else
+                                            status = "va012-red-color";
                                     }
                                     else if ((data[i].c_cashline_id != null && data[i].c_cashline_id != "0" && data[i].c_cashline_id != 0) /*&& data[i].usenexttime == true*/) {
                                         status = "va012-green-color";
@@ -3481,19 +3496,22 @@
                 var _matchingBaseItemList = [];
                 var _cmbMatchingCriteria = null;
                 var _cmbStatementNo = null;
-                var _cmbChargeType = null;
+                //var _cmbChargeType = null;
+                //Charge Type Search 
+                var _chargeSrch = null;
+                var $ChargeControl = null;
                 var _cmbTaxRate = null;
 
                 $match = $("<div class='va012-popform-content'>");
                 var _match = "";
                 _match =
                     "<div class='va012-popform-data'>"
-                + "<label>" + VIS.Msg.getMsg("VA012_StatementNo") + '<sup style="color: red;">*</sup></label>'
+                    + "<label>" + VIS.Msg.getMsg("VA012_StatementNo") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_cmbStatementNo_" + $self.windowNo + "'>"
                     + "</select></div> "
 
                     + "<div class='va012-popform-data'>"
-                + "<label>" + VIS.Msg.getMsg("VA012_MatchingBase") + '<sup style="color: red;">*</sup></label>'
+                    + "<label>" + VIS.Msg.getMsg("VA012_MatchingBase") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_cmbMatchingBase_" + $self.windowNo + "'>"
                     //Commeted because now we laod this from database
                     //+ "<option value='0'></option>"
@@ -3510,7 +3528,7 @@
                     + "<div id='VA012_divMatchingBase_" + $self.windowNo + "' style='width:100%;border: 2px solid rgba(var(--v-c-primary), 1);padding: 10px; float: left; margin-bottom: 10px; min-height: 150px; max-height: 200px; overflow:auto'>"
                     + "</div>"
                     + "<div class='va012-popform-data'>"
-                + "<label>" + VIS.Msg.getMsg("VA012_MatchingCriteria") + '<sup style="color: red;">*</sup></label>'
+                    + "<label>" + VIS.Msg.getMsg("VA012_MatchingCriteria") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_cmbMatchingCriteria_" + $self.windowNo + "'>"
                     + "<option value='0'></option>"
                     + "<option value='AT'>" + VIS.Msg.getMsg("VA012_MatchAnyTwo") + "</option>"
@@ -3519,13 +3537,18 @@
 
                     + "</select></div> "
 
+                    //+ "<div class='va012-popform-data'>"
+                    //+ "<label title = '" + VIS.Msg.getMsg("VA012_SetChargeType") + "' > " + VIS.Msg.getMsg("VA012_Charge") + '<sup style="color: red;">*</sup></label>'
+                    //+ "<select id='VA012_cmbChargeType_" + $self.windowNo + "'>"
+                    //+ "</select></div> "
+
                     + "<div class='va012-popform-data'>"
-                + "<label title = '" + VIS.Msg.getMsg("VA012_SetChargeType") + "' > " + VIS.Msg.getMsg("VA012_Charge") + '<sup style="color: red;">*</sup></label>'
-                    + "<select id='VA012_cmbChargeType_" + $self.windowNo + "'>"
-                    + "</select></div> "
-               //  + '<div id="chargeDiv"></div>'
+                    + "<label title = '" + VIS.Msg.getMsg("VA012_SetChargeType") + "' > " + VIS.Msg.getMsg("VA012_Charge") + '<sup style="color: red;">*</sup></label>'
+                    + "<div id='VA012_ChargeSrch_" + $self.windowNo + "'>"
+                    + "</div></div> "
+
                     + "<div class='va012-popform-data'>"
-                + "<label title =' " + VIS.Msg.getMsg("VA012_SetTaxRate") + "' >" + VIS.Msg.getMsg("VA012_TaxRate") + '<sup style="color: red;">*</sup></label>'
+                    + "<label title =' " + VIS.Msg.getMsg("VA012_SetTaxRate") + "' >" + VIS.Msg.getMsg("VA012_TaxRate") + '<sup style="color: red;">*</sup></label>'
                     + "<select id='VA012_cmbTaxRate_" + $self.windowNo + "'>"
                     + "</select></div> "
 
@@ -3537,27 +3560,27 @@
                 getMatchingBaseData(_cmbMatchingBase);
                 loadBankStatementNo();
 
-                loadBankAccountCharges();
+               // loadBankAccountCharges();
 
                 loadTaxRate();
 
-                function loadBankAccountCharges() {
-                    var _sql = "SELECT C_CHARGE_ID, NAME FROM C_CHARGE WHERE DTD001_ChargeType = 'BNK' AND ISACTIVE = 'Y' AND AD_CLIENT_ID = " + VIS.Env.getCtx().getAD_Client_ID() + " ORDER BY NAME  ";
-                    var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountCharges);
-                    function callbackloadBankAccountCharges(_ds) {
-                        _cmbChargeType.html("");
-                        _cmbChargeType.append("<option value=0 >-</option>");
-                        if (_ds != null) {
-                            for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                                _cmbChargeType.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
-                            }
-                        }
-                        _ds.dispose();
-                        _ds = null;
-                        _sql = null;
-                        _cmbChargeType.prop('selectedIndex', 0);
-                    }
-                };
+                //function loadBankAccountCharges() {
+                //    var _sql = "SELECT C_CHARGE_ID, NAME FROM C_CHARGE WHERE DTD001_ChargeType = 'BNK' AND ISACTIVE = 'Y' AND AD_CLIENT_ID = " + VIS.Env.getCtx().getAD_Client_ID() + " ORDER BY NAME  ";
+                //    var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountCharges);
+                //    function callbackloadBankAccountCharges(_ds) {
+                //        _cmbChargeType.html("");
+                //        _cmbChargeType.append("<option value=0 >-</option>");
+                //        if (_ds != null) {
+                //            for (var i = 0; i < _ds.tables[0].rows.length; i++) {
+                //                _cmbChargeType.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                //            }
+                //        }
+                //        _ds.dispose();
+                //        _ds = null;
+                //        _sql = null;
+                //        _cmbChargeType.prop('selectedIndex', 0);
+                //    }
+                //};
 
                 function loadBankStatementNo() {
 
@@ -3612,9 +3635,15 @@
                     $_divMatchingBase = $match.find("#VA012_divMatchingBase_" + $self.windowNo);
                     _cmbMatchingCriteria = $match.find("#VA012_cmbMatchingCriteria_" + $self.windowNo);
                     _cmbStatementNo = $match.find("#VA012_cmbStatementNo_" + $self.windowNo);
-                    _cmbChargeType = $match.find("#VA012_cmbChargeType_" + $self.windowNo);
+                    //_cmbChargeType = $match.find("#VA012_cmbChargeType_" + $self.windowNo);
+                    _chargeSrch = $match.find("#VA012_ChargeSrch_" + $self.windowNo);
                     _cmbTaxRate = $match.find("#VA012_cmbTaxRate_" + $self.windowNo);
-               //     $POP_lookCharge = $match.find("#chargeDiv");
+
+                    //Added Charge Search Lookup
+                    _ChargeLookUp = VIS.MLookupFactory.getMLookUp(VIS.Env.getCtx(), $self.windowNo, 3787, VIS.DisplayType.Search);
+                    $ChargeControl = new VIS.Controls.VTextBoxButton("C_Charge_ID", true, false, true, VIS.DisplayType.Search, _ChargeLookUp);
+                    _chargeSrch.append($ChargeControl.getControl().css('width', '93%')).append($ChargeControl.getBtn(0).css('width', '30px').css('height', '30px').css('padding', '0px').css('border-color', '#BBBBBB'));
+                    //VIS.Utility.Util.getValueOfInt($ChargeControl.value)
                 }
 
                 //function getlookupdata() {
@@ -3652,7 +3681,13 @@
                             }
                         }
 
-                        if (_cmbChargeType.val() == null || _cmbChargeType.val() == "" || _cmbChargeType.val() == "0") {
+                        //if (_cmbChargeType.val() == null || _cmbChargeType.val() == "" || _cmbChargeType.val() == "0") {
+                        //    VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoChargeSelected"), null, "", "");
+                        //    return false;
+                        //}
+
+                        //added same check which was working before i.e charge is mandatory
+                        if ($ChargeControl.value == null || (VIS.Utility.Util.getValueOfInt($ChargeControl.value) == 0)) {
                             VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoChargeSelected"), null, "", "");
                             return false;
                         }
@@ -3665,20 +3700,23 @@
                         //MATCH STATEMENT
                         busyIndicator($match, true, "absolute");
                         window.setTimeout(function () {
+                            //_cmbChargeType.val()
+                            //VIS.Utility.Util.getValueOfInt($ChargeControl.value)
                             $.ajax({
                                 url: VIS.Application.contextUrl + "BankStatement/MatchStatementGridData",
                                 type: "GET",
                                 dataType: "json",
                                 contentType: "application/json; charset=utf-8",
                                 async: false,
-                                data: ({ _matchingBaseItemList: _matchingBaseItemList.toString(), _cmbMatchingCriteria: _cmbMatchingCriteria.val(), _BankAccount: _cmbBankAccount.val(), _StatementNo: _cmbStatementNo.val(), _BankCharges: _cmbChargeType.val(), _TaxRate: _cmbTaxRate.val() }),
+                                data: ({ _matchingBaseItemList: _matchingBaseItemList.toString(), _cmbMatchingCriteria: _cmbMatchingCriteria.val(), _BankAccount: _cmbBankAccount.val(), _StatementNo: _cmbStatementNo.val(), _BankCharges: VIS.Utility.Util.getValueOfInt($ChargeControl.value), _TaxRate: _cmbTaxRate.val() }),
                                 success: function (data) {
 
                                     if (data != null && data != "") {
                                         data = $.parseJSON(data);
                                         _cmbMatchingBase.prop('selectedIndex', 0);
                                         _cmbStatementNo.prop('selectedIndex', 0);
-                                        _cmbChargeType.prop('selectedIndex', 0);
+                                       // _cmbChargeType.prop('selectedIndex', 0);
+                                        $ChargeControl.value = null;
                                         _cmbTaxRate.prop('selectedIndex', 0);
 
                                         _matchingBaseItemList = [];

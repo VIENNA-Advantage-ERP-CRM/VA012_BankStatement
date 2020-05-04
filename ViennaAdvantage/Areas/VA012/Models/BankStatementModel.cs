@@ -3123,7 +3123,7 @@ namespace VA012.Models
                + " ELSE CAST(' ' AS NVARCHAR2(50)) "
              + " END AS BPGROUP, "
                + " ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2))      AS STMTAMT, "
-                + " ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2))      AS TRXAMOUNT, "
+                + " ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2))       AS TRXAMOUNT, "
                + " CURR.ISO_CODE   AS CURRENCY, "
                + " BSL.C_BANKSTATEMENTLINE_ID, "
                + " BSL.C_PAYMENT_ID, "
@@ -3236,6 +3236,15 @@ namespace VA012.Models
                         _statement.c_bankstatement_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BANKSTATEMENT_ID"]);
                         _statement.description = Util.GetValueOfString(_ds.Tables[0].Rows[i]["DESCRIPTION"]);
                         _statement.trxamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]);
+                        _statement.STMTAMT= Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"]);
+                        //if charge id is there and Statement amount is Equal to Charge Amount then make it Matching Confirmed.
+                        if(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CHARGE_ID"]) > 0)
+                        {
+                            if(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]).Equals(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"])))
+                            {
+                                DB.ExecuteScalar(" UPDATE C_BANKSTATEMENTLINE SET VA012_ISMATCHINGCONFIRMED='Y' WHERE C_BANKSTATEMENTLINE_ID = " + Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]));
+                            }
+                        }
                         _statement.bpgroup = Util.GetValueOfString(_ds.Tables[0].Rows[i]["BPGROUP"]);
                         _statement.docstatus = Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCSTATUS"]);
                         _statement.basecurrency = Util.GetValueOfString(_ds.Tables[0].Rows[i]["BASECURRENCY"]);
@@ -5406,6 +5415,8 @@ namespace VA012.Models
         public int line { get; set; }
         public string invoiceno { get; set; }
         public bool usenexttime { get; set; }
+
+        public decimal STMTAMT { get; set; }
         public int c_charge_id { get; set; }
         public int c_payment_id { get; set; }
         public int c_bankstatementline_id { get; set; }

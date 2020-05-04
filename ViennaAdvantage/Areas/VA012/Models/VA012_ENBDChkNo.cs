@@ -186,11 +186,11 @@ namespace VA012.Models
                             {
                                 #region ENBD Format
 
-                                string accountCurrency = Convert.ToString(dt.Rows[2][0]);
+                                string accountCurrency = Util.GetValueOfString(dt.Rows[2][0]);
                                 if (accountCurrency != null && accountCurrency != "")
                                     accountCurrency = accountCurrency.Substring(accountCurrency.IndexOf(':') + 1).Trim();
 
-                                _C_Currency_ID = Convert.ToInt32(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_CURRENCY WHERE LOWER(DESCRIPTION) LIKE LOWER('" + accountCurrency + "') OR LOWER(ISO_CODE) LIKE LOWER('" + accountCurrency + "')"));
+                                _C_Currency_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_CURRENCY WHERE LOWER(DESCRIPTION) LIKE LOWER('" + accountCurrency + "') OR LOWER(ISO_CODE) LIKE LOWER('" + accountCurrency + "')"));
 
                                 if (_C_Currency_ID != _bankAccountCurrency)
                                 {
@@ -205,7 +205,7 @@ namespace VA012.Models
                                     {
                                         if (i == 1)
                                         {
-                                            _IBAN = Convert.ToString(dt.Rows[i][0]);
+                                            _IBAN = Util.GetValueOfString(dt.Rows[i][0]);
                                             _IBAN = _IBAN.Substring(_IBAN.LastIndexOf(':') + 1).Trim();
                                         }
                                         continue;
@@ -237,7 +237,7 @@ namespace VA012.Models
                                     else
                                     {
                                         _date = "";
-                                        if ((Convert.ToString(dt.Rows[i][0]) != string.Empty) && (Convert.ToString(dt.Rows[i][1]) != string.Empty))
+                                        if ((Util.GetValueOfString(dt.Rows[i][0]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][1]) != string.Empty))
                                         {
                                             bool isDiffCulture = false;
                                             if (dt.Rows[i][0].ToString().Contains('.'))
@@ -259,7 +259,7 @@ namespace VA012.Models
                                             _BnkStmtLine.SetDateAcct(DateTime.Parse(_date));// Set Transaction Date
                                             _BnkStmtLine.SetValutaDate(DateTime.Parse(_date));// Set Transaction Date
                                             _BnkStmtLine.SetReferenceNo(_IBAN);// Set Transaction Remarks
-                                            _BnkStmtLine.SetDescription(Convert.ToString(dt.Rows[i][1]));// Set Transaction Purticular
+                                            _BnkStmtLine.SetDescription(Util.GetValueOfString(dt.Rows[i][1]));// Set Transaction Purticular
                                             _BnkStmtLine.SetMemo(_branchName);// Set Deposite Branch
                                             if (Util.GetValueOfString(dt.Rows[i][2]) != "")
                                                 _BnkStmtLine.SetEftCheckNo(Util.GetValueOfString(dt.Rows[i][2]));
@@ -274,36 +274,72 @@ namespace VA012.Models
                                             {
                                                 _C_Charge_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_Charge_ID FROM C_Charge WHERE LOWER(Value)= LOWER('" + (dt.Rows[i][7]) + "')"));
                                                 _BnkStmtLine.SetC_Charge_ID(_C_Charge_ID);
-                                            }
-
-                                            if (_C_Currency_ID > 0)
-                                                _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
-                                            if ((Convert.ToString(dt.Rows[i][3]) != string.Empty) && (Convert.ToString(dt.Rows[i][3]) != "0"))
-                                            {
-                                                _payAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
-                                            }
-                                            else
-                                            {
-                                                _payAmt = GetAmount(dt.Rows[i][4].ToString(), isDiffCulture);
-                                            }
-
-                                            if ((Convert.ToString(dt.Rows[i][3]) != string.Empty) && (Convert.ToString(dt.Rows[i][3]) != "0"))
-                                            {
-                                                if (_payAmt != 0)
+                                                //If chanrge id is available then set charge amount and statement amount on bank statement line suggested by Ashish.
+                                                if (_C_Currency_ID > 0)
+                                                    _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
+                                                if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
                                                 {
-                                                    _BnkStmtLine.SetStmtAmt(Convert.ToDecimal("-" + _payAmt));
-                                                    _BnkStmtLine.SetTrxAmt(Convert.ToDecimal("-" + _payAmt));
+                                                    _payAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
                                                 }
                                                 else
                                                 {
-                                                    _BnkStmtLine.SetStmtAmt(0);
-                                                    _BnkStmtLine.SetTrxAmt(0);
+                                                    _payAmt = GetAmount(dt.Rows[i][4].ToString(), isDiffCulture);
+                                                }
+
+                                                if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                {
+                                                    if (_payAmt != 0)
+                                                    {
+                                                        _BnkStmtLine.SetStmtAmt(Util.GetValueOfDecimal("-" + _payAmt));
+                                                        _BnkStmtLine.SetChargeAmt(Util.GetValueOfDecimal("-" + _payAmt));
+                                                        _BnkStmtLine.SetTrxAmt(Util.GetValueOfDecimal(0));
+                                                    }
+                                                    else
+                                                    {
+                                                        _BnkStmtLine.SetStmtAmt(0);
+                                                        _BnkStmtLine.SetChargeAmt(0);
+                                                        _BnkStmtLine.SetTrxAmt(Util.GetValueOfDecimal(0));
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    _BnkStmtLine.SetStmtAmt(_payAmt);
+                                                    _BnkStmtLine.SetChargeAmt(_payAmt);
+                                                    _BnkStmtLine.SetTrxAmt(Util.GetValueOfDecimal(0));
                                                 }
                                             }
                                             else
                                             {
-                                                _BnkStmtLine.SetStmtAmt(_payAmt);
-                                                _BnkStmtLine.SetTrxAmt(_payAmt);
+
+                                                if (_C_Currency_ID > 0)
+                                                    _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
+                                                if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                {
+                                                    _payAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
+                                                }
+                                                else
+                                                {
+                                                    _payAmt = GetAmount(dt.Rows[i][4].ToString(), isDiffCulture);
+                                                }
+
+                                                if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                {
+                                                    if (_payAmt != 0)
+                                                    {
+                                                        _BnkStmtLine.SetStmtAmt(Util.GetValueOfDecimal("-" + _payAmt));
+                                                        _BnkStmtLine.SetTrxAmt(Util.GetValueOfDecimal("-" + _payAmt));
+                                                    }
+                                                    else
+                                                    {
+                                                        _BnkStmtLine.SetStmtAmt(0);
+                                                        _BnkStmtLine.SetTrxAmt(0);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    _BnkStmtLine.SetStmtAmt(_payAmt);
+                                                    _BnkStmtLine.SetTrxAmt(_payAmt);
+                                                }
                                             }
 
                                             if (!_BnkStmtLine.Save())
@@ -354,7 +390,7 @@ namespace VA012.Models
         public DateTime? GetDate(string _date)
         {
             string[] _dateArray = _date.Split('/');
-            DateTime? _returnDate = new DateTime(Convert.ToInt32(_dateArray[2]), Convert.ToInt32(_dateArray[1]), Convert.ToInt32(_dateArray[0]));
+            DateTime? _returnDate = new DateTime(Util.GetValueOfInt(_dateArray[2]), Util.GetValueOfInt(_dateArray[1]), Util.GetValueOfInt(_dateArray[0]));
             return _returnDate;
         }
         /// <summary>
