@@ -274,36 +274,72 @@ namespace VA012.Models
                                             {
                                                 _C_Charge_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_Charge_ID FROM C_Charge WHERE LOWER(Value)= LOWER('" + (dt.Rows[i][7]) + "')"));
                                                 _BnkStmtLine.SetC_Charge_ID(_C_Charge_ID);
-                                            }
-
-                                            if (_C_Currency_ID > 0)
-                                                _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
-                                            if ((Convert.ToString(dt.Rows[i][3]) != string.Empty) && (Convert.ToString(dt.Rows[i][3]) != "0"))
-                                            {
-                                                _payAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
-                                            }
-                                            else
-                                            {
-                                                _payAmt = GetAmount(dt.Rows[i][4].ToString(), isDiffCulture);
-                                            }
-
-                                            if ((Convert.ToString(dt.Rows[i][3]) != string.Empty) && (Convert.ToString(dt.Rows[i][3]) != "0"))
-                                            {
-                                                if (_payAmt != 0)
+                                                //If chanrge id is available then set charge amount and statement amount on bank statement line suggested by Ashish.
+                                                if (_C_Currency_ID > 0)
+                                                    _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
+                                                if ((Convert.ToString(dt.Rows[i][3]) != string.Empty) && (Convert.ToString(dt.Rows[i][3]) != "0"))
                                                 {
-                                                    _BnkStmtLine.SetStmtAmt(Convert.ToDecimal("-" + _payAmt));
-                                                    _BnkStmtLine.SetTrxAmt(Convert.ToDecimal("-" + _payAmt));
+                                                    _payAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
                                                 }
                                                 else
                                                 {
-                                                    _BnkStmtLine.SetStmtAmt(0);
-                                                    _BnkStmtLine.SetTrxAmt(0);
+                                                    _payAmt = GetAmount(dt.Rows[i][4].ToString(), isDiffCulture);
+                                                }
+
+                                                if ((Convert.ToString(dt.Rows[i][3]) != string.Empty) && (Convert.ToString(dt.Rows[i][3]) != "0"))
+                                                {
+                                                    if (_payAmt != 0)
+                                                    {
+                                                        _BnkStmtLine.SetStmtAmt(Convert.ToDecimal("-" + _payAmt));
+                                                        _BnkStmtLine.SetChargeAmt(Convert.ToDecimal("-" + _payAmt));
+                                                        _BnkStmtLine.SetTrxAmt(Convert.ToDecimal(0));
+                                                    }
+                                                    else
+                                                    {
+                                                        _BnkStmtLine.SetStmtAmt(0);
+                                                        _BnkStmtLine.SetChargeAmt(0);
+                                                        _BnkStmtLine.SetTrxAmt(Convert.ToDecimal(0));
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    _BnkStmtLine.SetStmtAmt(_payAmt);
+                                                    _BnkStmtLine.SetChargeAmt(_payAmt);
+                                                    _BnkStmtLine.SetTrxAmt(Convert.ToDecimal(0));
                                                 }
                                             }
                                             else
                                             {
-                                                _BnkStmtLine.SetStmtAmt(_payAmt);
-                                                _BnkStmtLine.SetTrxAmt(_payAmt);
+
+                                                if (_C_Currency_ID > 0)
+                                                    _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
+                                                if ((Convert.ToString(dt.Rows[i][3]) != string.Empty) && (Convert.ToString(dt.Rows[i][3]) != "0"))
+                                                {
+                                                    _payAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
+                                                }
+                                                else
+                                                {
+                                                    _payAmt = GetAmount(dt.Rows[i][4].ToString(), isDiffCulture);
+                                                }
+
+                                                if ((Convert.ToString(dt.Rows[i][3]) != string.Empty) && (Convert.ToString(dt.Rows[i][3]) != "0"))
+                                                {
+                                                    if (_payAmt != 0)
+                                                    {
+                                                        _BnkStmtLine.SetStmtAmt(Convert.ToDecimal("-" + _payAmt));
+                                                        _BnkStmtLine.SetTrxAmt(Convert.ToDecimal("-" + _payAmt));
+                                                    }
+                                                    else
+                                                    {
+                                                        _BnkStmtLine.SetStmtAmt(0);
+                                                        _BnkStmtLine.SetTrxAmt(0);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    _BnkStmtLine.SetStmtAmt(_payAmt);
+                                                    _BnkStmtLine.SetTrxAmt(_payAmt);
+                                                }
                                             }
 
                                             if (!_BnkStmtLine.Save())

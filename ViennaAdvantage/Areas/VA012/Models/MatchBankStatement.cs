@@ -347,7 +347,7 @@ namespace VA012.Models
                                 _bankStatementLine.SetTrxAmt(0);
 
 
-                                
+
 
 
 
@@ -1201,6 +1201,8 @@ namespace VA012.Models
             DataSet _dsPayments = new DataSet();
             DataSet _dsCashLine = new DataSet();
             DataSet _dsStatements = new DataSet();
+            //Declared Varriable globally because it is using in the loop.
+            MBankStatementLine _bankStatementLine = null;
             try
             {
                 #region Statement Lines
@@ -1266,7 +1268,7 @@ namespace VA012.Models
                 _sql.Append(" AND BS.C_BANKACCOUNT_ID=" + _BankAccount
                           + " AND BS.C_BANKSTATEMENT_ID=" + _StatementNo
                           + " AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-               
+
 
                 if (ctx.GetAD_Org_ID() != 0)
                 {
@@ -1533,7 +1535,7 @@ namespace VA012.Models
 
                         if (_dsPayments != null && _dsPayments.Tables.Count > 0 && _dsPayments.Tables[0].Rows.Count > 0 && _matchingCriteria == _matchingCount)
                         {
-                            MBankStatementLine _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
+                            _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
                             _bankStatementLine.SetC_Payment_ID(Util.GetValueOfInt(_dsPayments.Tables[0].Rows[0]["C_PAYMENT_ID"]));
                             _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
 
@@ -1565,8 +1567,13 @@ namespace VA012.Models
                                 _bankStatementLine.SetC_Charge_ID(_chargeID);
                                 _bankStatementLine.SetChargeAmt(_bankStatementLine.GetStmtAmt());
                                 _bankStatementLine.SetTrxAmt(0);
+
                                 //Calculate Surcharge on Bank Statement Line according to Charge Amount and Standard Precision
                                 MTax tax = new MTax(ctx, _SetTaxRate, null);
+
+                                //TO set Tax Rate suggested  by Ashish
+                                _bankStatementLine.SetC_Tax_ID(tax.GetC_Tax_ID());
+
                                 Decimal surchargeAmt, TaxAmount = Env.ZERO;
                                 MCurrency currency = MCurrency.Get(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_Currency_ID"]));
                                 int StdPrecision = Util.GetValueOfInt(currency.GetStdPrecision().ToString());
@@ -1585,7 +1592,7 @@ namespace VA012.Models
                                 {
                                     _ChgAmt = Util.GetValueOfDecimal(_bankStatementLine.GetTrxAmt()) - Util.GetValueOfDecimal(_dsPayments.Tables[0].Rows[0]["PAYMENTAMOUNT"]);
 
-                                    _bankStatementLine.SetTrxAmt(Util.GetValueOfDecimal(_dsPayments.Tables[0].Rows[0]["PAYMENTAMOUNT"]));                                    
+                                    _bankStatementLine.SetTrxAmt(Util.GetValueOfDecimal(_dsPayments.Tables[0].Rows[0]["PAYMENTAMOUNT"]));
 
                                     _bankStatementLine.SetChargeAmt(_ChgAmt);
                                     //Calculate Surcharge on Bank Statement Line according to Charge Amount and Standard Precision
@@ -1752,7 +1759,7 @@ namespace VA012.Models
 
                                 if (_dsCashLine != null && _dsCashLine.Tables.Count > 0 && _dsCashLine.Tables[0].Rows.Count > 0 && _matchingCriteria == _matchingCount)
                                 {
-                                    MBankStatementLine _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
+                                    _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
                                     _bankStatementLine.SetC_CashLine_ID(Util.GetValueOfInt(_dsCashLine.Tables[0].Rows[0]["C_CASHLINE_ID"]));
                                     _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
 
@@ -1763,7 +1770,7 @@ namespace VA012.Models
                                     }
 
                                     decimal TaxAmt = 0;
-                                    string chargeType ="";
+                                    string chargeType = "";
                                     string taxRate = "";
                                     if ((Convert.ToString(_dsStatements.Tables[0].Rows[i]["CHARGEAMOUNT"]).Trim() != string.Empty) && (Convert.ToString(_dsStatements.Tables[0].Rows[i]["CHARGEAMOUNT"]).Trim() != "0"))
                                     {
@@ -1791,7 +1798,7 @@ namespace VA012.Models
                                         chargeType = Util.GetValueOfString(DB.ExecuteScalar("Select Name From C_CHARGE Where C_CHARGE_ID=" + _SetBankCharges + " AND IsActive='Y'"));
                                     }
 
-                                    
+
                                     if (!_bankStatementLine.Save())
                                     {
                                         ValueNamePair vnp = null;
@@ -1801,7 +1808,7 @@ namespace VA012.Models
                                         LogEntry(_path, Msg.GetMsg(ctx, "VA012_Error") + ": " + _objResponse._error);
                                     }
                                     else
-                                    {                                        
+                                    {
                                         _objResponse._statementNo = Util.GetValueOfString(_dsStatements.Tables[0].Rows[i]["STATEMENTNO"]);
                                         _objResponse._statementLine = Util.GetValueOfString(_dsStatements.Tables[0].Rows[i]["STATEMENTLINENO"]);
                                         _objResponse._paymentNo = Util.GetValueOfString(_dsPayments.Tables[0].Rows[0]["PAYMENTNO"]);
@@ -1849,6 +1856,38 @@ namespace VA012.Models
                                 }
                             }
                             #endregion Contra Match Case
+                        }
+
+                        //Set TaxRate ID if charge amount = Statement amount suggested by Ashish
+                        if (Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_CHARGE_ID"]) > 0) 
+                        {
+                            if (Util.GetValueOfDecimal(_dsStatements.Tables[0].Rows[i]["CHARGEAMOUNT"]).Equals( Util.GetValueOfDecimal(_dsStatements.Tables[0].Rows[i]["NETAMOUNT"])))
+                            {
+                                decimal TaxAmt = 0;
+                                _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
+                                if (_SetTaxRate > 0)
+                                {
+                                    _bankStatementLine.SetC_Tax_ID(_SetTaxRate);
+                                    var Rate = Util.GetValueOfDecimal(DB.ExecuteScalar("Select Rate From C_Tax Where C_Tax_ID=" + _SetTaxRate + " AND IsActive='Y'"));
+                                    if (Rate > 0)
+                                    {
+                                        TaxAmt = Math.Round(Util.GetValueOfDecimal(Util.GetValueOfDecimal(_dsStatements.Tables[0].Rows[i]["CHARGEAMOUNT"]) - (Util.GetValueOfDecimal(_dsStatements.Tables[0].Rows[i]["CHARGEAMOUNT"]) / ((Rate / 100) + 1))), 2);
+                                        _bankStatementLine.SetTaxAmt(TaxAmt);
+                                    }
+                                    else
+                                    {
+                                        _bankStatementLine.SetTaxAmt(0);
+                                    }
+                                }
+                                if (!_bankStatementLine.Save())
+                                {
+                                    ValueNamePair vnp = null;
+                                    vnp = VLogger.RetrieveError();
+                                    _objResponse._error = Msg.GetMsg(ctx, "VA012_ErrorSaving") + " : " + Util.GetValueOfString(_dsStatements.Tables[0].Rows[i]["STATEMENTNO"]) + ">" + Util.GetValueOfString(_dsStatements.Tables[0].Rows[i]["STATEMENTLINENO"]) + " #" + vnp.Key + ":" + vnp.Name;
+                                    _lstObjResponse.Add(_objResponse);
+                                    LogEntry(_path, Msg.GetMsg(ctx, "VA012_Error") + ": " + _objResponse._error);
+                                }
+                            }
                         }
                     }
                 }
