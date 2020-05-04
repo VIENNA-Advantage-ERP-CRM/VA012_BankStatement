@@ -1949,7 +1949,7 @@
           <AutoAssignPort>False</AutoAssignPort>
           <DevelopmentServerPort>3972</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost/VA012</IISUrl>
+          <IISUrl>http://localhost/VA012_</IISUrl>
           <OverrideIISAppRootUrl>True</OverrideIISAppRootUrl>
           <IISAppRootUrl>http://localhost/VA012</IISAppRootUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
