@@ -1495,7 +1495,7 @@
                                     + '           <p title="Deposit Slip No">' + VIS.Utility.encodeText(data[i].depositslipno) + '</p>'
                                     + '           <p title="Authentication Code">' + VIS.Utility.encodeText(data[i].authcode) + '</p>'
 
-                                    + '           <p title="Date Account">' + data[i].DateAcct + '</p>'
+                                    + '           <p title="Account Date">' + data[i].DateAcct + '</p>'
                                     + '           <p title="Payment Method">' + data[i].PaymentMethod + '</p>'
 
                                     + '  </div>'
@@ -1510,7 +1510,7 @@
                                     + '         <div class="va012-pay-text">'
                                     + '           <p title="Authentication Code">' + VIS.Utility.encodeText(data[i].authcode) + '</p>'
 
-                                    + '           <p title="Date Account">' + data[i].DateAcct + '</p>'
+                                    + '           <p title="Account Date">' + data[i].DateAcct + '</p>'
                                     + '           <p title="Payment Method">' + data[i].PaymentMethod + '</p>'
 
                                     + '  </div>'
@@ -3555,6 +3555,7 @@
                     + "</div>";
                 $match.append(_match);
                 _getMatchControls();
+            //    getlookupdata();
                 // to load Maching Base combo
                 getMatchingBaseData(_cmbMatchingBase);
                 loadBankStatementNo();
@@ -3620,6 +3621,7 @@
                         _sql = null;
                     }
                 };
+              //  var $POP_lookCharge = null;
                 var matchDialog = new VIS.ChildDialog();
                 matchDialog.setContent($match);
                 matchDialog.setTitle(VIS.Msg.getMsg("VA012_MatchStatement"));
@@ -3644,6 +3646,11 @@
                     //VIS.Utility.Util.getValueOfInt($ChargeControl.value)
                 }
 
+                //function getlookupdata() {
+                //    _ChargeLookUp = VIS.MLookupFactory.getMLookUp(VIS.Env.getCtx(), $self.windowNo, 3787, VIS.DisplayType.Search);
+                //    $ChargeControl = new VIS.Controls.VTextBoxButton("C_Charge_ID", true, false, true, VIS.DisplayType.Search, _ChargeLookUp);
+                //    $POP_lookCharge.append($ChargeControl.getControl().css('width', '93%')).append($ChargeControl.getBtn(0).css('width', '30px').css('height', '30px').css('padding', '0px').css('border-color', '#BBBBBB'));
+                //};
 
                 matchDialog.onOkClick = function () {
 
@@ -3813,9 +3820,6 @@
                     }
                     return false;
                 };
-
-
-
                 matchDialog.onCancelClick = function () {
                     if (w2ui['VA012_gridPayment_' + $self.windowNo] != null) {
                         w2ui['VA012_gridPayment_' + $self.windowNo].destroy();
@@ -3824,7 +3828,6 @@
                 matchDialog.onClose = function () {
                     matchDispose();
                 };
-
                 _cmbMatchingBase.on('change', function () {
 
                     if (_matchingBaseItemList.length <= 0) {
