@@ -197,7 +197,7 @@ namespace VA012.Controllers
 
 
                     //_sql = "SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'))) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND TO_CHAR(STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY') AND C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
-                    _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'))),0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
+                    _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999')),0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
                     statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
 
                     _sql = "SELECT MAX(C_BANKSTATEMENT_ID) AS C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND NAME='" + statementNo + "'  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
@@ -205,7 +205,7 @@ namespace VA012.Controllers
 
                     if (statementID <= 0)
                     {
-                        _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+')))+1,0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
+                        _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
 
@@ -234,7 +234,7 @@ namespace VA012.Controllers
             }
             else
             {
-                _sql = "SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+')))+1 AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'   AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
+                _sql = "SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1 AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'   AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
                 statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                 pageno = 1;
                 lineno = 10;

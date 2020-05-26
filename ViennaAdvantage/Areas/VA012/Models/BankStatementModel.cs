@@ -2349,8 +2349,8 @@ namespace VA012.Models
                + "  ON BSL.C_BPARTNER_ID =BP.C_BPARTNER_ID "
                + " LEFT JOIN C_CHARGE CHRG "
                + " ON BSL.C_CHARGE_ID=CHRG.C_CHARGE_ID "
-               + " LEFT JOIN AD_IMAGE IMG "
-               + " ON BP.PIC=IMG.AD_IMAGE_ID "
+              //+ " LEFT JOIN AD_IMAGE IMG "
+              //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
               + "  LEFT JOIN C_BP_GROUP BPG "
               + " ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID "
               + "  LEFT JOIN C_CURRENCY CURR "
@@ -2402,8 +2402,8 @@ namespace VA012.Models
                    + " LEFT JOIN C_BANKSTATEMENTLINE BSL "
                    + " ON PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID "
 
-                   + " LEFT JOIN AD_IMAGE IMG "
-                   + " ON BP.PIC=IMG.AD_IMAGE_ID "
+                   //+ " LEFT JOIN AD_IMAGE IMG "
+                   //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
                    + " LEFT JOIN C_BP_GROUP BPG "
                    + " ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID "
                    + " LEFT JOIN C_CURRENCY CURR "
@@ -2441,8 +2441,8 @@ namespace VA012.Models
                             ON pay.C_INVOICE_id=inv.C_INVOICE_id
                             LEFT JOIN C_BPARTNER BP
                             ON inv.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                            LEFT JOIN AD_IMAGE IMG
-                            ON BP.PIC=IMG.AD_IMAGE_ID
+                            --LEFT JOIN AD_IMAGE IMG
+                            --ON BP.PIC=IMG.AD_IMAGE_ID
                             LEFT JOIN C_BP_GROUP BPG
                             ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
                             LEFT JOIN C_CURRENCY CURR
@@ -2488,8 +2488,8 @@ namespace VA012.Models
                         ON ORD.C_DocTypeTarget_ID=dt.C_DocType_ID
                         LEFT JOIN C_BPARTNER BP
                         ON ord.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                        LEFT JOIN AD_IMAGE IMG
-                        ON BP.PIC=IMG.AD_IMAGE_ID
+                        --LEFT JOIN AD_IMAGE IMG
+                        --ON BP.PIC=IMG.AD_IMAGE_ID
                         LEFT JOIN C_BP_GROUP BPG
                         ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
                         LEFT JOIN C_CURRENCY CURR
@@ -2521,8 +2521,8 @@ namespace VA012.Models
                         ON CS.C_CASH_ID=CSL.C_CASH_ID
                         LEFT JOIN C_BPARTNER BP
                         ON CSL.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                        LEFT JOIN AD_IMAGE IMG
-                        ON BP.PIC=IMG.AD_IMAGE_ID
+                        --LEFT JOIN AD_IMAGE IMG
+                        --ON BP.PIC=IMG.AD_IMAGE_ID
                         LEFT JOIN C_BP_GROUP BPG
                         ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
                         LEFT JOIN C_CURRENCY CURR
@@ -2586,7 +2586,7 @@ namespace VA012.Models
                            + "  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1 "
                           + " END      AS PAYMENTAMOUNT, "
                             + " BPG.NAME AS BPGROUP, "
-                            + " IMG.AD_IMAGE_ID , "
+                   //+ " IMG.AD_IMAGE_ID , "
                    + " BCURR.ISO_CODE AS BASECURRENCY,  "
                                       + "  CASE  "
                       + "  WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)  "
@@ -2634,8 +2634,8 @@ namespace VA012.Models
                    + " LEFT JOIN C_BANKSTATEMENT BS "
                    + " ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID) "
 
-                   + " LEFT JOIN AD_IMAGE IMG "
-                   + " ON BP.PIC=IMG.AD_IMAGE_ID "
+                   //+ " LEFT JOIN AD_IMAGE IMG "
+                   //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
                    + " LEFT JOIN C_BP_GROUP BPG "
                    + " ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID "
                    + " LEFT JOIN C_CURRENCY CURR "
@@ -2714,7 +2714,7 @@ namespace VA012.Models
                                     THEN ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))*-1
                                   END      AS PAYMENTAMOUNT,
                               BPG.NAME   AS BPGROUP,
-                              IMG.AD_IMAGE_ID ,
+                              --IMG.AD_IMAGE_ID ,
                               BCURR.ISO_CODE AS BASECURRENCY,
                                CASE
                                 WHEN(inv.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
@@ -2760,8 +2760,8 @@ namespace VA012.Models
                             ON pay.C_INVOICE_id=inv.C_INVOICE_id
                             LEFT JOIN C_BPARTNER BP
                             ON inv.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                            LEFT JOIN AD_IMAGE IMG
-                            ON BP.PIC=IMG.AD_IMAGE_ID
+                            --LEFT JOIN AD_IMAGE IMG
+                            --ON BP.PIC=IMG.AD_IMAGE_ID
                             LEFT JOIN C_BP_GROUP BPG
                             ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
                             LEFT JOIN C_CURRENCY CURR
@@ -2840,7 +2840,7 @@ namespace VA012.Models
                           BP.NAME        AS BUSINESSPARTNER,
                           ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
                           BPG.NAME       AS BPGROUP,
-                          IMG.AD_IMAGE_ID ,
+                          --IMG.AD_IMAGE_ID ,
                           BCURR.ISO_CODE AS BASECURRENCY,
                           CASE
                             WHEN(ord.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
@@ -2865,8 +2865,8 @@ namespace VA012.Models
                         ON ORD.C_DocTypeTarget_ID=dt.C_DocType_ID
                         LEFT JOIN C_BPARTNER BP
                         ON ord.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                        LEFT JOIN AD_IMAGE IMG
-                        ON BP.PIC=IMG.AD_IMAGE_ID
+                        --LEFT JOIN AD_IMAGE IMG
+                        --ON BP.PIC=IMG.AD_IMAGE_ID
                         LEFT JOIN C_BP_GROUP BPG
                         ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
                         LEFT JOIN C_CURRENCY CURR
@@ -2930,7 +2930,7 @@ namespace VA012.Models
                           END                                         AS BUSINESSPARTNER,
                             ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
                             BPG.NAME                                    AS BPGROUP,
-                            IMG.AD_IMAGE_ID ,
+                            --IMG.AD_IMAGE_ID ,
                             BCURR.ISO_CODE AS BASECURRENCY,
                             CASE
                             WHEN(CSL.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
@@ -2970,8 +2970,8 @@ namespace VA012.Models
                          LEFT JOIN C_BANKSTATEMENT BS 
                          ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID)
 
-                        LEFT JOIN AD_IMAGE IMG
-                        ON BP.PIC=IMG.AD_IMAGE_ID
+                        --LEFT JOIN AD_IMAGE IMG
+                        --ON BP.PIC=IMG.AD_IMAGE_ID
                         LEFT JOIN C_BP_GROUP BPG
                         ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
                         LEFT JOIN C_CURRENCY CURR
@@ -3015,7 +3015,7 @@ namespace VA012.Models
             DataSet _ds = new DataSet();
             try
             {
-                _ds = DB.ExecuteDataset(_sql, null, null, _PAGESIZE, _paymentPageNo);
+                _ds = VIS.DBase.DB.ExecuteDatasetPaging(_sql, _paymentPageNo, _PAGESIZE);
                 if (_ds != null)
                 {
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
@@ -3050,28 +3050,21 @@ namespace VA012.Models
 
                         _payment.authcode = Util.GetValueOfString(_ds.Tables[0].Rows[i]["TrxNo"]);
 
-                        if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
-                        {
-                            MImage _image = new MImage(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]), null);
-                            _payment.imageurl = _image.GetThumbnailURL(46, 46);
-                            //_payment.binarydata = Convert.ToBase64String(_image.GetThumbnailByte(46, 46));
+                        //if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
+                        //{
+                        //    MImage _image = new MImage(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]), null);
+                        //    _payment.imageurl = _image.GetThumbnailURL(46, 46);
+                        //    //_payment.binarydata = Convert.ToBase64String(_image.GetThumbnailByte(46, 46));
 
-                            if (_payment.imageurl == "FileDoesn'tExist" || _payment.imageurl == "NoRecordFound")
-                            {
-                                _payment.imageurl = "";
-                            }
-                            //else
-                            //{
-                            //    if (_payment.imageurl != null)
-                            //    {
-                            //        _payment.binarydata = "";
-                            //    }
-                            //}
-                        }
-                        else
-                        {
-                            _payment.imageurl = "";
-                        }
+                        //    if (_payment.imageurl == "FileDoesn'tExist" || _payment.imageurl == "NoRecordFound")
+                        //    {
+                        //        _payment.imageurl = "";
+                        //    }                            
+                        //}
+                        //else
+                        //{
+                        //    _payment.imageurl = "";
+                        //}
                         _payments.Add(_payment);
                     }
 
@@ -3082,7 +3075,7 @@ namespace VA012.Models
                 }
 
             }
-            catch
+            catch (Exception e)
             {
                 if (_ds != null)
                 {
@@ -3127,7 +3120,7 @@ namespace VA012.Models
                + " CURR.ISO_CODE   AS CURRENCY, "
                + " BSL.C_BANKSTATEMENTLINE_ID, "
                + " BSL.C_PAYMENT_ID, "
-               + " IMG.AD_IMAGE_ID, "
+               //+ " IMG.AD_IMAGE_ID, "
                + " BSL.LINE, "
                 + " BSL.VA012_PAGE AS PAGE,"
                 + " BSL.VA012_ISUSENEXTTIME, "
@@ -3162,8 +3155,8 @@ namespace VA012.Models
                 + " LEFT JOIN C_PAYMENT PAY "
                + " ON BSL.C_PAYMENT_ID=PAY.C_PAYMENT_ID "
 
-               + " LEFT JOIN AD_IMAGE IMG "
-               + " ON BP.PIC=IMG.AD_IMAGE_ID "
+              //+ " LEFT JOIN AD_IMAGE IMG "
+              //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
               + "  LEFT JOIN C_BP_GROUP BPG "
               + " ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID "
               + "  LEFT JOIN C_CURRENCY CURR "
@@ -3209,7 +3202,7 @@ namespace VA012.Models
             }
 
             //_sql += " ORDER BY BSL.StatementLineDate DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+')) DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
-            _sql += " ORDER BY ( CASE  WHEN BS.DOCSTATUS='DR' THEN 1 ELSE 0 END) DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+')) DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
+            _sql += " ORDER BY ( CASE  WHEN BS.DOCSTATUS='DR' THEN 1 ELSE 0 END) DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+'), '999999999999') DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
             List<StatementLineProp> _statements = new List<StatementLineProp>();
             StatementLineProp _statement = new StatementLineProp();
             DataSet _ds = new DataSet();
@@ -3217,7 +3210,7 @@ namespace VA012.Models
             {
 
 
-                _ds = DB.ExecuteDataset(_sql, null, null, _PAGESIZE, _statementPageNo);
+                _ds = VIS.DBase.DB.ExecuteDatasetPaging(_sql, _statementPageNo, _PAGESIZE);
 
                 //_ds = DB.ExecuteDataset(_sql);
                 if (_ds != null)
@@ -3236,11 +3229,11 @@ namespace VA012.Models
                         _statement.c_bankstatement_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BANKSTATEMENT_ID"]);
                         _statement.description = Util.GetValueOfString(_ds.Tables[0].Rows[i]["DESCRIPTION"]);
                         _statement.trxamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]);
-                        _statement.STMTAMT= Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"]);
+                        _statement.STMTAMT = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"]);
                         //if charge id is there and Statement amount is Equal to Charge Amount then make it Matching Confirmed.
-                        if(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CHARGE_ID"]) > 0)
+                        if (Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CHARGE_ID"]) > 0)
                         {
-                            if(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]).Equals(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"])))
+                            if (Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]).Equals(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"])))
                             {
                                 DB.ExecuteScalar(" UPDATE C_BANKSTATEMENTLINE SET VA012_ISMATCHINGCONFIRMED='Y' WHERE C_BANKSTATEMENTLINE_ID = " + Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]));
                             }
@@ -3253,28 +3246,20 @@ namespace VA012.Models
                         _statement.invoiceno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["INVOICENO"]);
                         _statement.c_cashline_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CASHLINE_ID"]);
                         _statement.trxno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["TRXNO"]);
-                        if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
-                        {
-                            MImage _image = new MImage(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]), null);
-                            _statement.imageurl = _image.GetThumbnailURL(46, 46);
-                            //_statement.binarydata = Convert.ToBase64String(_image.GetThumbnailByte(46, 46));
+                        //if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
+                        //{
+                        //    MImage _image = new MImage(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]), null);
+                        //    _statement.imageurl = _image.GetThumbnailURL(46, 46);                            
 
-                            if (_statement.imageurl == "FileDoesn'tExist" || _statement.imageurl == "NoRecordFound")
-                            {
-                                _statement.imageurl = "";
-                            }
-                            //else
-                            //{
-                            //    if (_statement.imageurl != null)
-                            //    {
-                            //        _statement.binarydata = "";
-                            //    }
-                            //}
-                        }
-                        else
-                        {
-                            _statement.imageurl = "";
-                        }
+                        //    if (_statement.imageurl == "FileDoesn'tExist" || _statement.imageurl == "NoRecordFound")
+                        //    {
+                        //        _statement.imageurl = "";
+                        //    }                           
+                        //}
+                        //else
+                        //{
+                        //    _statement.imageurl = "";
+                        //}
                         _statements.Add(_statement);
                     }
 
