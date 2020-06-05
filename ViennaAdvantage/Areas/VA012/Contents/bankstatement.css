@@ -94,7 +94,7 @@
     /*background: #575757;
       color: #fff;
     */
-    background: rgba(var(--v-c-secondary), .8);
+    background: rgba(var(--v-c-secondary), 1);
     height: 100%;
     color: rgba(var(--v-c-on-secondary), 1);
     position: absolute;
@@ -105,6 +105,7 @@
     /*background-color: #444243;*/
     /*background: rgba(var(--v-c-secondary), .8);
     border-bottom: 1px solid #fff;*/
+    margin-bottom: 10px;
 }
 
 /*To set background color for mandatory field*/
@@ -130,10 +131,11 @@
 .va012-left-content {
     height: 90%;
     overflow: auto;
+    padding: 10px;
 }
 
 .va012-left-data {
-    padding: 10px 10px 0;
+    /*padding: 10px 10px 0;*/
 }
 .va012-left-data > label {
     /* color: #fff; */
@@ -942,41 +944,19 @@ overflow: hidden;*/
     color: rgba(var(--v-c-on-secondary), 1);
 }
 
-
-/*busy indicator css for vis*/
-.vis-busyindicatorouterwrap {
-    position: absolute;
-    bottom: 0px;
+.vis-input-wrap.va012-left-data label,
+.vis-input-wrap.va012-left-data select:focus ~ label,
+.vis-input-wrap.va012-left-data input:focus ~ label {
+    background: linear-gradient(rgba(var(--v-c-secondary), 1) 50%, transparent 50%) !important;
+}
+.VA012-divmatchingbase {
     width: 100%;
-    height: 100%;
-    z-index: 999; 
-    left: 0;
-}
-.vis-busyindicatorinnerwrap {
-    position: absolute;
-    bottom: 0px;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.vis-busyindicatordiv {
-    border: 4px solid rgba(var(--v-c-secondary), 1);
-    border-radius: 50%;
-    border-top: 4px solid rgba(var( --v-c-primary), 1);
-    width: 40px;
-    height: 40px;
-    -webkit-animation: spin 1s linear infinite; /* Safari */
-    animation: spin 1s linear infinite;
-    display: flex;
-}
-@-webkit-keyframes spin {
-    0% { -webkit-transform: rotate(0deg); }
-    100% { -webkit-transform: rotate(360deg); }
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    border: 2px solid rgba(var(--v-c-primary), 1);
+    padding: 10px;
+    float: left;
+    margin-top: 5px;
+    min-height: 150px;
+    max-height: 200px;
+    overflow: auto;
+    border-radius: .25rem;
 }

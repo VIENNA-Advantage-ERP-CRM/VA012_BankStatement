@@ -560,21 +560,27 @@
                     //+ '                  </h4>'
                     + '              </div>'
                     + '              <div class="va012-left-content">'
-                    + '                  <div class="va012-left-data">'
-                    + '                      <label  id="VA012_lblBank_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_Bank") + '<sup style="color: red;">*</sup></label>'
-                    + '                      <select id="VA012_cmbBank_' + $self.windowNo + '" ></select>'
+                    + '                  <div class="va012-left-data vis-input-wrap">'
+                    + '                      <div class="vis-control-wrap"> '
+                    + '                         <select id="VA012_cmbBank_' + $self.windowNo + '" ></select>'
+                    + '                         <label  id="VA012_lblBank_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_Bank") + '<sup style="color: red;">*</sup></label>'
+                    + '                     </div>'
                     + '                  </div>'
                     + '                  <!-- end of left-data -->'
                     + '  '
-                    + '                  <div class="va012-left-data">'
-                    + '                      <label  id="VA012_lblBankAccount_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_BankAccount") + '<sup style="color: red;">*</sup></label>'
+                    + '                  <div class="va012-left-data vis-input-wrap">'
+                    + '                      <div class="vis-control-wrap"> '
                     + '                      <select id="VA012_cmbBankAccount_' + $self.windowNo + '"   ></select>'
+                    + '                      <label  id="VA012_lblBankAccount_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_BankAccount") + '<sup style="color: red;">*</sup></label>'
+                    + '                  </div>'
                     + '                  </div>'
                     + '                  <!-- end of left-data -->'
                     /*Added new parameter Statement Date*/
-                    + '                  <div class="va012-left-data">'
-                    + '                      <label  id="VA012_lblStatementDate_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
+                    + '                  <div class="va012-left-data vis-input-wrap">'
+                    + '                      <div class="vis-control-wrap"> '
                     + '                      <input type="date" max="9999-12-31" id="VA012_statementDate_' + $self.windowNo + '"   >'
+                    + '                      <label  id="VA012_lblStatementDate_' + $self.windowNo + '" >' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
+                    + '                  </div>'
                     + '                  </div>'
                     + '                  <!-- end of left-data -->'
                     /*End*/
@@ -3526,7 +3532,7 @@
                     // + "<option value='AC'>" + VIS.Msg.getMsg("VA012_AuthCode") + "</option>"
 
                     + "</select></div> "
-                    + "<div id='VA012_divMatchingBase_" + $self.windowNo + "' style='width:100%;border: 2px solid rgba(var(--v-c-primary), 1);padding: 10px; float: left; margin-top: 5px; min-height: 150px; max-height: 200px; overflow:auto'>"
+                    + "<div id='VA012_divMatchingBase_" + $self.windowNo + "' class='VA012-divmatchingbase'>"
                     + "</div>"
                     + "<div class='va012-popform-data'>"
                     + "<label>" + VIS.Msg.getMsg("VA012_MatchingCriteria") + '<sup style="color: red;">*</sup></label>'
@@ -3922,7 +3928,7 @@
                     + " <select id='VA012_cmbPaymentSchedule_" + $self.windowNo + "'  style=' width: 100%; ' ></select>"
                     + " </div>"
 
-                _paymentSchedule += "<div id='VA012_divPaymentSchedules_" + $self.windowNo + "' style='width:100%;border: 2px solid rgba(var(--v-c-primary), 1);padding: 10px; float: left;margin-top: 5px; min-height: 150px; max-height: 200px; overflow:auto'>"
+                _paymentSchedule += "<div id='VA012_divPaymentSchedules_" + $self.windowNo + "' class='VA012-divmatchingbase'>"
                     + "</div> </div>";
                 $paymentSchedule.append(_paymentSchedule);
                 _getScheduleControls();
