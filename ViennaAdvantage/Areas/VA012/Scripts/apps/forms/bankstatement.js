@@ -553,10 +553,11 @@
                     + '  <div id="VA012_mainContainer_' + $self.windowNo + '" class="va012-main-container">'
                     + '  <table id="VA012_table_' + $self.windowNo + '" style="width: 100%;"><tr><td id="VA012_tdLeft_' + $self.windowNo + '" style="width: 200px;position: relative;">'
                     + '   <div class="va012-left-part">'
-                    + '              <div class="va012-left-title">'
-                    + '                  <h4>'
+                    + '              <div class="va012-left-title vis-apanel-lb-toggle">'
+                    //+ '                  <h4>'
                     //+ '                      <img id="VA012_btnHide_' + $self.windowNo + '" src="Areas/VA012/Images/lines.png" alt="lines" style = "cursor: pointer;" ></h4>'
-                    + '    <i id="VA012_btnHide_' + $self.windowNo + '" class="fa fa-bars" alt="lines" style="cursor: pointer;background: rgba(var(--v-c-primary),1);"></i> </h4>'
+                    + '    <i id="VA012_btnHide_' + $self.windowNo + '" class="fa fa-bars" alt="lines" style="cursor: pointer;"></i> '
+                    //+ '                  </h4>'
                     + '              </div>'
                     + '              <div class="va012-left-content">'
                     + '                  <div class="va012-left-data">'
@@ -587,8 +588,8 @@
                     + '              <!-- end of left-content -->'
                     + '          </div>'
                     + '          <!-- end of left-part -->'
-                    + ' </td> <td style="position: relative;">'
-                    + '          <div id="VA012_contentArea_' + $self.windowNo + '" class="va012-content-area" style="position: absolute;" >'
+                    + ' </td> <td>'
+                    + '          <div id="VA012_contentArea_' + $self.windowNo + '" class="va012-content-area">'
                     + '              <div id="VA012_middleWrap_' + $self.windowNo + '" class="va012-middle-wrap">'
                     + '                  <div class="va012-mid-top-wrap" id="VA012_formBtnNewRecord_' + $self.windowNo + '">'
                     + '                      <div class="va012-icons-wrap">'
@@ -650,7 +651,7 @@
                     + '                                  <a tabindex="5" id="VA012_btnIn_' + $self.windowNo + '" v_active="1" class="va012-inout-icon va012-active">In</a>'
                     + '                                  <a tabindex="6" id="VA012_btnOut_' + $self.windowNo + '" v_active="0" class="va012-inout-icon va012-inactive">Out</a>'
                     + '                                  <input tabindex="7" autofocus  value="0.00" id="VA012_txtAmount_' + $self.windowNo + '" type="number" class="va012-input-size-amt va012-right-align va012-txtamount">'
-                    + '                                <a id="VA012_btnAmount_' + $self.windowNo + '" class="va012-info-icon"></a>'
+                    + '                                <a id="VA012_btnAmount_' + $self.windowNo + '" class="va012-add-icon va012-info-icon fa fa-info"></a>'
                     + '                              </div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
@@ -886,7 +887,7 @@
                     + '                              <div id="VA012_divPaymentSchedule_' + $self.windowNo + '" class="va012-form-data" >'
                     + '                              <label>' + VIS.Msg.getMsg("VA012_PaymentSchedules") + '</label>'
                     + '                              <input disabled id="VA012_txtPaymentSchedule_' + $self.windowNo + '" type="text" class="va012-input-size">'
-                    + '                              <a tabindex="13"  id="VA012_btnPaymentSchedule_' + $self.windowNo + '" class="va012-edit-icon"></a>'
+                    + '                              <a tabindex="13"  id="VA012_btnPaymentSchedule_' + $self.windowNo + '" class="va012-edit-icon va012-add-icon va012-info-icon vis vis-pencil"></a>'
                     + '                              </div>'
                     + '                              <!-- end of form-data -->'
                     + '                          </div>'
@@ -1016,7 +1017,7 @@
                     + '                           <div class="va012-right-search">'
                     + '                            <div class="va012-search-wrap">'
                     + '                               <input id="VA012_txtSearch_' + $self.windowNo + '" value="" placeholder="' + VIS.Msg.getMsg("VA012_Search") + '..." type="text">'
-                    + '                               <a id="VA012_btnSearch_' + $self.windowNo + '" class="va012-search-icon"><span class="glyphicon glyphicon-search"></span></a>'
+                    + '                               <a id="VA012_btnSearch_' + $self.windowNo + '" class="va012-search-icon"><span class="vis vis-search"></span></a>'
                     + '                          </div>'
                     + '                      <!-- end of search-wrap -->'
                     + '                         </div>'
@@ -1446,7 +1447,7 @@
 
                                 + '<div class="va012-payment-wrap" >'
                                 + '<div class="row">'
-                                + ' <div class="col-md-3 col-sm-3">'
+                                + ' <div class="col-md-4 col-sm-4">'
                                 + '    <div class="va012-form-check">'
                                 + '        <input type="checkbox" data-uid="' + data[i].c_payment_id + '"  >'
                                 + '    <div title="' + VIS.Msg.getMsg('VA012_PaymentAmount') + '" class="va012-inside-form-check" style=" float: left; width: 85%; ">'
@@ -3079,7 +3080,7 @@
                             _StatementsHTML = '<div  data-uid="' + data[i].c_bankstatementline_id + '" class="va012-right-data-wrap ' + status + '">'
                                 + '<div class="va012-statement-wrap">'
                                 + '<div class="va012-fl-padd">'
-                                + '<div class="col-md-4 col-sm-4 va012-padd-0">'
+                                + '<div class="col-md-5 col-sm-5 va012-padd-0">'
                                 + '<div class="va012-form-check">'
                                 + ' <input type="checkbox" data-uid="' + data[i].c_bankstatementline_id + '" >'
                                 // + ' <div class="va012-form-text"> <span style="background: #999;color: white; padding: 3px;margin-left: 2px;">' + data[i].page + '/' + data[i].line + '</span>'
@@ -3121,7 +3122,7 @@
 
 
 
-                                    + ' <div class="col-md-1 col-sm-1 va012-padd-0">'
+                                    + ' <div class="col-md-1 col-sm-1 pl-1 pr-0">'
                                     + '<div class="va012-form-check">'
                                     + '<div class="va012-pay-text">'
                                     + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit" title=' + VIS.Msg.getMsg("EditRecord") + '></span> <span data-uid="' + data[i].c_bankstatement_id + '" class="glyphicon glyphicon-zoom-in" title=' + VIS.Msg.getMsg("ZoomToRecord") + '></span> </p>'
@@ -3132,14 +3133,14 @@
                                     + ' <!-- end of col -->'
 
 
-                                    + ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
-                                    + '<div class="va012-form-data">';
+                                    //+ ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
+                                    //+ '<div class="va012-form-data">';
                             }
                             else {
                                 _StatementsHTML += '</div>'
-                                    + '</div>'
-                                    + '<!-- end of form-group -->'
-                                    + ' </div>'
+                                    //+ '</div>'
+                                    //+ '<!-- end of form-group -->'
+                                    //+ ' </div>'
                                     + '<!-- end of col -->'
                                     + '<div class="col-md-4 col-sm-4 va012-padd-0 va012-width-sm">'
                                     + '<div class="va012-form-check">'
@@ -3166,7 +3167,7 @@
 
 
 
-                                    + ' <div class="col-md-1 col-sm-1 va012-padd-0">'
+                                    + ' <div class="col-md-1 col-sm-1 pl-1 pr-0">'
                                     + '<div class="va012-form-check">'
                                     + '<div class="va012-pay-text">'
                                     + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit"></span> <span data-uid="' + data[i].c_bankstatement_id + '" class="glyphicon glyphicon-zoom-in"></span> </p>'
@@ -3177,8 +3178,8 @@
                                     + ' <!-- end of col -->'
 
 
-                                    + ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
-                                    + '<div class="va012-form-data">';
+                                    //+ ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
+                                    //+ '<div class="va012-form-data">';
                             }
 
                             //if (data[i].imageurl != null && data[i].imageurl != "") {
@@ -3194,10 +3195,10 @@
                             //}
 
                             _StatementsHTML += ' </div>'
-                                + ' <!-- end of form-group -->'
-                                + ' </div>'
-                                + ' <!-- end of col -->'
-                                + ' </div>'
+                                //+ ' <!-- end of form-group -->'
+                                //+ ' </div>'
+                                //+ ' <!-- end of col -->'
+                                //+ ' </div>'
                                 + ' <!-- end of row -->'
                                 + '</div>'
                                 + '<!-- end of payment-wrap -->'
@@ -3525,7 +3526,7 @@
                     // + "<option value='AC'>" + VIS.Msg.getMsg("VA012_AuthCode") + "</option>"
 
                     + "</select></div> "
-                    + "<div id='VA012_divMatchingBase_" + $self.windowNo + "' style='width:100%;border: 2px solid rgba(var(--v-c-primary), 1);padding: 10px; float: left; margin-bottom: 10px; min-height: 150px; max-height: 200px; overflow:auto'>"
+                    + "<div id='VA012_divMatchingBase_" + $self.windowNo + "' style='width:100%;border: 2px solid rgba(var(--v-c-primary), 1);padding: 10px; float: left; margin-top: 5px; min-height: 150px; max-height: 200px; overflow:auto'>"
                     + "</div>"
                     + "<div class='va012-popform-data'>"
                     + "<label>" + VIS.Msg.getMsg("VA012_MatchingCriteria") + '<sup style="color: red;">*</sup></label>'
@@ -3544,7 +3545,7 @@
 
                     + "<div class='va012-popform-data'>"
                     + "<label title = '" + VIS.Msg.getMsg("VA012_SetChargeType") + "' > " + VIS.Msg.getMsg("VA012_Charge") + '<sup style="color: red;">*</sup></label>'
-                    + "<div id='VA012_ChargeSrch_" + $self.windowNo + "'>"
+                    + "<div id='VA012_ChargeSrch_" + $self.windowNo + "' class='d-flex'>"
                     + "</div></div> "
 
                     + "<div class='va012-popform-data'>"
@@ -3642,7 +3643,7 @@
                     //Added Charge Search Lookup
                     _ChargeLookUp = VIS.MLookupFactory.getMLookUp(VIS.Env.getCtx(), $self.windowNo, 3787, VIS.DisplayType.Search);
                     $ChargeControl = new VIS.Controls.VTextBoxButton("C_Charge_ID", true, false, true, VIS.DisplayType.Search, _ChargeLookUp);
-                    _chargeSrch.append($ChargeControl.getControl().css('width', '93%')).append($ChargeControl.getBtn(0).css('width', '30px').css('height', '30px').css('padding', '0px').css('border-color', '#BBBBBB'));
+                    _chargeSrch.append($ChargeControl.getControl().css('flex', '1')).append($ChargeControl.getBtn(0).css('width', '30px').css('height', '30px').css('padding', '0px').css('border-color', 'rgba(var(--v-c-on-secondary), .2)'));
                     //VIS.Utility.Util.getValueOfInt($ChargeControl.value)
                 }
 
@@ -3921,7 +3922,7 @@
                     + " <select id='VA012_cmbPaymentSchedule_" + $self.windowNo + "'  style=' width: 100%; ' ></select>"
                     + " </div>"
 
-                _paymentSchedule += "<div id='VA012_divPaymentSchedules_" + $self.windowNo + "' style='width:100%;border: 2px solid rgba(var(--v-c-primary), 1);padding: 10px; float: left; margin-bottom: 10px;margin-top: 10px; min-height: 150px; max-height: 200px; overflow:auto'>"
+                _paymentSchedule += "<div id='VA012_divPaymentSchedules_" + $self.windowNo + "' style='width:100%;border: 2px solid rgba(var(--v-c-primary), 1);padding: 10px; float: left;margin-top: 5px; min-height: 150px; max-height: 200px; overflow:auto'>"
                     + "</div> </div>";
                 $paymentSchedule.append(_paymentSchedule);
                 _getScheduleControls();
@@ -5868,10 +5869,10 @@
             newRecordForm.newRecordDispose();
         };
         function busyIndicator(_obj, _isShow, _position) {
-            $BusyIndicator = $("<div class='vis-apanel-busy va012-busy-bank-statement'>");
-            $BusyIndicator.css({
-                "position": _position, "width": "95%", "height": "95%", 'text-align': 'center', "visibility": "hidden"
-            });
+            $BusyIndicator = $('<div class="vis-busyindicatorouterwrap va012-busy-bank-statement" style="visibility: hidden;"><div class="vis-busyindicatorinnerwrap"><i class="vis-busyindicatordiv"></i></div></div>');
+            //$BusyIndicator.css({
+            //    "position": _position, "width": "95%", "height": "95%", 'text-align': 'center', "visibility": "hidden"
+            //});
             if (_isShow) {
                 $BusyIndicator.css({
                     "visibility": "visible"
