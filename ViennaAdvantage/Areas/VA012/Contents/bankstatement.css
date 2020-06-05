@@ -53,8 +53,8 @@
 .va012-main-container, 
 .va012-left-title, 
 .va012-left-data, 
-.va012-left-data > label, 
-.va012-left-data > select, 
+/*.va012-left-data > label,*/ 
+/*.va012-left-data > select,*/ 
 .va012-mid-top-wrap, 
 .va012-payment-list, 
 .va012-payment-content, 
@@ -139,11 +139,11 @@
 }
 .va012-left-data > label {
     /* color: #fff; */
-    font-weight: normal;
+    /*font-weight: normal;*/
 }
 .va012-left-data > select {
     /* background: url(../Images/down-arrow.png) no-repeat 97% 50% transparent; */
-    -moz-appearance: none;
+    /*-moz-appearance: none;*/
     /* -webkit-appearance: none; */
     /* cursor: pointer; */
 }
@@ -151,9 +151,9 @@
     /* border: 1px solid #fff; */
     /* background: rgba(var(--v-c-on-primary), 1); */
     /* color: rgba(var(--v-c-on-primary), 1); */
-    height: 31px;
+    /*height: 31px;*/
     /* margin-right: 5px; */
-    width: 100%;
+    /*width: 100%;*/
 }
 
         /*.va012-left-data > select > option {
