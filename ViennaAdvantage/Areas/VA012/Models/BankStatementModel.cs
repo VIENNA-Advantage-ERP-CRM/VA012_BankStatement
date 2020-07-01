@@ -3037,7 +3037,8 @@ namespace VA012.Models
                         /* end change by pratap */
                         //added new column to show data on Bank Statement Form
                         _payment.PaymentMethod = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA009_Name"]);
-                        _payment.DateAcct = Util.GetValueOfString(Convert.ToDateTime(_ds.Tables[0].Rows[i]["DateAcct"]).ToShortDateString());
+                        //_payment.DateAcct = Util.GetValueOfString(Convert.ToDateTime(_ds.Tables[0].Rows[i]["DateAcct"]).ToShortDateString());
+                        _payment.DateAcct = Util.GetValueOfDateTime(Convert.ToDateTime(_ds.Tables[0].Rows[i]["DateAcct"]));
                         //end
                         /* change by pratap */
                         _payment.docstatus = Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocStatus"]);
@@ -5391,7 +5392,7 @@ namespace VA012.Models
         public string docstatus { get; set; }
 
         public string PaymentMethod { get; set; }
-        public string DateAcct { get; set; }
+        public DateTime? DateAcct { get; set; }
 
     }
     public class StatementLineProp
