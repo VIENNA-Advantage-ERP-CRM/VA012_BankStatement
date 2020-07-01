@@ -732,7 +732,7 @@
                 divRow4Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
                 divRow4Col1TrxAmt = $('<div id="VA012_divTrxAmt_' + $self.windowNo + '" class="va012-form-group va012-form-data">');
                 divRow4Col1Lbl = $('<label>' + VIS.Msg.getMsg("VA012_TrxAmt") + '</label>');
-                _txtTrxAmt = new VIS.Controls.VAmountTextBox("VA012_txtTrxAmt_" + $self.windowNo + "", false, false, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
+                _txtTrxAmt = new VIS.Controls.VAmountTextBox("VA012_txtTrxAmt_" + $self.windowNo + "", false, true, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
                 _txtTrxAmt.getControl().addClass('va012-right-align');
                 _txtTrxAmt.setValue(0);
                 divRow4Col1TrxAmt.append(divRow4Col1Lbl).append(_txtTrxAmt.getControl());
