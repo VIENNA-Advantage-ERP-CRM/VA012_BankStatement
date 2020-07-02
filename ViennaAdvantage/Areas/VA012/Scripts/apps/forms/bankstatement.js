@@ -1473,9 +1473,9 @@
                                 + '    <div class="va012-form-check">'
                                 + '        <input type="checkbox" data-uid="' + data[i].c_payment_id + '"  >'
                                 + '    <div title="' + VIS.Msg.getMsg('VA012_PaymentAmount') + '" class="va012-inside-form-check" style=" float: left; width: 85%; ">'
-                                + '      <label style=" width: 100%; ">' + data[i].currency + ' ' + Globalize.format(data[i].paymentamount, "N") + '</label>';
+                                + '      <label style=" width: 100%; ">' + data[i].currency + ' ' + parseFloat(data[i].paymentamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
                             if (data[i].isconverted == "Y") {
-                                _PaymentsHTML += '      <span>' + data[i].basecurrency + ' ' + Globalize.format(data[i].convertedamount, "N") + '</span>';
+                                _PaymentsHTML += '      <span>' + data[i].basecurrency + ' ' + parseFloat(data[i].convertedamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
                             }
                             _PaymentsHTML += '   </div></div>'
                                 + '    <!-- end of form-group -->'
@@ -3015,7 +3015,7 @@
                             _secUnreconciled.html("");
                             _secReconciled.html("");
                             _secReconciled.append("<p>" + VIS.Msg.getMsg("VA012_Reconciled") + "</p><p style='margin-top: 4px;'>" + VIS.Msg.getMsg("VA012_Unreconciled") + "</p>")
-                            _secUnreconciled.append("<span style='padding-bottom: 2px;' class='va012-amount va012-font-green'><span class='va012-base-curr'>" + _dsCon.tables[0].rows[0].cells.basecurrency + "</span> " + Globalize.format(_dsCon.tables[0].rows[0].cells.reconciled, "N") + "</span><span style='padding-bottom: 2px;' class='va012-amount va012-font-red'> <span class='va012-base-curr'>" + _dsCon.tables[0].rows[0].cells.basecurrency + "</span> " + Globalize.format(_dsCon.tables[0].rows[0].cells.unreconciled, "N") + "</span>");
+                            _secUnreconciled.append("<span style='padding-bottom: 2px;' class='va012-amount va012-font-green'><span class='va012-base-curr'>" + _dsCon.tables[0].rows[0].cells.basecurrency + "</span> " + parseFloat(_dsCon.tables[0].rows[0].cells.reconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span><span style='padding-bottom: 2px;' class='va012-amount va012-font-red'> <span class='va012-base-curr'>" + _dsCon.tables[0].rows[0].cells.basecurrency + "</span> " + parseFloat(_dsCon.tables[0].rows[0].cells.unreconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span>");
                             _dsCon.dispose();
                             _dsCon = null;
                             _sqlCon = null;
@@ -3119,7 +3119,7 @@
                                 + ' <input type="checkbox" data-uid="' + data[i].c_bankstatementline_id + '" >'
                                 // + ' <div class="va012-form-text"> <span style="background: #999;color: white; padding: 3px;margin-left: 2px;">' + data[i].page + '/' + data[i].line + '</span>'
                                 + ' <div class="va012-form-text"> <span style="background: rgba(var(--v-c-on-secondary), .4);color: rgba(var(--v-c-on-primary), 1); padding: 3px;margin-left: 2px;">' + data[i].statementno + '/' + data[i].page + '/' + data[i].line + '</span>'
-                                + '<label>' + data[i].currency + ' ' + Globalize.format(data[i].trxamount, "N") + '</label>';
+                                + '<label>' + data[i].currency + ' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
 
                             //if (data[i].isconverted == "Y") {
                             //    _StatementsHTML += '<span>' + data[i].basecurrency + ' ' + Globalize.format(data[i].convertedamount, "N") + '</span>';
