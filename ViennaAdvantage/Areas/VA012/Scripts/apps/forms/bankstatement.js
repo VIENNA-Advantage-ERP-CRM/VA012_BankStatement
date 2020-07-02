@@ -518,12 +518,12 @@
             _lstPayments.on(VIS.Events.onTouchStartOrClick, function () {
                 _txtAmount.trigger('blur');
             });
-            _statementDate.addClass("va012-mandatory");
+            _statementDate.addClass("vis-ev-col-mandatory");
             //Change event of Statement Date Filter
             _statementDate.on('change', function (e) {
                 //on change event of Statement Date to set background color logic
                 if (_statementDate.val() == "") {
-                    _statementDate.addClass("va012-mandatory");
+                    _statementDate.addClass("vis-ev-col-mandatory");
                 }
                 else {
                     if (new Date(_statementDate.val()) > new Date()) {
@@ -531,7 +531,7 @@
                         _statementDate.val("");
                         return false;
                     }
-                    _statementDate.removeClass("va012-mandatory");
+                    _statementDate.removeClass("vis-ev-col-mandatory");
                 }
                 loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
             });
@@ -552,7 +552,7 @@
                 var _formDesign = '  <div class="va012-assign-content">'
                     + '  <div id="VA012_mainContainer_' + $self.windowNo + '" class="va012-main-container">'
                     + '  <table id="VA012_table_' + $self.windowNo + '" style="width: 100%;"><tr><td id="VA012_tdLeft_' + $self.windowNo + '" style="width: 200px;position: relative;">'
-                    + '   <div class="va012-left-part">'
+                    + '   <div class="va012-left-part vis-leftsidebarouterwrap">'
                     + '              <div class="va012-left-title vis-apanel-lb-toggle">'
                     //+ '                  <h4>'
                     //+ '                      <img id="VA012_btnHide_' + $self.windowNo + '" src="Areas/VA012/Images/lines.png" alt="lines" style = "cursor: pointer;" ></h4>'
@@ -615,27 +615,27 @@
                     + '                  <div class="va012-form-wrap va012-newform" id="VA012_formNewRecord_' + $self.windowNo + '" data-uid="0">'
                     + '                      <div class="row va012-fl-padd">'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div class="va012-form-group va012-form-data">'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementNumber") + ' <sup style="color: red;">*</sup></label>'
-                    + '                                  <input  tabindex="1" id="VA012_txtStatementNo_' + $self.windowNo + '" type="text" class="va012-input-size">'
-                    + '                                  <i  id="VA012_btnStatementNo_' + $self.windowNo + '" class="fa fa-plus va012-add-icon"></i>'
+                    + '                              <div class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
+                    + '                                  <input  tabindex="1" id="VA012_txtStatementNo_' + $self.windowNo + '" type="text" class="va012-input-size" placeholder=" " data-placeholder="" data-hasbtn=" ">'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementNumber") + ' <sup style="color: red;">*</sup></label></div>'
+                    + '<div class="input-group-append"><button  id="VA012_btnStatementNo_' + $self.windowNo + '" class="input-group-text"><i class="fa fa-plus va012-add-icon"></i></button></div>'
                     + '                              </div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div class="va012-form-group va012-form-data">'
+                    + '                              <div class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
+                    + '                                  <input tabindex="2" value="1" id="VA012_txtStatementPage_' + $self.windowNo + '" type="text" placeholder=" " data-placeholder="">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementPage") + '</label>'
-                    + '                                  <input tabindex="2" value="1" id="VA012_txtStatementPage_' + $self.windowNo + '" type="text">'
-                    + '                              </div>'
+                    + '                              </div></div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div class="va012-form-group va012-form-data">'
+                    + '                              <div class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
+                    + '                                  <input tabindex="3" value="10" id="VA012_txtStatementLine_' + $self.windowNo + '" type="text" placeholder=" " data-placeholder="">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementLine") + '</label>'
-                    + '                                  <input tabindex="3" value="10" id="VA012_txtStatementLine_' + $self.windowNo + '" type="text">'
-                    + '                              </div>'
+                    + '                              </div></div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
@@ -644,41 +644,33 @@
                     + '  '
                     + '                      <div class="row va012-fl-padd">'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div class="va012-form-group va012-form-data">'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
+                    + '                              <div class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
                     + '                                  <input tabindex="4" id="VA012_dtStatementDate_' + $self.windowNo + '" type="date">'
-                    + '                              </div>'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
+                    + '                              </div></div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div class="va012-form-group va012-form-data" >'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_Amount") + '<sup style="color: red;">*</sup></label>'
-                    + '                                  <a tabindex="5" id="VA012_btnIn_' + $self.windowNo + '" v_active="1" class="va012-inout-icon va012-active">In</a>'
-                    + '                                  <a tabindex="6" id="VA012_btnOut_' + $self.windowNo + '" v_active="0" class="va012-inout-icon va012-inactive">Out</a>'
-                    + '                                  <input tabindex="7" autofocus  value="0.00" id="VA012_txtAmount_' + $self.windowNo + '" type="number" class="va012-input-size-amt va012-right-align va012-txtamount">'
-                    + '                                <a id="VA012_btnAmount_' + $self.windowNo + '" class="va012-add-icon va012-info-icon fa fa-info"></a>'
+                    + '                              <div class="va012-form-group va012-form-data input-group vis-input-wrap">'
+                    + '<div class="input-group-prepend">'
+                    + '                                  <a tabindex="5" id="VA012_btnIn_' + $self.windowNo + '" v_active="1" class="va012-inout-icon va012-active input-group-text">In</a>'
+                    + '                                  <a tabindex="6" id="VA012_btnOut_' + $self.windowNo + '" v_active="0" class="va012-inout-icon va012-inactive input-group-text">Out</a>'
+                    +'</div>'
+                    +'<div class="vis-control-wrap">'
+                    + '<input tabindex="7" autofocus  value="0.00" id="VA012_txtAmount_' + $self.windowNo + '" type="number" class="va012-input-size-amt va012-txtamount" placeholder=" " data-placeholder="" data-hasbtn=" ">'
+                    + '<label>' + VIS.Msg.getMsg("VA012_Amount") + '<sup style="color: red;">*</sup></label></div>'
+                    + '<div class="input-group-append"><button id="VA012_btnAmount_' + $self.windowNo + '" class="input-group-text"><i class="va012-add-icon va012-info-icon fa fa-info"></i></button></div>'
                     + '                              </div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
-                    //+ '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    //+ '                              <div class="va012-form-group va012-form-data">'
-                    //+ '                                  <label>' + VIS.Msg.getMsg("VA012_Currency") + '</label>'
-                    //+ '                                  <select id="VA012_cmbCurrency_' + $self.windowNo + '">'
-                    ////+ '                                  <label>' + VIS.Msg.getMsg("VA012_PaymentMethod") + '</label>'
-                    ////+ '                                  <select id="VA012_cmbPaymentMethod_' + $self.windowNo + '">'
-                    //+ '                                  </select>'
-                    //+ '                              </div>'
-                    //+ '                              <!-- end of form-group -->'
-                    //+ '                          </div>'
-                    //+ '                          <!-- end of col -->'
-                    + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div class="va012-form-group va012-form-data">'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_VoucherMatch") + '<sup style="color: red;">*</sup></label>'
+                    + '<div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '<div class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
                     + '                                  <select tabindex="8" id="VA012_cmbVoucherMatch_' + $self.windowNo + '">'
                     + '                                  </select>'
-                    + '                              </div>'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_VoucherMatch") + '<sup style="color: red;">*</sup></label>'
+                    + '                              </div></div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
@@ -686,38 +678,19 @@
                     + '                      <!-- end of row -->'
                     + '  '
                     + '                      <div class="row va012-fl-padd">'
-                    //+ '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    //+ '                              <div class="va012-form-group va012-form-data" >'
-                    //+ '                                  <label>' + VIS.Msg.getMsg("VA012_Amount") + '</label>'
-                    //+ '                                  <input value="0" id="VA012_txtAmount_' + $self.windowNo + '" type="number" class="va012-input-size">'
-                    //  + '                                <a id="VA012_btnAmount_' + $self.windowNo + '" class="va012-info-icon"></a>'
-                    //+ '                              </div>'
-                    //+ '                              <!-- end of form-group -->'
-                    //+ '                          </div>'
-                    //+ '                          <!-- end of col -->'
-
-                    //+ '                          <div class="col-md-2 col-sm-2 va012-padd-0">'
-                    //+ '                              <div class="va012-form-group va012-form-data">'
-                    //+ '                                  <label>' + VIS.Msg.getMsg("VA012_Currency") + '</label>'
-                    //+ '                                  <select id="VA012_cmbCurrency_' + $self.windowNo + '">'
-                    //+ '                                  </select>'
-                    //+ '                              </div>'
-                    //+ '                              <!-- end of form-group -->'
-                    //+ '                          </div>'
-                    //+ '                          <!-- end of col -->'
                     + '                          <div class="col-md-8 col-sm-8 va012-padd-0">'
-                    + '                              <div class="va012-form-group va012-form-data">'
+                    + '                              <div class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
+                    + '                                  <input tabindex="9" id="VA012_txtDescription_' + $self.windowNo + '" type="text" placeholder=" " data-placeholder="">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_Description") + '</label>'
-                    + '                                  <input tabindex="9" id="VA012_txtDescription_' + $self.windowNo + '" type="text">'
-                    + '                              </div>'
+                    + '                              </div></div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div id="VA012_divVoucherNo_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                              <div id="VA012_divVoucherNo_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
+                    + '                                  <input tabindex="9" id="VA012_txtVoucherNo_' + $self.windowNo + '" type="text" placeholder=" " data-placeholder="">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_VoucherNo") + '</label>'
-                    + '                                  <input tabindex="9" id="VA012_txtVoucherNo_' + $self.windowNo + '" type="text">'
-                    + '                              </div>'
+                    + '                              </div></div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
@@ -729,28 +702,28 @@
                     + '                      <div class="row va012-fl-padd">'
                     //  + '                          <div style="padding-left: 7px;padding-right: 7px;">'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                 <div id="VA012_divTrxAmt_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                 <div id="VA012_divTrxAmt_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
+                    + '                                   <input disabled tabindex="9" id="VA012_txtTrxAmt_' + $self.windowNo + '" type="number" placeholder=" " data-placeholder="">'
                     + '                                   <label>' + VIS.Msg.getMsg("VA012_TrxAmt") + '</label>'
-                    + '                                   <input disabled tabindex="9" id="VA012_txtTrxAmt_' + $self.windowNo + '" type="number" class="va012-right-align">'
-                    + '                                 </div>'
+                    + '                                 </div></div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
 
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                 <div id="VA012_divDifference_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                   <label>' + VIS.Msg.getMsg("VA012_Difference") + '</label>'
-                    + '                                   <input disabled tabindex="9" vchangable="Y" id="VA012_txtDifference_' + $self.windowNo + '" type="number" class="va012-right-align">'
-                    + '                                 </div>'
+                    + '                                 <div id="VA012_divDifference_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
+                    + '                                   <input disabled tabindex="9" vchangable="Y" id="VA012_txtDifference_' + $self.windowNo + '" type="number" placeholder=" " data-placeholder="">'
+                    + '<label>' + VIS.Msg.getMsg("VA012_Difference") + '</label>'
+                    + '                                 </div></div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div id="VA012_divDifferenceType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_DifferenceType") + '</label>'
+                    + '                              <div id="VA012_divDifferenceType_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
                     + '                                  <select tabindex="9" id="VA012_cmbDifferenceType_' + $self.windowNo + '">'
                     + '                                  </select>'
-                    + '                              </div>'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_DifferenceType") + '</label>'
+                    + '                              </div></div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
@@ -767,11 +740,11 @@
 
 
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divContraType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ContraType") + '</label>'
+                    + '                                  <div id="VA012_divContraType_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
                     + '                                      <select tabindex="10" id="VA012_cmbContraType_' + $self.windowNo + '">'
                     + '                                      </select>'
-                    + '                                  </div>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ContraType") + '</label>'
+                    + '                                  </div></div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
@@ -779,34 +752,24 @@
 
 
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divCashBook_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CashBook") + '</label>'
+                    + '                                  <div id="VA012_divCashBook_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
                     + '                                      <select tabindex="10" id="VA012_cmbCashBook_' + $self.windowNo + '">'
                     + '                                      </select>'
-                    + '                                  </div>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CashBook") + '</label>'
+                    + '                                  </div></div>'
 
-                    + '                                  <div id="VA012_divCtrlCashLine_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CashJournalLine") + '</label>'
-                    + '                                      <div id="VA012_ctrlCashLine_' + $self.windowNo + '" ></div>'
+                    + '                                  <div id="VA012_divCtrlCashLine_' + $self.windowNo + '">'
+                    + '                                      <div id="VA012_ctrlCashLine_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"></div>'
                     + '                                  </div>'
 
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
-                    //+ '                              <div class="col-md-3 col-sm-3 va012-padd-0">'
-                    //+ '                                  <div id="VA012_divTransferType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    //+ '                                      <label>' + VIS.Msg.getMsg("VA012_TransferType") + '</label>'
-                    //+ '                                      <select tabindex="11" id="VA012_cmbTransferType_' + $self.windowNo + '">'
-                    //+ '                                      </select>'
-                    //+ '                                  </div>'
-                    //+ '                                  <!-- end of form-group -->'
-                    //+ '                              </div>'
-                    //+ '                              <!-- end of col -->'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divCheckNo_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CheckNo") + '</label>'
+                    + '                                  <div id="VA012_divCheckNo_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
                     + '                                      <input  disabled tabindex="12" id="VA012_txtCheckNo_' + $self.windowNo + '" type="text">'
-                    + '                                  </div>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CheckNo") + '</label>'
+                    + '                                  </div></div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
@@ -821,10 +784,10 @@
                     + '                      <div class="row va012-fl-padd">'
                     //  + '                          <div id="VA012_divVoucher_' + $self.windowNo + '" style=" padding-left: 7px;padding-right: 7px;">'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divCharge_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Charge") + '</label>'
-                    + '                                      <div style=" position: relative; float: left; width: 100%; ">'
+                    + '                                  <div id="VA012_divCharge_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
+                    //+ '                                      <div style=" position: relative; float: left; width: 100%; ">'
                     + '                                      <input tabindex="10" chargeid="" type="text" id="VA012_txtCharge_' + $self.windowNo + '" style=" width: 100%; ">'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Charge") + '</label>'
                     + '                                      <img id="VA012_btnCharge_' + $self.windowNo + '" class="VA012-img-combo" alt="">'
                     + '                                     </div>'
                     //+ '                                      <select id="VA012_cmbCharge_' + $self.windowNo + '">'
@@ -834,19 +797,19 @@
                     + '                              </div>'
                     + '                              <!-- end of col -->'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divTaxRate_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_TaxRate") + '</label>'
+                    + '                                  <div id="VA012_divTaxRate_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
                     + '                                      <select tabindex="11" id="VA012_cmbTaxRate_' + $self.windowNo + '">'
                     + '                                      </select>'
-                    + '                                  </div>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_TaxRate") + '</label>'
+                    + '                                  </div></div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divTaxAmount_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_TaxAmount") + '</label>'
+                    + '                                  <div id="VA012_divTaxAmount_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap">'
                     + '                                      <input tabindex="12" class="va012-right-align"  value="0.00" id="VA012_txtTaxAmount_' + $self.windowNo + '" type="number">'
-                    + '                                  </div>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_TaxAmount") + '</label>'
+                    + '                                  </div></div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
@@ -861,25 +824,22 @@
                     + '                      <div class="row va012-fl-padd">'
                     // + '                          <div id="VA012_divMatch_' + $self.windowNo + '" style="padding-left: 7px;padding-right: 7px;">'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divCtrlPayment_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Payment") + '</label>'
-                    + '                                      <div id="VA012_ctrlPayment_' + $self.windowNo + '" ></div>'
+                    + '                                  <div id="VA012_divCtrlPayment_' + $self.windowNo + '">'
+                    + '                                      <div id="VA012_ctrlPayment_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"></div>'
                     + '                                  </div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divCtrlInvoice_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Invoice") + '</label>'
-                    + '                                      <div id="VA012_ctrlInvoice_' + $self.windowNo + '" ></div>'
+                    + '                                  <div id="VA012_divCtrlInvoice_' + $self.windowNo + '">'
+                    + '                                      <div id="VA012_ctrlInvoice_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"></div>'
                     + '                                  </div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divCtrlBusinessPartner_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_BusinessPartner") + '</label>'
-                    + '                                      <div id="VA012_ctrlBusinessPartner_' + $self.windowNo + '" ></div>'
+                    + '                                  <div id="VA012_divCtrlBusinessPartner_' + $self.windowNo + '">'
+                    + '                                      <div id="VA012_ctrlBusinessPartner_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"></div>'
                     + '                                  </div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
@@ -890,18 +850,17 @@
                     + '  '
                     + '                      <div class="row va012-fl-padd">'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div id="VA012_divPaymentSchedule_' + $self.windowNo + '" class="va012-form-data" >'
-                    + '                              <label>' + VIS.Msg.getMsg("VA012_PaymentSchedules") + '</label>'
-                    + '                              <input disabled id="VA012_txtPaymentSchedule_' + $self.windowNo + '" type="text" class="va012-input-size">'
-                    + '                              <a tabindex="13"  id="VA012_btnPaymentSchedule_' + $self.windowNo + '" class="va012-edit-icon va012-add-icon va012-info-icon vis vis-pencil"></a>'
+                    + '                              <div id="VA012_divPaymentSchedule_' + $self.windowNo + '" class="va012-form-data input-group vis-input-wrap"><div class="vis-control-wrap" >'
+                    + '                              <input disabled id="VA012_txtPaymentSchedule_' + $self.windowNo + '" type="text" class="va012-input-size" placeholder=" " data-placeholder="" data-hasbtn=" ">'
+                    + '                              <label>' + VIS.Msg.getMsg("VA012_PaymentSchedules") + '</label></div>'
+                    + '<div class="input-group-append"><a tabindex="13"  id="VA012_btnPaymentSchedule_' + $self.windowNo + '" class="va012-edit-icon va012-add-icon va012-info-icon vis vis-pencil input-group-text"></a></div>'
                     + '                              </div>'
                     + '                              <!-- end of form-data -->'
                     + '                          </div>'
                     + '                          <!-- end of col -->'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div id="VA012_divPrepayOrder_' + $self.windowNo + '" class="va012-form-data" >'
-                    + '                              <label>' + VIS.Msg.getMsg("VA012_PrepayOrders") + '</label>'
-                    + '                              <div id="VA012_ctrlOrder_' + $self.windowNo + '" ></div>'
+                    + '                              <div id="VA012_divPrepayOrder_' + $self.windowNo + '">'
+                    + '                              <div id="VA012_ctrlOrder_' + $self.windowNo + '" class="va012-form-group va012-form-data input-group vis-input-wrap"></div>'
                     //+ '                              <input disabled id="VA012_txtPrepayOrder_' + $self.windowNo + '" type="text" class="va012-input-size">'
                     //+ '                              <a tabindex="1" id="VA012_btnPrepay_' + $self.windowNo + '" class="va012-edit-icon"></a>'
                     + '                              </div>'
@@ -1019,7 +978,7 @@
                     + '                      <!-- end of row -->'
 
                     + '                     <div class="row">'
-                    + '                          <div class="col-md-12 col-sm-12" style=" padding-right: 5px; ">'
+                    + '                          <div class="col-md-12 col-sm-12">'
                     + '                           <div class="va012-right-search">'
                     + '                            <div class="va012-search-wrap">'
                     + '                               <input id="VA012_txtSearch_' + $self.windowNo + '" value="" placeholder="' + VIS.Msg.getMsg("VA012_Search") + '..." type="text">'
@@ -2514,46 +2473,32 @@
                     + "</div></div>"
 
                     + "<div style='border: 2px solid rgba(var(--v-c-primary), 1);padding: 10px; float: left;'>"
-                    + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_Bank") + "</label>"
+                    + "<div class='va012-popform-data input-group vis-input-wrap'><div class='vis-control-wrap'>"
                     + "<select id='VA012_STAT_cmbBank_" + $self.windowNo + "' class='vis-ev-col-readonly' disabled>" //Made readonly
-                    + "</select></div> "
+                    + "</select>"
+                    + "<label>" + VIS.Msg.getMsg("VA012_Bank") + "</label></div></div>"
 
-                    + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_BankAccount") + "</label>"
+                    + "<div class='va012-popform-data input-group vis-input-wrap'><div class='vis-control-wrap'>"
                     + "<select id='VA012_STAT_cmbBankAccount_" + $self.windowNo + "' class='vis-ev-col-readonly' disabled>" //Made readonly
-                    + "</select></div>"
+                    + "</select>"
+                    + "<label>" + VIS.Msg.getMsg("VA012_BankAccount") + "</label></div></div>"
                     /*Added New Parameter for information purpose the statement date which was selected on form*/
-                    + '<div class=va012-popform-data>'
+                    + "<div class='va012-popform-data input-group vis-input-wrap'><div class='vis-control-wrap'>"
+                    + '<input type=date max="9999-12-31" placeholder=" " data-placeholder="" class=vis-ev-col-readonly disabled id=VA012_STAT_statementDate_' + $self.windowNo + '>'
                     + '<label id=VA012_STAT_lblStatementDate_' + $self.windowNo + '>' + VIS.Msg.getMsg("VA012_StatementDate") + '</label>'
-                    + '<input type=date max="9999-12-31" class=vis-ev-col-readonly disabled id=VA012_STAT_statementDate_' + $self.windowNo + '>'
-                    + '</div>'
-                    + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_ClassName") + '<sup style="color: red;">*</sup></label>'
+                    + '</div></div>'
+                    + "<div class='va012-popform-data input-group vis-input-wrap'><div class='vis-control-wrap'>"
                     + "<select id='VA012_STAT_cmbBankAccountClassName_" + $self.windowNo + "'>"
-                    + "</select></div>"
+                    + "</select>"
+                    + "<label>" + VIS.Msg.getMsg("VA012_ClassName") + '<sup style="color: red;">*</sup></label></div></div>'
 
+                    + "<div class='va012-popform-data input-group vis-input-wrap'><div class='vis-control-wrap'>"
+                    + "<input type='text' placeholder=' ' data-placeholder='' id='VA012_STAT_txtStatementNo_" + $self.windowNo + "' /> "
+                    + "<label>" + VIS.Msg.getMsg("VA012_StatementNumber") + '<sup style="color: red;">*</sup></label></div></div>'
 
-                    //+ "<div class='va012-popform-data' id='VA012_BankChargeDiv' style='visibility: hidden;'>"
-                    //+ "<label>" + VIS.Msg.getMsg("VA012_BankCharges") + "</label>"
-                    //+ "<div><select id='VA012_STAT_cmbBankAccountCharges_" + $self.windowNo + "'>"
-                    //+ "</select></div>"
-
-
-                    + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_StatementNumber") + '<sup style="color: red;">*</sup></label>'
-                    + "<input type='text' id='VA012_STAT_txtStatementNo_" + $self.windowNo + "' /> </div>"
-
-                    //+ "<div class='va012-popform-data'>"
-                    //+ "<label>" + VIS.Msg.getMsg("VA012_Format") + "</label>"
-                    //+ "<select>"
-                    //+ "<option>xlsx</option>"
-                    //+ "<option>csv</option>"
-                    //+ "</select></div>"
-
-                    + "<div class='va012-popform-data va012-pop-file'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_SelectFile") + '<sup style="color: red;">*</sup></label>'
-                    + "<input type='text' id='VA012_ctrlLoadFileTxt_" + $self.windowNo + "' disabled>"
+                    + "<div class='va012-popform-data va012-pop-file input-group vis-input-wrap'><div class='vis-control-wrap'>"
+                    + "<input type='text' placeholder=' ' data-placeholder='' id='VA012_ctrlLoadFileTxt_" + $self.windowNo + "' disabled>"
+                    + "<label>" + VIS.Msg.getMsg("VA012_SelectFile") + '<sup style="color: red;">*</sup></label></div>'
                     + "<div class='va012-file-upload'>"
                     + "<label for='file-input' class='va012-file-label'>" + VIS.Msg.getMsg("VA012_Browse") + "</label>"
                     + "<input id='VA012_ctrlLoadFile_" + $self.windowNo + "' type='file' accept='.csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'/>"
@@ -3512,52 +3457,33 @@
                 $match = $("<div class='va012-popform-content'>");
                 var _match = "";
                 _match =
-                    "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_StatementNo") + '<sup style="color: red;">*</sup></label>'
+                    "<div class='va012-popform-data input-group vis-input-wrap'><div class='vis-control-wrap'>"
                     + "<select id='VA012_cmbStatementNo_" + $self.windowNo + "'>"
-                    + "</select></div> "
+                    + "</select> "
+                    + "<label>" + VIS.Msg.getMsg("VA012_StatementNo") + "<sup style='color: red;'>*</sup></label></div></div>"
 
-                    + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_MatchingBase") + '<sup style="color: red;">*</sup></label>'
+                    + "<div class='va012-popform-data input-group vis-input-wrap'><div class='vis-control-wrap'>"
                     + "<select id='VA012_cmbMatchingBase_" + $self.windowNo + "'>"
-                    //Commeted because now we laod this from database
-                    //+ "<option value='0'></option>"
-
-                    // + "<option value='BP'>" + VIS.Msg.getMsg("VA012_BusinessPartner") + "</option>"
-                    // + "<option value='PA'>" + VIS.Msg.getMsg("VA012_PaymentAmount") + "</option>"
-                    // + "<option value='CN'>" + VIS.Msg.getMsg("VA012_CheckNumber") + "</option>"
-                    // + "<option value='CH'>" + VIS.Msg.getMsg("VA012_Charge") + "</option>"
-                    // + "<option value='IN'>" + VIS.Msg.getMsg("VA012_Invoice") + "</option>"
-                    // + "<option value='OR'>" + VIS.Msg.getMsg("VA012_Order") + "</option>"
-                    // + "<option value='AC'>" + VIS.Msg.getMsg("VA012_AuthCode") + "</option>"
-
-                    + "</select></div> "
+                    + "</select>"
+                    + "<label>" + VIS.Msg.getMsg("VA012_MatchingBase") + "<sup style='color: red;'>*</sup></label></div></div>"
                     + "<div id='VA012_divMatchingBase_" + $self.windowNo + "' class='VA012-divmatchingbase'>"
                     + "</div>"
-                    + "<div class='va012-popform-data'>"
-                    + "<label>" + VIS.Msg.getMsg("VA012_MatchingCriteria") + '<sup style="color: red;">*</sup></label>'
+                    + "<div class='va012-popform-data input-group vis-input-wrap'><div class='vis-control-wrap'>"
                     + "<select id='VA012_cmbMatchingCriteria_" + $self.windowNo + "'>"
                     + "<option value='0'></option>"
                     + "<option value='AT'>" + VIS.Msg.getMsg("VA012_MatchAnyTwo") + "</option>"
                     + "<option value='AR'>" + VIS.Msg.getMsg("VA012_MatchAnyThree") + "</option>"
                     + "<option value='AL'>" + VIS.Msg.getMsg("VA012_MatchAll") + "</option>"
+                    + "</select>"
+                    + "<label>" + VIS.Msg.getMsg("VA012_MatchingCriteria") + "<sup style='color: red;'>*</sup></label></div></div>"
 
-                    + "</select></div> "
+                    + "<div class='va012-popform-data input-group vis-input-wrap' id='VA012_ChargeSrch_" + $self.windowNo + "'>"
+                    + "</div></div>"
 
-                    //+ "<div class='va012-popform-data'>"
-                    //+ "<label title = '" + VIS.Msg.getMsg("VA012_SetChargeType") + "' > " + VIS.Msg.getMsg("VA012_Charge") + '<sup style="color: red;">*</sup></label>'
-                    //+ "<select id='VA012_cmbChargeType_" + $self.windowNo + "'>"
-                    //+ "</select></div> "
-
-                    + "<div class='va012-popform-data'>"
-                    + "<label title = '" + VIS.Msg.getMsg("VA012_SetChargeType") + "' > " + VIS.Msg.getMsg("VA012_Charge") + '<sup style="color: red;">*</sup></label>'
-                    + "<div id='VA012_ChargeSrch_" + $self.windowNo + "' class='d-flex'>"
-                    + "</div></div> "
-
-                    + "<div class='va012-popform-data'>"
-                    + "<label title =' " + VIS.Msg.getMsg("VA012_SetTaxRate") + "' >" + VIS.Msg.getMsg("VA012_TaxRate") + '<sup style="color: red;">*</sup></label>'
+                    + "<div class='va012-popform-data input-group vis-input-wrap'><div class='vis-control-wrap'>"
                     + "<select id='VA012_cmbTaxRate_" + $self.windowNo + "'>"
-                    + "</select></div> "
+                    + "</select>"
+                    + "<label title =' " + VIS.Msg.getMsg("VA012_SetTaxRate") + "' >" + VIS.Msg.getMsg("VA012_TaxRate") + "<sup style='color: red;'>*</sup></label></div></div>"
 
                     + "</div>";
                 $match.append(_match);
@@ -3633,7 +3559,7 @@
                 matchDialog.setContent($match);
                 matchDialog.setTitle(VIS.Msg.getMsg("VA012_MatchStatement"));
                 matchDialog.setWidth(700);
-                matchDialog.setHeight(600);
+                //matchDialog.setHeight(600);
                 matchDialog.setEnableResize(false);
                 matchDialog.setModal(true);
                 matchDialog.show();
@@ -3649,7 +3575,13 @@
                     //Added Charge Search Lookup
                     _ChargeLookUp = VIS.MLookupFactory.getMLookUp(VIS.Env.getCtx(), $self.windowNo, 3787, VIS.DisplayType.Search);
                     $ChargeControl = new VIS.Controls.VTextBoxButton("C_Charge_ID", true, false, true, VIS.DisplayType.Search, _ChargeLookUp);
-                    _chargeSrch.append($ChargeControl.getControl().css('flex', '1')).append($ChargeControl.getBtn(0).css('width', '30px').css('height', '30px').css('padding', '0px').css('border-color', 'rgba(var(--v-c-on-secondary), .2)'));
+                    var $ChargeCtrlWrp = $('<div class="vis-control-wrap">');
+                    var $ChargeBtnWrp = $('<div class="input-group-append">');
+                    _chargeSrch.append($ChargeCtrlWrp);
+                    _chargeSrch.append($ChargeBtnWrp);
+                    $ChargeCtrlWrp.append($ChargeControl.getControl().attr('placeholder', ' ').attr('data-placeholder', '').attr('data-hasbtn', ' '));
+                    $ChargeCtrlWrp.append("<label title = '" + VIS.Msg.getMsg("VA012_SetChargeType") + "' > " + VIS.Msg.getMsg("VA012_Charge") + "<sup style='color: red;'>*</sup></label>");
+                    $ChargeBtnWrp.append($ChargeControl.getBtn(0));
                     //VIS.Utility.Util.getValueOfInt($ChargeControl.value)
                 }
 
@@ -3912,21 +3844,21 @@
                 $paymentSchedule = $("<div class='va012-popform-content'>");
                 var _paymentSchedule = "";
 
-                _paymentSchedule = "<div>"
-                    + " <label>" + VIS.Msg.getMsg("VA012_BusinessPartner") + "</label>"
-                    + " <div id='VA012_ctrlPSBP_" + $self.windowNo + "' ></div>"
+                _paymentSchedule = "<div id='VA012_ctrlPSBP_" + $self.windowNo + "' class='input-group vis-input-wrap'>"
+                    //+ " <label>" + VIS.Msg.getMsg("VA012_BusinessPartner") + "</label>"
+                    //+ " <div ></div>"
                     + " </div>";
 
-                _paymentSchedule += "<div>"
-                    + " <label>" + VIS.Msg.getMsg("VA012_Invoice") + "</label>"
-                    + " <div id='VA012_ctrlPSInvoice_" + $self.windowNo + "' ></div>"
+                _paymentSchedule += "<div id='VA012_ctrlPSInvoice_" + $self.windowNo + "' class='input-group vis-input-wrap'>"
+                    //+ " <label>" + VIS.Msg.getMsg("VA012_Invoice") + "</label>"
+                    //+ " <div ></div>"
                     + " </div>";
 
 
-                _paymentSchedule += "<div>"
+                _paymentSchedule += "<div class='input-group vis-input-wrap'><div class='vis-control-wrap'>"
+                    + " <select id='VA012_cmbPaymentSchedule_" + $self.windowNo + "'></select>"
                     + " <label>" + VIS.Msg.getMsg("VA012_PaymentSchedules") + "</label>"
-                    + " <select id='VA012_cmbPaymentSchedule_" + $self.windowNo + "'  style=' width: 100%; ' ></select>"
-                    + " </div>"
+                    + " </div></div>"
 
                 _paymentSchedule += "<div id='VA012_divPaymentSchedules_" + $self.windowNo + "' class='VA012-divmatchingbase'>"
                     + "</div> </div>";
@@ -4070,10 +4002,15 @@
                 function loadPSInvoice() {
                     _lookupPSInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.Search, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL') AND C_BPartner_ID=" + _psBpSelectedVal);
                     $_ctrlPSInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.Search, _lookupPSInvoice);
-                    $_ctrlPSInvoice.getControl().addClass("va012-input-size-2");
-                    _ctrlPSInvoice.append($_ctrlPSInvoice.getControl());
-                    _ctrlPSInvoice.append($_ctrlPSInvoice.getBtn(0));
-                    _ctrlPSInvoice.append($_ctrlPSInvoice.getBtn(1));
+                    var $PSInvoiceCtrlWrap = $('<div class="vis-control-wrap">');
+                    var $PSInvoiceBtnWrap = $('<div class="input-group-append">');
+                    //$_ctrlPSInvoice.getControl().addClass("va012-input-size-2");
+                    _ctrlPSInvoice.append($PSInvoiceCtrlWrap);
+                    _ctrlPSInvoice.append($PSInvoiceBtnWrap);
+                    $PSInvoiceCtrlWrap.append($_ctrlPSInvoice.getControl().attr('placeholder', ' ').attr('data-placeholder', '').attr('data-hasbtn', ' '));
+                    $PSInvoiceCtrlWrap.append("<label>" + VIS.Msg.getMsg("VA012_Invoice") + "</label>");
+                    $PSInvoiceBtnWrap.append($_ctrlPSInvoice.getBtn(0));
+                    $PSInvoiceBtnWrap.append($_ctrlPSInvoice.getBtn(1));
                     $_ctrlPSInvoice.fireValueChanged = function () {
                         _psInvoiceSelectedVal = 0;
                         _psInvoiceSelectedVal = $_ctrlPSInvoice.value;
@@ -4085,10 +4022,15 @@
                 function loadPSBP() {
                     _lookupPSBP = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 2893, VIS.DisplayType.Search, "C_BPartner_ID", 0, false, null);
                     $_ctrlPSBP = new VIS.Controls.VTextBoxButton("C_BPartner_ID", false, false, true, VIS.DisplayType.Search, _lookupBusinessPartner);
-                    $_ctrlPSBP.getControl().addClass("va012-input-size-2");
-                    _ctrlPSBP.append($_ctrlPSBP.getControl());
-                    _ctrlPSBP.append($_ctrlPSBP.getBtn(0));
-                    _ctrlPSBP.append($_ctrlPSBP.getBtn(1));
+                    var $PSBPCtrlWrap = $('<div class="vis-control-wrap">');
+                    var $PSBPBtnWrap = $('<div class="input-group-append">');
+                    //$_ctrlPSBP.getControl().addClass("va012-input-size-2");
+                    _ctrlPSBP.append($PSBPCtrlWrap);
+                    _ctrlPSBP.append($PSBPBtnWrap);
+                    $PSBPCtrlWrap.append($_ctrlPSBP.getControl().attr('placeholder', ' ').attr('data-placeholder', '').attr('data-hasbtn', ' '));
+                    $PSBPCtrlWrap.append("<label>" + VIS.Msg.getMsg("VA012_BusinessPartner") + "</label>");
+                    $PSBPBtnWrap.append($_ctrlPSBP.getBtn(0));
+                    $PSBPBtnWrap.append($_ctrlPSBP.getBtn(1));
                     $_ctrlPSBP.fireValueChanged = function () {
                         _psBpSelectedVal = 0;
                         _psBpSelectedVal = $_ctrlPSBP.value;
@@ -4243,11 +4185,11 @@
                 newRecordForm.loadCashLine();
                 //to check mandatory fields and their logic to set background color
                 if (parseFloat(_txtAmount.val()) <= 0)
-                    _txtAmount.addClass("va012-mandatory");
+                    _txtAmount.addClass("vis-ev-col-mandatory");
                 if (_txtStatementNo.val() != "")
-                    _txtStatementNo.removeClass("va012-mandatory");
+                    _txtStatementNo.removeClass("vis-ev-col-mandatory");
                 if (_dtStatementDate.val() != "")
-                    _dtStatementDate.removeClass("va012-mandatory");
+                    _dtStatementDate.removeClass("vis-ev-col-mandatory");
 
                 _txtCharge.on('blur', function () {
                     if (_txtCharge.val() == "" || _txtCharge.val() == null) {
@@ -4334,11 +4276,11 @@
                     }
                     //to check mandatory fields and their logic to set background color
                     if (parseFloat(_txtAmount.val()) <= 0)
-                        _txtAmount.addClass("va012-mandatory");
+                        _txtAmount.addClass("vis-ev-col-mandatory");
                     if (_txtStatementNo.val() != "")
-                        _txtStatementNo.removeClass("va012-mandatory");
+                        _txtStatementNo.removeClass("vis-ev-col-mandatory");
                     if (_dtStatementDate.val() != "")
-                        _dtStatementDate.removeClass("va012-mandatory");
+                        _dtStatementDate.removeClass("vis-ev-col-mandatory");
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
                     newRecordForm.refreshForm();
@@ -4990,10 +4932,10 @@
                 //on change event of Statement Name to set background color logic
                 _txtStatementNo.on("change", function () {
                     if (_txtStatementNo.val() == "") {
-                        _txtStatementNo.addClass("va012-mandatory");
+                        _txtStatementNo.addClass("vis-ev-col-mandatory");
                     }
                     else
-                        _txtStatementNo.removeClass("va012-mandatory");
+                        _txtStatementNo.removeClass("vis-ev-col-mandatory");
 
                 });
                 _txtStatementLine.on("keypress", function (event) {
@@ -5056,12 +4998,12 @@
                 _txtAmount.on("blur", function () {
                     if (_txtAmount.val() == "" || _txtAmount.val() == null) {
                         _txtAmount.val(0);
-                        _txtAmount.addClass("va012-mandatory");
+                        _txtAmount.addClass("vis-ev-col-mandatory");
                     }
                     if (parseFloat(_txtAmount.val()) > 0)
-                        _txtAmount.removeClass("va012-mandatory");
+                        _txtAmount.removeClass("vis-ev-col-mandatory");
                     else
-                        _txtAmount.addClass("va012-mandatory");
+                        _txtAmount.addClass("vis-ev-col-mandatory");
 
                     _txtAmount.val(parseFloat(_txtAmount.val()).toFixed(_stdPrecision));
 
@@ -5138,10 +5080,10 @@
                 //on change event of Statement Date to set background color logic
                 _dtStatementDate.on("change", function () {
                     if (_dtStatementDate.val() == "") {
-                        _dtStatementDate.addClass("va012-mandatory");
+                        _dtStatementDate.addClass("vis-ev-col-mandatory");
                     }
                     else {
-                        _dtStatementDate.removeClass("va012-mandatory");
+                        _dtStatementDate.removeClass("vis-ev-col-mandatory");
                     }
                 });
                 _btnAmount.mousemove(function (e) {
@@ -5418,11 +5360,16 @@
 
                 _lookupPayment = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Payment_ID", 0, false, " DocStatus IN ('CO','CL') AND C_BankAccount_ID = " + _cmbBankAccount.val());
                 $_ctrlPayment = new VIS.Controls.VTextBoxButton("C_Payment_ID", false, false, true, VIS.DisplayType.Search, _lookupPayment);
-                $_ctrlPayment.getControl().addClass("va012-input-size-2");
+                var $PaymentCtrlWrap = $('<div class="vis-control-wrap">');
+                var $PaymentBtnWrap = $('<div class="input-group-append">');
+                //$_ctrlPayment.getControl().addClass("va012-input-size-2");
                 $_ctrlPayment.getControl().attr("tabindex", "10");
-                _ctrlPayment.append($_ctrlPayment.getControl());
-                _ctrlPayment.append($_ctrlPayment.getBtn(0));
-                _ctrlPayment.append($_ctrlPayment.getBtn(1));
+                _ctrlPayment.append($PaymentCtrlWrap);
+                _ctrlPayment.append($PaymentBtnWrap);
+                $PaymentCtrlWrap.append($_ctrlPayment.getControl().attr('placeholder', ' ').attr('data-placeholder', '').attr('data-hasbtn', ' '));
+                $PaymentCtrlWrap.append('<label>' + VIS.Msg.getMsg("VA012_Payment") + '</label>');
+                $PaymentBtnWrap.append($_ctrlPayment.getBtn(0));
+                $PaymentBtnWrap.append($_ctrlPayment.getBtn(1));
                 $_ctrlPayment.fireValueChanged = function (e) {
 
 
@@ -5465,11 +5412,16 @@
                     + "  AND PM.VA009_PAYMENTBASETYPE! ='B')";
                 _lookupOrder = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Order_ID", 0, false, _orderWhere);
                 $_ctrlOrder = new VIS.Controls.VTextBoxButton("C_Order_ID", false, false, true, VIS.DisplayType.Search, _lookupOrder);
-                $_ctrlOrder.getControl().addClass("va012-input-size-2");
+                var $OrderCtrlWrap = $('<div class="vis-control-wrap">');
+                var $OrderBtnWrap = $('<div class="input-group-append">');
+                //$_ctrlOrder.getControl().addClass("va012-input-size-2");
                 $_ctrlOrder.getControl().attr("tabindex", "13");
-                _ctrlOrder.append($_ctrlOrder.getControl());
-                _ctrlOrder.append($_ctrlOrder.getBtn(0));
-                _ctrlOrder.append($_ctrlOrder.getBtn(1));
+                _ctrlOrder.append($OrderCtrlWrap);
+                _ctrlOrder.append($OrderBtnWrap);
+                $OrderCtrlWrap.append($_ctrlOrder.getControl().attr('placeholder', ' ').attr('data-placeholder', '').attr('data-hasbtn', ' '));
+                $OrderCtrlWrap.append('<label>' + VIS.Msg.getMsg("VA012_PrepayOrders") + '</label>');
+                $OrderBtnWrap.append($_ctrlOrder.getBtn(0));
+                $OrderBtnWrap.append($_ctrlOrder.getBtn(1));
 
                 $_ctrlOrder.fireValueChanged = function () {
                     _orderSelectedVal = 0;
@@ -5512,11 +5464,16 @@
                 _ctrlCashLine.html("");
                 _lookupCashLine = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 1008317, VIS.DisplayType.Search, "C_CashLine_ID", 0, false, _cashLineWhere);
                 $_ctrlCashLine = new VIS.Controls.VTextBoxButton("C_CashLine_ID", false, false, true, VIS.DisplayType.Search, _lookupCashLine);
-                $_ctrlCashLine.getControl().addClass("va012-input-size-2");
+                var $CashLineCtrlWrap = $('<div class="vis-control-wrap">');
+                var $CashLineBtnWrap = $('<div class="input-group-append">');
+                //$_ctrlCashLine.getControl().addClass("va012-input-size-2");
                 $_ctrlCashLine.getControl().attr("tabindex", "10");
-                _ctrlCashLine.append($_ctrlCashLine.getControl());
-                _ctrlCashLine.append($_ctrlCashLine.getBtn(0));
-                _ctrlCashLine.append($_ctrlCashLine.getBtn(1));
+                _ctrlCashLine.append($CashLineCtrlWrap);
+                _ctrlCashLine.append($CashLineBtnWrap);
+                $CashLineCtrlWrap.append($_ctrlCashLine.getControl().attr('placeholder', ' ').attr('data-placeholder', '').attr('data-hasbtn', ' '));
+                $CashLineCtrlWrap.append('<label>' + VIS.Msg.getMsg("VA012_CashJournalLine") + '</label>');
+                $CashLineBtnWrap.append($_ctrlCashLine.getBtn(0));
+                $CashLineBtnWrap.append($_ctrlCashLine.getBtn(1));
 
                 $_ctrlCashLine.fireValueChanged = function () {
                     _cashLineSelectedVal = 0;
@@ -5540,11 +5497,17 @@
             loadBusinessPartner: function () {
                 _lookupBusinessPartner = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 2893, VIS.DisplayType.Search, "C_BPartner_ID", 0, false, null);
                 $_ctrlBusinessPartner = new VIS.Controls.VTextBoxButton("C_BPartner_ID", false, false, true, VIS.DisplayType.Search, _lookupBusinessPartner);
-                $_ctrlBusinessPartner.getControl().addClass("va012-input-size-2");
+
+                var $BusinessPartnerCtrlWrap = $('<div class="vis-control-wrap">');
+                var $BusinessPartnerBtnWrap = $('<div class="input-group-append">');
+                //$_ctrlBusinessPartner.getControl().addClass("va012-input-size-2");
                 $_ctrlBusinessPartner.getControl().attr("tabindex", "12");
-                _ctrlBusinessPartner.append($_ctrlBusinessPartner.getControl());
-                _ctrlBusinessPartner.append($_ctrlBusinessPartner.getBtn(0));
-                _ctrlBusinessPartner.append($_ctrlBusinessPartner.getBtn(1));
+                _ctrlBusinessPartner.append($BusinessPartnerCtrlWrap);
+                _ctrlBusinessPartner.append($BusinessPartnerBtnWrap);
+                $BusinessPartnerCtrlWrap.append($_ctrlBusinessPartner.getControl().attr('placeholder', ' ').attr('data-placeholder', '').attr('data-hasbtn', ' '));
+                $BusinessPartnerCtrlWrap.append('<label>' + VIS.Msg.getMsg("VA012_BusinessPartner") + '</label>');
+                $BusinessPartnerBtnWrap.append($_ctrlBusinessPartner.getBtn(0));
+                $BusinessPartnerBtnWrap.append($_ctrlBusinessPartner.getBtn(1));
                 $_ctrlBusinessPartner.fireValueChanged = function () {
                     _bPartnerSelectedVal = 0;
                     _bPartnerSelectedVal = $_ctrlBusinessPartner.value;
@@ -5553,11 +5516,17 @@
             loadInvoice: function () {
                 _lookupInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.Search, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL')");
                 $_ctrlInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.Search, _lookupInvoice);
-                $_ctrlInvoice.getControl().addClass("va012-input-size-2");
+
+                var $InvoiceCtrlWrap = $('<div class="vis-control-wrap">');
+                var $InvoiceBtnWrap = $('<div class="input-group-append">');
+                //$_ctrlInvoice.getControl().addClass("va012-input-size-2");
                 $_ctrlInvoice.getControl().attr("tabindex", "11");
-                _ctrlInvoice.append($_ctrlInvoice.getControl());
-                _ctrlInvoice.append($_ctrlInvoice.getBtn(0));
-                _ctrlInvoice.append($_ctrlInvoice.getBtn(1));
+                _ctrlInvoice.append($InvoiceCtrlWrap);
+                _ctrlInvoice.append($InvoiceBtnWrap);
+                $InvoiceCtrlWrap.append($_ctrlInvoice.getControl().attr('placeholder', ' ').attr('data-placeholder', '').attr('data-hasbtn', ' '));
+                $InvoiceCtrlWrap.append('<label>' + VIS.Msg.getMsg("VA012_Invoice") + '</label>');
+                $InvoiceBtnWrap.append($_ctrlInvoice.getBtn(0));
+                $InvoiceBtnWrap.append($_ctrlInvoice.getBtn(1));
                 $_ctrlInvoice.fireValueChanged = function () {
                     _invoiceSelectedVal = 0;
                     _invoiceSelectedVal = $_ctrlInvoice.value;
