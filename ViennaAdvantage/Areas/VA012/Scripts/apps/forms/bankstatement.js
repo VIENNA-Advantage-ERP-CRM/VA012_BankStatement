@@ -519,7 +519,7 @@
             _lstStatement.on(VIS.Events.onTouchStartOrClick, childDialogs.selectedStatementLinesList);
             _lstPayments.on(VIS.Events.onTouchStartOrClick, childDialogs.selectedScheduleList);
             _lstPayments.on(VIS.Events.onTouchStartOrClick, function () {
-                _txtAmount.getControl().trigger('blur');
+                //_txtAmount.getControl().trigger('blur');
             });
             _statementDate.addClass("va012-mandatory");
             //Change event of Statement Date Filter
@@ -1211,7 +1211,7 @@
                         if (data != null && data != "") {
                             data = $.parseJSON($.parseJSON(data));
                             if (data._difference != 0) {
-                                _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal(data._difference.toFixed(_stdPrecision)));
+                                _txtDifference.setValue(data._difference.toFixed(_stdPrecision));
                                 _divDifferenceType.find("*").prop("disabled", false);
                                 _cmbDifferenceType.val(data._differenceType).prop('selected', true);
                                 _txtDifference.getControl().attr("vchangable", "N");
@@ -1800,7 +1800,9 @@
                                             for (var i = 0; i < _scheduleAmount.length; i++) {
                                                 amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                             }
+                                            //debugger;
                                             _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                                            //_txtTrxAmt.addVetoableChangeListener(this);
                                             _txtTrxAmt.getControl().trigger('change');
                                         }, 200);
                                     }
@@ -3402,10 +3404,10 @@
 
                     _cmbCashBook.val(_result._cmbCashBook).prop('selected', true);
                     _txtCheckNo.val(_result._txtCheckNo);
-                    _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_result._txtAmount.toFixed(_stdPrecision)));
-                    _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(_result._txtTrxAmt.toFixed(_stdPrecision)));
+                    _txtAmount.setValue(_result._txtAmount.toFixed(_stdPrecision));
+                    _txtTrxAmt.setValue(_result._txtTrxAmt.toFixed(_stdPrecision));
                     if (_cmbVoucherMatch.val() == "M" && _txtTrxAmt.getValue() != 0) {
-                        _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal(Math.abs(_result._txtDifference.toFixed(_stdPrecision))));
+                        _txtDifference.setValue(Math.abs(_result._txtDifference).toFixed(_stdPrecision));
                         if (_result._txtDifference != 0) {
                             _txtDifference.getControl().attr("vchangable", "N");
                         }
@@ -3430,6 +3432,7 @@
                         _btnIn.removeClass("va012-active");
                         _btnIn.addClass("va012-inactive");
                         _btnIn.attr("v_active", "0");
+                        _txtAmount.getControl().addClass('va012-mandatory');
                     }
                     else {
                         _btnIn.removeClass("va012-inactive");
@@ -3438,6 +3441,7 @@
                         _btnOut.removeClass("va012-active");
                         _btnOut.addClass("va012-inactive");
                         _btnOut.attr("v_active", "0");
+                        _txtAmount.getControl().removeClass('va012-mandatory');
                     }
 
 
@@ -5080,7 +5084,7 @@
 
                         //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
                         if (_txtDifference.getControl().attr("vchangable") == "Y") {
-                            _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal((_txtTrxAmt.getValue() - _txtAmount.getValue()).toFixed(_stdPrecision)));
+                            _txtDifference.setValue((Math.abs(_txtTrxAmt.getValue()) - Math.abs(_txtAmount.getValue())).toFixed(_stdPrecision));
                             if (_txtDifference.getValue() != 0) {
                                 _txtDifference.getControl().removeClass('va012-mandatory');//color change
                                 _divDifferenceType.find("*").prop("disabled", false);
@@ -5090,7 +5094,7 @@
                         if (_cmbTaxRate.val() > 0 && _txtDifference.getValue() != 0) {
                             _txtDifference.getControl().removeClass('va012-mandatory');//color change
                             var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                            _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtDifference.getValue() - (_txtDifference.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
+                            _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((Math.abs(_txtDifference.getValue()) - (Math.abs(_txtDifference.getValue()) / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
                         }
                     }
 
@@ -5103,12 +5107,10 @@
                         _txtAmount.getControl().addClass("va012-mandatory");
                     }
                     if (_txtAmount.getValue() > 0)
-                        _txtAmount.getControl().removeClass("va012-mandatory");
-                    else
                         _txtAmount.getControl().addClass("va012-mandatory");
-
-                    _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
-
+                    else
+                        _txtAmount.getControl().removeClass("va012-mandatory");
+                    _txtAmount.setValue(_txtAmount.getValue().toFixed(_stdPrecision));
                     //if (_btnOut.attr("v_active") == "1") {
                     //    if (_txtAmount.val() > 0) {
                     //        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
@@ -5124,7 +5126,7 @@
 
 
                     if (_btnOut.attr("v_active") == "1" && _txtAmount.getValue() > 0) {
-                        _txtAmount.setValue(-1*VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
+                        _txtAmount.setValue(-1 * VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
                     }
 
                     if (_btnIn.attr("v_active") == "1" && _txtAmount.getValue() < 0) {
@@ -5157,7 +5159,7 @@
 
                     if (_cmbTaxRate.val() > 0) {
                         var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));
+                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((Math.abs(_txtAmount.getValue()) - (Math.abs(_txtAmount.getValue()) / ((_rate / 100) + 1))).toFixed(_stdPrecision)));
                     }
                     _txtTrxAmt.getControl().trigger('change');
                     //if ($_ctrlInvoice.value) {
@@ -5793,7 +5795,7 @@
                 _currencyId = null;
                 _cmbVoucherMatch = null;
                 _txtAmount = null;
-                //_txtTrxAmt = null;
+                _txtTrxAmt = null;
                 _txtDifference = null;
                 _cmbDifferenceType = null;
                 _btnAmount = null;
