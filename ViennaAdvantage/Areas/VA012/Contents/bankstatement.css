@@ -183,7 +183,7 @@
     /*width: calc(100% - 200px);
     width: -webkit-calc(100% - 200px);
     width: -moz-calc(100% - 200px);*/
-    padding: 10px 0;
+    padding: 10px 0 0;
     height: 96%;
     width: 100%;
 }
@@ -348,6 +348,7 @@ input.va012-input-size-2 {
     background: url(../Images/edit.png);
     cursor: pointer;*/
     text-decoration: none !important;
+    outline: none;
 }
 
 .va012-add-icon2 {
@@ -911,6 +912,7 @@ label.va012-file-label {
 
 .va012-more:focus {
     color: rgba(var(--v-c-primary), 1);
+    outline: none;
 }
 
 /*white-space: nowrap;

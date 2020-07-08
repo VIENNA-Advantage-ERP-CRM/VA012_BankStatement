@@ -3170,7 +3170,7 @@
             setStatementListHeight: function () {
                 //$(".va012-content-area").height($("#VA012_mainContainer_" + $self.windowNo).height() - 20);
                 //$(".va012-right-content").height($(".va012-right-wrap").height() - $(".va012-right-top").height() - 18)
-                $("#VA012_contentArea_" + $self.windowNo).height($("#VA012_mainContainer_" + $self.windowNo).height() - 20);
+                $("#VA012_contentArea_" + $self.windowNo).height($("#VA012_mainContainer_" + $self.windowNo).height() - 8);
                 $("#VA012_lstStatement_" + $self.windowNo).height($("#VA012_rightWrap_" + $self.windowNo).height() - $("#VA012_rightTop_" + $self.windowNo).height() - 18)
             },
 
