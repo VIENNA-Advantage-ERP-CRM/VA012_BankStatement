@@ -5071,20 +5071,16 @@
                         _txtTrxAmt.setValue(parseFloat(0).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }));
                         //_txtTrxAmt.getControl().addClass('va012-mandatory');
                     }
-                    else {
-                        _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(_txtTrxAmt.getValue().toFixed(_stdPrecision)));
-                        //_txtTrxAmt.getControl().removeClass('va012-mandatory');
-                    }
                     //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
                     if (_txtDifference.getControl().attr("vchangable") == "Y") {
                         _txtDifference.setValue(0);
                         _divDifferenceType.find("*").prop("disabled", true);
                     }
-                    if (_cmbVoucherMatch.val() == "M") {
+                    if (parseFloat(_txtTrxAmt.oldValue) != 0 && _cmbVoucherMatch.val() == "M") {
 
                         //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
                         if (_txtDifference.getControl().attr("vchangable") == "Y") {
-                            _txtDifference.setValue((Math.abs(_txtTrxAmt.getValue()) - Math.abs(_txtAmount.getValue())).toFixed(_stdPrecision));
+                            _txtDifference.setValue((Math.abs(_txtTrxAmt.oldValue) - Math.abs(_txtAmount.oldValue)).toFixed(_stdPrecision));
                             if (_txtDifference.getValue() != 0) {
                                 _txtDifference.getControl().removeClass('va012-mandatory');//color change
                                 _divDifferenceType.find("*").prop("disabled", false);
@@ -5102,7 +5098,7 @@
 
 
                 _txtAmount.getControl().on("blur", function () {
-                    if (_txtAmount.getValue() == "" || _txtAmount.getValue() == 0 || _txtAmount.getValue() == null) {
+                    if (_txtAmount.getValue() == "" || _txtAmount.getValue() == null) {
                         _txtAmount.setValue(0);
                         _txtAmount.getControl().addClass("va012-mandatory");
                     }
@@ -5110,7 +5106,7 @@
                         _txtAmount.getControl().addClass("va012-mandatory");
                     else
                         _txtAmount.getControl().removeClass("va012-mandatory");
-                    _txtAmount.setValue(_txtAmount.getValue().toFixed(_stdPrecision));
+                    _txtAmount.setValue(parseFloat(_txtAmount.getValue()).toFixed(_stdPrecision));
                     //if (_btnOut.attr("v_active") == "1") {
                     //    if (_txtAmount.val() > 0) {
                     //        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
@@ -5121,12 +5117,8 @@
                     //        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
                     //    }
                     //}
-
-
-
-
-                    if (_btnOut.attr("v_active") == "1" && _txtAmount.getValue() > 0) {
-                        _txtAmount.setValue(-1 * VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
+                    if (_btnOut.attr("v_active") == "1" && _txtAmount.oldValue > 0) {
+                        _txtAmount.setValue((_txtAmount.oldValue * -1).toFixed(_stdPrecision));
                     }
 
                     if (_btnIn.attr("v_active") == "1" && _txtAmount.getValue() < 0) {
@@ -5197,8 +5189,8 @@
 
 
                 _btnIn.on(VIS.Events.onTouchStartOrClick, function () {
-                    if (_txtAmount.getValue() < 0) {
-                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)) * -1);
+                    if (_txtAmount.oldValue < 0) {
+                        _txtAmount.setValue(_txtAmount.oldValue * -1);
                     }
 
                     _btnIn.removeClass("va012-inactive");
@@ -5207,7 +5199,8 @@
                     _btnOut.removeClass("va012-active");
                     _btnOut.addClass("va012-inactive");
                     _btnOut.attr("v_active", "0");
-                    _txtAmount.getControl().trigger("blur");
+                    _txtAmount.getControl().removeClass('va012-mandatory');
+                    //_txtAmount.getControl().blur();
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
@@ -5219,7 +5212,7 @@
 
                 _btnOut.on(VIS.Events.onTouchStartOrClick, function () {
                     if (_txtAmount.getValue() > 0) {
-                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)) * -1);
+                        _txtAmount.setValue(_txtAmount.getValue() * -1);
                     }
                     _btnOut.removeClass("va012-inactive");
                     _btnOut.addClass("va012-active");
@@ -5227,7 +5220,8 @@
                     _btnIn.removeClass("va012-active");
                     _btnIn.addClass("va012-inactive");
                     _btnIn.attr("v_active", "0");
-                    _txtAmount.getControl().trigger("blur");
+                    _txtAmount.getControl().addClass('va012-mandatory');
+                    //_txtAmount.getControl().blur();
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
