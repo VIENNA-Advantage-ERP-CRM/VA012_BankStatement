@@ -4265,6 +4265,7 @@
                         _btnNewRecord.removeClass("vis vis-plus");
                         _btnNewRecord.addClass("fa fa-minus");
                         _btnNewRecord.attr("title", "Collapse");
+                        $_formNewRecord.height($("#VA012_contentArea_" + $self.windowNo).height() - 200);
                     }
                     else {
                         $_formNewRecord.hide()

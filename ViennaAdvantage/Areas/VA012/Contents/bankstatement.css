@@ -246,7 +246,7 @@
 }
 
 .va012-form-wrap {
-    padding: 5px 5px 10px 5px;
+    padding: 5px 8px 10px 5px;
     border-bottom: 1px solid rgba(var(--v-c-on-secondary),.2);
     color: rgba(var(--v-c-on-secondary), 1);
     height: calc(100% - 42px);
