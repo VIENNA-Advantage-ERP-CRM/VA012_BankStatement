@@ -519,8 +519,10 @@
             _lstStatement.on(VIS.Events.onTouchStartOrClick, childDialogs.selectedStatementLinesList);
             _lstPayments.on(VIS.Events.onTouchStartOrClick, childDialogs.selectedScheduleList);
             _lstPayments.on(VIS.Events.onTouchStartOrClick, function () {
+                // commnetd by koteswar - may be implamet fumction TextAmountChange()
                 //_txtAmount.getControl().trigger('blur');
             });
+
             _statementDate.addClass("va012-mandatory");
             //Change event of Statement Date Filter
             _statementDate.on('change', function (e) {
@@ -1211,7 +1213,7 @@
                         if (data != null && data != "") {
                             data = $.parseJSON($.parseJSON(data));
                             if (data._difference != 0) {
-                                _txtDifference.setValue(data._difference.toFixed(_stdPrecision));
+                                _txtDifference.setValue((Math.abs(data._difference)).toFixed(_stdPrecision));
                                 _divDifferenceType.find("*").prop("disabled", false);
                                 _cmbDifferenceType.val(data._differenceType).prop('selected', true);
                                 _txtDifference.getControl().attr("vchangable", "N");
@@ -1802,8 +1804,8 @@
                                             }
                                             //debugger;
                                             _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
-                                            //_txtTrxAmt.addVetoableChangeListener(this);
-                                            _txtTrxAmt.getControl().trigger('change');
+                                            // vetoable change event work, so not need to trigger
+                                            //_txtTrxAmt.getControl().trigger('change');
                                         }, 200);
                                     }
 
@@ -1949,7 +1951,8 @@
                                         amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                     }
                                     _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
-                                    _txtTrxAmt.getControl().trigger('change');
+                                    // veoable change vent fire, no need to trigger 
+                                    //_txtTrxAmt.getControl().trigger('change');
                                 }
                                 else {
                                     //alert("Notdone");
@@ -2429,11 +2432,94 @@
             }
             else if (evt.propertyName == "VA012_txtTrxAmt_" + $self.windowNo + "") {
                 _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(evt.newValue.toFixed(_stdPrecision)));
+                TextTrxAmtChange();
             }
             else if (evt.propertyName == "VA012_txtAmount_" + $self.windowNo + "") {
-                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(evt.newValue.toFixed(_stdPrecision)));
+                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(evt.newValue.toFixed(_stdPrecision)));      
+                TextAmountChange();
             }
         };
+
+
+        function TextTrxAmtChange() {
+            //if (_txtTrxAmt.getValue() == 0) {
+            //    _txtTrxAmt.setValue(parseFloat(0).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }));
+            //}
+            if (_txtDifference.getControl().attr("vchangable") == "Y") {
+                _txtDifference.setValue(0);
+                _divDifferenceType.find("*").prop("disabled", true);
+            }
+            if (parseFloat(_txtTrxAmt.getValue()) != 0 && _cmbVoucherMatch.val() == "M") {//_txtTrxAmt.oldValue
+
+                if (_txtDifference.getControl().attr("vchangable") == "Y") {
+                    _txtDifference.setValue((Math.abs(_txtTrxAmt.getValue()) - Math.abs(_txtAmount.getValue())).toFixed(_stdPrecision));//_txtTrxAmt.oldValue
+                    if (_txtDifference.getValue() != 0) {
+                        _txtDifference.getControl().removeClass('va012-mandatory');//color change
+                        _divDifferenceType.find("*").prop("disabled", false);
+                    }
+                }
+
+                if (_cmbTaxRate.val() > 0 && _txtDifference.getValue() != 0) {
+                    _txtDifference.getControl().removeClass('va012-mandatory');//color change
+                    var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
+                    _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((Math.abs(_txtDifference.getValue()) - (Math.abs(_txtDifference.getValue()) / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
+                }
+            }
+        };
+
+        function TextAmountChange() {
+            if (_txtAmount.getValue() == "" || _txtAmount.getValue() == null) {
+                // _txtAmount.setValue(0);
+                _txtAmount.getControl().addClass("va012-mandatory");
+            }
+            if (_txtAmount.getValue() > 0)
+                _txtAmount.getControl().addClass("va012-mandatory");
+            else
+                _txtAmount.getControl().removeClass("va012-mandatory");
+            //_txtAmount.setValue(parseFloat(_txtAmount.getValue()).toFixed(_stdPrecision));
+
+            if (_btnOut.attr("v_active") == "1" && _txtAmount.getValue() > 0) {//oldValue
+                _txtAmount.setValue((_txtAmount.getValue() * -1).toFixed(_stdPrecision));//oldValue
+            }
+
+            if (_btnIn.attr("v_active") == "1" && _txtAmount.getValue() < 0) {
+
+                _btnOut.removeClass("va012-inactive");
+                _btnOut.addClass("va012-active");
+                _btnOut.attr("v_active", "1");
+                _btnIn.removeClass("va012-active");
+                _btnIn.addClass("va012-inactive");
+                _btnIn.attr("v_active", "0");
+            }
+
+            if (_txtAmount.getValue() < 0) {
+                _btnOut.removeClass("va012-inactive");
+                _btnOut.addClass("va012-active");
+                _btnOut.attr("v_active", "1");
+                _btnIn.removeClass("va012-active");
+                _btnIn.addClass("va012-inactive");
+                _btnIn.attr("v_active", "0");
+            }
+            else if (_txtAmount.getValue() > 0) {
+                _btnIn.removeClass("va012-inactive");
+                _btnIn.addClass("va012-active");
+                _btnIn.attr("v_active", "1");
+                _btnOut.removeClass("va012-active");
+                _btnOut.addClass("va012-inactive");
+                _btnOut.attr("v_active", "0");
+            }
+
+            if (_cmbTaxRate.val() > 0) {
+                var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
+                _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((Math.abs(_txtAmount.getValue()) - (Math.abs(_txtAmount.getValue()) / ((_rate / 100) + 1))).toFixed(_stdPrecision)));
+            }
+
+            // call to change event of transaction amount
+            TextTrxAmtChange();
+
+        };
+
+
         /*
          * to get list of Matching Base List data
          * */
@@ -4086,7 +4172,8 @@
                             amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                         }
                         _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
-                        _txtTrxAmt.getControl().trigger('change');
+                        // vetoable change event work
+                        //_txtTrxAmt.getControl().trigger('change');
                         if (amount == 0) {
                             $_ctrlBusinessPartner.setValue();
                         }
@@ -4663,7 +4750,10 @@
                         _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision));//handle precision
                         //_txtTaxAmount.val(((_txtAmount.val() * _rate) / 100).toFixed(_stdPrecision));
                     }
-                    _txtTrxAmt.getControl().trigger("change");
+                    
+                    //_txtTrxAmt.getControl().trigger("change");
+                    TextTrxAmtChange();
+
                 });
 
                 _btnMore.on(VIS.Events.onTouchStartOrClick, function () {
@@ -5066,103 +5156,104 @@
                 //    }
                 //});
 
-                _txtTrxAmt.getControl().on("change", function () {
-                    if (_txtTrxAmt.getValue() == 0) {
-                        _txtTrxAmt.setValue(parseFloat(0).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }));
-                        //_txtTrxAmt.getControl().addClass('va012-mandatory');
-                    }
-                    //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
-                    if (_txtDifference.getControl().attr("vchangable") == "Y") {
-                        _txtDifference.setValue(0);
-                        _divDifferenceType.find("*").prop("disabled", true);
-                    }
-                    if (parseFloat(_txtTrxAmt.oldValue) != 0 && _cmbVoucherMatch.val() == "M") {
+                //_txtTrxAmt.getControl().on("change", function () {
+                //    if (_txtTrxAmt.getValue() == 0) {
+                //        _txtTrxAmt.setValue(parseFloat(0).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }));
+                //        //_txtTrxAmt.getControl().addClass('va012-mandatory');
+                //    }
+                //    //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
+                //    if (_txtDifference.getControl().attr("vchangable") == "Y") {
+                //        _txtDifference.setValue(0);
+                //        _divDifferenceType.find("*").prop("disabled", true);
+                //    }
+                //    if (parseFloat(_txtTrxAmt.getValue()) != 0 && _cmbVoucherMatch.val() == "M") {//_txtTrxAmt.oldValue
 
-                        //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
-                        if (_txtDifference.getControl().attr("vchangable") == "Y") {
-                            _txtDifference.setValue((Math.abs(_txtTrxAmt.oldValue) - Math.abs(_txtAmount.oldValue)).toFixed(_stdPrecision));
-                            if (_txtDifference.getValue() != 0) {
-                                _txtDifference.getControl().removeClass('va012-mandatory');//color change
-                                _divDifferenceType.find("*").prop("disabled", false);
-                            }
-                        }
+                //        //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
+                //        if (_txtDifference.getControl().attr("vchangable") == "Y") {
+                //            _txtDifference.setValue((Math.abs(_txtTrxAmt.getValue()) - Math.abs(_txtAmount.getValue())).toFixed(_stdPrecision));//_txtTrxAmt.oldValue
+                //            if (_txtDifference.getValue() != 0) {
+                //                _txtDifference.getControl().removeClass('va012-mandatory');//color change
+                //                _divDifferenceType.find("*").prop("disabled", false);
+                //            }
+                //        }
 
-                        if (_cmbTaxRate.val() > 0 && _txtDifference.getValue() != 0) {
-                            _txtDifference.getControl().removeClass('va012-mandatory');//color change
-                            var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                            _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((Math.abs(_txtDifference.getValue()) - (Math.abs(_txtDifference.getValue()) / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
-                        }
-                    }
+                //        if (_cmbTaxRate.val() > 0 && _txtDifference.getValue() != 0) {
+                //            _txtDifference.getControl().removeClass('va012-mandatory');//color change
+                //            var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
+                //            _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((Math.abs(_txtDifference.getValue()) - (Math.abs(_txtDifference.getValue()) / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
+                //        }
+                //    }
 
-                });
-
-
-                _txtAmount.getControl().on("blur", function () {
-                    if (_txtAmount.getValue() == "" || _txtAmount.getValue() == null) {
-                        _txtAmount.setValue(0);
-                        _txtAmount.getControl().addClass("va012-mandatory");
-                    }
-                    if (_txtAmount.getValue() > 0)
-                        _txtAmount.getControl().addClass("va012-mandatory");
-                    else
-                        _txtAmount.getControl().removeClass("va012-mandatory");
-                    _txtAmount.setValue(parseFloat(_txtAmount.getValue()).toFixed(_stdPrecision));
-                    //if (_btnOut.attr("v_active") == "1") {
-                    //    if (_txtAmount.val() > 0) {
-                    //        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
-                    //    }
-                    //}
-                    //else {
-                    //    if (_txtAmount.val() < 0) {
-                    //        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
-                    //    }
-                    //}
-                    if (_btnOut.attr("v_active") == "1" && _txtAmount.oldValue > 0) {
-                        _txtAmount.setValue((_txtAmount.oldValue * -1).toFixed(_stdPrecision));
-                    }
-
-                    if (_btnIn.attr("v_active") == "1" && _txtAmount.getValue() < 0) {
-
-                        _btnOut.removeClass("va012-inactive");
-                        _btnOut.addClass("va012-active");
-                        _btnOut.attr("v_active", "1");
-                        _btnIn.removeClass("va012-active");
-                        _btnIn.addClass("va012-inactive");
-                        _btnIn.attr("v_active", "0");
-                    }
+                //});
 
 
-                    if (_txtAmount.getValue() < 0) {
-                        _btnOut.removeClass("va012-inactive");
-                        _btnOut.addClass("va012-active");
-                        _btnOut.attr("v_active", "1");
-                        _btnIn.removeClass("va012-active");
-                        _btnIn.addClass("va012-inactive");
-                        _btnIn.attr("v_active", "0");
-                    }
-                    else if (_txtAmount.getValue() > 0) {
-                        _btnIn.removeClass("va012-inactive");
-                        _btnIn.addClass("va012-active");
-                        _btnIn.attr("v_active", "1");
-                        _btnOut.removeClass("va012-active");
-                        _btnOut.addClass("va012-inactive");
-                        _btnOut.attr("v_active", "0");
-                    }
+                //_txtAmount.getControl().on("blur", function () {
+                //    if (_txtAmount.getValue() == "" || _txtAmount.getValue() == null) {
+                //        _txtAmount.setValue(0);
+                //        _txtAmount.getControl().addClass("va012-mandatory");
+                //    }
+                //    if (_txtAmount.getValue() > 0)
+                //        _txtAmount.getControl().addClass("va012-mandatory");
+                //    else
+                //        _txtAmount.getControl().removeClass("va012-mandatory");
+                //    _txtAmount.setValue(parseFloat(_txtAmount.getValue()).toFixed(_stdPrecision));
+                //    //if (_btnOut.attr("v_active") == "1") {
+                //    //    if (_txtAmount.val() > 0) {
+                //    //        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
+                //    //    }
+                //    //}
+                //    //else {
+                //    //    if (_txtAmount.val() < 0) {
+                //    //        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
+                //    //    }
+                //    //}
+                //    if (_btnOut.attr("v_active") == "1" && _txtAmount.getValue() > 0) {//oldValue
+                //        _txtAmount.setValue((_txtAmount.getValue() * -1).toFixed(_stdPrecision));//oldValue
+                //    }
 
-                    if (_cmbTaxRate.val() > 0) {
-                        var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((Math.abs(_txtAmount.getValue()) - (Math.abs(_txtAmount.getValue()) / ((_rate / 100) + 1))).toFixed(_stdPrecision)));
-                    }
-                    _txtTrxAmt.getControl().trigger('change');
-                    //if ($_ctrlInvoice.value) {
-                    //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
-                    //}
-                    //if ($_ctrlPayment.value) {
-                    //    loadFunctions.checkPaymentCondition($_ctrlPayment.value, 0, _txtAmount.val());
-                    //    //pratap
-                    //    //loadFunctions.checkFormPaymentCondition($_ctrlPayment.value, _txtAmount.val());
-                    //}
-                });
+                //    if (_btnIn.attr("v_active") == "1" && _txtAmount.getValue() < 0) {
+
+                //        _btnOut.removeClass("va012-inactive");
+                //        _btnOut.addClass("va012-active");
+                //        _btnOut.attr("v_active", "1");
+                //        _btnIn.removeClass("va012-active");
+                //        _btnIn.addClass("va012-inactive");
+                //        _btnIn.attr("v_active", "0");
+                //    }
+
+
+                //    if (_txtAmount.getValue() < 0) {
+                //        _btnOut.removeClass("va012-inactive");
+                //        _btnOut.addClass("va012-active");
+                //        _btnOut.attr("v_active", "1");
+                //        _btnIn.removeClass("va012-active");
+                //        _btnIn.addClass("va012-inactive");
+                //        _btnIn.attr("v_active", "0");
+                //    }
+                //    else if (_txtAmount.getValue() > 0) {
+                //        _btnIn.removeClass("va012-inactive");
+                //        _btnIn.addClass("va012-active");
+                //        _btnIn.attr("v_active", "1");
+                //        _btnOut.removeClass("va012-active");
+                //        _btnOut.addClass("va012-inactive");
+                //        _btnOut.attr("v_active", "0");
+                //    }
+
+                //    if (_cmbTaxRate.val() > 0) {
+                //        var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
+                //        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((Math.abs(_txtAmount.getValue()) - (Math.abs(_txtAmount.getValue()) / ((_rate / 100) + 1))).toFixed(_stdPrecision)));
+                //    }
+                //    _txtTrxAmt.getControl().trigger('change');
+                //    //if ($_ctrlInvoice.value) {
+                //    //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
+                //    //}
+                //    //if ($_ctrlPayment.value) {
+                //    //    loadFunctions.checkPaymentCondition($_ctrlPayment.value, 0, _txtAmount.val());
+                //    //    //pratap
+                //    //    //loadFunctions.checkFormPaymentCondition($_ctrlPayment.value, _txtAmount.val());
+                //    //}
+                //});
+
                 _btnAmount.hover(function (e) {
 
                     $tooltip = $('<div  class="va012-div-tooltip"><h4>' + VIS.Msg.getMsg("VA012_Information") + '</h4><p>' + VIS.Msg.getMsg("VA012_InformationText") + '</p></div>');
@@ -5189,8 +5280,8 @@
 
 
                 _btnIn.on(VIS.Events.onTouchStartOrClick, function () {
-                    if (_txtAmount.oldValue < 0) {
-                        _txtAmount.setValue(_txtAmount.oldValue * -1);
+                    if (_txtAmount.getValue() < 0) {//oldValue
+                        _txtAmount.setValue(_txtAmount.getValue() * -1);//oldValue
                     }
 
                     _btnIn.removeClass("va012-inactive");
@@ -5221,7 +5312,9 @@
                     _btnIn.addClass("va012-inactive");
                     _btnIn.attr("v_active", "0");
                     _txtAmount.getControl().addClass('va012-mandatory');
+                    // ccommeented by koteswar
                     //_txtAmount.getControl().blur();
+
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
