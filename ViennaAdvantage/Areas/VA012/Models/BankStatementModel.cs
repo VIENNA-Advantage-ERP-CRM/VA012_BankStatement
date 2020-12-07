@@ -13,6 +13,8 @@ using VAdvantage.DataBase;
 using System.Net;
 using System.Web;
 using System.Text.RegularExpressions;
+using VAdvantage.Logging;
+
 namespace VA012.Models
 {
     //    #region Import Data
@@ -784,7 +786,13 @@ namespace VA012.Models
 
                 if (!_bankStatement.Save())
                 {
-                    return "VA012_ErrorSavingBankStatement";
+                    ValueNamePair pp = VLogger.RetrieveError();
+                    string error = pp != null ? pp.GetValue() : "";
+                    if (string.IsNullOrEmpty(error))
+                    {
+                        error = pp != null ? pp.GetName() : "";
+                    }
+                    return !string.IsNullOrEmpty(error) ? error : "VA012_ErrorSavingBankStatement";
                 }
             }
             else
@@ -2955,7 +2963,7 @@ namespace VA012.Models
                             THEN 'Receipt'
                             END AS PaymentType,
                             BS.DocStatus AS DocStatus ,
-                              ' '  as TrxNo , PM.VA009_Name, pay.DateAcct
+                              ' '  as TrxNo , '' as VA009_Name, CS.DateAcct
                         FROM C_CASH CS
                         INNER JOIN C_CASHLINE CSL
                         ON CS.C_CASH_ID=CSL.C_CASH_ID
@@ -2965,7 +2973,7 @@ namespace VA012.Models
                         ON CSL.C_BPARTNER_ID =BP.C_BPARTNER_ID
 
                          LEFT JOIN C_BANKSTATEMENTLINE BSL 
-                         ON (CSL.C_CASHLINE_ID =BSL.C_CASHLINE_ID AND 'VO' <> (SELECT NVL(DocStatus, 'XX') FROM C_BANKSTATEMENT BST WHERE BST.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID)))
+                         ON (CSL.C_CASHLINE_ID =BSL.C_CASHLINE_ID AND 'VO' <> (SELECT NVL(DocStatus, 'XX') FROM C_BANKSTATEMENT BST WHERE BST.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID))
 
                          LEFT JOIN C_BANKSTATEMENT BS 
                          ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID)
