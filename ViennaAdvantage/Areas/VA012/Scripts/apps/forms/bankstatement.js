@@ -164,7 +164,7 @@
 
         var $divMatchStatementGridPopUp;
         var $GrdPayment;
-       // var $CmbChargeType;
+        // var $CmbChargeType;
         var _chargeSrch;
         var $CmbTaxRate;
         //  var cartGrid = null;
@@ -3051,8 +3051,8 @@
                                     //if ((data[i].c_charge_id != null || data[i].c_charge_id == "") && (data[i].trxno != null || data[i].trxno == "")) {
                                     //    status = "va012-red-color";
                                     //}
-                                    if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
-                                        status = "va012-red-color";
+                                    if ((data[i].c_cashline_id != null && data[i].c_cashline_id != "0" && data[i].c_cashline_id != 0) /*&& data[i].usenexttime == true*/) {
+                                        status = "va012-green-color";
                                     }
                                     else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
 
@@ -3061,9 +3061,10 @@
                                         else
                                             status = "va012-red-color";
                                     }
-                                    else if ((data[i].c_cashline_id != null && data[i].c_cashline_id != "0" && data[i].c_cashline_id != 0) /*&& data[i].usenexttime == true*/) {
-                                        status = "va012-green-color";
+                                    else if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
+                                        status = "va012-red-color";
                                     }
+
 
                                     else {
                                         status = "va012-red-color";
@@ -3555,12 +3556,12 @@
                     + "</div>";
                 $match.append(_match);
                 _getMatchControls();
-            //    getlookupdata();
+                //    getlookupdata();
                 // to load Maching Base combo
                 getMatchingBaseData(_cmbMatchingBase);
                 loadBankStatementNo();
 
-               // loadBankAccountCharges();
+                // loadBankAccountCharges();
 
                 loadTaxRate();
 
@@ -3621,7 +3622,7 @@
                         _sql = null;
                     }
                 };
-              //  var $POP_lookCharge = null;
+                //  var $POP_lookCharge = null;
                 var matchDialog = new VIS.ChildDialog();
                 matchDialog.setContent($match);
                 matchDialog.setTitle(VIS.Msg.getMsg("VA012_MatchStatement"));
@@ -3715,7 +3716,7 @@
                                         data = $.parseJSON(data);
                                         _cmbMatchingBase.prop('selectedIndex', 0);
                                         _cmbStatementNo.prop('selectedIndex', 0);
-                                       // _cmbChargeType.prop('selectedIndex', 0);
+                                        // _cmbChargeType.prop('selectedIndex', 0);
                                         $ChargeControl.value = null;
                                         _cmbTaxRate.prop('selectedIndex', 0);
 
