@@ -2762,7 +2762,7 @@ namespace VA012.Models
                             THEN 'Receipt'
                              END AS PaymentType,
                              'CO' AS DocStatus ,
-                            ' ' as TrxNo , PM.VA009_Name, pay.DateAcct
+                            ' ' as TrxNo , PM.VA009_Name, INV.DateAcct
                             FROM C_INVOICEPAYSCHEDULE PAY
                             INNER JOIN C_INVOICE INV
                             ON pay.C_INVOICE_id=inv.C_INVOICE_id
@@ -2867,7 +2867,7 @@ namespace VA012.Models
                           END AS ISCONVERTED,
                         0 as C_BANKSTATEMENTLINE_ID,'Receipt' AS PaymentType,
                         'CO' AS DocStatus ,
-                        ' ' as TrxNo , PM.VA009_Name, pay.DateAcct
+                        ' ' as TrxNo , PM.VA009_Name, ORD.DateAcct
                         FROM C_ORDER ORD
                         LEFT JOIN C_DOCTYPE DT
                         ON ORD.C_DocTypeTarget_ID=dt.C_DocType_ID
@@ -3359,7 +3359,7 @@ namespace VA012.Models
                               (SELECT PAY.C_INVOICEPAYSCHEDULE_ID FROM C_PAYMENT PAY WHERE PAY.DOCSTATUS NOT IN ('VO','RE')
                               UNION
                               SELECT PA.C_INVOICEPAYSCHEDULE_ID FROM C_PAYMENTALLOCATE PA INNER JOIN C_PAYMENT PAY ON PAY.C_PAYMENT_ID      =PA.C_PAYMENT_ID WHERE PAY.DOCSTATUS NOT IN ('VO','RE')
-                              )
+                              )t
                             WHERE C_INVOICEPAYSCHEDULE_ID IN(" + _formData[0]._scheduleList + ")";
 
                 if (Util.GetValueOfInt(DB.ExecuteScalar(_sql)) > 0)

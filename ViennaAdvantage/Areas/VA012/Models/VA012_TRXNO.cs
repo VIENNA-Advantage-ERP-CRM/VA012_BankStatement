@@ -286,7 +286,7 @@ namespace VA012.Models
                                                 _BnkStmtLine.SetChargeAmt(Convert.ToDecimal(dt.Rows[i][15].ToString().Trim()));
                                                 _BnkStmtLine.SetC_Charge_ID(chargeID);
 
-                                                var _sql = "SELECT C_TAX_ID FROM C_TAX WHERE EXPORT_ID IS NOT NULL AND ISDEFAULT = 'Y' AND IsActive='Y'";
+                                                var _sql = "SELECT C_TAX_ID FROM C_TAX WHERE AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND EXPORT_ID IS NOT NULL AND ISDEFAULT = 'Y' AND IsActive='Y'";
                                               // _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Tax", true, false);
                                                int _C_Tax_ID = Convert.ToInt32(DB.ExecuteScalar(_sql));
                                                
