@@ -255,7 +255,7 @@ namespace VA012.Models
 
                                         ////
                                         _qry.Clear();
-                                        _qry.Append("SELECT C_BPARTNER_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(dt.Rows[i][1]));
+                                        _qry.Append("SELECT C_BPARTNER_ID FROM C_BPARTNER WHERE AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND C_BPARTNER_ID=" + Util.GetValueOfInt(dt.Rows[i][1]));
                                         _bpID = Util.GetValueOfInt(DB.ExecuteScalar(_qry.ToString()));
                                         if (_bpID > 0)
                                         {
