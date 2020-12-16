@@ -266,13 +266,18 @@ namespace VA012.Models
 
                                             if (Util.GetValueOfString(dt.Rows[i][6]) != "")
                                             {
-                                                _c_bpartner_id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BPartner_ID FROM C_BPartner WHERE AD_Client_ID = "+ ctx.GetAD_Client_ID() + " AND  LOWER(Value)= LOWER('" + (dt.Rows[i][6]) + "')"));
+                                                _c_bpartner_id = Util.GetValueOfInt(DB.ExecuteScalar(@"SELECT C_BPartner_ID FROM C_BPartner
+                                                WHERE AD_Client_ID = " + ctx.GetAD_Client_ID() +
+                                                @" AND ( LOWER(Value)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][6])) + @") 
+                                                   OR LOWER(Name)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][6])) + "))"));
                                                 _BnkStmtLine.SetC_BPartner_ID(_c_bpartner_id);
                                             }
                                             //set charge id if charge value is available in Bank Statement 7 column
                                             if (Util.GetValueOfString(dt.Rows[i][7]) != "")
                                             {
-                                                _C_Charge_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_Charge_ID FROM C_Charge WHERE AD_Client_ID IN (0,  " + ctx.GetAD_Client_ID() + ") AND LOWER(Value)= LOWER('" + (dt.Rows[i][7]) + "')"));
+                                                _C_Charge_ID = Util.GetValueOfInt(DB.ExecuteScalar(@"SELECT C_Charge_ID FROM C_Charge
+                                                    WHERE AD_Client_ID IN (0,  " + ctx.GetAD_Client_ID() +
+                                                    @") AND LOWER(Value)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][7])) + ")"));
                                                 _BnkStmtLine.SetC_Charge_ID(_C_Charge_ID);
                                                 //If chanrge id is available then set charge amount and statement amount on bank statement line suggested by Ashish.
                                                 if (_C_Currency_ID > 0)
@@ -393,6 +398,19 @@ namespace VA012.Models
             DateTime? _returnDate = new DateTime(Util.GetValueOfInt(_dateArray[2]), Util.GetValueOfInt(_dateArray[1]), Util.GetValueOfInt(_dateArray[0]));
             return _returnDate;
         }
+
+        /// <summary>
+        /// This function is used to handle the Single QUOTE and &ampersand in where clause
+        /// </summary>
+        /// <param name="value">value</param>
+        /// <returns>converted value</returns>
+        private String GetConvertedValue(String value)
+        {
+            value = DB.TO_STRING(value);
+            value = value.Replace("&", "&'||'");
+            return value;
+        }
+
         /// <summary>
         /// Used to fetching amount in decimal format
         /// </summary>
