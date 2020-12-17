@@ -407,7 +407,7 @@ namespace VA012.Models
         private String GetConvertedValue(String value)
         {
             value = DB.TO_STRING(value);
-            value = value.Replace("&", "&'||'");
+            //value = value.Replace("&", "&'||'");
             return value;
         }
 
