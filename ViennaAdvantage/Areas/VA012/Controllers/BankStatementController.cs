@@ -700,5 +700,16 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// Get List of Bank's
+        /// </summary>
+        /// <returns>List of Banks</returns>
+        public JsonResult GetBank() 
+        {
+            Ctx ctx = Session["ctx"] as Ctx;
+            StatementOperations obj = new StatementOperations();
+            return Json(JsonConvert.SerializeObject(obj.GetBank(ctx)), JsonRequestBehavior.AllowGet);
+        }
     }
 }
