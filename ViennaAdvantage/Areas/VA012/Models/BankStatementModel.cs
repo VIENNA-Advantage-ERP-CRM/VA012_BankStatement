@@ -2819,7 +2819,7 @@ namespace VA012.Models
                 //append statement date if it is not null
                 if (statementDate != null)
                 {
-                    _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
+                    _sql += " AND INV.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
                 //                //Check Schedule already mapped to payment
                 //                _sql += @" AND PAY.C_INVOICEPAYSCHEDULE_ID NOT IN (SELECT NVL(C_INVOICEPAYSCHEDULE_ID,0)
@@ -2920,7 +2920,7 @@ namespace VA012.Models
                 //append statement date if it is not null
                 if (statementDate != null)
                 {
-                    _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
+                    _sql += " AND ORD.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
                 _sql += " ORDER BY ord.DOCUMENTNO";
 
@@ -3013,7 +3013,7 @@ namespace VA012.Models
                 //append statement date if it is not null
                 if (statementDate != null)
                 {
-                    _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
+                    _sql += " AND CS.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
                 _sql += " ORDER BY CS.DOCUMENTNO";
             }
@@ -3464,7 +3464,13 @@ namespace VA012.Models
 
                         if (!_pay.Save())
                         {
-                            return "VA012_PaymentNotSaved";
+                            ValueNamePair pp = VLogger.RetrieveError();
+                            string error = pp != null ? pp.GetValue() : "";
+                            if (string.IsNullOrEmpty(error))
+                            {
+                                error = pp != null ? pp.GetName() : "";
+                            }
+                            return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                         }
                         else
                         {
@@ -3489,7 +3495,13 @@ namespace VA012.Models
                             }
                             else
                             {
-                                return "VA012_PaymentNotProcessed";
+                                ValueNamePair pp = VLogger.RetrieveError();
+                                string error = pp != null ? pp.GetValue() : "";
+                                if (string.IsNullOrEmpty(error))
+                                {
+                                    error = pp != null ? pp.GetName() : "";
+                                }
+                                return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
                             }
                         }
 
@@ -3591,7 +3603,13 @@ namespace VA012.Models
                             if (!_pay.Save())
                             {
                                 //trx.Rollback();
-                                return "VA012_PaymentNotSaved";
+                                ValueNamePair pp = VLogger.RetrieveError();
+                                string error = pp != null ? pp.GetValue() : "";
+                                if (string.IsNullOrEmpty(error))
+                                {
+                                    error = pp != null ? pp.GetName() : "";
+                                }
+                                return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                             }
                             else
                             {
@@ -3609,7 +3627,13 @@ namespace VA012.Models
                                 else
                                 {
                                     //trx.Rollback();
-                                    return "VA012_PaymentNotProcessed";
+                                    ValueNamePair pp = VLogger.RetrieveError();
+                                    string error = pp != null ? pp.GetValue() : "";
+                                    if (string.IsNullOrEmpty(error))
+                                    {
+                                        error = pp != null ? pp.GetName() : "";
+                                    }
+                                    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
                                 }
                             }
                         }
@@ -3640,7 +3664,13 @@ namespace VA012.Models
                             if (!_pay.Save())
                             {
                                 // trx.Rollback();
-                                return "VA012_PaymentNotSaved";
+                                ValueNamePair pp = VLogger.RetrieveError();
+                                string error = pp != null ? pp.GetValue() : "";
+                                if (string.IsNullOrEmpty(error))
+                                {
+                                    error = pp != null ? pp.GetName() : "";
+                                }
+                                return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                             }
                             else
                             {
@@ -3751,7 +3781,13 @@ namespace VA012.Models
                                     if (!PayAlocate.Save())
                                     {
                                         // trx.Rollback();
-                                        return "VA012_PaymentNotSaved";
+                                        ValueNamePair pp = VLogger.RetrieveError();
+                                        string error = pp != null ? pp.GetValue() : "";
+                                        if (string.IsNullOrEmpty(error))
+                                        {
+                                            error = pp != null ? pp.GetName() : "";
+                                        }
+                                        return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                                     }
                                 }
                                 if (_pay.CompleteIt() == "CO")
@@ -3771,7 +3807,13 @@ namespace VA012.Models
                                 else
                                 {
                                     // trx.Rollback();
-                                    return "VA012_PaymentNotProcessed";
+                                    ValueNamePair pp = VLogger.RetrieveError();
+                                    string error = pp != null ? pp.GetValue() : "";
+                                    if (string.IsNullOrEmpty(error))
+                                    {
+                                        error = pp != null ? pp.GetName() : "";
+                                    }
+                                    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
                                 }
                             }
                         }
@@ -3938,7 +3980,13 @@ namespace VA012.Models
 
                 if (!_pay.Save())
                 {
-                    return "VA012_PaymentNotSaved";
+                    ValueNamePair pp = VLogger.RetrieveError();
+                    string error = pp != null ? pp.GetValue() : "";
+                    if (string.IsNullOrEmpty(error))
+                    {
+                        error = pp != null ? pp.GetName() : "";
+                    }
+                    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                 }
                 else
                 {
@@ -3952,7 +4000,13 @@ namespace VA012.Models
                     }
                     else
                     {
-                        return "VA012_PaymentNotProcessed";
+                        ValueNamePair pp = VLogger.RetrieveError();
+                        string error = pp != null ? pp.GetValue() : "";
+                        if (string.IsNullOrEmpty(error))
+                        {
+                            error = pp != null ? pp.GetName() : "";
+                        }
+                        return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
                     }
                 }
             }
@@ -3966,7 +4020,14 @@ namespace VA012.Models
             int _paymentMethodID = 0;
             try
             {
-                _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                //based on txtAmout get the PaymentMethod with respective column
+                string payMethod_ID = _formData[0]._txtAmount >= 0 ? "VA009_PAYMENTMETHOD_ID" : "VA009_PO_PaymentMethod_ID";
+                _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT " + payMethod_ID + " FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                //if PaymentMethod_ID is zero it will return a message not do the Payment
+                if (_paymentMethodID == 0) 
+                {
+                    return "VA012_NotfoundPayMethodOnBPartner";
+                }
                 MPayment _pay = new MPayment(ctx, 0, null);
                 int C_Doctype_ID = GetDocTypeID(ctx, _formData[0]._txtAmount);
                 _pay.SetDescription(_formData[0]._txtVoucherNo);
@@ -3990,7 +4051,13 @@ namespace VA012.Models
 
                 if (!_pay.Save())
                 {
-                    return "VA012_PaymentNotSaved";
+                    ValueNamePair pp = VLogger.RetrieveError();
+                    string error = pp != null ? pp.GetValue() : "";
+                    if (string.IsNullOrEmpty(error))
+                    {
+                        error = pp != null ? pp.GetName() : "";
+                    }
+                    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                 }
                 else
                 {
@@ -4004,7 +4071,13 @@ namespace VA012.Models
                     }
                     else
                     {
-                        return "VA012_PaymentNotProcessed";
+                        ValueNamePair pp = VLogger.RetrieveError();
+                        string error = pp != null ? pp.GetValue() : "";
+                        if (string.IsNullOrEmpty(error))
+                        {
+                            error = pp != null ? pp.GetName() : "";
+                        }
+                        return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
                     }
                 }
             }
@@ -5251,6 +5324,29 @@ namespace VA012.Models
                 }
             }
             return matchingBase;
+        }
+
+        /// <summary>
+        /// Get the list of Bank's
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>List of Bank's</returns>
+        public List<MatchBase> GetBank(Ctx ctx)
+        {
+            List<MatchBase> bankList = new List<MatchBase>();
+            MatchBase list = null;
+            DataSet ds = DB.ExecuteDataset("SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y'", null, null);
+            if (ds != null && ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    list = new MatchBase();
+                    list.Value = Util.GetValueOfString(ds.Tables[0].Rows[i]["C_BANK_ID"]);
+                    list.Name = Util.GetValueOfString(ds.Tables[0].Rows[i]["NAME"]);
+                    bankList.Add(list);
+                }
+            }
+            return bankList;
         }
     }
 

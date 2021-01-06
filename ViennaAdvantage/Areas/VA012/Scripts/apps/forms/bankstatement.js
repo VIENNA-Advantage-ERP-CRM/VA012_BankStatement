@@ -248,7 +248,8 @@
             });
             _cmbBankAccount.on('change', function () {
 
-
+                //called loadPayment to update the data based on BankAccount
+                newRecordForm.loadPayment();
                 newRecordForm.loadCurrency();
                 newRecordForm.loadCashLine();
                 _lstPayments.html("");
@@ -1323,21 +1324,36 @@
             loadBank: function () {
 
                 //var _sql = "SELECT NAME,C_BANK_ID FROM C_BANK WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                var _sql = "SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y'";
+                //var _sql = "SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y'";
 
-                _sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Bank", true, false);
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBank);
+                //_sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Bank", true, false);
+                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBank);
+                //get Bank's from Controller and append to bank list dropdown
+                //fetch IsOwnBank is true those bank only will get
+                $.ajax({
+                    url: VIS.Application.contextUrl + "BankStatement/GetBank",
+                    type: "GET",
+                    datatype: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        if (data != null && data != "") {
+                            _ds = $.parseJSON(data);
+                            callbackloadBank(_ds);
+                        }
+                    },
+                });
                 function callbackloadBank(_ds) {
                     _cmbBank.html("");
                     _cmbBank.append("<option value=0 ></option>");
                     if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bank_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                        for (var i = 0; i < _ds.length; i++) {
+                            //_cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bank_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            _cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + ">" + _ds[i].Name + "</option>");
                         }
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                    //_ds.dispose();
+                    //_ds = null;
+                    //_sql = null;
                     _cmbBank.prop('selectedIndex', 0);
                     if (C_BANK_ID > 0) {
                         _cmbBank.val(C_BANK_ID).prop('selected', true);
@@ -5463,8 +5479,13 @@
                 }
             },
             loadPayment: function () {
-
-                _lookupPayment = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Payment_ID", 0, false, " DocStatus IN ('CO','CL') AND C_BankAccount_ID = " + _cmbBankAccount.val());
+                //remove the child elements before updating the lookup for Payment
+                if (_ctrlPayment != undefined && _ctrlPayment != null) {
+                    _ctrlPayment.empty();
+                }
+                //if back account is null then it's take only DocStustus
+                var status = _cmbBankAccount.val() != null ? "DocStatus IN ('CO','CL') AND C_BankAccount_ID = " + _cmbBankAccount.val() : "DocStatus IN ('CO','CL')";
+                _lookupPayment = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Payment_ID", 0, false, status);
                 $_ctrlPayment = new VIS.Controls.VTextBoxButton("C_Payment_ID", false, false, true, VIS.DisplayType.Search, _lookupPayment);
                 $_ctrlPayment.getControl().addClass("va012-input-size-2");
                 $_ctrlPayment.getControl().attr("tabindex", "10");
