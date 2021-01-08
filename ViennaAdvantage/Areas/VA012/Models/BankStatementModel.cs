@@ -3441,8 +3441,9 @@ namespace VA012.Models
                         _overPayment = false;
                         #region over Payment
 
-                        int _paymentMethodID = 0;
-                        _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                        //get the C_PaymentMethod_ID from Invoice (from above Query)
+                        //int _paymentMethodID = 0;
+                        //_paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
                         MPayment _pay = new MPayment(ctx, 0, null);
                         int C_Doctype_ID = GetDocTypeID(ctx, Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]));
                         _pay.SetC_DocType_ID(C_Doctype_ID);
@@ -3452,7 +3453,7 @@ namespace VA012.Models
                         _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
                         _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
                         _pay.SetC_ConversionType_ID(GetCurrencyType());
-                        _pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
+                        _pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
                         if (Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "ARI")
                         {
                             _pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
@@ -3639,8 +3640,8 @@ namespace VA012.Models
                         }
                         else if (_ds.Tables[0].Rows.Count > 1)
                         {
-                            int _paymentMethodID = 0;
-                            _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                            //int _paymentMethodID = 0;
+                            //_paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
                             MPayment _pay = new MPayment(ctx, 0, null);
 
 
@@ -3657,7 +3658,8 @@ namespace VA012.Models
                             _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
                             _pay.SetC_ConversionType_ID(GetCurrencyType());
                             _pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
-                            _pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
+                            //get C_PaymentMethod_ID from Invoice
+                            _pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
 
 
 
