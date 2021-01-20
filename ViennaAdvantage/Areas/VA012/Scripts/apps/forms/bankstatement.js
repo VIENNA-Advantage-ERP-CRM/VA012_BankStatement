@@ -611,8 +611,8 @@
                     + '                  </div>');
                 //+ '                  <!-- end of mid-top-wrap -->'
                 //+ '  '
-                divformWrap = $('<div class="va012-form-wrap va012-newform" id="VA012_formNewRecord_' + $self.windowNo + '" data-uid="0">');
-                divRow1 = $('<div class="row va012-fl-padd">'
+                divformWrap = $('<div class="va012-form-wrap va012-newform" id="VA012_formNewRecord_' + $self.windowNo + '" data-uid="0" style="height:55%;overflow-y:auto;width:101%;">');
+                divRow1 = $('<div class="row va012-fl-padd" style="width:102%">'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-data">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementNumber") + ' <sup style="color: red;">*</sup></label>'
@@ -641,7 +641,7 @@
                     + '                      </div>'
                     + '                      <!-- end of row -->'
                     + '  ');
-                divRow2 = $('<div class="row va012-fl-padd">');
+                divRow2 = $('<div class="row va012-fl-padd" style="width:102%">');
                 row2Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-data">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
@@ -687,7 +687,7 @@
                     + '                      </div>'
                     + '                      <!-- end of row -->'
                     + '  ');
-                divRow3 = $('                      <div class="row va012-fl-padd">'
+                divRow3 = $('                      <div class="row va012-fl-padd" style="width:102%">'
                     //+ '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     //+ '                              <div class="va012-form-group va012-form-data" >'
                     //+ '                                  <label>' + VIS.Msg.getMsg("VA012_Amount") + '</label>'
@@ -728,7 +728,7 @@
                     + '  ');
 
                 //TrxAmount
-                divRow4 = $('<div class="row va012-fl-padd">');
+                divRow4 = $('<div class="row va012-fl-padd" style="width:102%">');
                 //  + '                          <div style="padding-left: 7px;padding-right: 7px;">'
                 divRow4Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
                 divRow4Col1TrxAmt = $('<div id="VA012_divTrxAmt_' + $self.windowNo + '" class="va012-form-group va012-form-data">');
@@ -775,7 +775,7 @@
                 divRow4.append(divRow4Col1).append(divRow4Col2).append(divRow4Col3);
 
                 //Add Contra 
-                divRow5 = $('<div class="row va012-fl-padd">'
+                divRow5 = $('<div class="row va012-fl-padd" style="width:102%">'
                     // + '                          <div id="VA012_divContra_' + $self.windowNo + '" style="padding-left: 7px;padding-right: 7px;">'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divContraType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
@@ -826,7 +826,7 @@
 
 
 
-                divRow6 = $('<div class="row va012-fl-padd">');
+                divRow6 = $('<div class="row va012-fl-padd" style="width:102%">');
                 //  + '                          <div id="VA012_divVoucher_' + $self.windowNo + '" style=" padding-left: 7px;padding-right: 7px;">'
                 divRow6Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCharge_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
@@ -868,7 +868,7 @@
                 //// + '                      </div>'
                 //+ '                      <!-- end of row -->'
                 //+ '  ');
-                divRow7 = $('<div class="row va012-fl-padd">'
+                divRow7 = $('<div class="row va012-fl-padd" style="width:102%">'
                     // + '                          <div id="VA012_divMatch_' + $self.windowNo + '" style="padding-left: 7px;padding-right: 7px;">'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCtrlPayment_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
@@ -898,7 +898,7 @@
                     //+ '                      </div>'
                     + '                      <!-- end of row -->'
                     + '  ');
-                divRow8 = $('<div class="row va012-fl-padd">'
+                divRow8 = $('<div class="row va012-fl-padd" style="width:102%">'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div id="VA012_divPaymentSchedule_' + $self.windowNo + '" class="va012-form-data" >'
                     + '                              <label>' + VIS.Msg.getMsg("VA012_PaymentSchedules") + '</label>'
@@ -932,7 +932,7 @@
 
 
                     + '  ');
-                divRow9 = $('<div class="row va012-fl-padd">'
+                divRow9 = $('<div class="row va012-fl-padd" style="width:102%">'
                     + '                       <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-check">'
                     + '                                  <input tabindex="13" id="VA012_chkUseNextTime_' + $self.windowNo + '" type="checkbox">'
