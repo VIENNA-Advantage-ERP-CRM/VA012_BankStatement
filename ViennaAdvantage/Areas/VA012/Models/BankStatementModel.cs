@@ -4323,7 +4323,7 @@ namespace VA012.Models
 
 
                     WHERE PAY.C_PAYMENT_ID=" + _dragSourceID;
-                _trxAmt = Util.GetValueOfDecimal(DB.ExecuteScalar(_sql));
+                //_trxAmt = Util.GetValueOfDecimal(DB.ExecuteScalar(_sql));
                 ///// end trx amt
 
                 if (_authCode == "" || _authCode == null)
@@ -4331,7 +4331,7 @@ namespace VA012.Models
                     if (_amount == 0)
                     {
                         _obj._amount = _payAmt;
-                        _obj._trxamount = _trxAmt;
+                        _obj._trxamount = _payAmt;// _trxAmt;
                     }
                     else if (_payAmt != _amount)
                     {
@@ -4345,7 +4345,7 @@ namespace VA012.Models
                     if (_amount == 0)
                     {
                         _obj._amount = _payAmt;
-                        _obj._trxamount = _trxAmt;
+                        _obj._trxamount = _payAmt;// _trxAmt;
                     }
 
                 }
