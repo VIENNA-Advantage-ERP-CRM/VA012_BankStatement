@@ -519,7 +519,18 @@
             _lstStatement.on(VIS.Events.onTouchStartOrClick, childDialogs.openStatement);
             _lstStatement.on(VIS.Events.onTouchStartOrClick, childDialogs.selectedStatementLinesList);
             _lstPayments.on(VIS.Events.onTouchStartOrClick, childDialogs.selectedScheduleList);
-            _lstPayments.on(VIS.Events.onTouchStartOrClick, function () {
+            _lstPayments.on(VIS.Events.onTouchStartOrClick, function (e) {
+
+                // when we click on div, mark checkbox as True
+                if (e.target.type != "checkbox") {
+                    if ($(e.target).closest(".row").find(':checkbox').is(':checked')) {
+                        $(e.target).closest(".row").find(":checkbox").prop('checked', false);
+                    }
+                    else {
+                        $(e.target).closest(".row").find(":checkbox").prop('checked', true);
+                    }
+                }
+
                 _txtAmount.getControl().trigger('blur');
             });
             _statementDate.addClass("va012-mandatory");
