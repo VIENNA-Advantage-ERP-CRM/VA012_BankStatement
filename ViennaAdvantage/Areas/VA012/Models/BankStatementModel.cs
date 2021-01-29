@@ -5347,7 +5347,8 @@ namespace VA012.Models
         {
             List<MatchBase> bankList = new List<MatchBase>();
             MatchBase list = null;
-            DataSet ds = DB.ExecuteDataset("SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y'", null, null);
+            //added Client_ID to get Bank's with respect to Client
+            DataSet ds = DB.ExecuteDataset("SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y' AND AD_Client_ID=" + ctx.GetAD_Client_ID(), null, null);
             if (ds != null && ds.Tables[0].Rows.Count > 0)
             {
                 for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
