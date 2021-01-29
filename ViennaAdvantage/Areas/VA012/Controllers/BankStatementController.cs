@@ -711,5 +711,22 @@ namespace VA012.Controllers
             StatementOperations obj = new StatementOperations();
             return Json(JsonConvert.SerializeObject(obj.GetBank(ctx)), JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// Get Invoice PaySchedule list
+        /// </summary>
+        /// <param name="seltdInvoice">C_Invoice_ID</param>
+        /// <returns>Invoice PaySchedule list</returns>
+        public JsonResult GetInvPaySchedule(int seltdInvoice, int accountID)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations obj = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(obj.GetInvPaySchedule(ctx, seltdInvoice, accountID));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
     }
 }
