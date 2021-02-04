@@ -674,7 +674,8 @@ namespace VA012.Models
                     }
                 }
             }
-
+            //get the Org_ID from bank account
+            _formData[0]._bankAcctOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive ='Y' AND AD_Client_ID=" + ctx.GetAD_Client_ID() + " AND C_BankAccount_ID=" + _formData[0]._cmbBankAccount));
 
             string schedulePaymentResult = "";
             string orderPaymentResult = "";
@@ -770,7 +771,9 @@ namespace VA012.Models
             {
                 _bankStatement = new MBankStatement(ctx, 0, null);
                 _bankStatement.SetAD_Client_ID(ctx.GetAD_Client_ID());
-                _bankStatement.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                //_bankStatement.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                //set Org_ID based on BankAccount
+                _bankStatement.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                 _bankStatement.SetC_BankAccount_ID(_formData[0]._cmbBankAccount);
                 _bankStatement.SetName(_formData[0]._txtStatementNo);
                 _bankStatement.SetStatementDate(_formData[0]._dtStatementDate);
@@ -3526,6 +3529,7 @@ namespace VA012.Models
                         _pay.SetC_DocType_ID(C_Doctype_ID);
                         _pay.SetDateAcct(System.DateTime.Now);
                         _pay.SetDateTrx(System.DateTime.Now);
+                        _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                         _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                         _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
                         //added BPartner_Location_ID from Invoice Reference
@@ -3658,6 +3662,8 @@ namespace VA012.Models
                         _pay.SetC_DocType_ID(C_Doctype_ID);
                         _pay.SetDateAcct(System.DateTime.Now);
                         _pay.SetDateTrx(System.DateTime.Now);
+                        //set the Organization from the backaccount
+                        _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                         _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                         _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
                         //added BPartner_Location_ID from Invoice Reference
@@ -3960,6 +3966,8 @@ namespace VA012.Models
                 _pay.SetC_DocType_ID(C_Doctype_ID);
                 _pay.SetDateAcct(System.DateTime.Now);
                 _pay.SetDateTrx(System.DateTime.Now);
+                //set Org_ID based on BankAccount
+                _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                 _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                 _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
                 _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
@@ -4046,6 +4054,8 @@ namespace VA012.Models
                 _pay.SetC_DocType_ID(C_Doctype_ID);
                 _pay.SetDateAcct(System.DateTime.Now);
                 _pay.SetDateTrx(System.DateTime.Now);
+                //set Org_ID based on BankAccount
+                _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                 _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                 _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
                 _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
@@ -5565,6 +5575,7 @@ namespace VA012.Models
         public string _cmbDifferenceType { get; set; }
         public decimal _txtDifference { get; set; }
         public string _trxno { get; set; }
+        public int _bankAcctOrg_ID { get; internal set; }
         // public List<GetScheduleProp> _getSchedules { get; set; }
     }
     public class PaymentProp
