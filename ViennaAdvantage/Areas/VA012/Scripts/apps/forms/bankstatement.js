@@ -20,6 +20,7 @@
         var _cmbTransactionType = null;
         var _lstStatement = null;
         var _lstPayments = null;
+        var _paymentLists = null;
         var _statementID = "";
         var _secReconciled = null;
         var _secUnreconciled = null;
@@ -45,8 +46,10 @@
         var _openingFromDrop = false;
         var _openingFromEdit = false;
         var _paymentPageNo = 1;
+        var _paymentPageSizeInc = 1;
         var _statementPageNo = 1;
         var _PAGESIZE = 50;
+        var _paymentPAGESIZE = 50;
         var C_BANKACCOUNT_ID = 0
         var C_BANK_ID = 0;
         var VA012_BANKSTATEMENTCLASS_ID = 0;
@@ -172,7 +175,10 @@
         this.Initialize = function () {
 
             loadRoot(loadFunctions.loadFormDesign());
-
+            _txtTrxAmt.addVetoableChangeListener(this);
+            _txtTaxAmount.addVetoableChangeListener(this);
+            _txtAmount.addVetoableChangeListener(this);
+            _txtDifference.addVetoableChangeListener(this);
 
             //$.ajax({
             //    url: VIS.Application.contextUrl + "VA012/BankStatement/Index",
@@ -245,7 +251,8 @@
             });
             _cmbBankAccount.on('change', function () {
 
-
+                //called loadPayment to update the data based on BankAccount
+                newRecordForm.loadPayment();
                 newRecordForm.loadCurrency();
                 newRecordForm.loadCashLine();
                 _lstPayments.html("");
@@ -285,6 +292,10 @@
                 newRecordForm.prepayRefresh();
                 newRecordForm.refreshForm();
                 _paymentPageNo = 1;
+                //Used to handle the Scrolling for Transactions
+                _paymentPageCount = 0;
+                _paymentPAGESIZE = 50;
+                _paymentPageSizeInc = 1;
                 loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
 
             });
@@ -515,8 +526,19 @@
             _lstStatement.on(VIS.Events.onTouchStartOrClick, childDialogs.openStatement);
             _lstStatement.on(VIS.Events.onTouchStartOrClick, childDialogs.selectedStatementLinesList);
             _lstPayments.on(VIS.Events.onTouchStartOrClick, childDialogs.selectedScheduleList);
-            _lstPayments.on(VIS.Events.onTouchStartOrClick, function () {
-                _txtAmount.trigger('blur');
+            _lstPayments.on(VIS.Events.onTouchStartOrClick, function (e) {
+
+                // when we click on div, mark checkbox as True
+                if (e.target.type != "checkbox") {
+                    if ($(e.target).closest(".row").find(':checkbox').is(':checked')) {
+                        $(e.target).closest(".row").find(":checkbox").prop('checked', false);
+                    }
+                    else {
+                        $(e.target).closest(".row").find(":checkbox").prop('checked', true);
+                    }
+                }
+
+                _txtAmount.getControl().trigger('blur');
             });
             _statementDate.addClass("va012-mandatory");
             //Change event of Statement Date Filter
@@ -548,10 +570,11 @@
 
             loadFormDesign: function () {
 
-
-                var _formDesign = '  <div class="va012-assign-content">'
-                    + '  <div id="VA012_mainContainer_' + $self.windowNo + '" class="va012-main-container">'
-                    + '  <table id="VA012_table_' + $self.windowNo + '" style="width: 100%;"><tr><td id="VA012_tdLeft_' + $self.windowNo + '" style="width: 200px;position: relative;">'
+                _formDesign = $('<div class="va012-assign-content">');
+                divContainer = $('  <div id="VA012_mainContainer_' + $self.windowNo + '" class="va012-main-container">');
+                divTable = $('<table id="VA012_table_' + $self.windowNo + '" style="width: 100%;">');// splitted table tags into $variables
+                tableTr = $('<tr>');
+                tableTd = $('<td id="VA012_tdLeft_' + $self.windowNo + '" style="width: 200px;position: relative;">'
                     + '   <div class="va012-left-part">'
                     + '              <div class="va012-left-title">'
                     + '                  <h4>'
@@ -587,10 +610,11 @@
                     + '              <!-- end of left-content -->'
                     + '          </div>'
                     + '          <!-- end of left-part -->'
-                    + ' </td> <td style="position: relative;">'
-                    + '          <div id="VA012_contentArea_' + $self.windowNo + '" class="va012-content-area" style="position: absolute;" >'
-                    + '              <div id="VA012_middleWrap_' + $self.windowNo + '" class="va012-middle-wrap">'
-                    + '                  <div class="va012-mid-top-wrap" id="VA012_formBtnNewRecord_' + $self.windowNo + '">'
+                    + ' </td>');
+                tableTd1 = $('<td style="position: relative;">');
+                contentDiv = $('<div id="VA012_contentArea_' + $self.windowNo + '" class="va012-content-area" style="position: absolute;" >');
+                divMidWrap = $('<div id="VA012_middleWrap_' + $self.windowNo + '" class="va012-middle-wrap">');
+                divtopWrap = $('<div class="va012-mid-top-wrap" id="VA012_formBtnNewRecord_' + $self.windowNo + '">'
                     + '                      <div class="va012-icons-wrap">'
                     //+ '                          <span>'
                     //+ '                              <img class="va012-delete" alt="delete" id="VA012_btnDelete_' + $self.windowNo + '"></span>'
@@ -602,11 +626,11 @@
                     + '                              <i class="va012-hide-show-newform vis vis-plus" activestatus="0" alt="add" title = "Expand" id="VA012_btnNewRecord_' + $self.windowNo + '"></i></span>'
                     + '                      </div>'
                     + '                      <!-- end of icons-wrap -->'
-                    + '                  </div>'
-                    + '                  <!-- end of mid-top-wrap -->'
-                    + '  '
-                    + '                  <div class="va012-form-wrap va012-newform" id="VA012_formNewRecord_' + $self.windowNo + '" data-uid="0">'
-                    + '                      <div class="row va012-fl-padd">'
+                    + '                  </div>');
+                //+ '                  <!-- end of mid-top-wrap -->'
+                //+ '  '
+                divformWrap = $('<div class="va012-form-wrap va012-newform" id="VA012_formNewRecord_' + $self.windowNo + '" data-uid="0" style="height:55%;overflow-y:auto;width:101%;">');
+                divRow1 = $('<div class="row va012-fl-padd" style="width:102%">'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-data">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementNumber") + ' <sup style="color: red;">*</sup></label>'
@@ -634,39 +658,42 @@
                     + '                          <!-- end of col -->'
                     + '                      </div>'
                     + '                      <!-- end of row -->'
-                    + '  '
-                    + '                      <div class="row va012-fl-padd">'
-                    + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '  ');
+                divRow2 = $('<div class="row va012-fl-padd" style="width:102%">');
+                row2Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-data">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
                     + '                                  <input tabindex="4" id="VA012_dtStatementDate_' + $self.windowNo + '" type="date">'
                     + '                              </div>'
                     + '                              <!-- end of form-group -->'
                     + '                          </div>'
-                    + '                          <!-- end of col -->'
-                    + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div class="va012-form-group va012-form-data" >'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_Amount") + '<sup style="color: red;">*</sup></label>'
-                    + '                                  <a tabindex="5" id="VA012_btnIn_' + $self.windowNo + '" v_active="1" class="va012-inout-icon va012-active">In</a>'
-                    + '                                  <a tabindex="6" id="VA012_btnOut_' + $self.windowNo + '" v_active="0" class="va012-inout-icon va012-inactive">Out</a>'
-                    + '                                  <input tabindex="7" autofocus  value="0.00" id="VA012_txtAmount_' + $self.windowNo + '" type="number" class="va012-input-size-amt va012-right-align va012-txtamount">'
-                    + '                                <a id="VA012_btnAmount_' + $self.windowNo + '" class="va012-info-icon"></a>'
-                    + '                              </div>'
-                    + '                              <!-- end of form-group -->'
-                    + '                          </div>'
-                    + '                          <!-- end of col -->'
-                    //+ '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    //+ '                              <div class="va012-form-group va012-form-data">'
-                    //+ '                                  <label>' + VIS.Msg.getMsg("VA012_Currency") + '</label>'
-                    //+ '                                  <select id="VA012_cmbCurrency_' + $self.windowNo + '">'
-                    ////+ '                                  <label>' + VIS.Msg.getMsg("VA012_PaymentMethod") + '</label>'
-                    ////+ '                                  <select id="VA012_cmbPaymentMethod_' + $self.windowNo + '">'
-                    //+ '                                  </select>'
-                    //+ '                              </div>'
-                    //+ '                              <!-- end of form-group -->'
-                    //+ '                          </div>'
-                    //+ '                          <!-- end of col -->'
-                    + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                          <!-- end of col -->');
+                row2Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
+                row2Col2divAmt = $('<div class="va012-form-group va012-form-data" >');
+                row2Col2Lble = $('<label>' + VIS.Msg.getMsg("VA012_Amount") + '<sup style="color: red;">*</sup></label>');
+                row2Col2btnIn = $('<a tabindex="5" id="VA012_btnIn_' + $self.windowNo + '" v_active="1" class="va012-inout-icon va012-active">In</a>');
+                row2Col2btnOut = $('<a tabindex="6" id="VA012_btnOut_' + $self.windowNo + '" v_active="0" class="va012-inout-icon va012-inactive">Out</a>');
+                _txtAmount = new VIS.Controls.VAmountTextBox("VA012_txtAmount_" + $self.windowNo + "", false, false, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
+                _txtAmount.setValue(0);
+                _txtAmount.getControl().addClass('va012-input-size-amt va012-right-align va012-txtamount');
+                //$('<input tabindex="7" autofocus  value="0.00" id="VA012_txtAmount_' + $self.windowNo + '" type="number" class="va012-input-size-amt va012-right-align va012-txtamount">'
+                row2Col2btnIcon = $('<a id="VA012_btnAmount_' + $self.windowNo + '" class="va012-info-icon"></a>');
+                //+ '                              </div>'
+                //+ '                              <!-- end of form-group -->'
+                //+ '                          </div>'
+                //+ '                          <!-- end of col -->');
+                //+ '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
+                //+ '                              <div class="va012-form-group va012-form-data">'
+                //+ '                                  <label>' + VIS.Msg.getMsg("VA012_Currency") + '</label>'
+                //+ '                                  <select id="VA012_cmbCurrency_' + $self.windowNo + '">'
+                ////+ '                                  <label>' + VIS.Msg.getMsg("VA012_PaymentMethod") + '</label>'
+                ////+ '                                  <select id="VA012_cmbPaymentMethod_' + $self.windowNo + '">'
+                //+ '                                  </select>'
+                //+ '                              </div>'
+                //+ '                              <!-- end of form-group -->'
+                //+ '                          </div>'
+                //+ '                          <!-- end of col -->'
+                row2Col3 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-data">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_VoucherMatch") + '<sup style="color: red;">*</sup></label>'
                     + '                                  <select tabindex="8" id="VA012_cmbVoucherMatch_' + $self.windowNo + '">'
@@ -677,8 +704,8 @@
                     + '                          <!-- end of col -->'
                     + '                      </div>'
                     + '                      <!-- end of row -->'
-                    + '  '
-                    + '                      <div class="row va012-fl-padd">'
+                    + '  ');
+                divRow3 = $('                      <div class="row va012-fl-padd" style="width:102%">'
                     //+ '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     //+ '                              <div class="va012-form-group va012-form-data" >'
                     //+ '                                  <label>' + VIS.Msg.getMsg("VA012_Amount") + '</label>'
@@ -716,49 +743,58 @@
                     + '                          <!-- end of col -->'
                     + '                      </div>'
                     + '                      <!-- end of row -->'
-                    + '  '
+                    + '  ');
 
-                    //TrxAmount
-                    + '                      <div class="row va012-fl-padd">'
-                    //  + '                          <div style="padding-left: 7px;padding-right: 7px;">'
-                    + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                 <div id="VA012_divTrxAmt_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                   <label>' + VIS.Msg.getMsg("VA012_TrxAmt") + '</label>'
-                    + '                                   <input disabled tabindex="9" id="VA012_txtTrxAmt_' + $self.windowNo + '" type="number" class="va012-right-align">'
-                    + '                                 </div>'
-                    + '                                  <!-- end of form-group -->'
-                    + '                              </div>'
-                    + '                              <!-- end of col -->'
+                //TrxAmount
+                divRow4 = $('<div class="row va012-fl-padd" style="width:102%">');
+                //  + '                          <div style="padding-left: 7px;padding-right: 7px;">'
+                divRow4Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
+                divRow4Col1TrxAmt = $('<div id="VA012_divTrxAmt_' + $self.windowNo + '" class="va012-form-group va012-form-data">');
+                divRow4Col1Lbl = $('<label>' + VIS.Msg.getMsg("VA012_TrxAmt") + '</label>');
+                _txtTrxAmt = new VIS.Controls.VAmountTextBox("VA012_txtTrxAmt_" + $self.windowNo + "", false, true, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
+                _txtTrxAmt.getControl().addClass('va012-right-align');
+                _txtTrxAmt.setValue((0).toFixed(_stdPrecision));
+                divRow4Col1TrxAmt.append(divRow4Col1Lbl).append(_txtTrxAmt.getControl());
+                divRow4Col1.append(divRow4Col1TrxAmt);
+                //+ '                                   <input disabled tabindex="9" id="VA012_txtTrxAmt_' + $self.windowNo + '" type="number" class="va012-right-align">'
+                // + '                                 </div>'
+                //+ '                                  <!-- end of form-group -->'
+                //+ '                              </div>'
+                // + '                              <!-- end of col -->');
 
-                    + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                 <div id="VA012_divDifference_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                   <label>' + VIS.Msg.getMsg("VA012_Difference") + '</label>'
-                    + '                                   <input disabled tabindex="9" vchangable="Y" id="VA012_txtDifference_' + $self.windowNo + '" type="number" class="va012-right-align">'
-                    + '                                 </div>'
-                    + '                                  <!-- end of form-group -->'
-                    + '                              </div>'
-                    + '                              <!-- end of col -->'
-                    + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div id="VA012_divDifferenceType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                divRow4Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
+                divRow4Col2Diff = $('<div id="VA012_divDifference_' + $self.windowNo + '" class="va012-form-group va012-form-data">');
+                divRow4Col2DiffLbl = $('<label>' + VIS.Msg.getMsg("VA012_Difference") + '</label>');
+                _txtDifference = new VIS.Controls.VAmountTextBox("VA012_txtDifference_" + $self.windowNo + "", false, true, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
+                _txtDifference.getControl().addClass('va012-right-align');
+                _txtDifference.setValue(0);
+                divRow4Col2Diff.append(divRow4Col2DiffLbl).append(_txtDifference.getControl());
+                divRow4Col2.append(divRow4Col2Diff);
+                //$('                                   <input disabled tabindex="9" vchangable="Y" id="VA012_txtDifference_' + $self.windowNo + '" type="number" class="va012-right-align">'
+                //+ '                                 </div>'
+                //+ '                                  <!-- end of form-group -->'
+                //+ '                              </div>'
+                //+ '                              <!-- end of col -->');
+                divRow4Col3 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
+                divRow4Col3DiffType = $('<div id="VA012_divDifferenceType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
                     + '                                  <label>' + VIS.Msg.getMsg("VA012_DifferenceType") + '</label>'
                     + '                                  <select tabindex="9" id="VA012_cmbDifferenceType_' + $self.windowNo + '">'
                     + '                                  </select>'
                     + '                              </div>'
-                    + '                              <!-- end of form-group -->'
-                    + '                          </div>'
-                    + '                          <!-- end of col -->'
-                    + '                          </div>'
-                    // + '                      </div>'
-                    + '                      <!-- end of row -->'
-                    + '  '
-                    //end Trxamount
+                    + '                              <!-- end of form-group -->');
+                // + '                          </div>'
+                //+ '                          <!-- end of col -->'
+                //+ '                          </div>'
+                // + '                      </div>'
+                // + '                      <!-- end of row -->'
+                //+ '  ');
+                //end Trxamount
+                divRow4Col3.append(divRow4Col3DiffType);
+                divRow4.append(divRow4Col1).append(divRow4Col2).append(divRow4Col3);
 
-
-                    //Add Contra 
-                    + '                      <div class="row va012-fl-padd">'
+                //Add Contra 
+                divRow5 = $('<div class="row va012-fl-padd" style="width:102%">'
                     // + '                          <div id="VA012_divContra_' + $self.windowNo + '" style="padding-left: 7px;padding-right: 7px;">'
-
-
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divContraType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
                     + '                                      <label>' + VIS.Msg.getMsg("VA012_ContraType") + '</label>'
@@ -768,9 +804,6 @@
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
-
-
-
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCashBook_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
                     + '                                      <label>' + VIS.Msg.getMsg("VA012_CashBook") + '</label>'
@@ -806,14 +839,14 @@
                     + '                          </div>'
                     // + '                      </div>'
                     + '                      <!-- end of row -->'
-                    + '  '
-                    // End Contra
+                    + '  ');
+                // End Contra
 
 
 
-                    + '                      <div class="row va012-fl-padd">'
-                    //  + '                          <div id="VA012_divVoucher_' + $self.windowNo + '" style=" padding-left: 7px;padding-right: 7px;">'
-                    + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
+                divRow6 = $('<div class="row va012-fl-padd" style="width:102%">');
+                //  + '                          <div id="VA012_divVoucher_' + $self.windowNo + '" style=" padding-left: 7px;padding-right: 7px;">'
+                divRow6Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCharge_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
                     + '                                      <label>' + VIS.Msg.getMsg("VA012_Charge") + '</label>'
                     + '                                      <div style=" position: relative; float: left; width: 100%; ">'
@@ -825,8 +858,8 @@
                     + '                                  </div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
-                    + '                              <!-- end of col -->'
-                    + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                              <!-- end of col -->');
+                divRow6Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divTaxRate_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
                     + '                                      <label>' + VIS.Msg.getMsg("VA012_TaxRate") + '</label>'
                     + '                                      <select tabindex="11" id="VA012_cmbTaxRate_' + $self.windowNo + '">'
@@ -834,24 +867,26 @@
                     + '                                  </div>'
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
-                    + '                              <!-- end of col -->'
-                    + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divTaxAmount_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_TaxAmount") + '</label>'
-                    + '                                      <input tabindex="12" class="va012-right-align"  value="0.00" id="VA012_txtTaxAmount_' + $self.windowNo + '" type="number">'
-                    + '                                  </div>'
-                    + '                                  <!-- end of form-group -->'
-                    + '                              </div>'
-                    + '                              <!-- end of col -->'
-                    + '                          </div>'
-                    // + '                      </div>'
-                    + '                      <!-- end of row -->'
-                    + '  '
-
-
-
-
-                    + '                      <div class="row va012-fl-padd">'
+                    + '                              <!-- end of col -->');
+                divRow6Col3 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
+                divRow6Col3divTax = $('<div id="VA012_divTaxAmount_' + $self.windowNo + '" class="va012-form-group va012-form-data">');
+                divRow6Col3divTaxLbl = $('<label>' + VIS.Msg.getMsg("VA012_TaxAmount") + '</label>');
+                _txtTaxAmount = new VIS.Controls.VAmountTextBox("VA012_txtTaxAmount_" + $self.windowNo + "", false, false, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
+                _txtTaxAmount.setValue(0);
+                _txtTaxAmount.getControl().addClass('va012-right-align');
+                divRow6Col3divTax.append(divRow6Col3divTaxLbl).append(_txtTaxAmount.getControl());
+                divRow6Col3.append(divRow6Col3divTax);
+                divRow6.append(divRow6Col1).append(divRow6Col2).append(divRow6Col3);
+                //+ '<input tabindex="12" class="va012-right-align"  value="0.00" id="VA012_txtTaxAmount_' + $self.windowNo + '" type="number">'
+                //+ '                                  </div>'
+                //+ '                                  <!-- end of form-group -->'
+                //+ '                              </div>'
+                //+ '                              <!-- end of col -->'
+                //+ '                          </div>'
+                //// + '                      </div>'
+                //+ '                      <!-- end of row -->'
+                //+ '  ');
+                divRow7 = $('<div class="row va012-fl-padd" style="width:102%">'
                     // + '                          <div id="VA012_divMatch_' + $self.windowNo + '" style="padding-left: 7px;padding-right: 7px;">'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCtrlPayment_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
@@ -880,8 +915,8 @@
                     + '                          </div>'
                     //+ '                      </div>'
                     + '                      <!-- end of row -->'
-                    + '  '
-                    + '                      <div class="row va012-fl-padd">'
+                    + '  ');
+                divRow8 = $('<div class="row va012-fl-padd" style="width:102%">'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div id="VA012_divPaymentSchedule_' + $self.windowNo + '" class="va012-form-data" >'
                     + '                              <label>' + VIS.Msg.getMsg("VA012_PaymentSchedules") + '</label>'
@@ -914,8 +949,8 @@
 
 
 
-                    + '  '
-                    + '                      <div class="row va012-fl-padd">'
+                    + '  ');
+                divRow9 = $('<div class="row va012-fl-padd" style="width:102%">'
                     + '                       <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-check">'
                     + '                                  <input tabindex="13" id="VA012_chkUseNextTime_' + $self.windowNo + '" type="checkbox">'
@@ -940,14 +975,10 @@
                     + '                          </div>'
                     + '                          <!-- end of col -->'
                     + '                      </div>'
-                    + '                      <!-- end of row -->'
-
-
-
-
-                    + '                  </div>'
-                    + '                  <!-- end of form-wrap -->'
-                    + '                  <div id="VA012_paymentHeaderWrap_' + $self.windowNo + '" class="va012-payment-header-wrap">'
+                    + '                      <!-- end of row -->');
+                //+ '                  </div>');
+                //+ '                  <!-- end of form-wrap -->'
+                payHeaderWrap = $('<div id="VA012_paymentHeaderWrap_' + $self.windowNo + '" class="va012-payment-header-wrap">'
                     + '                          <div class="pull-left">'
                     + '                              <a class="va012-frm-btn va012-btn-gray" style="cursor: default;">' + VIS.Msg.getMsg("VA012_UpcomingTransactions") + '</a>'
                     + '                          </div>'
@@ -975,9 +1006,9 @@
                     + '                  </div>'
                     + '                  <!-- end of payment-list -->'
                     + '  '
-                    + '              </div>'
-                    + '              <!-- end of middle-wrap -->'
-                    + '              <div id="VA012_rightWrap_' + $self.windowNo + '" class="va012-right-wrap">'
+                    + '              </div>');
+                // + '              <!-- end of middle-wrap -->'
+                rightWrap = $('<div id="VA012_rightWrap_' + $self.windowNo + '" class="va012-right-wrap">'
                     + '                  <div id="VA012_rightTop_' + $self.windowNo + '" class="va012-right-top">'
                     + '                      <div class="row">'
                     + '                          <div class="col-md-3 col-sm-3" style=" padding-right: 5px; ">'
@@ -1031,18 +1062,27 @@
                     + '                  <div class="va012-right-content" id="VA012_lstStatement_' + $self.windowNo + '">'
                     + '                  </div>'
                     + '                  <!-- end of right-content -->'
-                    + '              </div>'
-                    + '              <!-- end of right-wrap -->'
-                    + '          </div>'
-                    + '          <!-- end of content-area -->'
-                    + '  </td></tr></table>'
-                    + '      </div>'
-                    + '      <!-- end of main-container -->'
-                    + '  '
-                    + '  </div>'
-                    + '  <!-- end of assign-content -->'
-                    + '  '
-                    ;
+                    + '              </div>');
+                //+ '              <!-- end of right-wrap -->'
+                //+ '          </div>'
+                //+ '          <!-- end of content-area -->'
+                //+ '  </td>');
+                //</tr>
+                //</table>');
+                row2Col2divAmt.append(row2Col2Lble).append(row2Col2btnIn).append(row2Col2btnOut).append(_txtAmount.getControl()).append(row2Col2btnIcon);
+                row2Col2.append(row2Col2divAmt);
+                divRow2.append(row2Col1).append(row2Col2).append(row2Col3);
+                divformWrap.append(divRow1).append(divRow2).append(divRow3).append(divRow4).append(divRow5).append(divRow6).append(divRow7).append(divRow8).append(divRow9);
+                divMidWrap.append(divtopWrap).append(divformWrap).append(payHeaderWrap);
+                contentDiv.append(divMidWrap).append(rightWrap);
+                tableTd1.append(contentDiv);
+                tableTr.append(tableTd).append(tableTd1);                   //+ '      </div>'
+                //+ '      <!-- end of main-container -->'
+                //+ '  '
+                //+ '  </div>'
+                //+ '  <!-- end of assign-content -->'
+                //+ '  '
+                //;
                 $divMatchStatementGridPopUp = $('<div  id="VA012_gridMatchStatePopUp_' + $self.windowNo + '"" style="display:block;width:auto;height:auto">'
                     + '<div  style="    width: 50%;float: left;" ><label>' + VIS.Msg.getMsg("VA012_ChargeType") + '</label><div  id="VA012_ChargeSrch_' + $self.windowNo + '"></div></div>'
                     + '<div ><label>' + VIS.Msg.getMsg("VA012_Taxrate") + '</label><select  id="VA012_cmbTaxRate_' + $self.windowNo + '"></select></div>'
@@ -1056,7 +1096,9 @@
                 _ChargeLookUp = VIS.MLookupFactory.getMLookUp(VIS.Env.getCtx(), $self.windowNo, 3787, VIS.DisplayType.Search);
                 $ChargeControl = new VIS.Controls.VTextBoxButton("C_Charge_ID", true, false, true, VIS.DisplayType.Search, _ChargeLookUp);
                 _chargeSrch.append($ChargeControl.getControl().css('width', '93%')).append($ChargeControl.getBtn(0).css('width', '30px').css('height', '30px').css('padding', '0px').css('border-color', '#BBBBBB'));
-
+                divTable.append(tableTr);
+                _formDesign.append(divContainer).append(divTable);
+                //_txtTrxAmt.addVetoableChangeListener(this);
                 return _formDesign;
             },
             setBankAndAccount: function () {
@@ -1188,15 +1230,15 @@
                         if (data != null && data != "") {
                             data = $.parseJSON($.parseJSON(data));
                             if (data._difference != 0) {
-                                _txtDifference.val((Math.abs(data._difference)).toFixed(_stdPrecision));
+                                _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal(Math.abs(data._difference)));
                                 _divDifferenceType.find("*").prop("disabled", false);
                                 _cmbDifferenceType.val(data._differenceType).prop('selected', true);
-                                _txtDifference.attr("vchangable", "N");
+                                _txtDifference.getControl().attr("vchangable", "N");
                                 //if (_cmbVoucherMatch.val() == "M") {
                                 //    _txtTrxAmt.val((parseFloat(_txtAmount.val()) + parseFloat(_txtDifference.val())).toFixed(_stdPrecision));
                                 //}
                                 if (_cmbVoucherMatch.val() == "M") {
-                                    _txtTrxAmt.val(parseFloat(data._payamt).toFixed(_stdPrecision));
+                                    _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(data._payamt.toFixed(_stdPrecision)));
                                 }
                             }
                         }
@@ -1222,6 +1264,8 @@
                 _btnMatchStatement = $root.find("#VA012_btnMatchStatement_" + $self.windowNo);
                 _lstStatement = $root.find("#VA012_lstStatement_" + $self.windowNo);
                 _lstPayments = $root.find("#VA012_lstPayments_" + $self.windowNo);
+                //to handling busyIdicator for paymentList
+                _paymentLists = $root.find("#VA012_paymentList_" + $self.windowNo);
                 _secReconciled = $root.find("#VA012_secReconciled_" + $self.windowNo);
                 _secUnreconciled = $root.find("#VA012_secUnreconciled_" + $self.windowNo);
                 // _divVoucher = $root.find("#VA012_divVoucher_" + $self.windowNo);
@@ -1300,21 +1344,36 @@
             loadBank: function () {
 
                 //var _sql = "SELECT NAME,C_BANK_ID FROM C_BANK WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                var _sql = "SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y'";
+                //var _sql = "SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y'";
 
-                _sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Bank", true, false);
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBank);
+                //_sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Bank", true, false);
+                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBank);
+                //get Bank's from Controller and append to bank list dropdown
+                //fetch IsOwnBank is true those bank only will get
+                $.ajax({
+                    url: VIS.Application.contextUrl + "BankStatement/GetBank",
+                    type: "GET",
+                    datatype: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        if (data != null && data != "") {
+                            _ds = $.parseJSON(data);
+                            callbackloadBank(_ds);
+                        }
+                    },
+                });
                 function callbackloadBank(_ds) {
                     _cmbBank.html("");
                     _cmbBank.append("<option value=0 ></option>");
                     if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bank_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                        for (var i = 0; i < _ds.length; i++) {
+                            //_cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bank_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            _cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + ">" + _ds[i].Name + "</option>");
                         }
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                    //_ds.dispose();
+                    //_ds = null;
+                    //_sql = null;
                     _cmbBank.prop('selectedIndex', 0);
                     if (C_BANK_ID > 0) {
                         _cmbBank.val(C_BANK_ID).prop('selected', true);
@@ -1367,7 +1426,7 @@
                     datatype: "json",
                     contentType: "application/json; charset=utf-8",
                     async: false,
-                    data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _PAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType }),
+                    data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _paymentPAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType }),
                     success: function (data) {
                         if (data != null && data != "") {
 
@@ -1392,7 +1451,8 @@
                 //_prepayDataList = [];
                 //_txtPaymentSchedule.val("");
                 //_txtPrepayOrder.val("");
-                busyIndicator($(_lstPayments), true, "inherit");
+                //handled Scrolling for Transaction tab
+                busyIndicator($(_paymentLists), true, "inherit");
 
 
                 window.setTimeout(function () {
@@ -1401,15 +1461,16 @@
                         type: "GET",
                         datatype: "json",
                         contentType: "application/json; charset=utf-8",
-                        data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _PAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, statementDate: (_statementDate == null || _statementDate == "") ? new (Date) : _statementDate }),
+                        data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _paymentPAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, statementDate: (_statementDate == null || _statementDate == "") ? new (Date) : _statementDate }),
                         success: function (data) {
                             if (data != null && data != "") {
+
                                 callbackloadPayments(data);
-                                busyIndicator($(_lstPayments), false, "inherit");
+                                busyIndicator($(_paymentLists), false, "inherit");
                             }
                         },
                         error: function () {
-                            busyIndicator($(_lstPayments), false, "inherit");
+                            busyIndicator($(_paymentLists), false, "inherit");
                         }
                     });
                 }, 2);
@@ -1419,7 +1480,7 @@
                     _lstPayments.html(""); //To Clear the Payment grid
                     if (data != null && data.length > 0) {
                         for (var i = 0; i < data.length; i++) {
-
+                            var dateAcc = new Date(data[i].DateAcct).toLocaleDateString();
                             var status = "va012-red-color";
 
                             if (data[i].c_bankstatementline_id == null || data[i].c_bankstatementline_id == "0" || data[i].c_bankstatementline_id == 0) {
@@ -1438,7 +1499,7 @@
                             if (_transactionType == "PY" || _transactionType == "CO") {
                                 _PaymentsHTML += status;
                             }
-                            _PaymentsHTML += ' " paymentdata="' + VIS.Utility.encodeText(data[i].paymentno) + "/" + VIS.Utility.encodeText(data[i].businesspartner) + '" data-uid="' + data[i].c_payment_id;
+                            _PaymentsHTML += ' " paymentdata="' + VIS.Utility.encodeText(new Date(data[i].DueDate).toLocaleDateString()) + "_" + VIS.Utility.encodeText(data[i].DueAmt) + '" data-uid="' + data[i].c_payment_id;
 
                             /* change by pratap*/
                             _PaymentsHTML += ' " paymentamount = " ' + VIS.Utility.Util.getValueOfDecimal(data[i].convertedamount, "N") + '">'
@@ -1450,9 +1511,9 @@
                                 + '    <div class="va012-form-check">'
                                 + '        <input type="checkbox" data-uid="' + data[i].c_payment_id + '"  >'
                                 + '    <div title="' + VIS.Msg.getMsg('VA012_PaymentAmount') + '" class="va012-inside-form-check" style=" float: left; width: 85%; ">'
-                                + '      <label style=" width: 100%; ">' + data[i].currency + ' ' + Globalize.format(data[i].paymentamount, "N") + '</label>';
+                                + '      <label style=" width: 100%; ">' + data[i].currency + ' ' + parseFloat(data[i].paymentamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
                             if (data[i].isconverted == "Y") {
-                                _PaymentsHTML += '      <span>' + data[i].basecurrency + ' ' + Globalize.format(data[i].convertedamount, "N") + '</span>';
+                                _PaymentsHTML += '      <span>' + data[i].basecurrency + ' ' + parseFloat(data[i].convertedamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
                             }
                             _PaymentsHTML += '   </div></div>'
                                 + '    <!-- end of form-group -->'
@@ -1495,7 +1556,7 @@
                                     + '           <p title="Deposit Slip No">' + VIS.Utility.encodeText(data[i].depositslipno) + '</p>'
                                     + '           <p title="Authentication Code">' + VIS.Utility.encodeText(data[i].authcode) + '</p>'
 
-                                    + '           <p title="Account Date">' + data[i].DateAcct + '</p>'
+                                    + '           <p title="Account Date">' + dateAcc + '</p>'
                                     + '           <p title="Payment Method">' + data[i].PaymentMethod + '</p>'
 
                                     + '  </div>'
@@ -1510,7 +1571,7 @@
                                     + '         <div class="va012-pay-text">'
                                     + '           <p title="Authentication Code">' + VIS.Utility.encodeText(data[i].authcode) + '</p>'
 
-                                    + '           <p title="Account Date">' + data[i].DateAcct + '</p>'
+                                    + '           <p title="Account Date">' + dateAcc + '</p>'
                                     + '           <p title="Payment Method">' + data[i].PaymentMethod + '</p>'
 
                                     + '  </div>'
@@ -1639,13 +1700,19 @@
                 }
             },
             paymentScroll: function () {
+                //handled scrolling issue
+                //_paymentPageCount = 0;
+                if ($(this).scrollTop() + $(this).innerHeight() + 2 >= this.scrollHeight) {
+                    //if ($(this).scrollTop() > 0 && $(this).scrollTop() + $(this).innerHeight() + 2 >= this.scrollHeight) {
+                    if (_paymentPageCount != 1) {
+                        _paymentPAGESIZE = _PAGESIZE * _paymentPageSizeInc;
 
-                _paymentPageCount = 0;
-                if ($(this).scrollTop() > 0 && $(this).scrollTop() + $(this).innerHeight() + 2 >= this.scrollHeight) {
-                    loadFunctions.LoadPaymentsPages(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val());
-                    if (_paymentPageNo < _paymentPageCount) {
-                        _paymentPageNo++;
-                        loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                        loadFunctions.LoadPaymentsPages(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val());
+                        if (_paymentPageNo <= _paymentPageCount) {
+                            //_paymentPageNo++;
+                            _paymentPageSizeInc++;
+                            loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                        }
                     }
 
                 }
@@ -1700,7 +1767,7 @@
                                     }
 
                                     var _dragStatementID = $(this).data("uid");
-                                    if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _txtAmount.val())) {
+                                    if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _txtAmount.getValue())) {
                                         childDialogs.statementOpenEdit($(this).data("uid"));
 
 
@@ -1722,7 +1789,7 @@
                                     if (parseInt($_formNewRecord.attr("data-uid")) != $(this).data("uid")) {
                                         newRecordForm.scheduleRefresh();
                                     }
-                                    if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _scheduleList.toString(), _txtAmount.val())) {
+                                    if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _scheduleList.toString(), _txtAmount.getValue())) {
                                         if (!isInList(parseInt(($(ui.draggable)).data('uid')), _scheduleList)) {
                                             _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                             _scheduleDataList.push($(ui.draggable).attr('paymentdata'));
@@ -1755,7 +1822,7 @@
                                                     _btnOut.addClass("va012-inactive");
                                                     _btnOut.attr("v_active", "0");
                                                 }
-                                                _txtAmount.val((amount).toFixed(_stdPrecision));
+                                                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                                                 //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
                                                 //_txtTrxAmt.trigger('change');
                                             }
@@ -1777,8 +1844,8 @@
                                             for (var i = 0; i < _scheduleAmount.length; i++) {
                                                 amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                             }
-                                            _txtTrxAmt.val((amount).toFixed(_stdPrecision));
-                                            _txtTrxAmt.trigger('change');
+                                            _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                                            _txtTrxAmt.getControl().trigger('blur');
                                         }, 200);
                                     }
 
@@ -1787,7 +1854,7 @@
                                     if (parseInt($_formNewRecord.attr("data-uid")) != $(this).data("uid")) {
                                         newRecordForm.prepayRefresh();
                                     }
-                                    if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _prepayList.toString(), _txtAmount.val())) {
+                                    if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _prepayList.toString(), _txtAmount.getValue())) {
 
                                         childDialogs.statementOpenEdit($(this).data("uid"));
                                         //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
@@ -1808,7 +1875,7 @@
                                         return;
                                     }
                                     var _dragStatementID = $(this).data("uid");
-                                    if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _txtAmount.val())) {
+                                    if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _txtAmount.getValue())) {
                                         childDialogs.statementOpenEdit($(this).data("uid"));
 
                                         window.setTimeout(function () {
@@ -1863,7 +1930,7 @@
                                     return;
                                 }
                                 if (($(ui.draggable)).data('uid') > 0) {
-                                    if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.val())) {
+                                    if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.getValue())) {
                                         $_ctrlPayment.setValue(($(ui.draggable)).data('uid'), false, true);
                                         //_lstStatement.html("");
                                         //_statementPageNo = 1;
@@ -1874,57 +1941,58 @@
 
                             if (_cmbTransactionType.val() == "IS") {
 
-                                if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _scheduleList.toString(), _txtAmount.val())) {
+                                if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _scheduleList.toString(), _txtAmount.getValue())) {
                                     //alert("done");
+                                    var amount = 0;
                                     if (!isInList(parseInt(($(ui.draggable)).data('uid')), _scheduleList)) {
                                         _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                         _scheduleDataList.push($(ui.draggable).attr('paymentdata'));
-                                        /*change by pratap*/
-                                        if (_txtAmount.val() == "0.00") {
-                                            _scheduleAmount.push("0");
-                                        }
+                                    /*change by pratap*/
+                                        //not required
+                                        //if (_txtAmount.getValue() == 0) {
+                                        //    _scheduleAmount.push("0");
+                                        //}
                                         _scheduleAmount.push($(ui.draggable).attr('paymentamount'));
+                                        var amount = 0;
+                                        if (Number(_scheduleAmount.length) > 0) {
 
-                                        if (Number(_scheduleAmount[0]) == "0") {
-                                            var amount = 0;
                                             for (var i = 0; i < _scheduleAmount.length; i++) {
                                                 amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                             }
-                                            if (amount < 0) {
-                                                _btnOut.removeClass("va012-inactive");
-                                                _btnOut.addClass("va012-active");
-                                                _btnOut.attr("v_active", "1");
-                                                _btnIn.removeClass("va012-active");
-                                                _btnIn.addClass("va012-inactive");
-                                                _btnIn.attr("v_active", "0");
-                                            }
-                                            else {
-                                                _btnIn.removeClass("va012-inactive");
-                                                _btnIn.addClass("va012-active");
-                                                _btnIn.attr("v_active", "1");
-                                                _btnOut.removeClass("va012-active");
-                                                _btnOut.addClass("va012-inactive");
-                                                _btnOut.attr("v_active", "0");
-                                            }
-                                            _txtAmount.val((amount).toFixed(_stdPrecision));
+                                        }
+                                        if (amount < 0) {
+                                            _btnOut.removeClass("va012-inactive");
+                                            _btnOut.addClass("va012-active");
+                                            _btnOut.attr("v_active", "1");
+                                            _btnIn.removeClass("va012-active");
+                                            _btnIn.addClass("va012-inactive");
+                                            _btnIn.attr("v_active", "0");
+                                        }
+                                        else {
+                                            _btnIn.removeClass("va012-inactive");
+                                            _btnIn.addClass("va012-active");
+                                            _btnIn.attr("v_active", "1");
+                                            _btnOut.removeClass("va012-active");
+                                            _btnOut.addClass("va012-inactive");
+                                            _btnOut.attr("v_active", "0");
+                                        }
+                                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                                             //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
                                             //_txtTrxAmt.trigger('change');
-                                        }
                                         /*change by pratap*/
-
-
                                         loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
                                     }
                                     else {
                                         VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
                                     }
                                     _txtPaymentSchedule.val(_scheduleDataList.toString());
-                                    var amount = 0;
-                                    for (var i = 0; i < _scheduleAmount.length; i++) {
-                                        amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
-                                    }
-                                    _txtTrxAmt.val((amount).toFixed(_stdPrecision));
-                                    _txtTrxAmt.trigger('change');
+                                    //repeated code in above line not reqauired again
+                                    //var amount = 0;
+                                    //for (var i = 0; i < _scheduleAmount.length; i++) {
+                                    //    amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
+                                    //}
+                                    _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                                    _txtTrxAmt.getControl().trigger('blur');
                                 }
                                 else {
                                     //alert("Notdone");
@@ -1932,7 +2000,7 @@
                             }
                             if (_cmbTransactionType.val() == "PO") {
 
-                                if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _prepayList.toString(), _txtAmount.val())) {
+                                if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _prepayList.toString(), _txtAmount.getValue())) {
                                     //alert("done");
                                     //newRecordForm.prepayRefresh();
                                     //if (!isInList(parseInt(($(ui.draggable)).data('uid')), _prepayList)) {
@@ -1963,7 +2031,7 @@
                                         VIS.ADialog.info(VIS.Msg.getMsg("VA012_CashLineAlreadyMatchedOthrStmt"), null, "", "");
                                         return;
                                     }
-                                    if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.val())) {
+                                    if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.getValue())) {
                                         $_ctrlCashLine.setValue(($(ui.draggable)).data('uid'), false, true);
                                     }
                                 }
@@ -1992,8 +2060,8 @@
                             _status = true;
                             if (result._amount != null && result._amount != 0) {
 
-                                _txtAmount.val((result._amount).toFixed(_stdPrecision));
-                                if (_txtAmount.val() < 0) {
+                                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
+                                if (_txtAmount.getValue() < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
@@ -2046,8 +2114,8 @@
                             _status = true;
                             if (result._amount > 0) {
 
-                                _txtAmount.val((result._amount).toFixed(_stdPrecision));
-                                if (_txtAmount.val() < 0) {
+                                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
+                                if (_txtAmount.getValue() < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
@@ -2126,8 +2194,8 @@
                             _status = true;
                             if (result._amount != null && result._amount != 0) {
 
-                                _txtAmount.val((result._amount).toFixed(_stdPrecision));
-                                if (_txtAmount.val() < 0) {
+                                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
+                                if (_txtAmount.getValue() < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
@@ -2143,7 +2211,7 @@
                                     _btnOut.addClass("va012-inactive");
                                     _btnOut.attr("v_active", "0");
                                 }
-                                _txtTrxAmt.val((result._trxamount).toFixed(_stdPrecision));
+                                _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(result._trxamount.toFixed(_stdPrecision)));
                                 //_txtTrxAmt.trigger('change');
                             }
                         }
@@ -2249,8 +2317,8 @@
                         if (result._status == "Success") {
                             _status = true;
                             if (result._amount > 0) {
-                                _txtAmount.val((result._amount).toFixed(_stdPrecision));
-                                if (_txtAmount.val() < 0) {
+                                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
+                                if (_txtAmount.getValue() < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
@@ -2306,8 +2374,8 @@
                         if (result._status == "Success") {
                             _status = true;
 
-                            _txtAmount.val((result._amount).toFixed(_stdPrecision));
-                            if (_txtAmount.val() < 0) {
+                            _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
+                            if (_txtAmount.getValue() < 0) {
                                 _btnOut.removeClass("va012-inactive");
                                 _btnOut.addClass("va012-active");
                                 _btnOut.attr("v_active", "1");
@@ -2353,8 +2421,8 @@
                         if (result._status == "Success") {
                             _status = true;
                             if (result._amount != null && result._amount != 0) {
-                                _txtAmount.val((result._amount).toFixed(_stdPrecision));
-                                if (_txtAmount.val() < 0) {
+                                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
+                                if (_txtAmount.getValue() < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
@@ -2395,8 +2463,20 @@
 
 
         };
-
-
+        this.vetoablechange = function (evt) {
+            if (evt.propertyName == "VA012_txtDifference_" + $self.windowNo + "") {
+                _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal(evt.newValue.toFixed(_stdPrecision)));
+            }
+            else if (evt.propertyName == "VA012_txtTaxAmount_" + $self.windowNo + "") {
+                _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(evt.newValue.toFixed(_stdPrecision)));
+            }
+            else if (evt.propertyName == "VA012_txtTrxAmt_" + $self.windowNo + "") {
+                _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(evt.newValue.toFixed(_stdPrecision)));
+            }
+            else if (evt.propertyName == "VA012_txtAmount_" + $self.windowNo + "") {
+                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(evt.newValue.toFixed(_stdPrecision)));
+            }
+        };
         /*
          * to get list of Matching Base List data
          * */
@@ -2980,7 +3060,7 @@
                             _secUnreconciled.html("");
                             _secReconciled.html("");
                             _secReconciled.append("<p>" + VIS.Msg.getMsg("VA012_Reconciled") + "</p><p style='margin-top: 4px;'>" + VIS.Msg.getMsg("VA012_Unreconciled") + "</p>")
-                            _secUnreconciled.append("<span style='padding-bottom: 2px;' class='va012-amount va012-font-green'><span class='va012-base-curr'>" + _dsCon.tables[0].rows[0].cells.basecurrency + "</span> " + Globalize.format(_dsCon.tables[0].rows[0].cells.reconciled, "N") + "</span><span style='padding-bottom: 2px;' class='va012-amount va012-font-red'> <span class='va012-base-curr'>" + _dsCon.tables[0].rows[0].cells.basecurrency + "</span> " + Globalize.format(_dsCon.tables[0].rows[0].cells.unreconciled, "N") + "</span>");
+                            _secUnreconciled.append("<span style='padding-bottom: 2px;' class='va012-amount va012-font-green'><span class='va012-base-curr'>" + _dsCon.tables[0].rows[0].cells.basecurrency + "</span> " + parseFloat(_dsCon.tables[0].rows[0].cells.reconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span><span style='padding-bottom: 2px;' class='va012-amount va012-font-red'> <span class='va012-base-curr'>" + _dsCon.tables[0].rows[0].cells.basecurrency + "</span> " + parseFloat(_dsCon.tables[0].rows[0].cells.unreconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span>");
                             _dsCon.dispose();
                             _dsCon = null;
                             _sqlCon = null;
@@ -3085,7 +3165,7 @@
                                 + ' <input type="checkbox" data-uid="' + data[i].c_bankstatementline_id + '" >'
                                 // + ' <div class="va012-form-text"> <span style="background: #999;color: white; padding: 3px;margin-left: 2px;">' + data[i].page + '/' + data[i].line + '</span>'
                                 + ' <div class="va012-form-text"> <span style="background: rgba(var(--v-c-on-secondary), .4);color: rgba(var(--v-c-on-primary), 1); padding: 3px;margin-left: 2px;">' + data[i].statementno + '/' + data[i].page + '/' + data[i].line + '</span>'
-                                + '<label>' + data[i].currency + ' ' + Globalize.format(data[i].trxamount, "N") + '</label>';
+                                + '<label>' + data[i].currency + ' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
 
                             //if (data[i].isconverted == "Y") {
                             //    _StatementsHTML += '<span>' + data[i].basecurrency + ' ' + Globalize.format(data[i].convertedamount, "N") + '</span>';
@@ -3368,15 +3448,15 @@
 
                     _cmbCashBook.val(_result._cmbCashBook).prop('selected', true);
                     _txtCheckNo.val(_result._txtCheckNo);
-                    _txtAmount.val((_result._txtAmount).toFixed(_stdPrecision));
-                    _txtTrxAmt.val((_result._txtTrxAmt).toFixed(_stdPrecision));
-                    if (_cmbVoucherMatch.val() == "M" && parseFloat(_txtTrxAmt.val()) != 0) {
-                        _txtDifference.val((Math.abs(_result._txtDifference)).toFixed(_stdPrecision));
+                    _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_result._txtAmount.toFixed(_stdPrecision)));
+                    _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(_result._txtTrxAmt.toFixed(_stdPrecision)));
+                    if (_cmbVoucherMatch.val() == "M" && _txtTrxAmt.getValue() != 0) {
+                        _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal(Math.abs(_result._txtDifference.toFixed(_stdPrecision))));
                         if (_result._txtDifference != 0) {
-                            _txtDifference.attr("vchangable", "N");
+                            _txtDifference.getControl().attr("vchangable", "N");
                         }
                         else {
-                            _txtDifference.attr("vchangable", "Y");
+                            _txtDifference.getControl().attr("vchangable", "Y");
                         }
 
                     }
@@ -3389,7 +3469,7 @@
                     }
                     _cmbDifferenceType.trigger('change');
                     //_txtTrxAmt.trigger('change');
-                    if (_txtAmount.val() < 0) {
+                    if (_txtAmount.getValue() < 0) {
                         _btnOut.removeClass("va012-inactive");
                         _btnOut.addClass("va012-active");
                         _btnOut.attr("v_active", "1");
@@ -3414,7 +3494,7 @@
                     _txtCharge.val(_result._txtCharge);
                     _txtCharge.attr('chargeid', _result._cmbCharge);
                     _cmbTaxRate.val(_result._cmbTaxRate).prop('selected', true);
-                    _txtTaxAmount.val((_result._txtTaxAmount).toFixed(_stdPrecision));
+                    _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_result._txtTaxAmount.toFixed(_stdPrecision)));
                     _chkUseNextTime.prop('checked', _result._chkUseNextTime);
 
                     if (_result._ctrlCashLine > 0) {
@@ -3892,17 +3972,19 @@
 
             //Payment Schedule  Dialog
             paymentScheduleDialog: function () {
+                //handled the issue when click on Edit Schedule button it's clearing the seleted records
+                if (_scheduleList.length == 0 && _scheduleDataList.length == 0) {
+                    var _lookupPSInvoice = null;
+                    var $_ctrlPSInvoice = null;
+                    var _psInvoiceSelectedVal = null;
+                    var _ctrlPSInvoice = null;
 
-                var _lookupPSInvoice = null;
-                var $_ctrlPSInvoice = null;
-                var _psInvoiceSelectedVal = null;
-                var _ctrlPSInvoice = null;
-
-                var _lookupPSBP = null;
-                var $_ctrlPSBP = null;
-                var _psBpSelectedVal = null;
-                var _ctrlPSBP = null;
-                var _cmbPaymentSchedule = null;
+                    var _lookupPSBP = null;
+                    var $_ctrlPSBP = null;
+                    var _psBpSelectedVal = null;
+                    var _ctrlPSBP = null;
+                    var _cmbPaymentSchedule = null;
+                }
                 $paymentSchedule = $("<div class='va012-popform-content'>");
                 var _paymentSchedule = "";
 
@@ -3953,11 +4035,14 @@
 
                 _cmbPaymentSchedule.on('change', function () {
                     if (_cmbPaymentSchedule.val() > 0) {
-                        if (loadFunctions.checkScheduleCondition(_cmbPaymentSchedule.val(), parseInt($_formNewRecord.attr("data-uid")), _scheduleList.toString(), _txtAmount.val())) {
+                        if (loadFunctions.checkScheduleCondition(_cmbPaymentSchedule.val(), parseInt($_formNewRecord.attr("data-uid")), _scheduleList.toString(), _txtAmount.getValue())) {
                             //alert("done");
-                            if (!isInList(_cmbPaymentSchedule.val(), _scheduleList)) {
-                                _scheduleList.push(_cmbPaymentSchedule.val());
+                            // fixed Issue while checking condition with interger like 123 compare with "123"
+                            if (!isInList(parseInt(_cmbPaymentSchedule.val()), _scheduleList)) {
+                                _scheduleList.push(parseInt(_cmbPaymentSchedule.val()));
                                 _scheduleDataList.push(this.options[this.selectedIndex].getAttribute('paymentdata'));
+                                //get the amount and push into scheduleamount list
+                                _scheduleAmount.push(this.options[this.selectedIndex].getAttribute('paymentamount'));
                                 loadPaymentScheduleItems();
                                 loadFunctions.setInvoiceAndBPartner(_cmbPaymentSchedule.val(), "IS");
                             }
@@ -3972,6 +4057,7 @@
 
                 function loadPaymentScheduleItems() {
                     var _addItem = "";
+                    var paySumAmt = 0;
                     $_divPaymentSchedules.html("");
                     for (var i = 0; i < _scheduleList.length; i++) {
                         _addItem = "<div class='va012-matchingbaselist'> "
@@ -3979,15 +4065,24 @@
                             + " <span data-uid='" + _scheduleList[i] + "'  data-udata='" + _scheduleDataList[i] + "' class='glyphicon glyphicon-remove'></span></a>"
                             + " <span>" + _scheduleDataList[i] + "</span> </div>";
                         $_divPaymentSchedules.append(_addItem);
+                        //amount = _scheduleDataList[i].split("_");
+                        if (_scheduleAmount.length > 0) {
+                            paySumAmt += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
+                        }
                     }
+                    //assign the total AMount to the fields
+                    _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(paySumAmt.toFixed(_stdPrecision)));
+                    _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(paySumAmt.toFixed(_stdPrecision)));
+                    if (_txtAmount.getValue() < 0) {
+                        _btnIn.attr("v_active", "0");
+                    }
+                    _txtAmount.getControl().trigger('blur');
                 }
                 $_divPaymentSchedules.on(VIS.Events.onTouchStartOrClick, removeItem);
 
                 function removeItem(e) {
                     var target = $(e.target);
                     if (target.hasClass('glyphicon-remove')) {
-
-
 
                         /*removeAmount*/
                         if (_scheduleAmount != null && _scheduleAmount.length > 0) {
@@ -3999,47 +4094,45 @@
                                 _scheduleAmount.splice(_scheduleList.indexOf(target.data("uid")), 1);
                             }
                             ///
-
-                            if (Number(_scheduleAmount[0]) == "0") {
-                                var amount = 0;
+                            var amount = 0;
+                            if (Number(_scheduleAmount.length) > 0) {
+                                
                                 for (var i = 0; i < _scheduleAmount.length; i++) {
                                     amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                 }
-                                if (amount < 0) {
-                                    _btnOut.removeClass("va012-inactive");
-                                    _btnOut.addClass("va012-active");
-                                    _btnOut.attr("v_active", "1");
-                                    _btnIn.removeClass("va012-active");
-                                    _btnIn.addClass("va012-inactive");
-                                    _btnIn.attr("v_active", "0");
-                                }
-                                else {
-                                    _btnIn.removeClass("va012-inactive");
-                                    _btnIn.addClass("va012-active");
-                                    _btnIn.attr("v_active", "1");
-                                    _btnOut.removeClass("va012-active");
-                                    _btnOut.addClass("va012-inactive");
-                                    _btnOut.attr("v_active", "0");
-                                }
-                                _txtAmount.val((amount).toFixed(_stdPrecision));
+                            }
+                            if (amount < 0) {
+                                _btnOut.removeClass("va012-inactive");
+                                _btnOut.addClass("va012-active");
+                                _btnOut.attr("v_active", "1");
+                                _btnIn.removeClass("va012-active");
+                                _btnIn.addClass("va012-inactive");
+                                _btnIn.attr("v_active", "0");
+                            }
+                            else {
+                                _btnIn.removeClass("va012-inactive");
+                                _btnIn.addClass("va012-active");
+                                _btnIn.attr("v_active", "1");
+                                _btnOut.removeClass("va012-active");
+                                _btnOut.addClass("va012-inactive");
+                                _btnOut.attr("v_active", "0");
+                            }
+                            _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                                 //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
                                 //_txtTrxAmt.trigger('change');
-                                if (_scheduleAmount.length == 1) {
-                                    if (Number(_scheduleAmount[0]) == "0") {
-                                        _scheduleAmount.splice(0, 1);
-                                    }
-                                }
-                            }
+                            //not required 
+                                //if (_scheduleAmount.length == 1) {
+                                //    if (Number(_scheduleAmount[0]) == "0") {
+                                //        _scheduleAmount.splice(0, 1);
+                                //    }
+                                //}
+                            //}
                             //
-
-
                         }
                         /*removeAmount*/
 
                         _scheduleList.splice(_scheduleList.indexOf(target.data("uid")), 1);
-                        _scheduleDataList.splice(_scheduleDataList.indexOf(target.data("udata")), 1)
-
-
+                        _scheduleDataList.splice(_scheduleDataList.indexOf(target.data("udata")), 1);
 
                         target.parent().parent().remove();
                         _txtPaymentSchedule.val(_scheduleDataList.toString());
@@ -4047,8 +4140,9 @@
                         for (var i = 0; i < _scheduleAmount.length; i++) {
                             amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                         }
-                        _txtTrxAmt.val((amount).toFixed(_stdPrecision));
-                        _txtTrxAmt.trigger('change');
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                        _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                        _txtAmount.getControl().trigger('blur');
                         if (amount == 0) {
                             $_ctrlBusinessPartner.setValue();
                         }
@@ -4095,36 +4189,48 @@
                 };
                 function loadPaymentSchedule() {
 
-                    var _sql = "SELECT BP.NAME as businesspartner,PAY.C_INVOICEPAYSCHEDULE_ID, "
-                        + " PAY.DOCUMENTNO AS NAME "
-                        + " FROM C_INVOICEPAYSCHEDULE PAY "
-                        + " INNER JOIN C_INVOICE INV "
-                        + " ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID "
-                        + " INNER JOIN C_BPARTNER BP "
-                        + " ON BP.C_BPARTNER_ID=INV.C_BPARTNER_ID "
-                        + " INNER JOIN VA009_PAYMENTMETHOD PM "
-                        + " ON (PM.VA009_PAYMENTMETHOD_ID =PAY.VA009_PAYMENTMETHOD_ID ) "
-                        + " INNER JOIN C_DOCTYPE DT "
-                        + " ON DT.C_DOCTYPE_ID            =INV.C_DOCTYPE_ID "
-                        + " WHERE PAY.VA009_ISPAID        ='N' "
-                        + " AND PAY.ISACTIVE              ='Y' "
-                        + " AND INV.DOCSTATUS            IN ('CO','CL') "
-                        + " AND PM.VA009_PAYMENTBASETYPE! ='B'"
-                        + " AND PAY.C_INVOICE_ID=" + _psInvoiceSelectedVal;
+                    //var _sql = "SELECT BP.NAME as businesspartner,PAY.C_INVOICEPAYSCHEDULE_ID, "
+                    //    + " PAY.DOCUMENTNO AS NAME "
+                    //    + " FROM C_INVOICEPAYSCHEDULE PAY "
+                    //    + " INNER JOIN C_INVOICE INV "
+                    //    + " ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID "
+                    //    + " INNER JOIN C_BPARTNER BP "
+                    //    + " ON BP.C_BPARTNER_ID=INV.C_BPARTNER_ID "
+                    //    + " INNER JOIN VA009_PAYMENTMETHOD PM "
+                    //    + " ON (PM.VA009_PAYMENTMETHOD_ID =PAY.VA009_PAYMENTMETHOD_ID ) "
+                    //    + " INNER JOIN C_DOCTYPE DT "
+                    //    + " ON DT.C_DOCTYPE_ID            =INV.C_DOCTYPE_ID "
+                    //    + " WHERE PAY.VA009_ISPAID        ='N' "
+                    //    + " AND PAY.ISACTIVE              ='Y' "
+                    //    + " AND INV.DOCSTATUS            IN ('CO','CL') "
+                    //    + " AND PM.VA009_PAYMENTBASETYPE! ='B'"
+                    //    + " AND PAY.C_INVOICE_ID=" + _psInvoiceSelectedVal;
+                    //used ajax call to get InvoicePaySchedules for selected Invoice
+                    $.ajax({
+                        url: VIS.Application.contextUrl + "BankStatement/GetInvPaySchedule",
+                        dataType: "json",
+                        data: { seltdInvoice: _psInvoiceSelectedVal, accountID: _cmbBankAccount.val() },
+                        success: function (data) {
+                            var result = JSON.parse(data);
+                            if (result != null || result !="") {
+                                callbackPaymentSchedule(result);
+                            }
+                        }
+                    });
 
-
-                    VIS.DB.executeDataSet(_sql.toString(), null, callbackPaymentSchedule);
+                    //VIS.DB.executeDataSet(_sql.toString(), null, callbackPaymentSchedule);
                     function callbackPaymentSchedule(_ds) {
                         _cmbPaymentSchedule.html("");
                         _cmbPaymentSchedule.append("<option value=0 ></option>");
                         if (_ds != null) {
-                            for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                                _cmbPaymentSchedule.append("<option paymentdata='" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "/" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.businesspartner) + "' value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_invoicepayschedule_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            for (var i = 0; i < _ds.length; i++) {
+                                //_cmbPaymentSchedule.append("<option paymentdata='" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "/" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.businesspartner) + "' value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_invoicepayschedule_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                                _cmbPaymentSchedule.append("<option paymentamount=" + _ds[i].DueAmount + " paymentdata='" + VIS.Utility.encodeText(new Date(_ds[i].DueDate).toLocaleDateString()) + "_" + VIS.Utility.encodeText(_ds[i].DueAmt) + "' value=" + VIS.Utility.Util.getValueOfInt(_ds[i].c_invoicepayschedule_id) + ">" + VIS.Utility.encodeText(new Date(_ds[i].DueDate).toLocaleDateString() + "_" + _ds[i].DueAmt) + "</option>");
                             }
                         }
-                        _ds.dispose();
-                        _ds = null;
-                        _sql = null;
+                        //_ds.dispose();
+                        //_ds = null;
+                        //_sql = null;
                         _cmbPaymentSchedule.prop('selectedIndex', 0);
 
                     };
@@ -4139,7 +4245,7 @@
                 paymentScheduleDialog.onCancelClick = function () {
                     newRecordForm.scheduleRefresh();
                     newRecordForm.refreshForm();
-                    disposeSchedule()
+                    disposeSchedule();
                 };
                 //paymentScheduleDialog.onClose = function () {
                 //    newRecordForm.scheduleRefresh();
@@ -4236,8 +4342,8 @@
                 newRecordForm.loadInvoice();
                 newRecordForm.loadCashLine();
                 //to check mandatory fields and their logic to set background color
-                if (parseFloat(_txtAmount.val()) <= 0)
-                    _txtAmount.addClass("va012-mandatory");
+                if (_txtAmount.getValue() <= 0)
+                    _txtAmount.getControl().addClass("va012-mandatory");
                 if (_txtStatementNo.val() != "")
                     _txtStatementNo.removeClass("va012-mandatory");
                 if (_dtStatementDate.val() != "")
@@ -4327,8 +4433,8 @@
                         _btnNewRecord.attr("title", "Expand");
                     }
                     //to check mandatory fields and their logic to set background color
-                    if (parseFloat(_txtAmount.val()) <= 0)
-                        _txtAmount.addClass("va012-mandatory");
+                    if (_txtAmount.getValue() <= 0)
+                        _txtAmount.getControl().addClass("va012-mandatory");
                     if (_txtStatementNo.val() != "")
                         _txtStatementNo.removeClass("va012-mandatory");
                     if (_dtStatementDate.val() != "")
@@ -4392,7 +4498,7 @@
                         _divTaxRate.hide();
                         _divTaxAmount.hide();
 
-                        _divTrxAmt.show();
+                        divRow4Col1TrxAmt.show();
                         _divDifference.show();
                         _divDifferenceType.show();
                         _divCtrlPayment.show();
@@ -4459,7 +4565,7 @@
                         _divPrepayOrder.find("*").prop("disabled", true);
                         _divPaymentSchedule.find("*").prop("disabled", true);
                         _btnPaymentSchedule.css('pointer-events', 'none');
-                        _divTrxAmt.hide();
+                        divRow4Col1TrxAmt.hide();
                         _divDifference.hide();
                         _divDifferenceType.hide();
                         _divCtrlPayment.hide();
@@ -4516,7 +4622,7 @@
                         _divPrepayOrder.find("*").prop("disabled", true);
                         _divPaymentSchedule.find("*").prop("disabled", true);
                         _btnPaymentSchedule.css('pointer-events', 'none');
-                        _divTrxAmt.hide();
+                        divRow4Col1TrxAmt.hide();
                         _divDifference.hide();
                         _divDifferenceType.hide();
                         _divCtrlPayment.hide();
@@ -4618,13 +4724,14 @@
                 //});
 
                 _cmbTaxRate.on('change', function () {
-                    _txtTaxAmount.val("0");
+                    _txtTaxAmount.setValue(0);
                     if (_cmbTaxRate.val() > 0) {
                         var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        _txtTaxAmount.val((_txtAmount.val() - (_txtAmount.val() / ((_rate / 100) + 1))).toFixed(_stdPrecision));
+                        //_txtTaxAmount.setValue(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1)));
+                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision));//handle precision
                         //_txtTaxAmount.val(((_txtAmount.val() * _rate) / 100).toFixed(_stdPrecision));
                     }
-                    _txtTrxAmt.trigger("change");
+                    _txtTrxAmt.getControl().trigger("blur");
                 });
 
                 _btnMore.on(VIS.Events.onTouchStartOrClick, function () {
@@ -4650,7 +4757,7 @@
                         _divTaxRate.show();
                         _divTaxAmount.show();
 
-                        _divTrxAmt.show();
+                        divRow4Col1TrxAmt.show();
                         _divDifference.show();
                         _divDifferenceType.show();
                         _divCtrlPayment.show();
@@ -5018,46 +5125,62 @@
                     _txtStatementLine.val("10");
                 });
                 //_btnStatementNo.on('focus', function () { _btnStatementNo.trigger('click') });
-
-
-                _txtTrxAmt.on("change", function () {
-                    //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
-                    if (_txtDifference.attr("vchangable") == "Y") {
-                        _txtDifference.val((0).toFixed(_stdPrecision));
-                        _divDifferenceType.find("*").prop("disabled", true);
-
+                _txtTaxAmount.getControl().on("change", function () {
+                    if (_txtTaxAmount.getValue() == 0 || _txtTaxAmount.getValue() == null) {
+                        _txtTaxAmount.setValue(0);
                     }
-                    if (parseFloat(_txtTrxAmt.val()) != 0 && _cmbVoucherMatch.val() == "M") {
+                    else {
+                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtTaxAmount.getValue().toFixed(_stdPrecision)));
+                    }
+                });
+
+                _txtTrxAmt.getControl().on("blur", function () {
+                    if (_txtTrxAmt.getValue() == 0) {
+                        _txtTrxAmt.setValue(0);
+                        _txtTrxAmt.getControl().addClass('va012-mandatory');
+                    }
+                    else {
+                        _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(_txtTrxAmt.getValue().toFixed(_stdPrecision)));
+                        _txtTrxAmt.getControl().removeClass('va012-mandatory');
+                    }
+                    //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
+                    if (_txtDifference.getControl().attr("vchangable") == "Y") {
+                        _txtDifference.setValue(0);
+                        _divDifferenceType.find("*").prop("disabled", true);
+                    }
+                    if (_cmbVoucherMatch.val() == "M") {
 
                         //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
-                        if (_txtDifference.attr("vchangable") == "Y") {
-                            _txtDifference.val((Math.abs(_txtTrxAmt.val()) - Math.abs(_txtAmount.val())).toFixed(_stdPrecision));
-                            if (parseFloat(_txtDifference.val()) != 0) {
+                        if (_txtDifference.getControl().attr("vchangable") == "Y") {
+                            _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal((_txtTrxAmt.getValue() - _txtAmount.getValue()).toFixed(_stdPrecision)));
+                            if (_txtDifference.getValue() != 0) {
+                                _txtDifference.getControl().removeClass('va012-mandatory');//color change
                                 _divDifferenceType.find("*").prop("disabled", false);
                             }
                         }
 
-                        if (_cmbTaxRate.val() > 0 && parseFloat(_txtDifference.val()) != 0) {
+                        if (_cmbTaxRate.val() > 0 && _txtDifference.getValue() != 0) {
+                            _txtDifference.getControl().removeClass('va012-mandatory');//color change
                             var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                            _txtTaxAmount.val((_txtDifference.val() - (_txtDifference.val() / ((_rate / 100) + 1))).toFixed(_stdPrecision));
+                            _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtDifference.getValue() - (_txtDifference.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
                         }
                     }
-
 
                 });
 
 
-                _txtAmount.on("blur", function () {
-                    if (_txtAmount.val() == "" || _txtAmount.val() == null) {
-                        _txtAmount.val(0);
-                        _txtAmount.addClass("va012-mandatory");
+                _txtAmount.getControl().on("blur", function () {
+                    if (_txtAmount.getValue() == "" || _txtAmount.getValue() == 0 || _txtAmount.getValue() == null) {
+                        _txtAmount.setValue(0);
+                        _txtAmount.getControl().addClass("va012-mandatory");
                     }
-                    if (parseFloat(_txtAmount.val()) > 0)
-                        _txtAmount.removeClass("va012-mandatory");
-                    else
-                        _txtAmount.addClass("va012-mandatory");
+                    //repeated code not required here
+                    //if (_txtAmount.getValue() > 0)
+                    //    _txtAmount.getControl().removeClass("va012-mandatory");
+                    //else
+                    //    _txtAmount.getControl().addClass("va012-mandatory");
 
-                    _txtAmount.val(parseFloat(_txtAmount.val()).toFixed(_stdPrecision));
+                    //_txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
 
                     //if (_btnOut.attr("v_active") == "1") {
                     //    if (_txtAmount.val() > 0) {
@@ -5073,43 +5196,46 @@
 
 
 
-                    if (_btnOut.attr("v_active") == "1" && _txtAmount.val() > 0) {
-                        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
+                    if (_btnOut.attr("v_active") == "1" && _txtAmount.getValue() > 0) {
+                        _txtAmount.setValue(-VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
                     }
 
-                    if (_btnIn.attr("v_active") == "1" && _txtAmount.val() < 0) {
+                    if (_btnIn.attr("v_active") == "1" && _txtAmount.getValue() < 0) {
 
+                        _txtAmount.setValue(-1 * VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
+                        //_btnOut.removeClass("va012-inactive");
+                        //_btnOut.addClass("va012-active");
+                        //_btnOut.attr("v_active", "1");
+                        //_btnIn.removeClass("va012-active");
+                        //_btnIn.addClass("va012-inactive");
+                        //_btnIn.attr("v_active", "0");
+                    }
+
+
+                    if (_txtAmount.getValue() < 0) {
                         _btnOut.removeClass("va012-inactive");
                         _btnOut.addClass("va012-active");
                         _btnOut.attr("v_active", "1");
                         _btnIn.removeClass("va012-active");
                         _btnIn.addClass("va012-inactive");
                         _btnIn.attr("v_active", "0");
+                        _txtAmount.getControl().addClass("va012-mandatory");
                     }
-
-
-                    if (_txtAmount.val() < 0) {
-                        _btnOut.removeClass("va012-inactive");
-                        _btnOut.addClass("va012-active");
-                        _btnOut.attr("v_active", "1");
-                        _btnIn.removeClass("va012-active");
-                        _btnIn.addClass("va012-inactive");
-                        _btnIn.attr("v_active", "0");
-                    }
-                    else if (_txtAmount.val() > 0) {
+                    else if (_txtAmount.getValue() > 0) {
                         _btnIn.removeClass("va012-inactive");
                         _btnIn.addClass("va012-active");
                         _btnIn.attr("v_active", "1");
                         _btnOut.removeClass("va012-active");
                         _btnOut.addClass("va012-inactive");
                         _btnOut.attr("v_active", "0");
+                        _txtAmount.getControl().removeClass("va012-mandatory");
                     }
 
                     if (_cmbTaxRate.val() > 0) {
                         var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        _txtTaxAmount.val((_txtAmount.val() - (_txtAmount.val() / ((_rate / 100) + 1))).toFixed(_stdPrecision));
+                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));
                     }
-                    _txtTrxAmt.trigger('change');
+                    _txtTrxAmt.getControl().trigger('blur');
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
@@ -5145,8 +5271,8 @@
 
 
                 _btnIn.on(VIS.Events.onTouchStartOrClick, function () {
-                    if (_txtAmount.val() < 0) {
-                        _txtAmount.val(_txtAmount.val() * -1);
+                    if (_txtAmount.getValue() < 0) {
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)) * -1);
                     }
 
                     _btnIn.removeClass("va012-inactive");
@@ -5155,7 +5281,7 @@
                     _btnOut.removeClass("va012-active");
                     _btnOut.addClass("va012-inactive");
                     _btnOut.attr("v_active", "0");
-                    _txtAmount.blur();
+                    _txtAmount.getControl().blur();
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
@@ -5166,8 +5292,8 @@
 
 
                 _btnOut.on(VIS.Events.onTouchStartOrClick, function () {
-                    if (_txtAmount.val() > 0) {
-                        _txtAmount.val(_txtAmount.val() * -1);
+                    if (_txtAmount.getValue() > 0) {
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)) * -1);
                     }
                     _btnOut.removeClass("va012-inactive");
                     _btnOut.addClass("va012-active");
@@ -5175,7 +5301,7 @@
                     _btnIn.removeClass("va012-active");
                     _btnIn.addClass("va012-inactive");
                     _btnIn.attr("v_active", "0");
-                    _txtAmount.blur();
+                    _txtAmount.getControl().blur();
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
@@ -5221,16 +5347,19 @@
                 _cmbTransferType = $_formNewRecord.find("#VA012_cmbTransferType_" + $self.windowNo);
                 _txtCheckNo = $_formNewRecord.find("#VA012_txtCheckNo_" + $self.windowNo);
                 _cmbVoucherMatch = $_formNewRecord.find("#VA012_cmbVoucherMatch_" + $self.windowNo);
-                _txtAmount = $_formNewRecord.find("#VA012_txtAmount_" + $self.windowNo);
-                _txtTrxAmt = $_formNewRecord.find("#VA012_txtTrxAmt_" + $self.windowNo);
-                _txtDifference = $_formNewRecord.find("#VA012_txtDifference_" + $self.windowNo);
+                //_txtAmount = $_formNewRecord.find("#VA012_txtAmount_" + $self.windowNo);
+                _txtAmount.getControl().addClass('va012-mandatory');
+                //_txtTrxAmt = $_formNewRecord.find("#VA012_txtTrxAmt_" + $self.windowNo);
+                _txtTrxAmt.getControl().addClass('va012-mandatory');
+                //_txtDifference = $_formNewRecord.find("#VA012_txtDifference_" + $self.windowNo);
+                _txtDifference.getControl().addClass('va012-mandatory');
                 _cmbDifferenceType = $_formNewRecord.find("#VA012_cmbDifferenceType_" + $self.windowNo);
                 _txtVoucherNo = $_formNewRecord.find("#VA012_txtVoucherNo_" + $self.windowNo);
                 _txtDescription = $_formNewRecord.find("#VA012_txtDescription_" + $self.windowNo);
                 _cmbCharge = $_formNewRecord.find("#VA012_cmbCharge_" + $self.windowNo);
                 _txtCharge = $_formNewRecord.find("#VA012_txtCharge_" + $self.windowNo);
                 _cmbTaxRate = $_formNewRecord.find("#VA012_cmbTaxRate_" + $self.windowNo);
-                _txtTaxAmount = $_formNewRecord.find("#VA012_txtTaxAmount_" + $self.windowNo);
+                //_txtTaxAmount = $_formNewRecord.find("#VA012_txtTaxAmount_" + $self.windowNo);
                 _ctrlCashLine = $_formNewRecord.find("#VA012_ctrlCashLine_" + $self.windowNo);
                 _ctrlPayment = $_formNewRecord.find("#VA012_ctrlPayment_" + $self.windowNo);
                 _ctrlOrder = $_formNewRecord.find("#VA012_ctrlOrder_" + $self.windowNo);
@@ -5409,8 +5538,13 @@
                 }
             },
             loadPayment: function () {
-
-                _lookupPayment = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Payment_ID", 0, false, " DocStatus IN ('CO','CL') AND C_BankAccount_ID = " + _cmbBankAccount.val());
+                //remove the child elements before updating the lookup for Payment
+                if (_ctrlPayment != undefined && _ctrlPayment != null) {
+                    _ctrlPayment.empty();
+                }
+                //if back account is null then it's take only DocStustus
+                var status = _cmbBankAccount.val() != null ? "DocStatus IN ('CO','CL') AND C_BankAccount_ID = " + _cmbBankAccount.val() : "DocStatus IN ('CO','CL')";
+                _lookupPayment = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Payment_ID", 0, false, status);
                 $_ctrlPayment = new VIS.Controls.VTextBoxButton("C_Payment_ID", false, false, true, VIS.DisplayType.Search, _lookupPayment);
                 $_ctrlPayment.getControl().addClass("va012-input-size-2");
                 $_ctrlPayment.getControl().attr("tabindex", "10");
@@ -5432,7 +5566,7 @@
                     if (!_openingFromDrop && !_openingFromEdit) {
                         if ($_ctrlPayment.value) {
                             // if (!loadFunctions.checkFormPaymentCondition(_paymentSelectedVal, _txtAmount.val())) {
-                            if (!loadFunctions.checkPaymentCondition(_paymentSelectedVal, 0, _txtAmount.val())) {
+                            if (!loadFunctions.checkPaymentCondition(_paymentSelectedVal, 0, _txtAmount.getValue())) {
                                 $_ctrlPayment.setValue();
                             }
                             else {
@@ -5475,7 +5609,7 @@
 
                         if (!_openingFromDrop) {
                             // if (!loadFunctions.checkFormPrepayCondition($_ctrlOrder.value, _txtAmount.val())) {
-                            if (!loadFunctions.checkPrepayCondition($_ctrlOrder.value, 0, null, _txtAmount.val())) {
+                            if (!loadFunctions.checkPrepayCondition($_ctrlOrder.value, 0, null, _txtAmount.getValue())) {
                                 $_ctrlOrder.setValue();
                             }
                             else {
@@ -5518,15 +5652,13 @@
 
                     if ($_ctrlCashLine.value) {
                         if (!_openingFromDrop && !_openingFromEdit) {
-                            if (!loadFunctions.checkContraCondition($_ctrlCashLine.value, 0, _txtAmount.val())) {
+                            if (!loadFunctions.checkContraCondition($_ctrlCashLine.value, 0, _txtAmount.getValue())) {
                                 $_ctrlCashLine.setValue();
                             }
                         }
                         _openingFromEdit = false;
                     }
                     _openingFromEdit = false;
-
-
                 };
             },
 
@@ -5556,7 +5688,7 @@
                     _invoiceSelectedVal = 0;
                     _invoiceSelectedVal = $_ctrlInvoice.value;
                     if ($_ctrlInvoice.value) {
-                        if (!loadFunctions.checkInvoiceCondition(_invoiceSelectedVal, _txtAmount.val())) {
+                        if (!loadFunctions.checkInvoiceCondition(_invoiceSelectedVal, _txtAmount.getValue())) {
                             $_ctrlInvoice.setValue();
                         }
                         else {
@@ -5584,7 +5716,7 @@
                 //formData["_cmbCharge"] = _cmbCharge.val();
                 formData["_cmbCharge"] = _txtCharge.attr('chargeid');
                 formData["_cmbTaxRate"] = _cmbTaxRate.val();
-                formData["_txtTaxAmount"] = _txtTaxAmount.val();
+                formData["_txtTaxAmount"] = _txtTaxAmount.getValue();
                 formData["_ctrlPayment"] = _paymentSelectedVal;
                 formData["_ctrlOrder"] = _orderSelectedVal;
                 formData["_ctrlCashLine"] = _cashLineSelectedVal;
@@ -5606,15 +5738,15 @@
                 formData["_cmbDifferenceType"] = _cmbDifferenceType.val();
 
                 if (_cmbDifferenceType.val() == "CH") {
-                    formData["_txtAmount"] = _txtTrxAmt.val();
-                    formData["_txtTrxAmt"] = _txtAmount.val();
+                    formData["_txtAmount"] = _txtTrxAmt.getValue();
+                    formData["_txtTrxAmt"] = _txtAmount.getValue();
                 }
                 else {
-                    formData["_txtAmount"] = _txtAmount.val();
-                    formData["_txtTrxAmt"] = _txtTrxAmt.val();
+                    formData["_txtAmount"] = _txtAmount.getValue();
+                    formData["_txtTrxAmt"] = _txtTrxAmt.getValue();
                 }
 
-                formData["_txtDifference"] = _txtDifference.val();
+                formData["_txtDifference"] = _txtDifference.getValue();
 
                 _formData.push(formData);
                 return _formData;
@@ -5676,10 +5808,10 @@
                 _cmbPaymentMethod.prop('selectedIndex', 0);
                 _cmbVoucherMatch.prop('selectedIndex', 0);
                 _cmbVoucherMatch.trigger('change');
-                _txtAmount.val((0).toFixed(_stdPrecision));
-                _txtTrxAmt.val((0).toFixed(_stdPrecision));
-                _txtDifference.val((0).toFixed(_stdPrecision));
-                _txtDifference.attr("vchangable", "Y");
+                _txtAmount.setValue(0);
+                _txtTrxAmt.setValue(0);
+                _txtDifference.setValue(0);
+                _txtDifference.getControl().attr("vchangable", "Y");
                 _cmbDifferenceType.prop('selectedIndex', 0);
                 _txtDescription.val("");
                 _txtVoucherNo.val("");
@@ -5687,7 +5819,7 @@
                 _txtCharge.attr('chargeid', 0);
                 _txtCharge.val("");
                 _cmbTaxRate.prop('selectedIndex', 0);
-                _txtTaxAmount.val((0).toFixed(_stdPrecision));
+                _txtTaxAmount.setValue(0);
                 _chkUseNextTime.attr('checked', false);
                 $_ctrlPayment.setValue();
                 $_ctrlOrder.setValue();
@@ -5703,8 +5835,9 @@
                 //_btnOut.attr("v_active", "0");
                 //loadFunctions.getBaseCurrency();
                 newRecordForm.loadCurrency();
-                _txtAmount.trigger("focus");
-                _txtAmount.select();
+                //fixed issue, amount is getting blur while Open the form or press on Plus(+) Button
+                //_txtAmount.getControl().trigger("focus");
+                //_txtAmount.getControl().select();
 
                 _cmbContraType.prop('selectedIndex', 0);
                 _cmbCashBook.prop('selectedIndex', 0);
@@ -5742,7 +5875,7 @@
                 _currencyId = null;
                 _cmbVoucherMatch = null;
                 _txtAmount = null;
-                _txtTrxAmt = null;
+                //_txtTrxAmt = null;
                 _txtDifference = null;
                 _cmbDifferenceType = null;
                 _btnAmount = null;
@@ -5840,6 +5973,7 @@
 
             _divVoucherNo = null;
             _divTrxAmt = null;
+            divRow4Col1TrxAmt = null;
             _divDifference = null;
             _divDifferenceType = null;
             _divCharge = null;
@@ -5904,14 +6038,7 @@
         this.Initialize();
         this.frame.getContentGrid().append(this.getRoot());
         this.setSize();
-
-
     };
     VA012.AForms = VA012.AForms || {};
     VA012.AForms.bankStatement = bankStatement;
 })(VA012, jQuery);
-
-
-
-(function (va012, $) {
-})();

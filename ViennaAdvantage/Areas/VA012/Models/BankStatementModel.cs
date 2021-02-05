@@ -1,19 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using VAdvantage.Utility;
-using VAdvantage.ProcessEngine;
-using System.IO;
 using System.Data;
-using System.Data.OleDb;
-using System.Web.Hosting;
-using VAdvantage.Model;
-using VAdvantage.DataBase;
-using System.Net;
-using System.Web;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
+using VAdvantage.Classes;
+using VAdvantage.DataBase;
 using VAdvantage.Logging;
+using VAdvantage.Model;
+using VAdvantage.Utility;
 
 namespace VA012.Models
 {
@@ -679,7 +674,8 @@ namespace VA012.Models
                     }
                 }
             }
-
+            //get the Org_ID from bank account
+            _formData[0]._bankAcctOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive ='Y' AND AD_Client_ID=" + ctx.GetAD_Client_ID() + " AND C_BankAccount_ID=" + _formData[0]._cmbBankAccount));
 
             string schedulePaymentResult = "";
             string orderPaymentResult = "";
@@ -775,7 +771,9 @@ namespace VA012.Models
             {
                 _bankStatement = new MBankStatement(ctx, 0, null);
                 _bankStatement.SetAD_Client_ID(ctx.GetAD_Client_ID());
-                _bankStatement.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                //_bankStatement.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                //set Org_ID based on BankAccount
+                _bankStatement.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                 _bankStatement.SetC_BankAccount_ID(_formData[0]._cmbBankAccount);
                 _bankStatement.SetName(_formData[0]._txtStatementNo);
                 _bankStatement.SetStatementDate(_formData[0]._dtStatementDate);
@@ -2762,7 +2760,7 @@ namespace VA012.Models
                             THEN 'Receipt'
                              END AS PaymentType,
                              'CO' AS DocStatus ,
-                            ' ' as TrxNo , PM.VA009_Name, INV.DateAcct
+                            ' ' as TrxNo , PM.VA009_Name, INV.DateAcct, PAY.DueDate
                             FROM C_INVOICEPAYSCHEDULE PAY
                             INNER JOIN C_INVOICE INV
                             ON pay.C_INVOICE_id=inv.C_INVOICE_id
@@ -2819,7 +2817,7 @@ namespace VA012.Models
                 //append statement date if it is not null
                 if (statementDate != null)
                 {
-                    _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
+                    _sql += " AND INV.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
                 //                //Check Schedule already mapped to payment
                 //                _sql += @" AND PAY.C_INVOICEPAYSCHEDULE_ID NOT IN (SELECT NVL(C_INVOICEPAYSCHEDULE_ID,0)
@@ -2920,7 +2918,7 @@ namespace VA012.Models
                 //append statement date if it is not null
                 if (statementDate != null)
                 {
-                    _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
+                    _sql += " AND ORD.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
                 _sql += " ORDER BY ord.DOCUMENTNO";
 
@@ -3013,7 +3011,7 @@ namespace VA012.Models
                 //append statement date if it is not null
                 if (statementDate != null)
                 {
-                    _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
+                    _sql += " AND CS.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
                 _sql += " ORDER BY CS.DOCUMENTNO";
             }
@@ -3045,7 +3043,8 @@ namespace VA012.Models
                         /* end change by pratap */
                         //added new column to show data on Bank Statement Form
                         _payment.PaymentMethod = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA009_Name"]);
-                        _payment.DateAcct = Util.GetValueOfString(Convert.ToDateTime(_ds.Tables[0].Rows[i]["DateAcct"]).ToShortDateString());
+                        //_payment.DateAcct = Util.GetValueOfString(Convert.ToDateTime(_ds.Tables[0].Rows[i]["DateAcct"]).ToShortDateString());
+                        _payment.DateAcct = Util.GetValueOfDateTime(_ds.Tables[0].Rows[i]["DateAcct"]);
                         //end
                         /* change by pratap */
                         _payment.docstatus = Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocStatus"]);
@@ -3058,22 +3057,29 @@ namespace VA012.Models
 
                         _payment.authcode = Util.GetValueOfString(_ds.Tables[0].Rows[i]["TrxNo"]);
 
-                        //if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
-                        //{
-                        //    MImage _image = new MImage(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]), null);
-                        //    _payment.imageurl = _image.GetThumbnailURL(46, 46);
-                        //    //_payment.binarydata = Convert.ToBase64String(_image.GetThumbnailByte(46, 46));
+                        //for Invoice Schedule get DueDate and Due Amount
+                        if (Util.GetValueOfString(_transactionType).Equals("IS"))
+                        {
+                            _payment.DueDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[i]["DueDate"]);
+                            _payment.DueAmt = DisplayType.GetNumberFormat(DisplayType.Amount).GetFormatAmount(_ds.Tables[0].Rows[i]["CONVERTEDAMOUNT"], ctx.GetContext("#ClientLanguage"));
+                        }
 
-                        //    if (_payment.imageurl == "FileDoesn'tExist" || _payment.imageurl == "NoRecordFound")
-                        //    {
-                        //        _payment.imageurl = "";
-                        //    }                            
-                        //}
-                        //else
-                        //{
-                        //    _payment.imageurl = "";
-                        //}
-                        _payments.Add(_payment);
+                            //if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
+                            //{
+                            //    MImage _image = new MImage(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]), null);
+                            //    _payment.imageurl = _image.GetThumbnailURL(46, 46);
+                            //    //_payment.binarydata = Convert.ToBase64String(_image.GetThumbnailByte(46, 46));
+
+                            //    if (_payment.imageurl == "FileDoesn'tExist" || _payment.imageurl == "NoRecordFound")
+                            //    {
+                            //        _payment.imageurl = "";
+                            //    }                            
+                            //}
+                            //else
+                            //{
+                            //    _payment.imageurl = "";
+                            //}
+                            _payments.Add(_payment);
                     }
 
                 }
@@ -3390,7 +3396,7 @@ namespace VA012.Models
                                       END AS GrandTotal,
 
                                     PAY.C_INVOICE_ID,PAY.VA009_PAYMENTMETHOD_ID,PAY.C_INVOICEPAYSCHEDULE_ID,
-                               PAY.AD_ORG_ID,PAY.AD_CLIENT_ID, dt.DOCBASETYPE
+                               PAY.AD_ORG_ID,PAY.AD_CLIENT_ID, dt.DOCBASETYPE, INV.C_BPartner_Location_ID
                             FROM C_INVOICEPAYSCHEDULE PAY
                             INNER JOIN C_INVOICE INV
                             ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID
@@ -3419,7 +3425,7 @@ namespace VA012.Models
                 _ds = DB.ExecuteDataset(_sql.ToString(), null);
                 if (_ds != null)
                 {
-                    bool _overPayment = false;
+                    //bool _overPayment = false;
 
 
 
@@ -3431,27 +3437,108 @@ namespace VA012.Models
                     //{
                     //    _overPayment = true;
                     //}
-                    if (_formData[0]._cmbDifferenceType == "OU" && _formData[0]._txtDifference < 0)
-                    {
-                        _overPayment = true;
-                    }
-                    if (_overPayment)
-                    {
-                        _overPayment = false;
-                        #region over Payment
+                    //if (_formData[0]._cmbDifferenceType == "OU" && _formData[0]._txtDifference < 0)
+                    //{
+                    //    _overPayment = true;
+                    //    //_overPayment = false;
+                    //}
+                    //if (_overPayment)
+                    //{
+                    //    _overPayment = false;
+                    //    #region over Payment
 
-                        int _paymentMethodID = 0;
-                        _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                    //    //get the C_PaymentMethod_ID from Invoice (from above Query)
+                    //    //int _paymentMethodID = 0;
+                    //    //_paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                    //    MPayment _pay = new MPayment(ctx, 0, null);
+                    //    int C_Doctype_ID = GetDocTypeID(ctx, Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]));
+                    //    _pay.SetC_DocType_ID(C_Doctype_ID);
+                    //    _pay.SetDateAcct(System.DateTime.Now);
+                    //    _pay.SetDateTrx(System.DateTime.Now);
+                    //    _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
+                    //    _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
+                    //    _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
+                    //    _pay.SetC_ConversionType_ID(GetCurrencyType());
+                    //    _pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
+                    //    if (Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "ARI")
+                    //    {
+                    //        _pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
+                    //    }
+                    //    else
+                    //    {
+                    //        _pay.SetPayAmt(-1 * Math.Abs(_formData[0]._txtAmount));
+                    //    }
+
+                    //    if (!_pay.Save())
+                    //    {
+                    //        ValueNamePair pp = VLogger.RetrieveError();
+                    //        string error = pp != null ? pp.GetValue() : "";
+                    //        if (string.IsNullOrEmpty(error))
+                    //        {
+                    //            error = pp != null ? pp.GetName() : "";
+                    //        }
+                    //        return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
+                    //    }
+                    //    else
+                    //    {
+                    //        if (_pay.CompleteIt() == "CO")
+                    //        {
+                    //            _pay.SetProcessed(true);
+                    //            _pay.SetDocAction("CL");
+                    //            _pay.SetDocStatus("CO");
+                    //            _pay.Save();
+
+                    //            int _viewAllocationID = CreateViewAllocation(ctx, _formData, _ds, _pay.GetC_Payment_ID());
+                    //            _ds.Dispose();
+                    //            if (_viewAllocationID > 0)
+                    //            {
+                    //                return _pay.GetC_Payment_ID().ToString();
+                    //            }
+                    //            else
+                    //            {
+                    //                return "VA012_ErrorViewAllocation";
+                    //            }
+
+                    //        }
+                    //        else
+                    //        {
+                    //            ValueNamePair pp = VLogger.RetrieveError();
+                    //            string error = pp != null ? pp.GetValue() : "";
+                    //            if (string.IsNullOrEmpty(error))
+                    //            {
+                    //                error = pp != null ? pp.GetName() : "";
+                    //            }
+                    //            return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
+                    //        }
+                    //    }
+
+                    //    #endregion over Payment
+
+                    //}
+                    //else
+                    //{
+                    #region under Payment
+                    if (_ds.Tables[0].Rows.Count == 1)
+                    {
+                        decimal differenceAmount = 0;
                         MPayment _pay = new MPayment(ctx, 0, null);
+                        /*chnage by pratap*/
+                        //int C_Doctype_ID = GetDocTypeID(ctx, _formData[0]._txtAmount);
                         int C_Doctype_ID = GetDocTypeID(ctx, Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]));
+                        /*end change by pratap*/
                         _pay.SetC_DocType_ID(C_Doctype_ID);
                         _pay.SetDateAcct(System.DateTime.Now);
                         _pay.SetDateTrx(System.DateTime.Now);
+                        _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                         _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                         _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
+                        //added BPartner_Location_ID from Invoice Reference
+                        _pay.SetC_BPartner_Location_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BPartner_Location_ID"]));
                         _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
                         _pay.SetC_ConversionType_ID(GetCurrencyType());
-                        _pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
+                        /*chnage by pratap*/
+                        //_pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
+
                         if (Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "ARI")
                         {
                             _pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
@@ -3460,322 +3547,296 @@ namespace VA012.Models
                         {
                             _pay.SetPayAmt(-1 * Math.Abs(_formData[0]._txtAmount));
                         }
+                        /*end change by pratap*/
 
-                        if (!_pay.Save())
+                        //uncomment this
+                        _pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
+
+
+
+
+                        #region OverUnder
+
+                        if (Util.GetValueOfDecimal(_pay.GetPayAmt()) >= 0)
                         {
-                            return "VA012_PaymentNotSaved";
+                            if (Math.Abs(_formData[0]._txtTrxAmt) > Util.GetValueOfDecimal(_pay.GetPayAmt()))
+                            {
+                                differenceAmount = Math.Abs(_formData[0]._txtDifference);
+                            }
+                            else if (Math.Abs(_formData[0]._txtTrxAmt) < Util.GetValueOfDecimal(_pay.GetPayAmt()))
+                            {
+                                differenceAmount = Math.Abs(_formData[0]._txtDifference) * -1;
+                            }
                         }
                         else
                         {
+                            if (Math.Abs(_formData[0]._txtTrxAmt) > Math.Abs(Util.GetValueOfDecimal(_pay.GetPayAmt())))
+                            {
+                                differenceAmount = Math.Abs(_formData[0]._txtDifference) * -1;
+                            }
+                            else if (Math.Abs(_formData[0]._txtTrxAmt) < Math.Abs(Util.GetValueOfDecimal(_pay.GetPayAmt())))
+                            {
+                                differenceAmount = Math.Abs(_formData[0]._txtDifference);
+
+                            }
+
+                        }
+                        if (differenceAmount != 0 && _formData[0]._cmbVoucherMatch == "M")
+                        {
+                            //DiscountAmount
+                            if (_formData[0]._cmbDifferenceType == "DA")
+                            {
+                                _pay.SetDiscountAmt(differenceAmount);
+                            }
+                            //OverUnderPayment
+                            else if (_formData[0]._cmbDifferenceType == "OU")
+                            {
+                                _pay.SetOverUnderAmt(differenceAmount);
+
+
+                            }
+                            //WriteoffAmount
+                            else if (_formData[0]._cmbDifferenceType == "WO")
+                            {
+                                _pay.SetWriteOffAmt(differenceAmount);
+                            }
+                        }
+                        #endregion OverUnder
+
+
+                        _pay.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_INVOICE_ID"]));
+                        _pay.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_INVOICEPAYSCHEDULE_ID"]));
+
+
+
+
+                        if (!_pay.Save())
+                        {
+                            //trx.Rollback();
+                            ValueNamePair pp = VLogger.RetrieveError();
+                            string error = pp != null ? pp.GetValue() : "";
+                            if (string.IsNullOrEmpty(error))
+                            {
+                                error = pp != null ? pp.GetName() : "";
+                            }
+                            return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
+                        }
+                        else
+                        {
+
                             if (_pay.CompleteIt() == "CO")
                             {
                                 _pay.SetProcessed(true);
                                 _pay.SetDocAction("CL");
                                 _pay.SetDocStatus("CO");
                                 _pay.Save();
-
-                                int _viewAllocationID = CreateViewAllocation(ctx, _formData, _ds, _pay.GetC_Payment_ID());
                                 _ds.Dispose();
-                                if (_viewAllocationID > 0)
-                                {
-                                    return _pay.GetC_Payment_ID().ToString();
-                                }
-                                else
-                                {
-                                    return "VA012_ErrorViewAllocation";
-                                }
-
+                                //trx.Commit();
+                                return _pay.GetC_Payment_ID().ToString();
                             }
                             else
-                            {
-                                return "VA012_PaymentNotProcessed";
-                            }
-                        }
-
-                        #endregion over Payment
-
-                    }
-                    else
-                    {
-                        #region under Payment
-                        if (_ds.Tables[0].Rows.Count == 1)
-                        {
-                            decimal differenceAmount = 0;
-                            MPayment _pay = new MPayment(ctx, 0, null);
-                            /*chnage by pratap*/
-                            //int C_Doctype_ID = GetDocTypeID(ctx, _formData[0]._txtAmount);
-                            int C_Doctype_ID = GetDocTypeID(ctx, Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]));
-                            /*end change by pratap*/
-                            _pay.SetC_DocType_ID(C_Doctype_ID);
-                            _pay.SetDateAcct(System.DateTime.Now);
-                            _pay.SetDateTrx(System.DateTime.Now);
-                            _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
-                            _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
-                            _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
-                            _pay.SetC_ConversionType_ID(GetCurrencyType());
-                            /*chnage by pratap*/
-                            //_pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
-
-                            if (Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "ARI")
-                            {
-                                _pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
-                            }
-                            else
-                            {
-                                _pay.SetPayAmt(-1 * Math.Abs(_formData[0]._txtAmount));
-                            }
-                            /*end change by pratap*/
-
-                            //uncomment this
-                            _pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
-
-
-
-
-                            #region OverUnder
-
-                            if (Util.GetValueOfDecimal(_pay.GetPayAmt()) >= 0)
-                            {
-                                if (Math.Abs(_formData[0]._txtTrxAmt) > Util.GetValueOfDecimal(_pay.GetPayAmt()))
-                                {
-                                    differenceAmount = Math.Abs(_formData[0]._txtDifference);
-                                }
-                                else if (Math.Abs(_formData[0]._txtTrxAmt) < Util.GetValueOfDecimal(_pay.GetPayAmt()))
-                                {
-                                    differenceAmount = Math.Abs(_formData[0]._txtDifference) * -1;
-                                }
-                            }
-                            else
-                            {
-                                if (Math.Abs(_formData[0]._txtTrxAmt) > Math.Abs(Util.GetValueOfDecimal(_pay.GetPayAmt())))
-                                {
-                                    differenceAmount = Math.Abs(_formData[0]._txtDifference) * -1;
-                                }
-                                else if (Math.Abs(_formData[0]._txtTrxAmt) < Math.Abs(Util.GetValueOfDecimal(_pay.GetPayAmt())))
-                                {
-                                    differenceAmount = Math.Abs(_formData[0]._txtDifference);
-
-                                }
-
-                            }
-                            if (differenceAmount != 0 && _formData[0]._cmbVoucherMatch == "M")
-                            {
-                                //DiscountAmount
-                                if (_formData[0]._cmbDifferenceType == "DA")
-                                {
-                                    _pay.SetDiscountAmt(differenceAmount);
-                                }
-                                //OverUnderPayment
-                                else if (_formData[0]._cmbDifferenceType == "OU")
-                                {
-                                    _pay.SetOverUnderAmt(differenceAmount);
-
-
-                                }
-                                //WriteoffAmount
-                                else if (_formData[0]._cmbDifferenceType == "WO")
-                                {
-                                    _pay.SetWriteOffAmt(differenceAmount);
-                                }
-                            }
-                            #endregion OverUnder
-
-
-                            _pay.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_INVOICE_ID"]));
-                            _pay.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_INVOICEPAYSCHEDULE_ID"]));
-
-
-
-
-                            if (!_pay.Save())
                             {
                                 //trx.Rollback();
-                                return "VA012_PaymentNotSaved";
-                            }
-                            else
-                            {
-
-                                if (_pay.CompleteIt() == "CO")
+                                ValueNamePair pp = VLogger.RetrieveError();
+                                string error = pp != null ? pp.GetValue() : "";
+                                if (string.IsNullOrEmpty(error))
                                 {
-                                    _pay.SetProcessed(true);
-                                    _pay.SetDocAction("CL");
-                                    _pay.SetDocStatus("CO");
-                                    _pay.Save();
-                                    _ds.Dispose();
-                                    //trx.Commit();
-                                    return _pay.GetC_Payment_ID().ToString();
+                                    error = pp != null ? pp.GetName() : "";
                                 }
-                                else
-                                {
-                                    //trx.Rollback();
-                                    return "VA012_PaymentNotProcessed";
-                                }
+                                return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
                             }
                         }
-                        else if (_ds.Tables[0].Rows.Count > 1)
+                    }
+                    else if (_ds.Tables[0].Rows.Count > 1)
+                    {
+                        //int _paymentMethodID = 0;
+                        //_paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                        MPayment _pay = new MPayment(ctx, 0, null);
+
+
+                        //int C_Doctype_ID = GetDocTypeID(ctx, _formData[0]._txtAmount);
+                        /*chnage by pratap*/
+                        int C_Doctype_ID = GetDocTypeID(ctx, Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]));
+                        /*end change by pratap*/
+
+                        _pay.SetC_DocType_ID(C_Doctype_ID);
+                        _pay.SetDateAcct(System.DateTime.Now);
+                        _pay.SetDateTrx(System.DateTime.Now);
+                        //set the Organization from the backaccount
+                        _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
+                        _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
+                        _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
+                        //added BPartner_Location_ID from Invoice Reference
+                        _pay.SetC_BPartner_Location_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BPartner_Location_ID"]));
+                        _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
+                        _pay.SetC_ConversionType_ID(GetCurrencyType());
+                        //_pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
+                        //get C_PaymentMethod_ID from Invoice
+                        _pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
+
+
+
+                        if (!_pay.Save())
                         {
-                            int _paymentMethodID = 0;
-                            _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
-                            MPayment _pay = new MPayment(ctx, 0, null);
-
-
-                            //int C_Doctype_ID = GetDocTypeID(ctx, _formData[0]._txtAmount);
-                            /*chnage by pratap*/
-                            int C_Doctype_ID = GetDocTypeID(ctx, Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]));
-                            /*end change by pratap*/
-
-                            _pay.SetC_DocType_ID(C_Doctype_ID);
-                            _pay.SetDateAcct(System.DateTime.Now);
-                            _pay.SetDateTrx(System.DateTime.Now);
-                            _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
-                            _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
-                            _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
-                            _pay.SetC_ConversionType_ID(GetCurrencyType());
-                            _pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
-                            _pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
-
-
-
-                            if (!_pay.Save())
+                            // trx.Rollback();
+                            ValueNamePair pp = VLogger.RetrieveError();
+                            string error = pp != null ? pp.GetValue() : "";
+                            if (string.IsNullOrEmpty(error))
                             {
-                                // trx.Rollback();
-                                return "VA012_PaymentNotSaved";
+                                error = pp != null ? pp.GetName() : "";
                             }
-                            else
+                            return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
+                        }
+                        else
+                        {
+                            bool _status = true;
+                            decimal differenceAmount = 0;
+                            for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                             {
-                                bool _status = true;
-                                decimal differenceAmount = 0;
-                                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                                differenceAmount = 0;
+                                MPaymentAllocate PayAlocate = new MPaymentAllocate(ctx, 0, null);
+                                PayAlocate.SetC_Payment_ID(_pay.GetC_Payment_ID());
+                                //PayAlocate.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
+                                //PayAlocate.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
+
+
+
+                                //PayAlocate.SetInvoiceAmt(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["GrandTotal"]));
+                                PayAlocate.SetAD_Org_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_ORG_ID"]));
+                                PayAlocate.SetAD_Client_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_CLIENT_ID"]));
+                                //PayAlocate.SetWriteOffAmt(0);
+                                //PayAlocate.SetOverUnderAmt(0);
+
+
+                                #region OverUnder
+                                if (_formData[0]._txtDifference != 0 && _formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType != "CH" && Math.Abs(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"])) > Math.Abs(_formData[0]._txtDifference) && _status)
                                 {
-                                    differenceAmount = 0;
-                                    MPaymentAllocate PayAlocate = new MPaymentAllocate(ctx, 0, null);
-                                    PayAlocate.SetC_Payment_ID(_pay.GetC_Payment_ID());
-                                    //PayAlocate.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
-                                    //PayAlocate.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
 
 
-
-                                    PayAlocate.SetInvoiceAmt(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["GrandTotal"]));
-                                    PayAlocate.SetAD_Org_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_ORG_ID"]));
-                                    PayAlocate.SetAD_Client_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_CLIENT_ID"]));
-                                    //PayAlocate.SetWriteOffAmt(0);
-                                    //PayAlocate.SetOverUnderAmt(0);
-
-
-                                    #region OverUnder
-                                    if (_formData[0]._txtDifference != 0 && _formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType != "CH" && Math.Abs(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"])) > Math.Abs(_formData[0]._txtDifference) && _status)
+                                    //pratap
+                                    //PayAlocate.SetAmount(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
+                                    if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "ARI")
                                     {
-
-
-                                        //pratap
-                                        //PayAlocate.SetAmount(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
-                                        if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "ARI")
-                                        {
-                                            //PayAlocate.SetAmount(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]) + _formData[0]._txtDifference);
-                                            PayAlocate.SetAmount(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
-                                        }
-                                        else
-                                        {
-                                            //PayAlocate.SetAmount((-1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"])) + _formData[0]._txtDifference);
-                                            PayAlocate.SetAmount((-1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"])));
-                                        }
-
-                                        if (PayAlocate.GetAmount() > 0)
-                                        {
-
-                                            differenceAmount = _formData[0]._txtDifference;
-                                            PayAlocate.SetAmount(PayAlocate.GetAmount() - _formData[0]._txtDifference);
-                                        }
-                                        else
-                                        {
-                                            if (_formData[0]._cmbDifferenceType == "OU")
-                                            {
-                                                differenceAmount = Decimal.Negate(_formData[0]._txtDifference);
-                                                //differenceAmount = _formData[0]._txtDifference;
-                                                PayAlocate.SetAmount(PayAlocate.GetAmount() + _formData[0]._txtDifference);
-                                            }
-                                            else
-                                            {
-                                                differenceAmount = Decimal.Negate(_formData[0]._txtDifference);
-                                                PayAlocate.SetAmount(PayAlocate.GetAmount() + _formData[0]._txtDifference);
-                                            }
-
-                                        }
-
-
-                                        //differenceAmount = _formData[0]._txtDifference;
-                                        //end pratap
-
-                                        //DiscountAmount
-                                        if (_formData[0]._cmbDifferenceType == "DA")
-                                        {
-                                            PayAlocate.SetDiscountAmt(differenceAmount);
-                                        }
-                                        //WriteoffAmount
-                                        else if (_formData[0]._cmbDifferenceType == "WO")
-                                        {
-                                            PayAlocate.SetWriteOffAmt(differenceAmount);
-                                        }
-                                        //OverUnderPayment
-                                        else if (_formData[0]._cmbDifferenceType == "OU")
-                                        {
-                                            PayAlocate.SetOverUnderAmt(differenceAmount);
-
-                                        }
-
-
-                                        _status = false;
+                                        PayAlocate.SetInvoiceAmt(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
+                                        //PayAlocate.SetAmount(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]) + _formData[0]._txtDifference);
+                                        PayAlocate.SetAmount(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
                                     }
-                                    #endregion OverUnder
-
                                     else
                                     {
-                                        if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "ARI")
+                                        PayAlocate.SetInvoiceAmt(-1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
+                                        //PayAlocate.SetAmount((-1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"])) + _formData[0]._txtDifference);
+                                        PayAlocate.SetAmount((-1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"])));
+                                    }
+
+                                    if (PayAlocate.GetAmount() > 0)
+                                    {
+
+                                        differenceAmount = Math.Abs(_formData[0]._txtDifference);
+                                        PayAlocate.SetAmount(PayAlocate.GetAmount() - differenceAmount);
+                                    }
+                                    else
+                                    {
+                                        if (_formData[0]._cmbDifferenceType == "OU")
                                         {
-                                            PayAlocate.SetAmount(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
+                                            differenceAmount = Decimal.Negate(_formData[0]._txtDifference);
+                                            //differenceAmount = _formData[0]._txtDifference;
+                                            PayAlocate.SetAmount(PayAlocate.GetAmount() + differenceAmount);
                                         }
                                         else
                                         {
-                                            PayAlocate.SetAmount(-1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
+                                            differenceAmount = Decimal.Negate(_formData[0]._txtDifference);
+                                            PayAlocate.SetAmount(PayAlocate.GetAmount() + differenceAmount);
                                         }
+
                                     }
 
 
+                                    //differenceAmount = _formData[0]._txtDifference;
+                                    //end pratap
 
-                                    PayAlocate.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
-                                    PayAlocate.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
-
-
-
-                                    if (!PayAlocate.Save())
+                                    //DiscountAmount
+                                    if (_formData[0]._cmbDifferenceType == "DA")
                                     {
-                                        // trx.Rollback();
-                                        return "VA012_PaymentNotSaved";
+                                        PayAlocate.SetDiscountAmt(differenceAmount);
                                     }
+                                    //WriteoffAmount
+                                    else if (_formData[0]._cmbDifferenceType == "WO")
+                                    {
+                                        PayAlocate.SetWriteOffAmt(differenceAmount);
+                                    }
+                                    //OverUnderPayment
+                                    else if (_formData[0]._cmbDifferenceType == "OU")
+                                    {
+                                        PayAlocate.SetOverUnderAmt(differenceAmount);
+
+                                    }
+
+
+                                    _status = false;
                                 }
-                                if (_pay.CompleteIt() == "CO")
-                                {
-                                    _pay.SetProcessed(true);
-                                    _pay.SetDocAction("CL");
-                                    _pay.SetDocStatus("CO");
-                                    _pay.Save();
-                                    _ds.Dispose();
-                                    // trx.Commit();
-
-
-
-
-                                    return _pay.GetC_Payment_ID().ToString();
-                                }
+                                #endregion OverUnder
                                 else
                                 {
+                                    if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "ARI")
+                                    {
+                                        PayAlocate.SetInvoiceAmt(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
+                                        PayAlocate.SetAmount(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
+                                    }
+                                    else
+                                    {
+                                        PayAlocate.SetInvoiceAmt(-1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
+                                        PayAlocate.SetAmount(-1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
+                                    }
+                                }
+
+
+
+                                PayAlocate.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
+                                PayAlocate.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
+
+
+
+                                if (!PayAlocate.Save())
+                                {
                                     // trx.Rollback();
-                                    return "VA012_PaymentNotProcessed";
+                                    ValueNamePair pp = VLogger.RetrieveError();
+                                    string error = pp != null ? pp.GetValue() : "";
+                                    if (string.IsNullOrEmpty(error))
+                                    {
+                                        error = pp != null ? pp.GetName() : "";
+                                    }
+                                    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                                 }
                             }
+                            if (_pay.CompleteIt() == "CO")
+                            {
+                                _pay.SetProcessed(true);
+                                _pay.SetDocAction("CL");
+                                _pay.SetDocStatus("CO");
+                                _pay.Save();
+                                _ds.Dispose();
+                                // trx.Commit();
+
+
+
+
+                                return _pay.GetC_Payment_ID().ToString();
+                            }
+                            else
+                            {
+                                // trx.Rollback();
+                                ValueNamePair pp = VLogger.RetrieveError();
+                                string error = pp != null ? pp.GetValue() : "";
+                                if (string.IsNullOrEmpty(error))
+                                {
+                                    error = pp != null ? pp.GetName() : "";
+                                }
+                                return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
+                            }
                         }
-                        #endregion under Payment
                     }
+                    #endregion under Payment
+                    //}
                 }
 
                 else
@@ -3905,6 +3966,8 @@ namespace VA012.Models
                 _pay.SetC_DocType_ID(C_Doctype_ID);
                 _pay.SetDateAcct(System.DateTime.Now);
                 _pay.SetDateTrx(System.DateTime.Now);
+                //set Org_ID based on BankAccount
+                _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                 _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                 _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
                 _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
@@ -3937,7 +4000,13 @@ namespace VA012.Models
 
                 if (!_pay.Save())
                 {
-                    return "VA012_PaymentNotSaved";
+                    ValueNamePair pp = VLogger.RetrieveError();
+                    string error = pp != null ? pp.GetValue() : "";
+                    if (string.IsNullOrEmpty(error))
+                    {
+                        error = pp != null ? pp.GetName() : "";
+                    }
+                    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                 }
                 else
                 {
@@ -3951,7 +4020,13 @@ namespace VA012.Models
                     }
                     else
                     {
-                        return "VA012_PaymentNotProcessed";
+                        ValueNamePair pp = VLogger.RetrieveError();
+                        string error = pp != null ? pp.GetValue() : "";
+                        if (string.IsNullOrEmpty(error))
+                        {
+                            error = pp != null ? pp.GetName() : "";
+                        }
+                        return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
                     }
                 }
             }
@@ -3965,13 +4040,22 @@ namespace VA012.Models
             int _paymentMethodID = 0;
             try
             {
-                _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                //based on txtAmout get the PaymentMethod with respective column
+                string payMethod_ID = _formData[0]._txtAmount >= 0 ? "VA009_PAYMENTMETHOD_ID" : "VA009_PO_PaymentMethod_ID";
+                _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT " + payMethod_ID + " FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                //if PaymentMethod_ID is zero it will return a message not do the Payment
+                if (_paymentMethodID == 0)
+                {
+                    return "VA012_NotfoundPayMethodOnBPartner";
+                }
                 MPayment _pay = new MPayment(ctx, 0, null);
                 int C_Doctype_ID = GetDocTypeID(ctx, _formData[0]._txtAmount);
                 _pay.SetDescription(_formData[0]._txtVoucherNo);
                 _pay.SetC_DocType_ID(C_Doctype_ID);
                 _pay.SetDateAcct(System.DateTime.Now);
                 _pay.SetDateTrx(System.DateTime.Now);
+                //set Org_ID based on BankAccount
+                _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                 _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                 _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
                 _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
@@ -3989,7 +4073,13 @@ namespace VA012.Models
 
                 if (!_pay.Save())
                 {
-                    return "VA012_PaymentNotSaved";
+                    ValueNamePair pp = VLogger.RetrieveError();
+                    string error = pp != null ? pp.GetValue() : "";
+                    if (string.IsNullOrEmpty(error))
+                    {
+                        error = pp != null ? pp.GetName() : "";
+                    }
+                    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                 }
                 else
                 {
@@ -4003,7 +4093,13 @@ namespace VA012.Models
                     }
                     else
                     {
-                        return "VA012_PaymentNotProcessed";
+                        ValueNamePair pp = VLogger.RetrieveError();
+                        string error = pp != null ? pp.GetValue() : "";
+                        if (string.IsNullOrEmpty(error))
+                        {
+                            error = pp != null ? pp.GetName() : "";
+                        }
+                        return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
                     }
                 }
             }
@@ -4247,7 +4343,7 @@ namespace VA012.Models
 
 
                     WHERE PAY.C_PAYMENT_ID=" + _dragSourceID;
-                _trxAmt = Util.GetValueOfDecimal(DB.ExecuteScalar(_sql));
+                //_trxAmt = Util.GetValueOfDecimal(DB.ExecuteScalar(_sql));
                 ///// end trx amt
 
                 if (_authCode == "" || _authCode == null)
@@ -4255,7 +4351,7 @@ namespace VA012.Models
                     if (_amount == 0)
                     {
                         _obj._amount = _payAmt;
-                        _obj._trxamount = _trxAmt;
+                        _obj._trxamount = _payAmt;// _trxAmt;
                     }
                     else if (_payAmt != _amount)
                     {
@@ -4269,7 +4365,7 @@ namespace VA012.Models
                     if (_amount == 0)
                     {
                         _obj._amount = _payAmt;
-                        _obj._trxamount = _trxAmt;
+                        _obj._trxamount = _payAmt;// _trxAmt;
                     }
 
                 }
@@ -5251,8 +5347,115 @@ namespace VA012.Models
             }
             return matchingBase;
         }
+
+        /// <summary>
+        /// Get the list of Bank's
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>List of Bank's</returns>
+        public List<MatchBase> GetBank(Ctx ctx)
+        {
+            List<MatchBase> bankList = new List<MatchBase>();
+            MatchBase list = null;
+            //added Client_ID to get Bank's with respect to Client
+            DataSet ds = DB.ExecuteDataset("SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y' AND AD_Client_ID=" + ctx.GetAD_Client_ID(), null, null);
+            if (ds != null && ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    list = new MatchBase();
+                    list.Value = Util.GetValueOfString(ds.Tables[0].Rows[i]["C_BANK_ID"]);
+                    list.Name = Util.GetValueOfString(ds.Tables[0].Rows[i]["NAME"]);
+                    bankList.Add(list);
+                }
+            }
+            return bankList;
+        }
+
+        /// <summary>
+        /// Get InvoicePaySchedule Details
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="seltdInvoice">C_Invoice_ID</param>
+        /// <returns>get the list of InvoicePaySchedule</returns>
+        public List<InvoicePaySchedule> GetInvPaySchedule(Ctx ctx, int seltdInvoice, int accountID)
+        {
+            List<InvoicePaySchedule> payList = new List<InvoicePaySchedule>();
+            InvoicePaySchedule list = null;
+            //get Account Currency ID
+            int _accountCurrencyID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + accountID));
+            string _sql = @"SELECT PAY.C_INVOICEPAYSCHEDULE_ID,
+                                CASE
+                                    WHEN (DT.DOCBASETYPE IN ('ARI','APC'))
+                                    THEN ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))
+                                    WHEN (DT.DOCBASETYPE IN ('API','ARC'))
+                                    THEN ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))*-1
+                                  END      AS DUEAMT,
+                               CASE
+                                WHEN(inv.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                                THEN
+                                  CASE
+                                    WHEN (DT.DOCBASETYPE IN ('ARI','APC'))
+                                    THEN ROUND(PAY.DueAmt *(
+                                  CASE
+                                    WHEN CCR.MULTIPLYRATE IS NOT NULL
+                                    THEN CCR.MULTIPLYRATE
+                                    ELSE CCR1.DIVIDERATE
+                                  END),NVL(BCURR.StdPrecision,2))
+                                    WHEN (DT.DOCBASETYPE IN ('API','ARC'))
+                                    THEN ROUND(PAY.DueAmt *(
+                                  CASE
+                                    WHEN CCR.MULTIPLYRATE IS NOT NULL
+                                    THEN CCR.MULTIPLYRATE
+                                    ELSE CCR1.DIVIDERATE
+                                  END),NVL(BCURR.StdPrecision,2)) *-1
+                                  END
+                                ELSE
+                                  CASE
+                                    WHEN (DT.DOCBASETYPE IN ('ARI','APC'))
+                                    THEN ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))
+                                    WHEN (DT.DOCBASETYPE IN ('API','ARC'))
+                                    THEN ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))*-1
+                                  END
+                              END AS CONVERTEDAMOUNT,PAY.DueDate
+                            FROM C_INVOICEPAYSCHEDULE PAY
+                            INNER JOIN C_INVOICE INV ON pay.C_INVOICE_id=inv.C_INVOICE_id
+                            LEFT JOIN C_CURRENCY CURR ON INV.C_CURRENCY_ID =CURR.C_CURRENCY_ID
+                            LEFT JOIN C_CURRENCY BCURR ON " + _accountCurrencyID + @" =BCURR.C_CURRENCY_ID 
+                            LEFT JOIN C_CONVERSION_RATE CCR ON (CCR.C_CURRENCY_ID   =INV.C_CURRENCY_ID
+                            AND CCR.ISACTIVE ='Y' AND CCR.C_CURRENCY_TO_ID=" + _accountCurrencyID + @" AND CCR.AD_CLIENT_ID =INV.AD_CLIENT_ID AND CCR.AD_ORG_ID IN (INV.AD_ORG_ID,0) 
+                            AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
+                            LEFT JOIN C_CONVERSION_RATE CCR1 ON (CCR1.C_CURRENCY_ID   =" + _accountCurrencyID + @" AND CCR1.C_CURRENCY_TO_ID=INV.C_CURRENCY_ID
+                            AND CCR1.ISACTIVE ='Y' AND CCR1.AD_CLIENT_ID=INV.AD_CLIENT_ID AND CCR1.AD_ORG_ID IN (INV.AD_ORG_ID,0) AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)
+                            INNER JOIN VA009_PAYMENTMETHOD PM ON (PM.VA009_PAYMENTMETHOD_ID=PAY.VA009_PAYMENTMETHOD_ID )
+                            INNER JOIN C_DOCTYPE DT ON DT.C_DOCTYPE_ID=INV.C_DOCTYPE_ID
+                            WHERE  pay.VA009_IsPaid='N' AND PAY.ISACTIVE='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B' AND PAY.C_INVOICE_ID= " + seltdInvoice;
+
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                {
+                    list = new InvoicePaySchedule();
+                    
+                    list.DueDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[i]["DueDate"]);
+                    list.c_invoicepayschedule_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]);
+                    list.DueAmount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["CONVERTEDAMOUNT"]);
+                    list.DueAmt = DisplayType.GetNumberFormat(DisplayType.Amount).GetFormatAmount(list.DueAmount, ctx.GetContext("#ClientLanguage"));
+                    payList.Add(list);
+                }
+            }
+            return payList;
+        }
     }
 
+    public class InvoicePaySchedule
+    {
+        public string DueAmt { get; internal set; }
+        public DateTime? DueDate { get; internal set; }
+        public int c_invoicepayschedule_id { get; internal set; }
+        public decimal DueAmount { get; internal set; }
+    }
 
     public class MatchBase
     {
@@ -5372,6 +5575,7 @@ namespace VA012.Models
         public string _cmbDifferenceType { get; set; }
         public decimal _txtDifference { get; set; }
         public string _trxno { get; set; }
+        public int _bankAcctOrg_ID { get; internal set; }
         // public List<GetScheduleProp> _getSchedules { get; set; }
     }
     public class PaymentProp
@@ -5399,8 +5603,9 @@ namespace VA012.Models
         public string docstatus { get; set; }
 
         public string PaymentMethod { get; set; }
-        public string DateAcct { get; set; }
-
+        public DateTime? DateAcct { get; set; }
+        public DateTime? DueDate { get; internal set; }
+        public string DueAmt { get; internal set; }
     }
     public class StatementLineProp
     {
