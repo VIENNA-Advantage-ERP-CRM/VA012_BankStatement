@@ -634,7 +634,8 @@ namespace VA012.Models
 
                 #endregion
                 //_qryStmt = "SELECT C_BANKSTATEMENT_ID,DOCSTATUS,0 AS C_PAYMENT_ID, 0 AS C_CHARGE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _formData[0]._txtStatementNo + "' AND TO_CHAR(BS.STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY')";
-                _qryStmt = "SELECT C_BANKSTATEMENT_ID,C_BANKACCOUNT_ID,DOCSTATUS,0 AS C_PAYMENT_ID, 0 AS C_CHARGE_ID, 0 AS C_CASHLINE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _formData[0]._txtStatementNo + "'  AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
+                //not required start and end date filters
+                _qryStmt = "SELECT C_BANKSTATEMENT_ID,C_BANKACCOUNT_ID,DOCSTATUS,0 AS C_PAYMENT_ID, 0 AS C_CHARGE_ID, 0 AS C_CASHLINE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _formData[0]._txtStatementNo + "'";/*  AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true)*/
             }
             _ds = DB.ExecuteDataset(_qryStmt, null);
             if (_ds != null)
@@ -3527,8 +3528,11 @@ namespace VA012.Models
                         int C_Doctype_ID = GetDocTypeID(ctx, Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]));
                         /*end change by pratap*/
                         _pay.SetC_DocType_ID(C_Doctype_ID);
-                        _pay.SetDateAcct(System.DateTime.Now);
-                        _pay.SetDateTrx(System.DateTime.Now);
+                        //Payment AcctDate & Trx date should be StatementLine AcctDate
+                        //_pay.SetDateAcct(System.DateTime.Now);
+                        _pay.SetDateAcct(_formData[0]._dtStatementDate);
+                        //_pay.SetDateTrx(System.DateTime.Now);
+                        _pay.SetDateTrx(_formData[0]._dtStatementDate);
                         _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                         _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                         _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
@@ -3660,8 +3664,11 @@ namespace VA012.Models
                         /*end change by pratap*/
 
                         _pay.SetC_DocType_ID(C_Doctype_ID);
-                        _pay.SetDateAcct(System.DateTime.Now);
-                        _pay.SetDateTrx(System.DateTime.Now);
+                        //Payment AcctDate & Trx Date should be StatementLine AcctDate
+                        //_pay.SetDateAcct(System.DateTime.Now);
+                        _pay.SetDateAcct(_formData[0]._dtStatementDate);
+                        //_pay.SetDateTrx(System.DateTime.Now);
+                        _pay.SetDateTrx(_formData[0]._dtStatementDate);
                         //set the Organization from the backaccount
                         _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                         _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
@@ -3702,8 +3709,10 @@ namespace VA012.Models
 
 
                                 //PayAlocate.SetInvoiceAmt(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["GrandTotal"]));
-                                PayAlocate.SetAD_Org_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_ORG_ID"]));
+                                //PayAlocate.SetAD_Org_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_ORG_ID"]));
                                 PayAlocate.SetAD_Client_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_CLIENT_ID"]));
+                                //set Organization with the reference of Bank Account
+                                PayAlocate.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                                 //PayAlocate.SetWriteOffAmt(0);
                                 //PayAlocate.SetOverUnderAmt(0);
 
@@ -3961,15 +3970,23 @@ namespace VA012.Models
                     _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
                 }
 
+                //get Bpartner Location
+                int _bPartnerLocation_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BPartner_Location_ID FROM C_BPartner_Location WHERE IsActive='Y' AND C_BPartner_ID=" + _formData[0]._ctrlBusinessPartner));
+
                 MPayment _pay = new MPayment(ctx, 0, null);
                 int C_Doctype_ID = GetDocTypeID(ctx, _formData[0]._txtAmount);
                 _pay.SetC_DocType_ID(C_Doctype_ID);
-                _pay.SetDateAcct(System.DateTime.Now);
-                _pay.SetDateTrx(System.DateTime.Now);
+                //Payment AcctDate & Trx Date should be StatementLine AcctDate
+                //_pay.SetDateAcct(System.DateTime.Now);
+                _pay.SetDateAcct(_formData[0]._dtStatementDate);
+                //_pay.SetDateTrx(System.DateTime.Now);
+                _pay.SetDateTrx(_formData[0]._dtStatementDate);
                 //set Org_ID based on BankAccount
                 _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                 _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                 _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
+                //added BPartner_Location_ID from BPartner
+                _pay.SetC_BPartner_Location_ID(_bPartnerLocation_ID);
                 _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
                 _pay.SetC_ConversionType_ID(GetCurrencyType());
                 _pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
@@ -4048,16 +4065,24 @@ namespace VA012.Models
                 {
                     return "VA012_NotfoundPayMethodOnBPartner";
                 }
+                //get Bpartner Location
+                int _bPartnerLocation_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BPartner_Location_ID FROM C_BPartner_Location WHERE IsActive='Y' AND C_BPartner_ID=" + _formData[0]._ctrlBusinessPartner));
+
                 MPayment _pay = new MPayment(ctx, 0, null);
                 int C_Doctype_ID = GetDocTypeID(ctx, _formData[0]._txtAmount);
                 _pay.SetDescription(_formData[0]._txtVoucherNo);
                 _pay.SetC_DocType_ID(C_Doctype_ID);
-                _pay.SetDateAcct(System.DateTime.Now);
-                _pay.SetDateTrx(System.DateTime.Now);
+                //Payment AcctDate & Trx Date should be StatementLine AcctDate
+                //_pay.SetDateAcct(System.DateTime.Now);
+                _pay.SetDateAcct(_formData[0]._dtStatementDate);
+                //_pay.SetDateTrx(System.DateTime.Now);
+                _pay.SetDateTrx(_formData[0]._dtStatementDate);
                 //set Org_ID based on BankAccount
                 _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                 _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                 _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
+                //added BPartner_Location_ID from BPartner
+                _pay.SetC_BPartner_Location_ID(_bPartnerLocation_ID);
                 _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._cmbCurrency));
                 _pay.SetC_ConversionType_ID(GetCurrencyType());
                 _pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
