@@ -151,41 +151,42 @@ namespace VA012.Controllers
             int pageno = 0;
             int lineno = 0;
             Ctx ctx = Session["ctx"] as Ctx;
+            //not required
             #region Period StartDate and End Date
-            DateTime? _startdate = null;
-            DateTime? _enddate = null;
-            string _sqlDate = @"SELECT STARTDATE
-                                FROM C_PERIOD
-                                WHERE C_YEAR_ID =
-                                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                                    FROM C_YEAR Y
-                                    INNER JOIN C_PERIOD P
-                                    ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                                    WHERE Y.C_CALENDAR_ID =
-                                      (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                                      )
-                                    AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
-                                    AND P.ISACTIVE = 'Y'
-                                    AND Y.ISACTIVE ='Y'
-                                  )
-                                AND PERIODNO=1";
-            _startdate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
-            _sqlDate = @"SELECT ENDDATE
-                                FROM C_PERIOD
-                                WHERE C_YEAR_ID =
-                                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                                        FROM C_YEAR Y
-                                        INNER JOIN C_PERIOD P
-                                        ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                                        WHERE Y.C_CALENDAR_ID =
-                                          (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                                          )
-                                        AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
-                                        AND P.ISACTIVE = 'Y'
-                                        AND Y.ISACTIVE ='Y'
-                                  )
-                                AND PERIODNO=12";
-            _enddate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
+            //DateTime? _startdate = null;
+            //DateTime? _enddate = null;
+            //string _sqlDate = @"SELECT STARTDATE
+            //                    FROM C_PERIOD
+            //                    WHERE C_YEAR_ID =
+            //                      (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
+            //                        FROM C_YEAR Y
+            //                        INNER JOIN C_PERIOD P
+            //                        ON P.C_YEAR_ID        = Y.C_YEAR_ID
+            //                        WHERE Y.C_CALENDAR_ID =
+            //                          (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
+            //                          )
+            //                        AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
+            //                        AND P.ISACTIVE = 'Y'
+            //                        AND Y.ISACTIVE ='Y'
+            //                      )
+            //                    AND PERIODNO=1";
+            //_startdate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
+            //_sqlDate = @"SELECT ENDDATE
+            //                    FROM C_PERIOD
+            //                    WHERE C_YEAR_ID =
+            //                      (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
+            //                            FROM C_YEAR Y
+            //                            INNER JOIN C_PERIOD P
+            //                            ON P.C_YEAR_ID        = Y.C_YEAR_ID
+            //                            WHERE Y.C_CALENDAR_ID =
+            //                              (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
+            //                              )
+            //                            AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
+            //                            AND P.ISACTIVE = 'Y'
+            //                            AND Y.ISACTIVE ='Y'
+            //                      )
+            //                    AND PERIODNO=12";
+            //_enddate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
 
             #endregion
 
@@ -194,16 +195,17 @@ namespace VA012.Controllers
                 if (_bankAccount > 0)
                 {
                     //changed logic as per requirement that first get the Statement Name and if name is null then fetch name from regular expression
-                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
+                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                     statementID = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
                     if (statementID > 0) 
                     {
-                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
+                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
                     else 
                     {
-                        _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
+                        //based on BankAcct fetch the Statement Name
+                        _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
 
@@ -245,7 +247,8 @@ namespace VA012.Controllers
             }
             else
             {
-                _sql = "SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1 AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'   AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
+                //not required start and end date's
+                _sql = "SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1 AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'   AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                 statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                 pageno = 1;
                 lineno = 10;
