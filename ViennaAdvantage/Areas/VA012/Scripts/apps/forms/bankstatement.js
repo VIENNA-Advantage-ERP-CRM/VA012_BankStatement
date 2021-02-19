@@ -2573,20 +2573,6 @@
 
         };
 
-        //Get the Converted Amount
-        function GetConvertedAmt(Record_ID, tranactionType) {
-            $.ajax({
-                url: VIS.Application.contextUrl + "BankStatement/GetConvtAmount",
-                dataType: "json",
-                data: { recordID: Record_ID, accountID: _cmbBankAccount.val(), transcType: tranactionType, statemtDate: _dtStatementDate.val() },
-                success: function (data) {
-                    var result = JSON.parse(data);
-                    if (result != null || result != "") {
-                        return result;
-                    }
-                }
-            });
-        };
         //End Load All Functions
 
         //Load Child Dialogs
@@ -4273,7 +4259,7 @@
                         if (_ds != null) {
                             for (var i = 0; i < _ds.length; i++) {
                                 if (_ds[i].DueAmount == 0) {
-                                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_ConversionRateNotFound"), null, "", "");
+                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                     return;
                                 }
                                 //_cmbPaymentSchedule.append("<option paymentdata='" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "/" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.businesspartner) + "' value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_invoicepayschedule_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
@@ -5376,7 +5362,7 @@
                                     }
                                 }
                             }
-                            else if (_txtPaymentSchedule.val() == 0 && ($_ctrlPayment.getValue() != 0 || $_ctrlPayment.getValue() != null)) {
+                            else if ((_txtPaymentSchedule.val() == null || _txtPaymentSchedule.val() == 0) && ($_ctrlPayment.getValue() != 0 || $_ctrlPayment.getValue() != null)) {
                                 var transtype = "PY";
                                 var _ds = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: $_ctrlPayment.getValue(), bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() });
                                 for (var i = 0; i < _ds.length; i++) {
