@@ -1333,16 +1333,17 @@ namespace VA012.Models
                 _ds = DB.ExecuteDataset(_sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
                 {
-                    list = new InvoicePaySchedule();
+                    
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                     {
+                        list = new InvoicePaySchedule();
                         if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
                         {
-                            list.DueAmount += MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID()) * -1;
+                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID()) * -1;
                         }
                         else if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_ARINVOICE) || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_APCREDITMEMO))
                         {
-                            list.DueAmount += MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID());
+                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID());
                         }
                         payList.Add(list);
                     }
@@ -1357,16 +1358,17 @@ namespace VA012.Models
                 _ds = DB.ExecuteDataset(_sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
                 {
-                    list = new InvoicePaySchedule();
+                    
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                     {
+                        list = new InvoicePaySchedule();
                         if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_APPAYMENT))
                         {
-                            list.DueAmount += MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["PaymentAmount"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID) * -1;
+                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["PaymentAmount"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID) * -1;
                         }
                         else if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_ARRECEIPT))
                         {
-                            list.DueAmount += MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["PaymentAmount"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID);
+                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["PaymentAmount"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID);
                         }
                         payList.Add(list);
                     }
@@ -1397,9 +1399,9 @@ namespace VA012.Models
         /// <param name="cmbBankAccount">C_BankAccout_ID</param>
         /// <param name="txtSearch">Search Text</param>
         /// <param name="currencyID">C_Currency_ID</param>
-        /// <param name="sEARCHREQUEST">Search Request</param>
+        /// <param name="_searchRequest">Search Request</param>
         /// <returns></returns>
-        public List<ConcileStatement> LoadConciledOrUnConciledStatements(Ctx ctx, int cmbBankAccount, string txtSearch, int currencyID, bool sEARCHREQUEST)
+        public List<ConcileStatement> LoadConciledOrUnConciledStatements(Ctx ctx, int cmbBankAccount, string txtSearch, int currencyID, bool _searchRequest)
         {
             string _sqlCon = @"SELECT NVL(ROUND(SUM( 
              CASE 
@@ -1466,7 +1468,7 @@ namespace VA012.Models
                 _sqlCon += " AND BS.AD_ORG_ID=" + org_Id;
             }
 
-            if (sEARCHREQUEST)
+            if (_searchRequest)
             {
 
                 _sqlCon += " AND (UPPER(BP.NAME) LIKE UPPER('%" + txtSearch + "%')"

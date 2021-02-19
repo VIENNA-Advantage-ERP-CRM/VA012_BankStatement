@@ -2324,7 +2324,7 @@
                     datatype: "json",
                     contentType: "application/json; charset=utf-8",
                     async: false,
-                    data: ({ _dragSourceID: _dragSourceID, _dragDestinationID: _dragDestinationID, _listToCheck: _listToCheck, _amount: _amount, _currencyId: _currencyId, _formBPartnerID: _formBPartnerID }),
+                    data: ({ _dragSourceID: _dragSourceID, _dragDestinationID: _dragDestinationID, _listToCheck: _listToCheck, _amount: _amount, _currencyId: _currencyId, _formBPartnerID: _formBPartnerID, stateDate: _dtStatementDate.val() }),
 
                     success: function (result) {
 
@@ -2382,7 +2382,7 @@
                     datatype: "json",
                     contentType: "application/json; charset=utf-8",
                     async: false,
-                    data: ({ _dragSourceID: _dragSourceID, _dragDestinationID: _dragDestinationID, _amount: _amount, _currencyId: _currencyId, _formBPartnerID: _formBPartnerID }),
+                    data: ({ _dragSourceID: _dragSourceID, _dragDestinationID: _dragDestinationID, _amount: _amount, _currencyId: _currencyId, _formBPartnerID: _formBPartnerID, stateDate: _dtStatementDate.val() }),
 
                     success: function (result) {
                         result = $.parseJSON(result);
@@ -3088,7 +3088,7 @@
                         datatype: "json",
                         contentType: "application/json; charset=utf-8",
                         async: false,
-                        data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _currencyID: _currencyId != null ? _currencyId : 0, _SEARCHREQUEST: _SEARCHREQUEST }),
+                        data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _currencyID: _currencyId != null ? _currencyId : 0, _searchRequest: _SEARCHREQUEST }),
                         success: function (data) {
                             var _dsCon = $.parseJSON(data);
                             //if (_dsCon != null && _dsCon != "") {
@@ -5355,6 +5355,7 @@
                                         if (_ds.length == 0 || _ds[i].DueAmount == 0) {
                                             _txtAmount.setValue();
                                             _txtTrxAmt.setValue();
+                                            _txtDifference.setValue();
                                             VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                             return;
                                         }
@@ -5369,6 +5370,7 @@
                                     else {
                                         _txtAmount.setValue();
                                         _txtTrxAmt.setValue();
+                                        _txtDifference.setValue();
                                         VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                         return;
                                     }

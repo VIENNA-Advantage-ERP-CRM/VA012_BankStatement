@@ -610,25 +610,47 @@ namespace VA012.Controllers
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
 
-        public JsonResult CheckPrepayCondition(int _dragSourceID, int _dragDestinationID, string _listToCheck, decimal _amount, int _currencyId, int _formBPartnerID)
+        /// <summary>
+        /// Get the List of Amount and Message
+        /// </summary>
+        /// <param name="_dragSourceID">C_Order_ID</param>
+        /// <param name="_dragDestinationID">C_Order_ID</param>
+        /// <param name="_listToCheck">true or false to check list</param>
+        /// <param name="_amount">Amount</param>
+        /// <param name="_currencyId">C_Currency_ID</param>
+        /// <param name="_formBPartnerID">C_BPartner_ID</param>
+        /// <param name="stateDate">Statement Date</param>
+        /// <returns>List</returns>
+        public JsonResult CheckPrepayCondition(int _dragSourceID, int _dragDestinationID, string _listToCheck, decimal _amount, int _currencyId, int _formBPartnerID, DateTime? stateDate)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.CheckPrepayCondition(ctx, _dragSourceID, _dragDestinationID, _listToCheck, _amount, _currencyId, _formBPartnerID));
+                retJSON = JsonConvert.SerializeObject(obj.CheckPrepayCondition(ctx, _dragSourceID, _dragDestinationID, _listToCheck, _amount, _currencyId, _formBPartnerID, stateDate));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult CheckContraCondition(int _dragSourceID, int _dragDestinationID, decimal _amount, int _currencyId, int _formBPartnerID)
+
+        /// <summary>
+        /// Get the Amount
+        /// </summary>
+        /// <param name="_dragSourceID">C_CashLine_ID</param>
+        /// <param name="_dragDestinationID">C_CashLine_ID</param>
+        /// <param name="_amount">Amount</param>
+        /// <param name="_currencyId">C_Currency_ID</param>
+        /// <param name="_formBPartnerID">C_BPartner_ID</param>
+        /// <param name="stateDate">Statement Date</param>
+        /// <returns>List</returns>
+        public JsonResult CheckContraCondition(int _dragSourceID, int _dragDestinationID, decimal _amount, int _currencyId, int _formBPartnerID, DateTime? stateDate)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.CheckContraCondition(ctx, _dragSourceID, _dragDestinationID, _amount, _currencyId, _formBPartnerID));
+                retJSON = JsonConvert.SerializeObject(obj.CheckContraCondition(ctx, _dragSourceID, _dragDestinationID, _amount, _currencyId, _formBPartnerID, stateDate));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -761,16 +783,16 @@ namespace VA012.Controllers
         /// <param name="_cmbBankAccount">C_BankAccount_ID</param>
         /// <param name="_txtSearch">Search Text</param>
         /// <param name="_currencyID">C_Currency_ID</param>
-        /// <param name="_SEARCHREQUEST">Search Request</param>
+        /// <param name="_searchRequest">Search Request</param>
         /// <returns>List</returns>
-        public JsonResult LoadConciledOrUnConciledStatements(int _cmbBankAccount, string _txtSearch, int _currencyID, bool _SEARCHREQUEST)
+        public JsonResult LoadConciledOrUnConciledStatements(int _cmbBankAccount, string _txtSearch, int _currencyID, bool _searchRequest)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.LoadConciledOrUnConciledStatements(ctx, _cmbBankAccount, _txtSearch, _currencyID, _SEARCHREQUEST));
+                retJSON = JsonConvert.SerializeObject(obj.LoadConciledOrUnConciledStatements(ctx, _cmbBankAccount, _txtSearch, _currencyID, _searchRequest));
 
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
