@@ -2835,21 +2835,11 @@ namespace VA012.Models
                       + "  WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)  "
                        + " THEN  "
                          + " CASE "
-                        + "  WHEN (DT.DOCBASETYPE='ARR') "
-                         + "   THEN ROUND(PAY.PAYAMT*( "
-                         + " CASE  "
-                          + "  WHEN CCR.MULTIPLYRATE IS NOT NULL "
-                          + "  THEN CCR.MULTIPLYRATE "
-                          + "  ELSE CCR1.DIVIDERATE "
-                        + "  END),NVL(BCURR.StdPrecision,2)) "
-                         + "   WHEN (DT.DOCBASETYPE='APP') "
-                          + "  THEN ROUND((PAY.PAYAMT*(  "
-                      + " CASE  "
-                      + "  WHEN CCR.MULTIPLYRATE IS NOT NULL  "
-                      + "  THEN CCR.MULTIPLYRATE  "
-                     + "   ELSE CCR1.DIVIDERATE  "
-                     + " END)),NVL(BCURR.StdPrecision,2))*-1 "
-                        + "  END "
+                            + "  WHEN (DT.DOCBASETYPE='ARR') "
+                            + "  THEN CURRENCYCONVERT(PAY.PAYAMT, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, PAY.DateAcct, PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) "
+                            + "   WHEN (DT.DOCBASETYPE='APP') "
+                            + "  THEN CURRENCYCONVERT(PAY.PAYAMT * -1, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, PAY.DateAcct, PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) "
+                            + "  END "
                        + " ELSE "
                         + "  CASE "
                           + "  WHEN (DT.DOCBASETYPE='ARR') "
@@ -2877,38 +2867,17 @@ namespace VA012.Models
                    + " LEFT JOIN C_BANKSTATEMENT BS "
                    + " ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID) "
 
-                   //+ " LEFT JOIN AD_IMAGE IMG "
-                   //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
+                  
                    + " LEFT JOIN C_BP_GROUP BPG "
                    + " ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID "
                    + " LEFT JOIN C_CURRENCY CURR "
                    + " ON PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID "
-                     // + " INNER JOIN AD_CLIENTINFO CINFO  "
-                     // + " ON CINFO.AD_CLIENT_ID =PAY.AD_CLIENT_ID  "
-                     // + " INNER JOIN C_ACCTSCHEMA AC  "
-                     //  + " ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID  "
+                    
                      + " INNER JOIN C_BANKACCOUNT AC  "
                       + " ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID  "
                    + " LEFT JOIN C_CURRENCY BCURR  "
                    + " ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID  "
-                   + " LEFT JOIN C_CONVERSION_RATE CCR  "
-                   + " ON (CCR.C_CURRENCY_ID   =PAY.C_CURRENCY_ID  "
-                   + " AND CCR.ISACTIVE        ='Y'  "
-                   + " AND CCR.C_CURRENCY_TO_ID=AC.C_CURRENCY_ID  "
-                     + "   AND CCR.AD_CLIENT_ID    =pay.AD_CLIENT_ID "
-                     + "  AND CCR.AD_ORG_ID      IN (pay.AD_ORG_ID,0) "
-                   //+ " AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)  "
-                   + " AND pay.DateAcct BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)  "
-
-                   + " LEFT JOIN C_CONVERSION_RATE CCR1  "
-                    + " ON (CCR1.C_CURRENCY_ID   =AC.C_CURRENCY_ID  "
-                    + " AND CCR1.C_CURRENCY_TO_ID=PAY.C_CURRENCY_ID  "
-                    + " AND CCR1.ISACTIVE        ='Y'  "
-                     + "   AND CCR1.AD_CLIENT_ID    =pay.AD_CLIENT_ID "
-                     + "  AND CCR1.AD_ORG_ID      IN (pay.AD_ORG_ID,0) "
-                    //+ " AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)  "
-                    + " AND pay.DateAcct BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)  "
-
+                  
                    + " LEFT JOIN VA009_PAYMENTMETHOD PM  "
                    + " ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID ) "
 
@@ -2967,19 +2936,9 @@ namespace VA012.Models
                                 THEN
                                   CASE
                                     WHEN (DT.DOCBASETYPE IN ('ARI','APC'))
-                                    THEN ROUND(PAY.DueAmt       *(
-                                  CASE
-                                    WHEN CCR.MULTIPLYRATE IS NOT NULL
-                                    THEN CCR.MULTIPLYRATE
-                                    ELSE CCR1.DIVIDERATE
-                                  END),NVL(BCURR.StdPrecision,2))
+                                    THEN CURRENCYCONVERT(PAY.DueAmt, inv.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, INV.DateAcct, INV.C_ConversionType_ID, INV.AD_Client_ID, INV.AD_Org_ID)
                                     WHEN (DT.DOCBASETYPE IN ('API','ARC'))
-                                    THEN ROUND(PAY.DueAmt      *(
-                                  CASE
-                                    WHEN CCR.MULTIPLYRATE IS NOT NULL
-                                    THEN CCR.MULTIPLYRATE
-                                    ELSE CCR1.DIVIDERATE
-                                  END),NVL(BCURR.StdPrecision,2)) *-1
+                                    THEN CURRENCYCONVERT(PAY.DueAmt*-1, inv.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, INV.DateAcct, INV.C_ConversionType_ID, INV.AD_Client_ID, INV.AD_Org_ID)
                                   END
                                 ELSE
                                   CASE
@@ -3006,37 +2965,20 @@ namespace VA012.Models
                             ON pay.C_INVOICE_id=inv.C_INVOICE_id
                             LEFT JOIN C_BPARTNER BP
                             ON inv.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                            --LEFT JOIN AD_IMAGE IMG
-                            --ON BP.PIC=IMG.AD_IMAGE_ID
+                           /* --LEFT JOIN AD_IMAGE IMG
+                            -- ON BP.PIC=IMG.AD_IMAGE_ID*/
                             LEFT JOIN C_BP_GROUP BPG
                             ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
                             LEFT JOIN C_CURRENCY CURR
                             ON inv.C_CURRENCY_ID =CURR.C_CURRENCY_ID
-                            --INNER JOIN AD_CLIENTINFO CINFO
+                            /*--INNER JOIN AD_CLIENTINFO CINFO
                             --ON CINFO.AD_CLIENT_ID =PAY.AD_CLIENT_ID
                             --INNER JOIN C_ACCTSCHEMA AC
                             --ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID
                             --LEFT JOIN C_CURRENCY BCURR
-                            --ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID
+                            --ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID*/
                             LEFT JOIN C_CURRENCY BCURR
-                            ON " + bankCurr_ID + @" =BCURR.C_CURRENCY_ID 
-                            LEFT JOIN C_CONVERSION_RATE CCR
-                            ON (CCR.C_CURRENCY_ID   =inv.C_CURRENCY_ID
-                            AND CCR.ISACTIVE        ='Y'
-                            AND CCR.C_CURRENCY_TO_ID=" + bankCurr_ID + @"
-                            AND CCR.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                        AND CCR.AD_ORG_ID      IN (inv.AD_ORG_ID,0) 
-                            --AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
-                            AND INV.DateAcct BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
-
-                            LEFT JOIN C_CONVERSION_RATE CCR1
-                            ON (CCR1.C_CURRENCY_ID   =" + bankCurr_ID + @"
-                            AND CCR1.C_CURRENCY_TO_ID=inv.C_CURRENCY_ID
-                            AND CCR1.ISACTIVE        ='Y'
-                            AND CCR1.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                        AND CCR1.AD_ORG_ID      IN (inv.AD_ORG_ID,0) 
-                            
-                            AND INV.DateAcct BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)
+                            ON " + bankCurr_ID + @" =BCURR.C_CURRENCY_ID
 
                             INNER JOIN VA009_PAYMENTMETHOD PM  
                             ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
@@ -3092,12 +3034,7 @@ namespace VA012.Models
                           BCURR.ISO_CODE AS BASECURRENCY,
                           CASE
                             WHEN(ord.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                            THEN ROUND(ord.GrandTotal*(
-                              CASE
-                                WHEN CCR.MULTIPLYRATE IS NOT NULL
-                                THEN CCR.MULTIPLYRATE
-                                ELSE CCR1.DIVIDERATE
-                              END),NVL(BCURR.StdPrecision,2))
+                             THEN CURRENCYCONVERT(ord.GrandTotal, ord.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, ord.DateAcct, ord.C_ConversionType_ID, ord.AD_Client_ID, ord.AD_Org_ID) 
                             ELSE ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2))
                           END AS CONVERTEDAMOUNT,
                           CASE
@@ -3119,30 +3056,9 @@ namespace VA012.Models
                         ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
                         LEFT JOIN C_CURRENCY CURR
                         ON ord.C_CURRENCY_ID =CURR.C_CURRENCY_ID
-                        --INNER JOIN AD_CLIENTINFO CINFO
-                        --ON CINFO.AD_CLIENT_ID =ord.AD_CLIENT_ID
-                        --INNER JOIN C_ACCTSCHEMA AC
-                        --ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID
                         LEFT JOIN C_CURRENCY BCURR
                         ON " + bankCurr_ID + @" =BCURR.C_CURRENCY_ID
-                        LEFT JOIN C_CONVERSION_RATE CCR
-                        ON (CCR.C_CURRENCY_ID   =ord.C_CURRENCY_ID
-                        AND CCR.ISACTIVE        ='Y'
-                        AND CCR.C_CURRENCY_TO_ID=" + bankCurr_ID + @"
-                            AND CCR.AD_CLIENT_ID    =ord.AD_CLIENT_ID
-                        AND CCR.AD_ORG_ID      IN (ord.AD_ORG_ID,0) 
-                        
-                        AND ORD.DateAcct BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
-
-                        LEFT JOIN C_CONVERSION_RATE CCR1
-                        ON (CCR1.C_CURRENCY_ID   =" + bankCurr_ID + @"
-                        AND CCR1.C_CURRENCY_TO_ID=ord.C_CURRENCY_ID
-                        AND CCR1.ISACTIVE        ='Y'
-                            AND CCR1.AD_CLIENT_ID    =ord.AD_CLIENT_ID
-                        AND CCR1.AD_ORG_ID      IN (ord.AD_ORG_ID,0) 
-
-                         AND ORD.DateAcct BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)
-
+                     
                         INNER JOIN VA009_PAYMENTMETHOD PM  
                         ON (PM.VA009_PAYMENTMETHOD_ID   =ORD.VA009_PAYMENTMETHOD_ID )
 
@@ -3184,12 +3100,7 @@ namespace VA012.Models
                             BCURR.ISO_CODE AS BASECURRENCY,
                             CASE
                             WHEN(CSL.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                            THEN ROUND(CSL.AMOUNT*(
-                                CASE
-                                WHEN CCR.MULTIPLYRATE IS NOT NULL
-                                THEN CCR.MULTIPLYRATE
-                                ELSE CCR1.DIVIDERATE
-                                END),NVL(BCURR.StdPrecision,2))
+                            THEN CURRENCYCONVERT(CSL.AMOUNT, CSL.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, CS.DateAcct, CSL.C_ConversionType_ID, CS.AD_Client_ID, CS.AD_Org_ID) 
                             ELSE ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2))
                             END AS CONVERTEDAMOUNT,
                             CASE
@@ -3228,22 +3139,7 @@ namespace VA012.Models
                         ON CSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID
                         LEFT JOIN C_CURRENCY BCURR
                         ON " + bankCurr_ID + @" =BCURR.C_CURRENCY_ID
-                        LEFT JOIN C_CONVERSION_RATE CCR
-                        ON (CCR.C_CURRENCY_ID   =csl.C_CURRENCY_ID
-                        AND CCR.ISACTIVE        ='Y'
-                        AND CCR.C_CURRENCY_TO_ID=" + bankCurr_ID + @"
-                        AND CCR.AD_CLIENT_ID    =cs.AD_CLIENT_ID
-                        AND CCR.AD_ORG_ID      IN (cs.AD_ORG_ID,0)
-                        
-                        AND CS.DateAcct BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
-                        LEFT JOIN C_CONVERSION_RATE CCR1
-                        ON (CCR1.C_CURRENCY_ID   =" + bankCurr_ID + @"
-                        AND CCR1.C_CURRENCY_TO_ID=csl.C_CURRENCY_ID
-                        AND CCR1.ISACTIVE        ='Y'
-                        AND CCR1.AD_CLIENT_ID    =cs.AD_CLIENT_ID
-                        AND CCR1.AD_ORG_ID      IN (cs.AD_ORG_ID,0)
-                        
-                        AND CS.DateAcct BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)
+                       
                      WHERE CS.ISACTIVE   ='Y' 
                         AND CSL.CashType           ='C'
                         AND chrg.dtd001_chargetype ='CON'                        
@@ -5691,19 +5587,9 @@ namespace VA012.Models
                                 THEN
                                   CASE
                                     WHEN (DT.DOCBASETYPE IN ('ARI','APC'))
-                                    THEN ROUND(PAY.DueAmt *(
-                                  CASE
-                                    WHEN CCR.MULTIPLYRATE IS NOT NULL
-                                    THEN CCR.MULTIPLYRATE
-                                    ELSE CCR1.DIVIDERATE
-                                  END),NVL(BCURR.StdPrecision,2))
+                                     THEN CURRENCYCONVERT(PAY.DueAmt, inv.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, "+ GlobalVariable.TO_DATE(statemtDate, true) + @", inv.C_ConversionType_ID, inv.AD_Client_ID, inv.AD_Org_ID) 
                                     WHEN (DT.DOCBASETYPE IN ('API','ARC'))
-                                    THEN ROUND(PAY.DueAmt *(
-                                  CASE
-                                    WHEN CCR.MULTIPLYRATE IS NOT NULL
-                                    THEN CCR.MULTIPLYRATE
-                                    ELSE CCR1.DIVIDERATE
-                                  END),NVL(BCURR.StdPrecision,2)) *-1
+                                    THEN CURRENCYCONVERT(PAY.DueAmt * -1, inv.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statemtDate, true) + @", inv.C_ConversionType_ID, inv.AD_Client_ID, inv.AD_Org_ID) 
                                   END
                                 ELSE
                                   CASE
@@ -5717,11 +5603,6 @@ namespace VA012.Models
                             INNER JOIN C_INVOICE INV ON pay.C_INVOICE_id=inv.C_INVOICE_id
                             LEFT JOIN C_CURRENCY CURR ON INV.C_CURRENCY_ID =CURR.C_CURRENCY_ID
                             LEFT JOIN C_CURRENCY BCURR ON " + _accountCurrencyID + @" =BCURR.C_CURRENCY_ID 
-                            LEFT JOIN C_CONVERSION_RATE CCR ON (CCR.C_CURRENCY_ID   =INV.C_CURRENCY_ID
-                            AND CCR.ISACTIVE ='Y' AND CCR.C_CURRENCY_TO_ID=" + _accountCurrencyID + @" AND CCR.AD_CLIENT_ID =INV.AD_CLIENT_ID AND CCR.AD_ORG_ID IN (INV.AD_ORG_ID,0) 
-                            AND " + GlobalVariable.TO_DATE(statemtDate, true) + @" BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
-                            LEFT JOIN C_CONVERSION_RATE CCR1 ON (CCR1.C_CURRENCY_ID   =" + _accountCurrencyID + @" AND CCR1.C_CURRENCY_TO_ID=INV.C_CURRENCY_ID
-                            AND CCR1.ISACTIVE ='Y' AND CCR1.AD_CLIENT_ID=INV.AD_CLIENT_ID AND CCR1.AD_ORG_ID IN (INV.AD_ORG_ID,0) AND " + GlobalVariable.TO_DATE(statemtDate, true) + @" BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)
                             INNER JOIN VA009_PAYMENTMETHOD PM ON (PM.VA009_PAYMENTMETHOD_ID=PAY.VA009_PAYMENTMETHOD_ID )
                             INNER JOIN C_DOCTYPE DT ON DT.C_DOCTYPE_ID=INV.C_DOCTYPE_ID
                             WHERE  pay.VA009_IsPaid='N' AND PAY.ISACTIVE='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B' AND PAY.C_INVOICE_ID= " + seltdInvoice;
