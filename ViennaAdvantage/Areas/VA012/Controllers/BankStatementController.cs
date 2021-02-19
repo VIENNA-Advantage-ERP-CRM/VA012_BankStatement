@@ -197,12 +197,12 @@ namespace VA012.Controllers
                     //changed logic as per requirement that first get the Statement Name and if name is null then fetch name from regular expression
                     _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                     statementID = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
-                    if (statementID > 0) 
+                    if (statementID > 0)
                     {
                         _sql = "SELECT NAME AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
-                    else 
+                    else
                     {
                         //based on BankAcct fetch the Statement Name
                         _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
@@ -583,7 +583,7 @@ namespace VA012.Controllers
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.MatchByDrag(ctx, _dragPaymentID, _dragStatementID));
+                retJSON = JsonConvert.SerializeObject(obj.MatchByDrag(ctx, _dragPaymentID, _dragStatementID, DateTime.Now));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -705,7 +705,7 @@ namespace VA012.Controllers
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.CheckFormPrepayCondition(ctx, _orderID, _amount, _currencyId, _formBPartnerID));
+                retJSON = JsonConvert.SerializeObject(obj.CheckFormPrepayCondition(ctx, _orderID, _amount, _currencyId, _formBPartnerID, DateTime.Now));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -729,7 +729,7 @@ namespace VA012.Controllers
         /// Get List of Bank's
         /// </summary>
         /// <returns>List of Banks</returns>
-        public JsonResult GetBank() 
+        public JsonResult GetBank()
         {
             Ctx ctx = Session["ctx"] as Ctx;
             StatementOperations obj = new StatementOperations();
@@ -781,7 +781,7 @@ namespace VA012.Controllers
         /// </summary>
         /// <param name="bankAcct">C_BankAccount_ID</param>
         /// <returns>Statement Date</returns>
-        public JsonResult GetStatementDate(int bankAcct) 
+        public JsonResult GetStatementDate(int bankAcct)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
@@ -802,7 +802,7 @@ namespace VA012.Controllers
         /// <param name="transcType">Tansaction Type</param>
         /// <param name="stmtDate">Statement Date</param>
         /// <returns>LIst</returns>
-        public JsonResult GetConvtAmount(string recordID, int bnkAct_Id, string transcType, DateTime? stmtDate) 
+        public JsonResult GetConvtAmount(string recordID, int bnkAct_Id, string transcType, DateTime? stmtDate)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
