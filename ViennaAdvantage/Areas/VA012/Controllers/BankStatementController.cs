@@ -632,14 +632,24 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult CheckPaymentCondition(int _dragSourceID, int _dragDestinationID, string _listToCheck, decimal _amount)
+        /// <summary>
+        /// Get Payment Amounts
+        /// </summary>
+        /// <param name="_dragSourceID">C_Payment_ID</param>
+        /// <param name="_dragDestinationID">C_Payment_ID or Zero</param>
+        /// <param name="_listToCheck">true or false</param>
+        /// <param name="_amount">Amount</param>
+        /// <param name="statmtDate">Statement Date</param>
+        /// <param name="accountID">C_BankAccount_ID</param>
+        /// <returns>List</returns>
+        public JsonResult CheckPaymentCondition(int _dragSourceID, int _dragDestinationID, string _listToCheck, decimal _amount, DateTime? statmtDate, int accountID)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.CheckPaymentCondition(ctx, _dragSourceID, _dragDestinationID, _amount));
+                retJSON = JsonConvert.SerializeObject(obj.CheckPaymentCondition(ctx, _dragSourceID, _dragDestinationID, _amount, statmtDate, accountID));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -730,15 +740,77 @@ namespace VA012.Controllers
         /// Get Invoice PaySchedule list
         /// </summary>
         /// <param name="seltdInvoice">C_Invoice_ID</param>
+        /// <param name="accountID">C_BankAccount_ID</param>
+        /// <param name="statemtDate">Statement Date</param>
         /// <returns>Invoice PaySchedule list</returns>
-        public JsonResult GetInvPaySchedule(int seltdInvoice, int accountID)
+        public JsonResult GetInvPaySchedule(int seltdInvoice, int accountID, DateTime? statemtDate)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.GetInvPaySchedule(ctx, seltdInvoice, accountID));
+                retJSON = JsonConvert.SerializeObject(obj.GetInvPaySchedule(ctx, seltdInvoice, accountID, statemtDate));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Total conciled or Unconciled Amount
+        /// </summary>
+        /// <param name="_cmbBankAccount">C_BankAccount_ID</param>
+        /// <param name="_txtSearch">Search Text</param>
+        /// <param name="_currencyID">C_Currency_ID</param>
+        /// <param name="_SEARCHREQUEST">Search Request</param>
+        /// <returns>List</returns>
+        public JsonResult LoadConciledOrUnConciledStatements(int _cmbBankAccount, string _txtSearch, int _currencyID, bool _SEARCHREQUEST)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations obj = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(obj.LoadConciledOrUnConciledStatements(ctx, _cmbBankAccount, _txtSearch, _currencyID, _SEARCHREQUEST));
+
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Statement Date from Bank Statement window
+        /// </summary>
+        /// <param name="bankAcct">C_BankAccount_ID</param>
+        /// <returns>Statement Date</returns>
+        public JsonResult GetStatementDate(int bankAcct) 
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations obj = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(obj.GetStatementDate(ctx, bankAcct));
+
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Amount and Date
+        /// </summary>
+        /// <param name="recordID">Record ID</param>
+        /// <param name="bnkAct_Id">C_BankAccount_ID</param>
+        /// <param name="transcType">Tansaction Type</param>
+        /// <param name="stmtDate">Statement Date</param>
+        /// <returns>LIst</returns>
+        public JsonResult GetConvtAmount(string recordID, int bnkAct_Id, string transcType, DateTime? stmtDate) 
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations obj = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(obj.GetConvtAmount(ctx, recordID, bnkAct_Id, transcType, stmtDate));
+
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
