@@ -3526,27 +3526,15 @@ namespace VA012.Models
                 }
                 _sql = "";
                 _sql = @"SELECT CASE
-                                WHEN(inv.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                                THEN
-                                     ROUND(PAY.DueAmt       *(
-                                      CASE
-                                        WHEN CCR.MULTIPLYRATE IS NOT NULL
-                                        THEN CCR.MULTIPLYRATE
-                                        ELSE CCR1.DIVIDERATE
-                                      END),NVL(BCURR.StdPrecision,2))
-                                ELSE
-                                     ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))
-                              END AS AMOUNT,
-                                     CASE
-                                        WHEN(INV.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                                        THEN ROUND(inv.GrandTotal *(
-                                          CASE
-                                            WHEN CCR.MULTIPLYRATE IS NOT NULL
-                                            THEN CCR.MULTIPLYRATE
-                                            ELSE CCR1.DIVIDERATE
-                                          END),NVL(BCURR.STDPRECISION,2))
-                                        ELSE ROUND(inv.GrandTotal,NVL(BCURR.STDPRECISION,2))
-                                      END AS GrandTotal,
+                                    WHEN(inv.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                                    THEN CURRENCYCONVERT(PAY.DueAmt, inv.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) +
+                                            @", INV.C_ConversionType_ID, INV.AD_Client_ID, INV.AD_Org_ID)
+                                    ELSE ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2)) END AS AMOUNT,
+                                 CASE
+                                    WHEN(INV.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                                    THEN CURRENCYCONVERT(inv.GrandTotal, inv.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) +
+                                            @", INV.C_ConversionType_ID, INV.AD_Client_ID, INV.AD_Org_ID)
+                                    ELSE ROUND(inv.GrandTotal,NVL(BCURR.STDPRECISION,2)) END AS GrandTotal,
 
                                     PAY.C_INVOICE_ID,PAY.VA009_PAYMENTMETHOD_ID,PAY.C_INVOICEPAYSCHEDULE_ID,
                                PAY.AD_ORG_ID,PAY.AD_CLIENT_ID, dt.DOCBASETYPE, INV.C_BPartner_Location_ID
@@ -3556,23 +3544,7 @@ namespace VA012.Models
                             INNER JOIN C_Doctype dt
                             ON dt.C_Doctype_id = INV.c_doctype_id
                             LEFT JOIN C_CURRENCY BCURR
-                            ON " + _formData[0]._cmbCurrency + @" =BCURR.C_CURRENCY_ID
-
-                            LEFT JOIN C_CONVERSION_RATE CCR
-                            ON (CCR.C_CURRENCY_ID =inv.C_CURRENCY_ID
-                            AND CCR.C_CURRENCY_TO_ID=" + _formData[0]._cmbCurrency + @"
-                            AND CCR.ISACTIVE      ='Y'
-                            AND CCR.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                            AND CCR.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
-                            AND " + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) + @" BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
-
-                            LEFT JOIN C_CONVERSION_RATE CCR1
-                            ON (CCR1.C_CURRENCY_ID   =" + _formData[0]._cmbCurrency + @"
-                            AND CCR1.C_CURRENCY_TO_ID=inv.C_CURRENCY_ID
-                            AND CCR1.ISACTIVE        ='Y'
-                            AND CCR1.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                            AND CCR1.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
-                            AND "+ GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) + @" BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) 
+                            ON " + _formData[0]._cmbCurrency + @" =BCURR.C_CURRENCY_ID 
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _formData[0]._scheduleList + ")";
                 // Trx trx = Trx.Get("VA012_PaymentCreate" + System.DateTime.Now.Ticks);
                 _ds = DB.ExecuteDataset(_sql.ToString(), null);
