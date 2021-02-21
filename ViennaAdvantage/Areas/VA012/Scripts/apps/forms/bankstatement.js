@@ -1954,12 +1954,13 @@
                                     //alert("done");
                                     var amount = 0;
                                     if (!isInList(parseInt(($(ui.draggable)).data('uid')), _scheduleList)) {
-                                        _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
+                                        //_scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                         var _ds = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: parseInt(($(ui.draggable)).data('uid')), bnkAct_Id: _cmbBankAccount.val(), transcType: _cmbTransactionType.val(), stmtDate: _dtStatementDate.val() });
                                         if (_ds.length == 0 || _ds[0].DueAmount == 0) {
                                             VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                             return;
                                         }
+                                        _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                         _scheduleDataList.push($(ui.draggable).attr('paymentdata'));
                                     /*change by pratap*/
                                         //not required
@@ -1999,6 +2000,7 @@
                                     }
                                     else {
                                         VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
+                                        return;
                                     }
                                     _txtPaymentSchedule.val(_scheduleDataList.toString());
                                     //repeated code in above line not reqauired again
