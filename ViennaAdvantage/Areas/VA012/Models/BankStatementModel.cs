@@ -1337,13 +1337,14 @@ namespace VA012.Models
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                     {
                         list = new InvoicePaySchedule();
+                        //Conversion is based On Bank Org not Context Organziation
                         if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
                         {
-                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID()) * -1;
+                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID) * -1;
                         }
                         else if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_ARINVOICE) || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_APCREDITMEMO))
                         {
-                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID());
+                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID);
                         }
                         payList.Add(list);
                     }
@@ -1595,7 +1596,8 @@ namespace VA012.Models
             statementDetail._cmbCashBook = _bankStatementLine.GetC_CashBook_ID();
             MBankStatement _bankStatement = new MBankStatement(ctx, _bankStatementLine.GetC_BankStatement_ID(), null);
             statementDetail._txtStatementNo = _bankStatement.GetName();
-            statementDetail._dtStatementDate = _bankStatement.GetStatementDate();
+            //statement Date should be Line StatementDate
+            statementDetail._dtStatementDate = _bankStatementLine.GetStatementLineDate();
             statementDetail._ctrlCashLine = _bankStatementLine.GetC_CashLine_ID();
             statementDetail._trxno = (String)_bankStatementLine.Get_Value("TrxNo");
             if (string.IsNullOrEmpty(statementDetail._txtVoucherNo) && !string.IsNullOrEmpty(statementDetail._trxno))
