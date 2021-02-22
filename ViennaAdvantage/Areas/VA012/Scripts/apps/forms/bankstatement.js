@@ -1954,12 +1954,13 @@
                                     //alert("done");
                                     var amount = 0;
                                     if (!isInList(parseInt(($(ui.draggable)).data('uid')), _scheduleList)) {
-                                        _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
+                                        //_scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                         var _ds = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: parseInt(($(ui.draggable)).data('uid')), bnkAct_Id: _cmbBankAccount.val(), transcType: _cmbTransactionType.val(), stmtDate: _dtStatementDate.val() });
                                         if (_ds.length == 0 || _ds[0].DueAmount == 0) {
                                             VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                             return;
                                         }
+                                        _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                         _scheduleDataList.push($(ui.draggable).attr('paymentdata'));
                                     /*change by pratap*/
                                         //not required
@@ -1998,7 +1999,8 @@
                                         loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
                                     }
                                     else {
-                                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
+                                        VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                                        return;
                                     }
                                     _txtPaymentSchedule.val(_scheduleDataList.toString());
                                     //repeated code in above line not reqauired again
@@ -2043,7 +2045,7 @@
                                 if (($(ui.draggable)).data('uid') > 0) {
 
                                     if (($(ui.draggable)).hasClass("va012-green-color")) {
-                                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_CashLineAlreadyMatchedOthrStmt"), null, "", "");
+                                        VIS.ADialog.info("VA012_CashLineAlreadyMatchedOthrStmt", null, "", "");
                                         return;
                                     }
                                     if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.getValue())) {
@@ -2097,12 +2099,12 @@
                             }
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg(result._status), null, "", "");
+                            VIS.ADialog.info(result._status, null, "", "");
                             _status = false;
                         }
                     },
                     error: function () {
-                        VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                        VIS.ADialog.info("error", null, "", "");
                         _status = false;
                     }
                 });
@@ -2151,12 +2153,12 @@
                             }
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg(result._status), null, "", "");
+                            VIS.ADialog.info(result._status, null, "", "");
                             _status = false;
                         }
                     },
                     error: function () {
-                        VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                        VIS.ADialog.info("error", null, "", "");
                         _status = false;
                     }
                 });
@@ -2180,12 +2182,12 @@
 
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg(result), null, "", "");
+                            VIS.ADialog.info(result, null, "", "");
                             _status = false;
                         }
                     },
                     error: function () {
-                        VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                        VIS.ADialog.info("error", null, "", "");
                         _status = false;
                     }
                 });
@@ -2231,12 +2233,12 @@
                             }
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg(result._status), null, "", "");
+                            VIS.ADialog.info(result._status, null, "", "");
                             _status = false;
                         }
                     },
                     error: function () {
-                        VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                        VIS.ADialog.info("error", null, "", "");
                         _status = false;
                     }
                 });
@@ -2246,7 +2248,7 @@
             //strictly advised that condider amount only in case of new record otherwise get from destination
             checkScheduleCondition: function (_dragSourceID, _dragDestinationID, _listToCheck, _amount) {
                 if (_currencyId == null || _currencyId == 0) {
-                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectBankAccountFirst"), null, "", "");
+                    VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                     return;
                 }
                 var _formBPartnerID = 0;
@@ -2269,12 +2271,12 @@
                             _status = true;
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg(result), null, "", "");
+                            VIS.ADialog.info(result, null, "", "");
                             _status = false;
                         }
                     },
                     error: function () {
-                        VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                        VIS.ADialog.info("error", null, "", "");
                         _status = false;
                     }
                 });
@@ -2298,12 +2300,12 @@
                             _status = true;
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg(result), null, "", "");
+                            VIS.ADialog.info(result, null, "", "");
                             _status = false;
                         }
                     },
                     error: function () {
-                        VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                        VIS.ADialog.info("error", null, "", "");
                         _status = false;
                     }
                 });
@@ -2354,12 +2356,12 @@
                             }
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg(result._status), null, "", "");
+                            VIS.ADialog.info(result._status, null, "", "");
                             _status = false;
                         }
                     },
                     error: function () {
-                        VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                        VIS.ADialog.info("error", null, "", "");
                         _status = false;
                     }
                 });
@@ -2409,12 +2411,12 @@
 
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg(result._status), null, "", "");
+                            VIS.ADialog.info(result._status, null, "", "");
                             _status = false;
                         }
                     },
                     error: function () {
-                        VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                        VIS.ADialog.info("error", null, "", "");
                         _status = false;
                     }
                 });
@@ -2464,12 +2466,12 @@
                             //childDialogs.loadStatement(_statementID);
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg(result._status), null, "", "");
+                            VIS.ADialog.info(result._status, null, "", "");
                             _status = false;
                         }
                     },
                     error: function () {
-                        VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                        VIS.ADialog.info("error", null, "", "");
                         _status = false;
                     }
                 });
@@ -2778,7 +2780,7 @@
                     }
                     else {
                         STAT_ctrlLoadFile = null;
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectBankAccountFirst"), null, "", "");
+                        VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
 
                     }
 
@@ -2791,12 +2793,12 @@
                     //Load Bank Statement From File Selected
                     if (_tabFile.attr("activestatus") == "1") {
                         if (STAT_cmbBankAccount.val() == null || STAT_cmbBankAccount.val() == "" || STAT_cmbBankAccount.val() == "0") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectBankAccountFirst"), null, "", "");
+                            VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                             return false;
                         }
 
                         if (STAT_cmbBankAccountClassName.val() == null || STAT_cmbBankAccountClassName.val() == "" || STAT_cmbBankAccountClassName.val() == "0") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectClassFirst"), null, "", "");
+                            VIS.ADialog.info("VA012_PleaseSelectClassFirst", null, "", "");
                             return false;
                         }
 
@@ -2809,12 +2811,12 @@
                         ////}
 
                         if (STAT_txtStatementNo.val() == null || STAT_txtStatementNo.val() == "") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseEnterStatementNo"), null, "", "");
+                            VIS.ADialog.info("VA012_PleaseEnterStatementNo", null, "", "");
                             return false;
                         }
 
                         if (STAT_ctrlLoadFile.val() == "" == null || STAT_ctrlLoadFile.val() == "") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectFileFirst"), null, "", "");
+                            VIS.ADialog.info("VA012_SelectFileFirst", null, "", "");
                             return false;
                         }
 
@@ -2822,7 +2824,7 @@
                         if (_result != null) {
                             if (_result._filename == null || _result._filename == "" || _result._path == null || _result._path == "") {
 
-                                VIS.ADialog.info(VIS.Msg.getMsg("VA012_ErrorInGettingFile"), null, "", "");
+                                VIS.ADialog.info("VA012_ErrorInGettingFile", null, "", "");
                                 return;
                             }
                             else if (_result._error != null && _result._error != "") {
@@ -2870,7 +2872,7 @@
                                                 if (result._error != null && result._error != "") {
                                                     //busyIndicator($_statement, false, "absolute");
                                                     busyIndicator($root, false, "absolute");
-                                                    VIS.ADialog.info(VIS.Msg.getMsg(result._error), null, "", "");
+                                                    VIS.ADialog.info(result._error, null, "", "");
 
                                                 }
                                             }
@@ -2879,7 +2881,7 @@
 
                                             //busyIndicator($_statement, false, "absolute");
                                             busyIndicator($root, false, "absolute");
-                                            VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                                            VIS.ADialog.info("error", null, "", "");
 
                                         }
                                     })
@@ -3357,10 +3359,12 @@
                 var _bankStatementLineID = 0;
                 if (target.hasClass('glyphicon-edit')) {
                     _bankStatementLineID = target.data("uid");
-                    _btnNewRecord.attr("activestatus", "1");
+                    _btnNewRecord.attr("activestatus", "0");
                     _btnNewRecord.attr("src", "Areas/VA012/Images/hide.png");
                     _btnNewRecord.attr("title", "Collapse");
                     $_formNewRecord.show();
+                    _btnNewRecord.removeClass("vis vis-plus");
+                    _btnNewRecord.addClass("fa fa-minus");
                     loadFunctions.setPaymentListHeight()
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
@@ -3772,26 +3776,26 @@
                     if (_matchingBaseItemList.length > 0) {
 
                         if (_cmbStatementNo.val() == null || _cmbStatementNo.val() == "" || _cmbStatementNo.val() == "0") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoLinesFoundToMatch"), null, "", "");
+                            VIS.ADialog.info("VA012_NoLinesFoundToMatch", null, "", "");
                             return false;
                         }
 
                         if (_cmbBankAccount.val() == null || _cmbBankAccount.val() == "" || _cmbBankAccount.val() == "0") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectBankAccountFirst"), null, "", "");
+                            VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                             return false;
                         }
 
                         if (_cmbMatchingCriteria.val() == null || _cmbMatchingCriteria.val() == "" || _cmbMatchingCriteria.val() == "0") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectMatchingCriteria"), null, "", "");
+                            VIS.ADialog.info("VA012_SelectMatchingCriteria", null, "", "");
                             return false;
                         }
                         else {
                             if (_cmbMatchingCriteria.val() == "AT" && _matchingBaseItemList.length < 2) {
-                                VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectMin2MatchingBase"), null, "", "");
+                                VIS.ADialog.info("VA012_SelectMin2MatchingBase", null, "", "");
                                 return false;
                             }
                             if (_cmbMatchingCriteria.val() == "AR" && _matchingBaseItemList.length < 3) {
-                                VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectMin3MatchingBase"), null, "", "");
+                                VIS.ADialog.info("VA012_SelectMin3MatchingBase", null, "", "");
                                 return false;
                             }
                         }
@@ -3803,12 +3807,12 @@
 
                         //added same check which was working before i.e charge is mandatory
                         if ($ChargeControl.value == null || (VIS.Utility.Util.getValueOfInt($ChargeControl.value) == 0)) {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoChargeSelected"), null, "", "");
+                            VIS.ADialog.info("VA012_NoChargeSelected", null, "", "");
                             return false;
                         }
 
                         if (_cmbTaxRate.val() == null || _cmbTaxRate.val() == "" || _cmbTaxRate.val() == "0") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoTaxRateSelected"), null, "", "");
+                            VIS.ADialog.info("VA012_NoTaxRateSelected", null, "", "");
                             return false;
                         }
 
@@ -3882,12 +3886,12 @@
                                     }
                                     else {
                                         busyIndicator($match, false, "absolute");
-                                        VIS.ADialog.info(VIS.Msg.getMsg(data.toString()), null, "", "");
+                                        VIS.ADialog.info(data.toString(), null, "", "");
                                     }
                                 },
                                 error: function () {
                                     busyIndicator($match, false, "absolute");
-                                    VIS.ADialog.info(VIS.Msg.getMsg("error"), null, "", "");
+                                    VIS.ADialog.info("error", null, "", "");
                                 }
                             })
                         }, 2);
@@ -3930,7 +3934,7 @@
 
                     }
                     else {
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoMatchingBaseSelected"), null, "", "");
+                        VIS.ADialog.info("VA012_NoMatchingBaseSelected", null, "", "");
                         return false;
                     }
                     return false;
@@ -4081,7 +4085,7 @@
                                 loadFunctions.setInvoiceAndBPartner(_cmbPaymentSchedule.val(), "IS");
                             }
                             else {
-                                VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
+                                VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
                             }
                             _txtPaymentSchedule.val(_scheduleDataList.toString());
                         }
@@ -4883,21 +4887,21 @@
 
                     var _formData = newRecordForm.getFormData();
                     if (_formData[0]["_cmbBankAccount"] == null || _formData[0]["_cmbBankAccount"] == "" || _formData[0]["_cmbBankAccount"] == "0") {
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectBankAccountFirst"), null, "", "");
+                        VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                         return;
                     }
 
                     if (_formData[0]["_txtStatementNo"] == null || _formData[0]["_txtStatementNo"] == "" || _formData[0]["_txtStatementNo"] == "0") {
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseEnterStatementNo"), null, "", "");
+                        VIS.ADialog.info("VA012_PleaseEnterStatementNo", null, "", "");
                         return;
                     }
 
                     if (_formData[0]["_dtStatementDate"] == null || _formData[0]["_dtStatementDate"] == "" || _formData[0]["_dtStatementDate"] == "0") {
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseEnterStatementDate"), null, "", "");
+                        VIS.ADialog.info("VA012_PleaseEnterStatementDate", null, "", "");
                         return;
                     }
                     if (_formData[0]["_txtAmount"] == null || _formData[0]["_txtAmount"] == "" || _formData[0]["_txtAmount"] == "0" || _formData[0]["_txtAmount"] == "0.00") {
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseEnterAmount"), null, "", "");
+                        VIS.ADialog.info("VA012_PleaseEnterAmount", null, "", "");
                         return;
                     }
 
@@ -4905,7 +4909,7 @@
                         !(_formData[0]["_ctrlBusinessPartner"] == null || _formData[0]["_ctrlBusinessPartner"] == "" || _formData[0]["_ctrlBusinessPartner"] == "0") &&
                         (_formData[0]["_ctrlPayment"] == null || _formData[0]["_ctrlPayment"] == "" || _formData[0]["_ctrlPayment"] == "0") &&
                         (_formData[0]["_scheduleList"] == null || _formData[0]["_scheduleList"] == "")) {
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectPaySchedule"), null, "", "");
+                        VIS.ADialog.info("VA012_PleaseSelectPaySchedule", null, "", "");
                         return;
                     }
 
@@ -4916,7 +4920,7 @@
                         (_formData[0]["_ctrlOrder"] == null || _formData[0]["_ctrlOrder"] == "" || _formData[0]["_ctrlOrder"] == "0") &&
                         (_formData[0]["_cmbCharge"] == null || _formData[0]["_cmbCharge"] == "" || _formData[0]["_cmbCharge"] == "0")
                     ) {
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectAnyOne"), null, "", "");
+                        VIS.ADialog.info("VA012_PleaseSelectAnyOne", null, "", "");
                         return;
                     }
 
@@ -4925,12 +4929,12 @@
 
                         if (_formData[0]["_cmbContraType"] == "BB") {
                             if (_formData[0]["_cmbCharge"] == null || _formData[0]["_cmbCharge"] == "" || _formData[0]["_cmbCharge"] == "0") {
-                                VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectCharge"), null, "", "");
+                                VIS.ADialog.info("VA012_PleaseSelectCharge", null, "", "");
                                 _txtCharge.addClass("va012-mandatory");
                                 return;
                             }
                             else if (_formData[0]["_cmbTaxRate"] == null || _formData[0]["_cmbTaxRate"] == "" || _formData[0]["_cmbTaxRate"] == "0") {
-                                VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectTaxRate"), null, "", "");
+                                VIS.ADialog.info("VA012_PleaseSelectTaxRate", null, "", "");
                                 _cmbTaxRate.addClass("va012-mandatory");
                                 return;
                             }
@@ -4938,7 +4942,7 @@
                         else if (_formData[0]["_cmbContraType"] == "CB") {
 
                             if (_formData[0]["_ctrlCashLine"] == null || _formData[0]["_ctrlCashLine"] == "" || _formData[0]["_ctrlCashLine"] == "0") {
-                                VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectCashJournalLine"), null, "", "");
+                                VIS.ADialog.info("VA012_PleaseSelectCashJournalLine", null, "", "");
                                 return;
                             }
                             //Commented For Contra-29-1-16
@@ -4965,18 +4969,18 @@
                             //}
                         }
                         else {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectContraType"), null, "", "");
+                            VIS.ADialog.info("VA012_PleaseSelectContraType", null, "", "");
                             return;
                         }
                     }
                     if (_formData[0]["_cmbVoucherMatch"] == "V") {
                         if (_formData[0]["_cmbCharge"] == null || _formData[0]["_cmbCharge"] == "" || _formData[0]["_cmbCharge"] == "0") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectCharge"), null, "", "");
+                            VIS.ADialog.info("VA012_PleaseSelectCharge", null, "", "");
                             _txtCharge.addClass("va012-mandatory");
                             return;
                         }
                         else if (_formData[0]["_cmbTaxRate"] == null || _formData[0]["_cmbTaxRate"] == "" || _formData[0]["_cmbTaxRate"] == "0") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectTaxRate"), null, "", "");
+                            VIS.ADialog.info("VA012_PleaseSelectTaxRate", null, "", "");
                             _cmbTaxRate.addClass("va012-mandatory");
                             return;
                         }
@@ -5018,11 +5022,11 @@
 
                     if (parseFloat(_formData[0]["_txtDifference"]) != 0 && _formData[0]["_cmbVoucherMatch"] == "M") {
                         if (_formData[0]["_cmbDifferenceType"] == null || _formData[0]["_cmbDifferenceType"] == "" || _formData[0]["_cmbDifferenceType"] == "0") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectDifferenceType"), null, "", "");
+                            VIS.ADialog.info("VA012_PleaseSelectDifferenceType", null, "", "");
                             return;
                         }
                         else if (parseFloat(_formData[0]["_txtDifference"]) < 0 && _formData[0]["_cmbDifferenceType"] != "OU") {
-                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseSelectDifferenceTypeOU"), null, "", "");
+                            VIS.ADialog.info("VA012_PleaseSelectDifferenceTypeOU", null, "", "");
                             return;
                         }
                     }
@@ -5362,7 +5366,7 @@
                                     }
                                 }
                             }
-                            else if ((_txtPaymentSchedule.val() == null || _txtPaymentSchedule.val() == 0) && ($_ctrlPayment.getValue() != 0 || $_ctrlPayment.getValue() != null)) {
+                            else if ((_txtPaymentSchedule.val() == null || _txtPaymentSchedule.val() == 0) && ($_ctrlPayment.getValue() != null && $_ctrlPayment.getValue() != 0)) {
                                 var transtype = "PY";
                                 var _ds = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: $_ctrlPayment.getValue(), bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() });
                                 for (var i = 0; i < _ds.length; i++) {
@@ -5379,10 +5383,12 @@
                                 if (amt != 0) {
                                     _txtAmount.setValue(amt);
                                     _txtTrxAmt.setValue(amt);
+                                    _txtDifference.setValue();
                                 }
                                 else {
                                     _txtAmount.setValue();
                                     _txtTrxAmt.setValue();
+                                    _txtDifference.setValue();
                                     VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                     return;
                                 }
@@ -5895,7 +5901,7 @@
                     if (_result == "Success") {
                         _txtStatementLine.val(parseInt(_txtStatementLine.val()) + 10);
                         busyIndicator($root, false, "absolute");
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_RecordSaved"), null, "", "");
+                        VIS.ADialog.info("VA012_RecordSaved", null, "", "");
                         //if (parseInt($_formNewRecord.attr("data-uid")) > 0) {
                         //    loadFunctions.addEffect($_formNewRecord, _lstStatement.find('div[data-uid="' + parseInt($_formNewRecord.attr("data-uid")) + '"]'));
                         //}
@@ -5922,7 +5928,7 @@
                     }
                     else {
                         busyIndicator($root, false, "absolute");
-                        VIS.ADialog.info(VIS.Msg.getMsg(_result), null, "", "");
+                        VIS.ADialog.info(_result, null, "", "");
                     }
                 }
             },
