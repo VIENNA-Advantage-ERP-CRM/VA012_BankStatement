@@ -1596,7 +1596,8 @@ namespace VA012.Models
             statementDetail._cmbCashBook = _bankStatementLine.GetC_CashBook_ID();
             MBankStatement _bankStatement = new MBankStatement(ctx, _bankStatementLine.GetC_BankStatement_ID(), null);
             statementDetail._txtStatementNo = _bankStatement.GetName();
-            statementDetail._dtStatementDate = _bankStatement.GetStatementDate();
+            //statement Date should be Line StatementDate
+            statementDetail._dtStatementDate = _bankStatementLine.GetStatementLineDate();
             statementDetail._ctrlCashLine = _bankStatementLine.GetC_CashLine_ID();
             statementDetail._trxno = (String)_bankStatementLine.Get_Value("TrxNo");
             if (string.IsNullOrEmpty(statementDetail._txtVoucherNo) && !string.IsNullOrEmpty(statementDetail._trxno))
