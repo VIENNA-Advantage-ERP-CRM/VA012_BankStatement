@@ -393,6 +393,7 @@
                                 newRecordForm.prepayRefresh();
                                 newRecordForm.refreshForm();
                                 _statementLinesList = [];
+                                storepaymentdata = [];
                                 _lstStatement.html("");
                                 _statementPageNo = 1;
                                 childDialogs.loadStatement(_statementID);
@@ -450,6 +451,7 @@
                                 newRecordForm.scheduleRefresh();
                                 newRecordForm.prepayRefresh();
                                 newRecordForm.refreshForm();
+                                storepaymentdata = [];
                                 _statementLinesList = [];
                                 _lstStatement.html("");
                                 _statementPageNo = 1;
@@ -499,6 +501,7 @@
                                     newRecordForm.prepayRefresh();
                                     newRecordForm.refreshForm();
                                     _statementLinesList = [];
+                                    storepaymentdata = [];
                                     _lstStatement.html("");
                                     _statementPageNo = 1;
                                     childDialogs.loadStatement(_statementID);
@@ -1532,7 +1535,7 @@
                                 + '     <div class="va012-form-check">'
                                 + '         <div class="va012-pay-text">'
                                 + '           <p title="Business Partner">' + VIS.Utility.encodeText(data[i].businesspartner) + '</p>'
-                                + '         <span title="'+VIS.Msg.getMsg("VA012_InvReference")+'">' + VIS.Utility.encodeText(data[i].bpgroup) + '</span>'
+                                + '         <span title="' + VIS.Msg.getMsg("VA012_InvReference") + '">' + VIS.Utility.encodeText(data[i].bpgroup) + '</span>'
                                 + '       <span title="Document No.">' + VIS.Utility.encodeText(data[i].paymentno) + '</span>'
                                 + '  </div>'
                                 + ' </div>'
@@ -1714,14 +1717,14 @@
                 if ($(this).scrollTop() + $(this).innerHeight() + 2 >= this.scrollHeight) {
                     //if ($(this).scrollTop() > 0 && $(this).scrollTop() + $(this).innerHeight() + 2 >= this.scrollHeight) {
                     //if (_paymentPageCount != 1) {
-                        //_paymentPAGESIZE = _PAGESIZE * _paymentPageSizeInc;
+                    //_paymentPAGESIZE = _PAGESIZE * _paymentPageSizeInc;
 
-                        loadFunctions.LoadPaymentsPages(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val());
-                        if (_paymentPageNo < _paymentPageCount) {
-                            _paymentPageNo++;
-                            //_paymentPageSizeInc++;
-                            loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
-                        }
+                    loadFunctions.LoadPaymentsPages(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val());
+                    if (_paymentPageNo < _paymentPageCount) {
+                        _paymentPageNo++;
+                        //_paymentPageSizeInc++;
+                        loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                    }
                     //}
 
                 }
@@ -1962,7 +1965,7 @@
                                         }
                                         _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                         _scheduleDataList.push($(ui.draggable).attr('paymentdata'));
-                                    /*change by pratap*/
+                                        /*change by pratap*/
                                         //not required
                                         //if (_txtAmount.getValue() == 0) {
                                         //    _scheduleAmount.push("0");
@@ -1993,8 +1996,8 @@
                                             _btnOut.attr("v_active", "0");
                                         }
                                         _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
-                                            //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
-                                            //_txtTrxAmt.trigger('change');
+                                        //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
+                                        //_txtTrxAmt.trigger('change');
                                         /*change by pratap*/
                                         loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
                                     }
@@ -3112,7 +3115,7 @@
                     childDialogs.setStatementListHeight();
 
                 }
-                
+
 
 
 
@@ -3474,6 +3477,12 @@
                     else {
                         _cmbVoucherMatch.prop('selectedIndex', 0);
                     }
+
+                    // when cmb on transaction type Contra then bind "Voucher/Match" type as Contra
+                    if (_cmbTransactionType.val() == "CO") {
+                        _cmbVoucherMatch.val("C").prop('selected', true);
+                    }
+
                     _cmbVoucherMatch.trigger('change');
 
                     if (_result._cmbContraType != null && _result._cmbContraType != "") {
@@ -3481,6 +3490,12 @@
                     }
                     else {
                         _cmbContraType.prop('selectedIndex', 0);
+                    }
+
+                    // when voucher match is contra and voucher type not eselected then bind as " Cash To Bank"
+                    if (_cmbVoucherMatch.val() != null && _cmbVoucherMatch.val() != ""
+                        && _cmbContraType.val() != "" && _cmbContraType.val() != "") {
+                        _cmbContraType.val("CB").prop('selected', true);
                     }
                     _cmbContraType.trigger('change');
 
@@ -4134,7 +4149,7 @@
                             ///
                             var amount = 0;
                             if (Number(_scheduleAmount.length) > 0) {
-                                
+
                                 for (var i = 0; i < _scheduleAmount.length; i++) {
                                     amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                 }
@@ -4156,14 +4171,14 @@
                                 _btnOut.attr("v_active", "0");
                             }
                             _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
-                                //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
-                                //_txtTrxAmt.trigger('change');
+                            //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
+                            //_txtTrxAmt.trigger('change');
                             //not required 
-                                //if (_scheduleAmount.length == 1) {
-                                //    if (Number(_scheduleAmount[0]) == "0") {
-                                //        _scheduleAmount.splice(0, 1);
-                                //    }
-                                //}
+                            //if (_scheduleAmount.length == 1) {
+                            //    if (Number(_scheduleAmount[0]) == "0") {
+                            //        _scheduleAmount.splice(0, 1);
+                            //    }
+                            //}
                             //}
                             //
                         }
@@ -4250,7 +4265,7 @@
                         data: { seltdInvoice: _psInvoiceSelectedVal, accountID: _cmbBankAccount.val(), statemtDate: _dtStatementDate.val() },
                         success: function (data) {
                             var result = JSON.parse(data);
-                            if (result != null || result !="") {
+                            if (result != null || result != "") {
                                 callbackPaymentSchedule(result);
                             }
                         }
@@ -5939,7 +5954,7 @@
                 //_txtStatementPage.val("1");
                 //_txtStatementLine.val("");
                 //get BankStatement Date and set as Statement Date for new Record
-                var stateDate = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetStatementDate", { bankAcct : _cmbBankAccount.val() });
+                var stateDate = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetStatementDate", { bankAcct: _cmbBankAccount.val() });
                 if (stateDate != "" && stateDate != null) {
                     _dtStatementDate.val(Globalize.format(new Date(stateDate), "yyyy-MM-dd"));
                 }
