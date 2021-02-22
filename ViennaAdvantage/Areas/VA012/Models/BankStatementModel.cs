@@ -1681,12 +1681,7 @@ namespace VA012.Models
                         END AS AMOUNT,
                         CASE
                         WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                        THEN ROUND(PAY.PAYAMT*(
-                          CASE
-                            WHEN CCR.MULTIPLYRATE IS NOT NULL
-                            THEN CCR.MULTIPLYRATE
-                            ELSE CCR1.DIVIDERATE
-                          END),NVL(BCURR.STDPRECISION,2))
+                        THEN CURRENCYCONVERT(PAY.PAYAMT, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statementDate, true) + @", PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) 
                         ELSE ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))
                       END AS TRXAMOUNT,
                         PAY.TrxNo

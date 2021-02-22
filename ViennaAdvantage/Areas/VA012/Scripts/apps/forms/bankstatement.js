@@ -4506,17 +4506,17 @@
                 });
                 _btnUndo.on(VIS.Events.onTouchStartOrClick, function () {
 
-                    if (parseInt($_formNewRecord.attr("data-uid")) > 0) {
-                        newRecordForm.scheduleRefresh();
-                        newRecordForm.prepayRefresh();
-                        _openingFromEdit = true;
-                        childDialogs.statementListRecordEdit($_formNewRecord.attr("data-uid"))
-                    }
-                    else {
-                        newRecordForm.scheduleRefresh();
-                        newRecordForm.prepayRefresh();
-                        newRecordForm.refreshForm();
-                    }
+                    //if (parseInt($_formNewRecord.attr("data-uid")) > 0) {
+                    //    newRecordForm.scheduleRefresh();
+                    //    newRecordForm.prepayRefresh();
+                    //    _openingFromEdit = true;
+                    //    childDialogs.statementListRecordEdit($_formNewRecord.attr("data-uid"))
+                    //}
+                    //else {
+                    newRecordForm.scheduleRefresh();
+                    newRecordForm.prepayRefresh();
+                    newRecordForm.refreshForm();
+                    //}
 
                 });
                 $_formNewRecord.hide();
