@@ -1333,7 +1333,7 @@ namespace VA012.Models
                 _ds = DB.ExecuteDataset(_sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
                 {
-                    
+
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                     {
                         list = new InvoicePaySchedule();
@@ -1359,7 +1359,7 @@ namespace VA012.Models
                 _ds = DB.ExecuteDataset(_sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
                 {
-                    
+
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                     {
                         list = new InvoicePaySchedule();
@@ -1504,12 +1504,13 @@ namespace VA012.Models
             StatementProp statementDetail = new StatementProp();
             MBankStatementLine _bankStatementLine = new MBankStatementLine(ctx, _bankStatementLineID, null);
 
-            MCharge chrg = new MCharge(ctx, _bankStatementLine.GetC_Charge_ID(), null);
+            MCharge chrg = null;
             statementDetail._txtStatementLine = _bankStatementLine.GetLine();
             statementDetail._txtAmount = _bankStatementLine.GetStmtAmt();
 
             if (_bankStatementLine.GetC_Charge_ID() > 0)
             {
+                chrg = new MCharge(ctx, _bankStatementLine.GetC_Charge_ID(), null);
                 statementDetail._txtTrxAmt = _bankStatementLine.GetTrxAmt();
 
                 if (statementDetail._txtAmount != statementDetail._txtTrxAmt)
@@ -1565,6 +1566,10 @@ namespace VA012.Models
                 //statementDetail._getSchedules = GetPaymentSchedules(ctx, _bankStatementLine.GetC_Payment_ID());
 
                 //#endregion
+            }
+            else if (_bankStatementLine.GetC_CashLine_ID() == 0)
+            {
+                statementDetail._txtTrxAmt = _bankStatementLine.GetTrxAmt();
             }
             statementDetail._cmbCurrency = _bankStatementLine.GetC_Currency_ID();
             statementDetail._txtDescription = _bankStatementLine.GetDescription();
@@ -3060,14 +3065,14 @@ namespace VA012.Models
                             THEN BP.NAME
                             ELSE cs.NAME
                           END                                         AS BUSINESSPARTNER,
-                            ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
+                            ROUND(CSL.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
                             --BPG.NAME                                    AS BPGROUP,
                             --IMG.AD_IMAGE_ID ,
                             BCURR.ISO_CODE AS BASECURRENCY,
                             CASE
                             WHEN(CSL.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                            THEN CURRENCYCONVERT(CSL.AMOUNT, CSL.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, CS.DateAcct, CSL.C_ConversionType_ID, CS.AD_Client_ID, CS.AD_Org_ID) 
-                            ELSE ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2))
+                            THEN CURRENCYCONVERT(CSL.AMOUNT * -1, CSL.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, CS.DateAcct, CSL.C_ConversionType_ID, CS.AD_Client_ID, CS.AD_Org_ID) 
+                            ELSE ROUND(CSL.AMOUNT * -1 ,NVL(BCURR.StdPrecision,2))
                             END AS CONVERTEDAMOUNT,
                             CASE
                             WHEN(csl.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
@@ -3077,9 +3082,9 @@ namespace VA012.Models
                             BSL.C_BANKSTATEMENTLINE_ID,
                             CASE csl.VSS_PAYMENTTYPE
                             WHEN 'P'
-                            THEN 'Payment'
-                            WHEN 'R'
                             THEN 'Receipt'
+                            WHEN 'R'
+                            THEN 'Payment'
                             END AS PaymentType,
                             BS.DocStatus AS DocStatus ,
                               ' '  as TrxNo , '' as VA009_Name, CS.DateAcct
