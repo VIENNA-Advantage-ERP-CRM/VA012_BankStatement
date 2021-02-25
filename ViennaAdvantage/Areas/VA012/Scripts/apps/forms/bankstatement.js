@@ -5040,7 +5040,9 @@
                             VIS.ADialog.info("VA012_PleaseSelectDifferenceType", null, "", "");
                             return;
                         }
-                        else if (parseFloat(_formData[0]["_txtDifference"]) < 0 && _formData[0]["_cmbDifferenceType"] != "OU") {
+                        else if (((_txtAmount.getValue() > 0 && parseFloat(_formData[0]["_txtDifference"]) < 0) || 
+                                  (_txtAmount.getValue() < 0 && parseFloat(_formData[0]["_txtDifference"]) > 0))
+                                && _formData[0]["_cmbDifferenceType"] != "OU") {
                             VIS.ADialog.info("VA012_PleaseSelectDifferenceTypeOU", null, "", "");
                             return;
                         }
