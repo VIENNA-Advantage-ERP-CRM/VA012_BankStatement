@@ -928,7 +928,8 @@ namespace VA012.Models
                     decimal _paymentAmt = 0;
                     if (paymentrecord.GetC_Currency_ID() != _formData[0]._cmbCurrency)
                     {
-                        _paymentAmt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(paymentrecord.GetPayAmt()), paymentrecord.GetC_Currency_ID(), _formData[0]._cmbCurrency, ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID());
+                        //Conversion according to the Statement Date and BankCurrency
+                        _paymentAmt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(paymentrecord.GetPayAmt()), paymentrecord.GetC_Currency_ID(), _formData[0]._cmbCurrency, _formData[0]._dtStatementDate, paymentrecord.GetC_ConversionType_ID(), ctx.GetAD_Client_ID(), _formData[0]._bankAcctOrg_ID);
                     }
                     else
                     {
@@ -956,11 +957,17 @@ namespace VA012.Models
 
                         if (_formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType == "CH" && differenceAmount != 0)
                         {
-                            _bankStatementLine.SetStmtAmt(_paymentAmt + differenceAmount);
+                            if (_bankStatementLine.GetStmtAmt() == 0) 
+                            {
+                                _bankStatementLine.SetStmtAmt(_paymentAmt + differenceAmount);
+                            }
                         }
                         else
                         {
-                            _bankStatementLine.SetStmtAmt(_paymentAmt);
+                            if (_bankStatementLine.GetStmtAmt() == 0)
+                            {
+                                _bankStatementLine.SetStmtAmt(_paymentAmt);
+                            }
                         }
                     }
                     else if (documentType.GetDocBaseType() == "APP")
@@ -983,11 +990,17 @@ namespace VA012.Models
                             /////
                             if (_formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType == "CH" && differenceAmount != 0)
                             {
-                                _bankStatementLine.SetStmtAmt(Decimal.Negate(_paymentAmt) + differenceAmount);
+                                if (_bankStatementLine.GetStmtAmt() == 0)
+                                {
+                                    _bankStatementLine.SetStmtAmt(Decimal.Negate(_paymentAmt) + differenceAmount);
+                                }
                             }
                             else
                             {
-                                _bankStatementLine.SetStmtAmt(Decimal.Negate(_paymentAmt));
+                                if (_bankStatementLine.GetStmtAmt() == 0)
+                                {
+                                    _bankStatementLine.SetStmtAmt(Decimal.Negate(_paymentAmt));
+                                }
                             }
 
                         }
@@ -1008,11 +1021,17 @@ namespace VA012.Models
                             /////
                             if (_formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType == "CH" && differenceAmount != 0)
                             {
-                                _bankStatementLine.SetStmtAmt(Decimal.Negate(_paymentAmt) + differenceAmount);
+                                if (_bankStatementLine.GetStmtAmt() == 0)
+                                {
+                                    _bankStatementLine.SetStmtAmt(Decimal.Negate(_paymentAmt) + differenceAmount);
+                                }
                             }
                             else
                             {
-                                _bankStatementLine.SetStmtAmt(Decimal.Negate(_paymentAmt));
+                                if (_bankStatementLine.GetStmtAmt() == 0)
+                                {
+                                    _bankStatementLine.SetStmtAmt(Decimal.Negate(_paymentAmt));
+                                }
                             }
                         }
                     }
@@ -1033,11 +1052,17 @@ namespace VA012.Models
                         /////
                         if (_formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType == "CH" && differenceAmount != 0)
                         {
-                            _bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_formData[0]._txtTrxAmt) + differenceAmount);
+                            if (_bankStatementLine.GetStmtAmt() == 0)
+                            {
+                                _bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_formData[0]._txtTrxAmt) + differenceAmount);
+                            }
                         }
                         else
                         {
-                            _bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_formData[0]._txtTrxAmt));
+                            if (_bankStatementLine.GetStmtAmt() == 0)
+                            {
+                                _bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_formData[0]._txtTrxAmt));
+                            }
                         }
                     }
                 }
@@ -1498,7 +1523,17 @@ namespace VA012.Models
 
         }
 
-        public StatementProp GetStatementLine(Ctx ctx, int _bankStatementLineID)
+        /// <summary>
+        /// Get Statement Line Data
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_bankStatementLineID">C_BankStatementLine_ID</param>
+        /// <param name="_trxType">Tranaction Type</param>
+        /// <param name="payment_ID">C_Payment_ID or C_InvoiceSchedule_ID or C_Order_ID</param>
+        /// <param name="_statementDate">Statement Date</param>
+        /// <returns>List</returns>
+
+        public StatementProp GetStatementLine(Ctx ctx, int _bankStatementLineID, string _trxType, int payment_ID, DateTime? _statementDate)
         {
 
             StatementProp statementDetail = new StatementProp();
@@ -1524,13 +1559,33 @@ namespace VA012.Models
                 //}
                 //statementDetail._cmbDifferenceType = _bankStatementLine.GetVA012_DifferenceType();
             }
-            else if (_bankStatementLine.GetC_Payment_ID() > 0)
+            else if (_bankStatementLine.GetC_Payment_ID() > 0 || (payment_ID != 0 && _trxType.Equals("PY")))
             {
-                MPayment _pay = new MPayment(ctx, _bankStatementLine.GetC_Payment_ID(), null);
+                MPayment _pay = new MPayment(ctx, _bankStatementLine.GetC_Payment_ID() != 0 ? _bankStatementLine.GetC_Payment_ID() : payment_ID, null);
                 //decimal _trxamt = _pay.GetPayAmt() + _pay.GetOverUnderAmt() + _pay.GetDiscountAmt() + _pay.GetWriteOffAmt();
                 //pratap
                 // decimal _trxamt = _bankStatementLine.GetTrxAmt();
-                decimal _trxamt = _pay.GetPayAmt();
+                decimal _trxamt = 0;
+                string _baseType = Util.GetValueOfString(DB.ExecuteScalar("SELECT DOcBaseType FROM C_DocType WHERE IsActive='Y' AND C_DocType_ID=" + _pay.GetC_DocType_ID(), null, null));
+                if (_pay.GetC_Currency_ID() != _bankStatementLine.GetC_Currency_ID())
+                {
+                    _trxamt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_pay.GetPayAmt()), _pay.GetC_Currency_ID(), _bankStatementLine.GetC_Currency_ID(), _statementDate, _pay.GetC_ConversionType_ID(), ctx.GetAD_Client_ID(), _bankStatementLine.GetAD_Org_ID());
+                    if (_baseType != null && _baseType.Equals(MDocBaseType.DOCBASETYPE_APPAYMENT))
+                    {
+                        _trxamt = Decimal.Negate(_trxamt);
+                    }
+                }
+                else 
+                {
+                    if (_baseType != null && _baseType.Equals(MDocBaseType.DOCBASETYPE_APPAYMENT))
+                    {
+                        _trxamt = Decimal.Negate(_pay.GetPayAmt());
+                    }
+                    else
+                    {
+                        _trxamt = _pay.GetPayAmt();
+                    }
+                }
                 statementDetail._txtTrxAmt = _trxamt;
                 //if (_bankStatementLine.GetStmtAmt() > 0)
                 //{
@@ -1567,9 +1622,69 @@ namespace VA012.Models
 
                 //#endregion
             }
-            else if (_bankStatementLine.GetC_CashLine_ID() == 0)
+            else if (_bankStatementLine.GetC_CashLine_ID() == 0 && payment_ID == 0)
             {
                 statementDetail._txtTrxAmt = _bankStatementLine.GetTrxAmt();
+            }
+            else if (payment_ID != 0 && _trxType.Equals("IS")) 
+            {
+                decimal _trxamt = 0;
+                DataSet data = DB.ExecuteDataset(@"SELECT dt.DocBaseType,pay.C_Invoice_ID,inv.C_Currency_ID,inv.C_ConversionType_ID,pay.DueAmt FROM C_InvoicePaySchedule pay
+                                        INNER JOIN C_Invoice inv ON pay.C_Invoice_ID = inv.C_Invoice_ID
+                                        INNER JOIN C_DocType dt ON dt.C_DocType_ID = inv.C_DocType_ID WHERE pay.C_InvoicePaySchedule_ID = " + payment_ID, null, null);
+                if (data != null && data.Tables[0].Rows.Count > 0)
+                {
+                    if (Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]) != _bankStatementLine.GetC_Currency_ID())
+                    {
+                        _trxamt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]), Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]), _bankStatementLine.GetC_Currency_ID(), _statementDate, Util.GetValueOfInt(data.Tables[0].Rows[0]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), _bankStatementLine.GetAD_Org_ID());
+                        if (Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
+                        {
+                            _trxamt = Decimal.Negate(_trxamt);
+                        }
+                    }
+                    else
+                    {
+                        if (Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
+                        {
+                            _trxamt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]) * -1;
+                        }
+                        else
+                        {
+                            _trxamt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]);
+                        }
+                    }
+                }
+                statementDetail._txtTrxAmt = _trxamt;
+            }
+            else if (payment_ID != 0 && _trxType.Equals("PO"))
+            {
+                decimal _trxamt = 0;
+                DataSet data = DB.ExecuteDataset(@"SELECT dt.DocBaseType,pay.C_Invoice_ID,inv.C_Currency_ID,inv.C_ConversionType_ID,pay.DueAmt FROM C_InvoicePaySchedule pay
+                                        INNER JOIN C_Invoice inv ON pay.C_Invoice_ID = inv.C_Invoice_ID
+                                        INNER JOIN C_DocType dt ON dt.C_DocType_ID = inv.C_DocType_ID WHERE pay.C_InvoicePaySchedule_ID = " + payment_ID, null, null);
+                if (data != null && data.Tables[0].Rows.Count > 0)
+                {
+                    if (Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]) != _bankStatementLine.GetC_Currency_ID())
+                    {
+                        _trxamt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]), Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]), _bankStatementLine.GetC_Currency_ID(), _statementDate, Util.GetValueOfInt(data.Tables[0].Rows[0]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), _bankStatementLine.GetAD_Org_ID());
+                        if (Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
+                        {
+                            _trxamt = Decimal.Negate(_trxamt);
+                        }
+                    }
+                    else
+                    {
+                        if (Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
+                        {
+                            _trxamt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]) * -1;
+                        }
+                        else
+                        {
+                            _trxamt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]);
+                        }
+                    }
+                }
+                statementDetail._txtTrxAmt = _trxamt;
             }
             statementDetail._cmbCurrency = _bankStatementLine.GetC_Currency_ID();
             statementDetail._txtDescription = _bankStatementLine.GetDescription();
@@ -1609,7 +1724,11 @@ namespace VA012.Models
             {
                 statementDetail._txtVoucherNo = statementDetail._trxno;
             }
-            statementDetail._txtDifference = (Math.Abs(statementDetail._txtTrxAmt) - Math.Abs(statementDetail._txtAmount));
+            statementDetail._txtDifference = Math.Abs(statementDetail._txtTrxAmt) - Math.Abs(statementDetail._txtAmount);
+            if (statementDetail._txtDifference != 0 && payment_ID != 0 && _trxType.Equals("PY"))
+            {
+                statementDetail._cmbDifferenceType = "CH";
+            }
             return statementDetail;
 
         }
@@ -1712,7 +1831,7 @@ namespace VA012.Models
                     _obj._trxamount = _trxAmt;
 
                 }
-                if (_statementBP == 0 && _statementAmt == _paymentAmt)
+                if (_statementBP == 0)
                 {
                     _status = true;
                     _obj._status = "Success";
@@ -3686,8 +3805,6 @@ namespace VA012.Models
                             else if (_formData[0]._cmbDifferenceType == "OU")
                             {
                                 _pay.SetOverUnderAmt(differenceAmount);
-
-
                             }
                             //WriteoffAmount
                             else if (_formData[0]._cmbDifferenceType == "WO")
@@ -3708,7 +3825,8 @@ namespace VA012.Models
                         {
                             //trx.Rollback();
                             ValueNamePair pp = VLogger.RetrieveError();
-                            string error = pp != null ? pp.GetValue() : "";
+                            //some times getting the error pp also
+                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
                             if (string.IsNullOrEmpty(error))
                             {
                                 error = pp != null ? pp.GetName() : "";
@@ -4407,7 +4525,7 @@ namespace VA012.Models
                         _obj._amount = _payAmt;
                         _obj._trxamount = _payAmt;// _trxAmt;
                     }
-                    else if (_payAmt != _amount)
+                    else if ((_payAmt > 0 && _amount < 0) || (_payAmt < 0 && _amount > 0))
                     {
                         //_obj._status = "VA012_StatementPaymentNotEq";
                         _obj._status = "VA012_StatementPaymentNotMatched";
