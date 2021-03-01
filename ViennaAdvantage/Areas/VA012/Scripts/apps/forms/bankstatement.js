@@ -5087,7 +5087,7 @@
                             return;
                         }
                     }
-                    // In case of Payment user not able to do Save difference Type as Over Under Amount
+                    //User cannot save difference type is Discount, Over under and Write-off in the Case of Payment Transaction
                     if (parseFloat(_formData[0]["_txtDifference"]) != 0 && (_formData[0]["_ctrlPayment"] != null || _formData[0]["_ctrlPayment"] != 0 || _formData[0]["_ctrlPayment"] != "") && _formData[0]["_cmbDifferenceType"] != "CH") {
                         VIS.ADialog.info("VA012_PlsSelectDiffTypeCharge", null, "", "");
                         return;
