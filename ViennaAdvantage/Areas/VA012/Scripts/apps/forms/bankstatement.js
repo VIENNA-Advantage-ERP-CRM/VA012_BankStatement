@@ -4727,9 +4727,13 @@
                         _divCharge.find("*").prop("disabled", false);
                         _divTaxRate.find("*").prop("disabled", false);
                         _divTaxAmount.find("*").prop("disabled", false);
-                        //mandatory fields
-                        _txtCharge.addClass("va012-mandatory");
-                        _cmbTaxRate.addClass("va012-mandatory");
+                        //mandatory fields and have value then not add mandatory class
+                        if (_txtCharge.val() == null || _txtCharge.val() == "") {
+                            _txtCharge.addClass("va012-mandatory");
+                        }
+                        if (_cmbTaxRate.val() == 0) {
+                            _cmbTaxRate.addClass("va012-mandatory");
+                        }
                     }
                     else if (_cmbVoucherMatch.val() == "M") {
                         //_divVoucherNo.find("*").prop("disabled", true);
@@ -4824,6 +4828,10 @@
                         _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision));//handle precision
                         //_txtTaxAmount.val(((_txtAmount.val() * _rate) / 100).toFixed(_stdPrecision));
                         _cmbTaxRate.removeClass("va012-mandatory");
+                    }
+                    // Mandatory when have charge
+                    else if (_cmbTaxRate.val() == 0) {
+                        _cmbTaxRate.addClass("va012-mandatory");
                     }
                     _txtTrxAmt.getControl().trigger("blur");
                 });
@@ -5066,8 +5074,24 @@
                         //    return;
                         //}
                     }
-
-
+                    //In case of difference type is charge it must be a value of charge and tax rate!
+                    if (parseFloat(_formData[0]["_txtDifference"]) != 0 && _formData[0]["_cmbDifferenceType"] == "CH") {
+                        if (_formData[0]["_cmbCharge"] == null || _formData[0]["_cmbCharge"] == "" || _formData[0]["_cmbCharge"] == "0") {
+                            VIS.ADialog.info("VA012_PleaseSelectCharge", null, "", "");
+                            _txtCharge.addClass("va012-mandatory");
+                            return;
+                        }
+                        else if (_formData[0]["_cmbTaxRate"] == null || _formData[0]["_cmbTaxRate"] == "" || _formData[0]["_cmbTaxRate"] == "0") {
+                            VIS.ADialog.info("VA012_PleaseSelectTaxRate", null, "", "");
+                            _cmbTaxRate.addClass("va012-mandatory");
+                            return;
+                        }
+                    }
+                    //User cannot save difference type is Discount, Over under and Write-off in the Case of Payment Transaction
+                    if (parseFloat(_formData[0]["_txtDifference"]) != 0 && (_formData[0]["_ctrlPayment"] != null || _formData[0]["_ctrlPayment"] != 0 || _formData[0]["_ctrlPayment"] != "") && _formData[0]["_cmbDifferenceType"] != "CH") {
+                        VIS.ADialog.info("VA012_PlsSelectDiffTypeCharge", null, "", "");
+                        return;
+                    }
 
                     busyIndicator($root, true, "absolute");
                     newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
@@ -5273,6 +5297,11 @@
                             var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
                             _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtDifference.getValue() - (_txtDifference.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
                         }
+                    }
+                    // when diff amount have then it must selected diff.Type as Charge in case of Payment
+                    if (_txtDifference.getValue() != 0 && ($_ctrlPayment.getValue() != undefined && $_ctrlPayment.getValue() != 0 && $_ctrlPayment.getValue() != null)) {
+                        _cmbDifferenceType.val("CH").prop('selected', true);
+                        _cmbDifferenceType.trigger('change');
                     }
 
                 });
