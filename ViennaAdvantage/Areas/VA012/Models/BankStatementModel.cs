@@ -1831,13 +1831,15 @@ namespace VA012.Models
                     _obj._trxamount = _trxAmt;
 
                 }
-                if (_statementBP == 0)
+                //both statement amount and payment must be same sign
+                if (_statementBP == 0 && ((_statementAmt > 0 && _paymentAmt > 0) || (_statementAmt < 0 && _paymentAmt < 0)))
                 {
                     _status = true;
                     _obj._status = "Success";
                     return _obj;
                 }
-                else if (_statementBP > 0 && (_statementAmt == _paymentAmt && _statementBP == _paymentBP))
+                // no need to match the statement amount with Payment amount but match with sign
+                else if (_statementBP > 0 && ((_statementAmt > 0 && _paymentAmt > 0) || (_statementAmt < 0 && _paymentAmt < 0)) && _statementBP == _paymentBP)
                 {
                     _status = true;
                     _obj._status = "Success";
