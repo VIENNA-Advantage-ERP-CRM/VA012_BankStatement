@@ -5088,7 +5088,7 @@
                         }
                     }
                     //User cannot save difference type is Discount, Over under and Write-off in the Case of Payment Transaction
-                    if (parseFloat(_formData[0]["_txtDifference"]) != 0 && (_formData[0]["_ctrlPayment"] != null || _formData[0]["_ctrlPayment"] != 0 || _formData[0]["_ctrlPayment"] != "") && _formData[0]["_cmbDifferenceType"] != "CH") {
+                    if (parseFloat(_formData[0]["_txtDifference"]) != 0 && (_formData[0]["_ctrlPayment"] != null && _formData[0]["_ctrlPayment"] != 0 && _formData[0]["_ctrlPayment"] != "") && _formData[0]["_cmbDifferenceType"] != "CH") {
                         VIS.ADialog.info("VA012_PlsSelectDiffTypeCharge", null, "", "");
                         return;
                     }
@@ -6130,7 +6130,7 @@
             },
         };
         //End New Record Form
-
+  
         function isInList(value, array) {
             return array.indexOf(value) > -1;
         }
