@@ -677,7 +677,7 @@ namespace VA012.Models
             //Transaction should not allow when Statement Date is lesser than previous Statement Date of BankStatement
             if (_existingStatementID == 0)
             {
-                //Compare the Statement date with previous Bankstatement records statement Date which is not the records in Status as void or Reversed 
+                //Compare the Statement date with previous Bankstatement records statement Date which is not consider the records in Status as void or Reversed 
                 _qryStmt = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT COUNT(C_BankStatement_ID) FROM C_BankStatement WHERE IsActive = 'Y' AND DocStatus NOT IN ('VO', 'RE') AND StatementDate > "
                     + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) + " AND C_BankAccount_ID = " + _formData[0]._cmbBankAccount, null, null));
                 if (Util.GetValueOfInt(_qryStmt) > 0)
