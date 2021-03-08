@@ -579,8 +579,6 @@ namespace VA012.Models
             DataSet _ds = new DataSet();
             string _qryStmt = "";
 
-
-
             if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0)
             {
                 _qryStmt = @"SELECT BS.C_BANKSTATEMENT_ID,BS.C_BANKACCOUNT_ID,
@@ -651,7 +649,6 @@ namespace VA012.Models
                     _statementCashLineID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_CASHLINE_ID"]);
                     _isMatchingConfirmed = Util.GetValueOfString(_ds.Tables[0].Rows[0]["VA012_ISMATCHINGCONFIRMED"]);
 
-
                     if (_formData[0]._bankStatementLineID > 0)
                     {
                         if (_statementDocStatus == "CO" || _statementDocStatus == "CL" || _statementDocStatus == "RE" || _statementDocStatus == "VO")
@@ -674,6 +671,16 @@ namespace VA012.Models
                             return "VA012_StatementAlreadyExist";
                         }
                     }
+                }
+            }
+            //Transaction should not allow when Statement Date is lesser than previous Statement Date of BankStatement
+            if (_existingStatementID == 0)
+            {
+                _qryStmt = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT COUNT(C_BankStatement_ID) FROM C_BankStatement WHERE IsActive = 'Y' AND DocStatus != 'VO' AND StatementDate > "
+                    + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) + " AND C_BankAccount_ID = " + _formData[0]._cmbBankAccount, null, null));
+                if (Util.GetValueOfInt(_qryStmt) > 0)
+                {
+                    return "VIS_BankStatementDate";
                 }
             }
             //get the Org_ID from bank account
@@ -1136,8 +1143,11 @@ namespace VA012.Models
                         //    differenceAmount = Math.Abs(_formData[0]._txtDifference) * -1;
                         //}
                         _bankStatementLine.SetChargeAmt(differenceAmount);
-
-
+                        //if TaxRate have Surcharge then SurchargeAmt set in StatementLine
+                        if (_formData[0]._surChargeAmt != 0)
+                        {
+                            _bankStatementLine.Set_Value("SurchargeAmt", _formData[0]._surChargeAmt);
+                        }
 
                     }
                 }
@@ -1319,6 +1329,36 @@ namespace VA012.Models
 
 
             return "Success";
+        }
+
+        /// <summary>
+        /// Calculate Surcharge Tax and Tax
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="tax_ID">C_Tax_ID</param>
+        /// <param name="chargeAmt">Charge Amount</param>
+        /// <returns>List of Values</returns>
+        public Dictionary<String, Object> CalculateSurcharge(Ctx ctx, int tax_ID, decimal chargeAmt, int _stdPrecision)
+        {
+            Dictionary<String, Object> retval = new Dictionary<String, Object>();
+
+            Boolean IsTaxIncluded = true;
+
+            //End Assign parameter value
+            MTax tax = new MTax(ctx, tax_ID, null);
+            Decimal surchargeAmt = Env.ZERO;
+            Decimal TaxAmt = Env.ZERO;
+            if (tax.Get_ColumnIndex("Surcharge_Tax_ID") > 0 && tax.GetSurcharge_Tax_ID() > 0)
+            {
+                TaxAmt = tax.CalculateSurcharge(chargeAmt, IsTaxIncluded, _stdPrecision, out surchargeAmt);
+            }
+            else 
+            {
+                TaxAmt = tax.CalculateTax(chargeAmt, IsTaxIncluded, _stdPrecision);
+            }
+            retval["TaxAmt"] = TaxAmt;
+            retval["SurchargeAmt"] = surchargeAmt;
+            return retval;
         }
 
         /// <summary>
@@ -4305,6 +4345,11 @@ namespace VA012.Models
                 _pay.SetC_Charge_ID(Util.GetValueOfInt(_formData[0]._cmbCharge));
                 _pay.SetC_Tax_ID(Util.GetValueOfInt(_formData[0]._cmbTaxRate));
                 _pay.SetTaxAmount(Math.Abs(_formData[0]._txtTaxAmount));
+                //if selected TaxRate have Surcharge then will insert SurChargeAmt
+                if (_formData[0]._cmbCharge > 0 && _formData[0]._cmbTaxRate > 0 && _formData[0]._txtTaxAmount != 0)
+                {
+                    _pay.Set_Value("SurchargeAmt", Math.Abs(_formData[0]._surChargeAmt));
+                }
 
                 if (!_pay.Save())
                 {
@@ -5624,6 +5669,7 @@ namespace VA012.Models
         public decimal _txtDifference { get; set; }
         public string _trxno { get; set; }
         public int _bankAcctOrg_ID { get; internal set; }
+        public decimal _surChargeAmt { get; set; }
         // public List<GetScheduleProp> _getSchedules { get; set; }
     }
     public class PaymentProp

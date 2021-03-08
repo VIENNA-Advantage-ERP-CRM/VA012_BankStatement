@@ -195,11 +195,13 @@ namespace VA012.Controllers
                 if (_bankAccount > 0)
                 {
                     //changed logic as per requirement that first get the Statement Name and if name is null then fetch name from regular expression
-                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    //when the DocStatus in InProgress also should allow to check the StatementID
+                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                     statementID = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
                     if (statementID > 0)
                     {
-                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                        //when the DocStatus in InProgress also should allow  to check the statementNo
+                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
                     else
@@ -841,6 +843,26 @@ namespace VA012.Controllers
                 StatementOperations obj = new StatementOperations();
                 retJSON = JsonConvert.SerializeObject(obj.GetConvtAmount(ctx, recordID, bnkAct_Id, transcType, stmtDate));
 
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Calculate Surcharge & Tax
+        /// </summary>
+        /// <param name="_tax_ID">C_Tax_ID</param>
+        /// <param name="_chargeAmt">Charge Amount</param>
+        /// <param name="_stdPrecision">Standard Precision</param>
+        /// <returns>Tax Amount and Surcharge Amount</returns>
+        public JsonResult CalculateSurcharge(int _tax_ID, decimal _chargeAmt, int _stdPrecision)
+        {
+
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                VAdvantage.Utility.Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations tax = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(tax.CalculateSurcharge(ctx, _tax_ID, _chargeAmt, _stdPrecision));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
