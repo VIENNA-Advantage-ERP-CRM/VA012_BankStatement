@@ -4638,10 +4638,11 @@
                         _divTaxRate.find("*").prop("disabled", false);
                         //_divTaxAmount.find("*").prop("disabled", false);
 
-                        //when it should not have id or value then add mandatory class
+                        //when _txtCharge should not have chargeid then add mandatory class
                         if (VIS.Utility.Util.getValueOfInt(_txtCharge.attr('chargeid')) == 0) {
                             _txtCharge.addClass("va012-mandatory");
                         }
+                        //when _cmbTaxRate is Zero or null then add mandatory class
                         if (VIS.Utility.Util.getValueOfInt(_cmbTaxRate.val()) == 0) {
                             _cmbTaxRate.addClass("va012-mandatory");
                         }
@@ -4724,10 +4725,6 @@
                     //remove the mandatory class
                     //_cmbTaxRate.removeClass("va012-mandatory");
                     //_txtCharge.removeClass("va012-mandatory");
-                    _cmbContraType.prop('selectedIndex', 0);
-                    _txtCharge.attr('chargeid', 0);
-                    _txtCharge.val("");
-                    _cmbTaxRate.prop('selectedIndex', 0);
 
                     //_divMore.show();
                     _btnMore.text(VIS.Msg.getMsg("VA012_More"));
@@ -4841,10 +4838,7 @@
                 _cmbTaxRate.on('change', function () {
                     _txtTaxAmount.setValue(0);
                     if (_cmbTaxRate.val() > 0) {
-                        //var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        //_txtTaxAmount.setValue(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1)));
-                        //_txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision));//handle precision
-                        //_txtTaxAmount.val(((_txtAmount.val() * _rate) / 100).toFixed(_stdPrecision));
+                        // Get the Tax amount when select a TaxRate
                         GetTaxAmount(_cmbTaxRate.val(), _txtAmount.getValue(), _stdPrecision, callbackamt);
                         //callback function
                         function callbackamt(data) {
@@ -5350,7 +5344,7 @@
                                 _divDifferenceType.find("*").prop("disabled", false);
                             }
                         }
-
+                        //Get tax Amount if user selected TaxRate and have _txtDifference
                         GetTaxAmount(_cmbTaxRate.val(), _txtDifference.getValue(), _stdPrecision, callbackamt);
                         //callback function
                         function callbackamt(data) {
@@ -5367,12 +5361,6 @@
                                 _cmbDifferenceType.trigger('change');
                             }
                         }
-
-                        //if (_cmbTaxRate.val() > 0 && _txtDifference.getValue() != 0) {
-                        //    _txtDifference.getControl().removeClass('va012-mandatory');//color change
-                        //    //var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        //    //_txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtDifference.getValue() - (_txtDifference.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
-                        //}
                     }
                     else {
                         // when diff amount have then it must selected diff.Type as Charge in case of Payment
@@ -5446,7 +5434,7 @@
                         _btnOut.attr("v_active", "0");
                         _txtAmount.getControl().removeClass("va012-mandatory");
                     }
-                    // get tax amt if we have tax_Id
+                    // get tax amt if we have tax_Id and _txtAmount
                     GetTaxAmount(_cmbTaxRate.val(), _txtAmount.getValue(), _stdPrecision, callbackamt);
 
                     function callbackamt(data) {

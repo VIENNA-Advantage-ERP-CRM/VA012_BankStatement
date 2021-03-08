@@ -659,7 +659,8 @@ namespace VA012.Models
                     }
                     else
                     {
-                        if (_statementDocStatus == "DR")
+                        //Statement should check the status Drafted as well as Inprogress
+                        if (_statementDocStatus.Equals(X_C_BankStatement.DOCSTATUS_Drafted) || _statementDocStatus.Equals(X_C_BankStatement.DOCSTATUS_InProgress))
                         {
                             if (_existingAccountID > 0 && _existingAccountID != _formData[0]._cmbBankAccount)
                             {
