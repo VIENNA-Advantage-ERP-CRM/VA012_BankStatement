@@ -879,7 +879,8 @@
                 divRow6Col3 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
                 divRow6Col3divTax = $('<div id="VA012_divTaxAmount_' + $self.windowNo + '" class="va012-form-group va012-form-data">');
                 divRow6Col3divTaxLbl = $('<label>' + VIS.Msg.getMsg("VA012_TaxAmount") + '</label>');
-                _txtTaxAmount = new VIS.Controls.VAmountTextBox("VA012_txtTaxAmount_" + $self.windowNo + "", false, false, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
+                // _txtTaxAmount should be readonly
+                _txtTaxAmount = new VIS.Controls.VAmountTextBox("VA012_txtTaxAmount_" + $self.windowNo + "", false, true, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
                 _txtTaxAmount.setValue(0);
                 _txtTaxAmount.getControl().addClass('va012-right-align');
                 divRow6Col3divTax.append(divRow6Col3divTaxLbl).append(_txtTaxAmount.getControl());
@@ -4560,9 +4561,12 @@
                         _divTaxRate.find("*").prop("disabled", true);
                         _divTaxAmount.find("*").prop("disabled", true);
 
-                        _divCharge.hide();
-                        _divTaxRate.hide();
-                        _divTaxAmount.hide();
+                        //hide incase of Payment as Voucher/Match and other than charge as diffType
+                        if (_cmbDifferenceType.val() != "CH") {
+                            _divCharge.hide();
+                            _divTaxRate.hide();
+                            _divTaxAmount.hide();
+                        }
 
                         divRow4Col1TrxAmt.show();
                         _divDifference.show();
@@ -4584,6 +4588,15 @@
 
                         _cmbTaxRate.removeClass("va012-mandatory");
                         _txtCharge.removeClass("va012-mandatory");
+
+                        //clear incase of Payment as Voucher/Match and other than charge as diffType
+                        if (_cmbDifferenceType.val() != "CH") {
+                            _cmbContraType.prop('selectedIndex', 0);
+                            _txtCharge.attr('chargeid', 0);
+                            _txtCharge.val("");
+                            _cmbTaxRate.prop('selectedIndex', 0);
+                            _txtTaxAmount.setValue(0);
+                        }
                         //// _divMatch.find("*").prop("disabled", false);
 
                         /////
@@ -4623,10 +4636,16 @@
                         _divVoucherNo.find("*").prop("disabled", false);
                         _divCharge.find("*").prop("disabled", false);
                         _divTaxRate.find("*").prop("disabled", false);
-                        _divTaxAmount.find("*").prop("disabled", false);
+                        //_divTaxAmount.find("*").prop("disabled", false);
 
-                        _txtCharge.addClass("va012-mandatory");
-                        _cmbTaxRate.addClass("va012-mandatory");
+                        //when _txtCharge should not have chargeid then add mandatory class
+                        if (VIS.Utility.Util.getValueOfInt(_txtCharge.attr('chargeid')) == 0) {
+                            _txtCharge.addClass("va012-mandatory");
+                        }
+                        //when _cmbTaxRate is Zero or null then add mandatory class
+                        if (VIS.Utility.Util.getValueOfInt(_cmbTaxRate.val()) == 0) {
+                            _cmbTaxRate.addClass("va012-mandatory");
+                        }
                         _divCtrlPayment.find("*").prop("disabled", true);
                         _divCtrlInvoice.find("*").prop("disabled", true);
                         _divCtrlBusinessPartner.find("*").prop("disabled", false);
@@ -4706,10 +4725,6 @@
                     //remove the mandatory class
                     //_cmbTaxRate.removeClass("va012-mandatory");
                     //_txtCharge.removeClass("va012-mandatory");
-                    _cmbContraType.prop('selectedIndex', 0);
-                    _txtCharge.attr('chargeid', 0);
-                    _txtCharge.val("");
-                    _cmbTaxRate.prop('selectedIndex', 0);
 
                     //_divMore.show();
                     _btnMore.text(VIS.Msg.getMsg("VA012_More"));
@@ -4726,7 +4741,7 @@
                         _divVoucherNo.find("*").prop("disabled", false);
                         _divCharge.find("*").prop("disabled", false);
                         _divTaxRate.find("*").prop("disabled", false);
-                        _divTaxAmount.find("*").prop("disabled", false);
+                        //_divTaxAmount.find("*").prop("disabled", false);
                         //mandatory fields and have value then not add mandatory class
                         if (_txtCharge.val() == null || _txtCharge.val() == "") {
                             _txtCharge.addClass("va012-mandatory");
@@ -4789,7 +4804,7 @@
                         _divVoucherNo.find("*").prop("disabled", false);
                         _divCharge.find("*").prop("disabled", false);
                         _divTaxRate.find("*").prop("disabled", false);
-                        _divTaxAmount.find("*").prop("disabled", false);
+                        //_divTaxAmount.find("*").prop("disabled", false);
                         //should be mandatory
                         _txtCharge.addClass("va012-mandatory");
                         _cmbTaxRate.addClass("va012-mandatory");
@@ -4823,17 +4838,25 @@
                 _cmbTaxRate.on('change', function () {
                     _txtTaxAmount.setValue(0);
                     if (_cmbTaxRate.val() > 0) {
-                        var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        //_txtTaxAmount.setValue(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1)));
-                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision));//handle precision
-                        //_txtTaxAmount.val(((_txtAmount.val() * _rate) / 100).toFixed(_stdPrecision));
-                        _cmbTaxRate.removeClass("va012-mandatory");
+                        // Get the Tax amount when select a TaxRate
+                        GetTaxAmount(_cmbTaxRate.val(), _txtAmount.getValue(), _stdPrecision, callbackamt);
+                        //callback function
+                        function callbackamt(data) {
+                            data = JSON.parse(data);
+                            if (data != null) {
+                                _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(data["TaxAmt"]));
+                                _cmbTaxRate.removeClass("va012-mandatory");
+                                _txtTrxAmt.getControl().trigger("blur");
+                            }
+                        }
+                        //_cmbTaxRate.removeClass("va012-mandatory");
                     }
                     // Mandatory when have charge
-                    else if (_cmbTaxRate.val() == 0) {
+                    else {
                         _cmbTaxRate.addClass("va012-mandatory");
+                        _txtTrxAmt.getControl().trigger("blur");
                     }
-                    _txtTrxAmt.getControl().trigger("blur");
+                    
                 });
 
                 _btnMore.on(VIS.Events.onTouchStartOrClick, function () {
@@ -5092,9 +5115,39 @@
                         VIS.ADialog.info("VA012_PlsSelectDiffTypeCharge", null, "", "");
                         return;
                     }
+                    //for Invoice schedule when statement amount is more than the schedule amount it should be Diff Amount as charge other wise it should show validation message in case match with unconciled StatementLine!
+                    if (VIS.Utility.Util.getValueOfDecimal(_formData[0]["_txtDifference"]) != 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_scheduleList"].length) > 0 && Math.abs(_txtAmount.getValue()) > Math.abs(_txtTrxAmt.getValue()) && _formData[0]["_cmbDifferenceType"] != "CH") {
+                        VIS.ADialog.info("MoreScheduleAmount", null, "", "");
+                        return;
+                    }
+                    //get the Surcharge Amount when select the TaxRate
+                    if (VIS.Utility.Util.getValueOfString(_formData[0]["_cmbDifferenceType"]) == "CH" || VIS.Utility.Util.getValueOfString(_formData[0]["_cmbVoucherMatch"]) == "V") {
+                        var _tax_ID = VIS.Utility.Util.getValueOfInt(_formData[0]["_cmbTaxRate"]);
+                        var chargeAmt = 0;
+                        if (VIS.Utility.Util.getValueOfString(_formData[0]["_cmbDifferenceType"]) == "CH") {
+                            chargeAmt = VIS.Utility.Util.getValueOfDecimal(_formData[0]["_txtDifference"]);
+                        }
+                        else {
+                            chargeAmt = VIS.Utility.Util.getValueOfDecimal(_formData[0]["_txtAmount"]);
+                        }
+                        if (_tax_ID > 0) {
+                            GetTaxAmount(_formData[0]["_cmbTaxRate"], chargeAmt, _stdPrecision, callbackamt);
+                            function callbackamt(data) {
+                                data = JSON.parse(data);
+                                if (data != null) {
+                                    _formData[0]["_surChargeAmt"] = data["SurchargeAmt"];
+                                    _formData[0]["_txtTaxAmount"] = data["TaxAmt"];
+                                    busyIndicator($root, true, "absolute");
+                                    newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        busyIndicator($root, true, "absolute");
+                        newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
 
-                    busyIndicator($root, true, "absolute");
-                    newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
+                    }
 
 
                     //// Inserting New Record
@@ -5291,17 +5344,30 @@
                                 _divDifferenceType.find("*").prop("disabled", false);
                             }
                         }
-
-                        if (_cmbTaxRate.val() > 0 && _txtDifference.getValue() != 0) {
-                            _txtDifference.getControl().removeClass('va012-mandatory');//color change
-                            var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                            _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtDifference.getValue() - (_txtDifference.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
+                        //Get tax Amount if user selected TaxRate and have _txtDifference
+                        GetTaxAmount(_cmbTaxRate.val(), _txtDifference.getValue(), _stdPrecision, callbackamt);
+                        //callback function
+                        function callbackamt(data) {
+                            data = JSON.parse(data);
+                            if (data != null) {
+                                _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(data["TaxAmt"]));
+                            }
+                            if (_cmbTaxRate.val() > 0 && _txtDifference.getValue() != 0) {
+                                _txtDifference.getControl().removeClass('va012-mandatory');//color change
+                            }
+                            // when diff amount have then it must selected diff.Type as Charge in case of Payment
+                            if (_txtDifference.getValue() != 0 && VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) != 0) {
+                                _cmbDifferenceType.val("CH").prop('selected', true);
+                                _cmbDifferenceType.trigger('change');
+                            }
                         }
                     }
-                    // when diff amount have then it must selected diff.Type as Charge in case of Payment
-                    if (_txtDifference.getValue() != 0 && ($_ctrlPayment.getValue() != undefined && $_ctrlPayment.getValue() != 0 && $_ctrlPayment.getValue() != null)) {
-                        _cmbDifferenceType.val("CH").prop('selected', true);
-                        _cmbDifferenceType.trigger('change');
+                    else {
+                        // when diff amount have then it must selected diff.Type as Charge in case of Payment
+                        if (_txtDifference.getValue() != 0 && VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) != 0) {
+                            _cmbDifferenceType.val("CH").prop('selected', true);
+                            _cmbDifferenceType.trigger('change');
+                        }
                     }
 
                 });
@@ -5368,12 +5434,17 @@
                         _btnOut.attr("v_active", "0");
                         _txtAmount.getControl().removeClass("va012-mandatory");
                     }
+                    // get tax amt if we have tax_Id and _txtAmount
+                    GetTaxAmount(_cmbTaxRate.val(), _txtAmount.getValue(), _stdPrecision, callbackamt);
 
-                    if (_cmbTaxRate.val() > 0) {
-                        var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));
+                    function callbackamt(data) {
+                        data = JSON.parse(data);
+                        if (data != null) {
+                            _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(data["TaxAmt"]));
+                            _cmbTaxRate.removeClass("va012-mandatory");
+                        }
+                        _txtTrxAmt.getControl().trigger('blur');
                     }
-                    _txtTrxAmt.getControl().trigger('blur');
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
@@ -6130,7 +6201,26 @@
             },
         };
         //End New Record Form
-  
+
+        // Get the TaxAmt and Surcharge Amt
+        function GetTaxAmount(tax_Id, amount, stdPrecision, callback) {
+            var _taxId = VIS.Utility.Util.getValueOfInt(tax_Id);
+            if (_taxId == 0) {
+                callback(tax_Id);
+                return;
+            }
+            var chargeAmt = VIS.Utility.Util.getValueOfDecimal(amount);
+            var _precision = VIS.Utility.Util.getValueOfInt(stdPrecision);
+            $.ajax({
+                url: VIS.Application.contextUrl + "VA012/BankStatement/CalculateSurcharge",
+                type: 'GET',
+                contentType: "application/json; charset=utf-8",
+                data: ({ _tax_ID: _taxId, _chargeAmt: chargeAmt, _stdPrecision: _precision }),
+                success: function (data) { callback(data); },
+                error: function (data) { VIS.ADialog.info(data, null, "", ""); }
+            });
+        };
+
         function isInList(value, array) {
             return array.indexOf(value) > -1;
         }
