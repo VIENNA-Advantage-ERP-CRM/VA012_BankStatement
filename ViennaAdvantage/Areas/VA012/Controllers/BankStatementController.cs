@@ -454,16 +454,15 @@ namespace VA012.Controllers
         /// <param name="_bankStatementLineID">C_BankStatementLine_ID</param>
         /// <param name="trxType">Transaction Type</param>
         /// <param name="payment_ID">Payment ID</param>
-        /// <param name="_statementDt">Statement Date</param>
         /// <returns>List</returns>
-        public JsonResult GetStatementLine(int _bankStatementLineID, string trxType, int payment_ID, DateTime? _statementDt)
+        public JsonResult GetStatementLine(int _bankStatementLineID, string trxType, int payment_ID)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.GetStatementLine(ctx, _bankStatementLineID, trxType, payment_ID, _statementDt));
+                retJSON = JsonConvert.SerializeObject(obj.GetStatementLine(ctx, _bankStatementLineID, trxType, payment_ID));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
