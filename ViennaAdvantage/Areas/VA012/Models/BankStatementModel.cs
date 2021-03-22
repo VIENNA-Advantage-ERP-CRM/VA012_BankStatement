@@ -691,7 +691,8 @@ namespace VA012.Models
             string schedulePaymentResult = "";
             string orderPaymentResult = "";
             string chargePaymentResult = "";
-            string cashPaymentResult = "";
+            //not in Use
+            //string cashPaymentResult = "";
 
             int paymentID = 0;
             if (_formData[0]._ctrlPayment <= 0 && _formData[0]._scheduleList != "" && _formData[0]._scheduleList != null)
@@ -716,8 +717,8 @@ namespace VA012.Models
                     return orderPaymentResult;
                 }
             }
-
-            if (_formData[0]._cmbCharge > 0 && _formData[0]._ctrlBusinessPartner > 0 && _formData[0]._ctrlPayment <= 0 && paymentID == 0)
+            //not create Payment with Charge if Transaction is Prepy Order
+            if (_formData[0]._cmbCharge > 0 && _formData[0]._ctrlBusinessPartner > 0 && _formData[0]._ctrlPayment <= 0 && paymentID == 0 && _formData[0]._ctrlOrder <= 0)
             {
                 chargePaymentResult = CreatePaymentFromCharge(ctx, _formData);
                 if (int.TryParse(chargePaymentResult, out paymentID))
@@ -897,7 +898,8 @@ namespace VA012.Models
                 _bankStatementLine.SetLine(_formData[0]._txtStatementLine);
                 _bankStatementLine.SetVA012_Page(_formData[0]._txtStatementPage);
                 _bankStatementLine.SetC_Currency_ID(_formData[0]._cmbCurrency);
-                _bankStatementLine.SetTaxAmt(Util.GetValueOfDecimal(_formData[0]._txtTaxAmount));
+                //TaxAmount will update on Line when DifferenceType is charge not always
+                //_bankStatementLine.SetTaxAmt(Util.GetValueOfDecimal(_formData[0]._txtTaxAmount));
 
                 /*chnage by pratap*/
                 decimal differenceAmount = 0;
@@ -1080,7 +1082,8 @@ namespace VA012.Models
                     _bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
                     if (_formData[0]._cmbVoucherMatch == "C" && _formData[0]._cmbContraType == "CB")
                     {
-                        _bankStatementLine.SetTrxAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
+                        //Contra Amount as TrxAmt
+                        _bankStatementLine.SetTrxAmt(_formData[0]._txtTrxAmt);
                         _bankStatementLine.SetC_CashLine_ID(Util.GetValueOfInt(_formData[0]._ctrlCashLine));
 
                     }
@@ -1090,67 +1093,31 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _bankStatementLine.SetTrxAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
+                        //Other than Cash to bank Type set txtAmount as TrxAmt
+                        if (!_formData[0]._cmbContraType.Equals("CB")) 
+                        {
+                            _bankStatementLine.SetTrxAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
+                        }
                     }
                 }
-                if (_formData[0]._cmbCharge > 0)
+                //Charge Amount will Update on Line when VoucherMatch Type is not Voucher
+                if (_formData[0]._cmbCharge > 0 && _formData[0]._cmbVoucherMatch != "V")
                 {
+                    _bankStatementLine.SetChargeAmt(_bankStatementLine.GetStmtAmt() - _bankStatementLine.GetTrxAmt());
                     _bankStatementLine.SetC_Charge_ID(_formData[0]._cmbCharge);
-                    if (_formData[0]._cmbVoucherMatch == "V" || _formData[0]._cmbVoucherMatch == "C")
+                    if (_formData[0]._cmbTaxRate > 0)
                     {
-                        _bankStatementLine.SetChargeAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
+                        _bankStatementLine.SetC_Tax_ID(_formData[0]._cmbTaxRate);
                     }
-                    else
+                    if (_bankStatementLine.GetChargeAmt() > 0)
                     {
-                        //decimal differenceAmount = 0;
-
-                        //if (Util.GetValueOfDecimal(_bankStatementLine.GetStmtAmt()) >= 0)
-                        //{
-                        //    if (Math.Abs(_formData[0]._txtTrxAmt) > Util.GetValueOfDecimal(_bankStatementLine.GetStmtAmt()))
-                        //    {
-
-                        //        differenceAmount = Math.Abs(_formData[0]._txtDifference) * -1;
-
-                        //    }
-                        //    else if (Math.Abs(_formData[0]._txtTrxAmt) < Util.GetValueOfDecimal(_bankStatementLine.GetStmtAmt()))
-                        //    {
-                        //        differenceAmount = Math.Abs(_formData[0]._txtDifference);
-                        //    }
-                        //}
-                        //else
-                        //{
-                        //    if (Math.Abs(_formData[0]._txtTrxAmt) > Math.Abs(Util.GetValueOfDecimal(_bankStatementLine.GetStmtAmt())))
-                        //    {
-                        //        differenceAmount = Math.Abs(_formData[0]._txtDifference);
-                        //    }
-                        //    else if (Math.Abs(_formData[0]._txtTrxAmt) < Math.Abs(Util.GetValueOfDecimal(_bankStatementLine.GetStmtAmt())))
-                        //    {
-                        //        differenceAmount = Math.Abs(_formData[0]._txtDifference) * -1;
-                        //    }
-
-                        //}
-
-
-
-
-
-                        //if (Util.GetValueOfDecimal(_bankStatementLine.GetStmtAmt()) >= 0)
-                        //{
-
-                        //    differenceAmount = Math.Abs(_formData[0]._txtDifference);
-
-                        //}
-                        //else
-                        //{
-                        //    differenceAmount = Math.Abs(_formData[0]._txtDifference) * -1;
-                        //}
-                        _bankStatementLine.SetChargeAmt(differenceAmount);
-                        //if TaxRate have Surcharge then SurchargeAmt set in StatementLine
-                        if (_formData[0]._surChargeAmt != 0)
-                        {
-                            _bankStatementLine.Set_Value("SurchargeAmt", _formData[0]._surChargeAmt);
-                        }
-
+                        _bankStatementLine.SetTaxAmt(Math.Abs(_formData[0]._txtTaxAmount));
+                        _bankStatementLine.Set_Value("SurchargeAmt", Math.Abs(_formData[0]._surChargeAmt));
+                    }
+                    else 
+                    {
+                        _bankStatementLine.SetTaxAmt(Decimal.Negate(Math.Abs(_formData[0]._txtTaxAmount)));
+                        _bankStatementLine.Set_Value("SurchargeAmt", Decimal.Negate(Math.Abs(_formData[0]._surChargeAmt)));
                     }
                 }
                 else
@@ -1239,14 +1206,15 @@ namespace VA012.Models
                 {
                     _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
                 }
-                if (_formData[0]._cmbTaxRate > 0)
-                {
-                    _bankStatementLine.SetC_Tax_ID(_formData[0]._cmbTaxRate);
-                }
-                else
-                {
-                    _bankStatementLine.SetC_Tax_ID(0);
-                }
+                // TaxRate will update on Line when DifferenceType as charge on BankStatement form
+                //if (_formData[0]._cmbTaxRate > 0)
+                //{
+                //    _bankStatementLine.SetC_Tax_ID(_formData[0]._cmbTaxRate);
+                //}
+                //else
+                //{
+                //    _bankStatementLine.SetC_Tax_ID(0);
+                //}
                 #endregion New Record
             }
 
@@ -1442,6 +1410,52 @@ namespace VA012.Models
                     }
                 }
             }
+            //Converted Amount Incase of Cash Journal Line
+            else if (transcType.Equals("CO"))
+            {
+                _sql = @"SELECT C_CashLine_ID, CASE
+                            WHEN(csl.C_Currency_ID!=bcurr.C_Currency_ID)
+                            THEN CURRENCYCONVERT(csl.Amount * -1, csl.C_Currency_ID, bcurr.C_Currency_ID, " + GlobalVariable.TO_DATE(stmtDate, true) + @", csl.C_ConversionType_ID, cs.AD_Client_ID, " + bnkOrg_ID + @") 
+                            ELSE ROUND(csl.Amount * -1 ,NVL(bcurr.StdPrecision,2))
+                            END AS Amount FROM C_CashLine csl
+                            INNER JOIN C_Cash cs ON csl.C_Cash_ID = cs.C_Cash_ID 
+                            LEFT JOIN C_Currency bcurr ON " + bnkCurrency_ID + @" = bcurr.C_Currency_ID WHERE csl.C_CashLine_ID IN  (" + recordIds + ")";
+
+                _ds = DB.ExecuteDataset(_sql, null, null);
+                if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+                {
+                    for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                    {
+                        list = new InvoicePaySchedule();
+                        list.DueAmount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["Amount"]);
+                        payList.Add(list);
+                    }
+                }
+            }
+            //Converted Amount Incase of Prepay Order
+            else if (transcType.Equals("PO"))
+            {
+                _sql = @"SELECT 
+                    CASE 
+                        WHEN(ORD.C_CURRENCY_ID!=" + bnkCurrency_ID + @")
+                        THEN CURRENCYCONVERT(ORD.GrandTotal, ORD.C_CURRENCY_ID," + bnkCurrency_ID+", " + GlobalVariable.TO_DATE(stmtDate, true) + @", ORD.C_ConversionType_ID," + ctx.GetAD_Client_ID() + ", " + bnkOrg_ID + @") 
+                        ELSE ORD.GrandTotal END GrandTotal
+                        FROM C_ORDER ORD
+                        INNER JOIN C_OrderLine ol ON ORD.C_ORDER_ID=ol.C_ORDER_ID
+                        INNER JOIN C_DOCTYPE DT ON ORD.C_DocTypeTarget_ID=dt.C_DocType_ID WHERE ORD.IsActive='Y' AND ORD.C_ORDER_ID IN (" + recordIds + ")";
+
+                _ds = DB.ExecuteDataset(_sql, null, null);
+                if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+                {
+                    for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                    {
+                        list = new InvoicePaySchedule();
+                        list.DueAmount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["GrandTotal"]);
+                        //MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["GrandTotal"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID);
+                        payList.Add(list);
+                    }
+                }
+            }
 
             return payList;
         }
@@ -1572,10 +1586,9 @@ namespace VA012.Models
         /// <param name="_bankStatementLineID">C_BankStatementLine_ID</param>
         /// <param name="_trxType">Tranaction Type</param>
         /// <param name="payment_ID">C_Payment_ID or C_InvoiceSchedule_ID or C_Order_ID</param>
-        /// <param name="_statementDate">Statement Date</param>
         /// <returns>List</returns>
 
-        public StatementProp GetStatementLine(Ctx ctx, int _bankStatementLineID, string _trxType, int payment_ID, DateTime? _statementDate)
+        public StatementProp GetStatementLine(Ctx ctx, int _bankStatementLineID, string _trxType, int payment_ID)
         {
 
             StatementProp statementDetail = new StatementProp();
@@ -1584,6 +1597,8 @@ namespace VA012.Models
             MCharge chrg = null;
             statementDetail._txtStatementLine = _bankStatementLine.GetLine();
             statementDetail._txtAmount = _bankStatementLine.GetStmtAmt();
+            //statement Date should be Line StatementDate
+            statementDetail._dtStatementDate = _bankStatementLine.GetStatementLineDate();
 
             if (_bankStatementLine.GetC_Charge_ID() > 0)
             {
@@ -1611,13 +1626,13 @@ namespace VA012.Models
                 string _baseType = Util.GetValueOfString(DB.ExecuteScalar("SELECT DOcBaseType FROM C_DocType WHERE IsActive='Y' AND C_DocType_ID=" + _pay.GetC_DocType_ID(), null, null));
                 if (_pay.GetC_Currency_ID() != _bankStatementLine.GetC_Currency_ID())
                 {
-                    _trxamt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_pay.GetPayAmt()), _pay.GetC_Currency_ID(), _bankStatementLine.GetC_Currency_ID(), _statementDate, _pay.GetC_ConversionType_ID(), ctx.GetAD_Client_ID(), _bankStatementLine.GetAD_Org_ID());
+                    _trxamt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_pay.GetPayAmt()), _pay.GetC_Currency_ID(), _bankStatementLine.GetC_Currency_ID(), statementDetail._dtStatementDate, _pay.GetC_ConversionType_ID(), ctx.GetAD_Client_ID(), _bankStatementLine.GetAD_Org_ID());
                     if (_baseType != null && _baseType.Equals(MDocBaseType.DOCBASETYPE_APPAYMENT))
                     {
                         _trxamt = Decimal.Negate(_trxamt);
                     }
                 }
-                else 
+                else
                 {
                     if (_baseType != null && _baseType.Equals(MDocBaseType.DOCBASETYPE_APPAYMENT))
                     {
@@ -1668,66 +1683,72 @@ namespace VA012.Models
             {
                 statementDetail._txtTrxAmt = _bankStatementLine.GetTrxAmt();
             }
-            else if (payment_ID != 0 && _trxType.Equals("IS")) 
+            //Get TrxAmount when Drag Invoice Schedule on to the Line
+            else if (payment_ID != 0 && _trxType.Equals("IS"))
             {
-                decimal _trxamt = 0;
-                DataSet data = DB.ExecuteDataset(@"SELECT dt.DocBaseType,pay.C_Invoice_ID,inv.C_Currency_ID,inv.C_ConversionType_ID,pay.DueAmt FROM C_InvoicePaySchedule pay
-                                        INNER JOIN C_Invoice inv ON pay.C_Invoice_ID = inv.C_Invoice_ID
-                                        INNER JOIN C_DocType dt ON dt.C_DocType_ID = inv.C_DocType_ID WHERE pay.C_InvoicePaySchedule_ID = " + payment_ID, null, null);
+                DataSet data = DB.ExecuteDataset(@"SELECT CASE
+                                WHEN(inv.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                                THEN
+                                  CASE
+                                    WHEN (dt.DOCBASETYPE IN ('ARI','APC'))
+                                     THEN CURRENCYCONVERT(pay.DueAmt, inv.C_Currency_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statementDetail._dtStatementDate, true) + @", inv.C_ConversionType_ID, inv.AD_Client_ID, "+ _bankStatementLine.GetAD_Org_ID() + @")
+                                    WHEN (dt.DOCBASETYPE IN ('API','ARC'))
+                                     THEN CURRENCYCONVERT(pay.DueAmt*-1, inv.C_Currency_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statementDetail._dtStatementDate, true) + @", inv.C_ConversionType_ID, inv.AD_Client_ID, " + _bankStatementLine.GetAD_Org_ID() + @")
+                                  END
+                                ELSE
+                                  CASE
+                                    WHEN (dt.DOCBASETYPE IN ('ARI','APC'))
+                                     THEN ROUND(pay.DUEAMT,NVL(BCURR.StdPrecision,2))
+                                    WHEN (dt.DOCBASETYPE IN ('API','ARC'))
+                                     THEN ROUND(pay.DUEAMT,NVL(BCURR.StdPrecision,2))*-1
+                                  END
+                                END AS DueAmt 
+                                FROM C_InvoicePaySchedule pay
+                                INNER JOIN C_Invoice inv ON pay.C_Invoice_ID = inv.C_Invoice_ID
+                                INNER JOIN C_DocType dt ON dt.C_DocType_ID = inv.C_DocType_ID
+                                LEFT JOIN C_CURRENCY BCURR ON " + _bankStatementLine.GetC_Currency_ID() + @" =BCURR.C_CURRENCY_ID WHERE pay.IsActive='Y' AND pay.C_InvoicePaySchedule_ID =" + payment_ID, null, null);
+
                 if (data != null && data.Tables[0].Rows.Count > 0)
                 {
-                    if (Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]) != _bankStatementLine.GetC_Currency_ID())
-                    {
-                        _trxamt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]), Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]), _bankStatementLine.GetC_Currency_ID(), _statementDate, Util.GetValueOfInt(data.Tables[0].Rows[0]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), _bankStatementLine.GetAD_Org_ID());
-                        if (Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
-                        {
-                            _trxamt = Decimal.Negate(_trxamt);
-                        }
-                    }
-                    else
-                    {
-                        if (Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
-                        {
-                            _trxamt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]) * -1;
-                        }
-                        else
-                        {
-                            _trxamt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]);
-                        }
-                    }
+                    statementDetail._txtTrxAmt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]);
                 }
-                statementDetail._txtTrxAmt = _trxamt;
             }
+            //Get TrxAmount when Drag Prepay Order on to the Line
             else if (payment_ID != 0 && _trxType.Equals("PO"))
             {
-                decimal _trxamt = 0;
-                DataSet data = DB.ExecuteDataset(@"SELECT dt.DocBaseType,pay.C_Invoice_ID,inv.C_Currency_ID,inv.C_ConversionType_ID,pay.DueAmt FROM C_InvoicePaySchedule pay
-                                        INNER JOIN C_Invoice inv ON pay.C_Invoice_ID = inv.C_Invoice_ID
-                                        INNER JOIN C_DocType dt ON dt.C_DocType_ID = inv.C_DocType_ID WHERE pay.C_InvoicePaySchedule_ID = " + payment_ID, null, null);
+
+                DataSet data = DB.ExecuteDataset(@"SELECT CASE
+                        WHEN(ord.C_Currency_ID != bcurr.C_Currency_ID)
+                          THEN CURRENCYCONVERT(ord.GrandTotal, ord.C_Currency_ID, bcurr.C_Currency_ID, " + GlobalVariable.TO_DATE(statementDetail._dtStatementDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, " + _bankStatementLine.GetAD_Org_ID() + @")
+                        ELSE ROUND(ord.GrandTotal, NVL(bcurr.StdPrecision,2))
+                        END AS GrandTotal 
+                        FROM C_Order ord LEFT JOIN C_Currency bcurr ON " + _bankStatementLine.GetC_Currency_ID() + @" = bcurr.C_Currency_ID WHERE ord.IsActive='Y' AND ord.C_Order_ID =" + payment_ID, null, null);
+
                 if (data != null && data.Tables[0].Rows.Count > 0)
                 {
-                    if (Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]) != _bankStatementLine.GetC_Currency_ID())
-                    {
-                        _trxamt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]), Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]), _bankStatementLine.GetC_Currency_ID(), _statementDate, Util.GetValueOfInt(data.Tables[0].Rows[0]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), _bankStatementLine.GetAD_Org_ID());
-                        if (Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
-                        {
-                            _trxamt = Decimal.Negate(_trxamt);
-                        }
-                    }
-                    else
-                    {
-                        if (Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(data.Tables[0].Rows[0]["DOCBASETYPE"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
-                        {
-                            _trxamt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]) * -1;
-                        }
-                        else
-                        {
-                            _trxamt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]);
-                        }
-                    }
+                    statementDetail._txtTrxAmt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["GrandTotal"]);
                 }
-                statementDetail._txtTrxAmt = _trxamt;
             }
+
+            //Get TrxAmount when Drag Prepay Order on to the Line
+            else if (payment_ID != 0 && _trxType.Equals("CO"))
+            {
+
+                DataSet data = DB.ExecuteDataset(@"SELECT C_CashLine_ID, CASE
+                            WHEN(csl.C_Currency_ID!=bcurr.C_Currency_ID)
+                            THEN CURRENCYCONVERT(csl.Amount * -1, csl.C_Currency_ID, bcurr.C_Currency_ID, " + GlobalVariable.TO_DATE(statementDetail._dtStatementDate, true) + @", csl.C_ConversionType_ID, cs.AD_Client_ID, " + _bankStatementLine.GetAD_Org_ID() + @") 
+                            ELSE ROUND(csl.Amount * -1 ,NVL(bcurr.StdPrecision,2))
+                            END AS Amount FROM C_CashLine csl
+                            INNER JOIN C_Cash cs ON csl.C_Cash_ID = cs.C_Cash_ID 
+                            LEFT JOIN C_Currency bcurr ON " + _bankStatementLine.GetC_Currency_ID() + @" = bcurr.C_Currency_ID WHERE csl.IsActive='Y' AND csl.C_CashLine_ID =" + payment_ID, null, null);
+
+                if (data != null && data.Tables[0].Rows.Count > 0)
+                {
+                    statementDetail._txtTrxAmt= Util.GetValueOfDecimal(data.Tables[0].Rows[0]["Amount"]);
+                    statementDetail._ctrlCashLine = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_CashLine_ID"]);
+                }
+            }
+
             statementDetail._cmbCurrency = _bankStatementLine.GetC_Currency_ID();
             statementDetail._txtDescription = _bankStatementLine.GetDescription();
             statementDetail._txtVoucherNo = _bankStatementLine.GetVA012_VoucherNo();
@@ -1758,16 +1779,19 @@ namespace VA012.Models
             statementDetail._cmbCashBook = _bankStatementLine.GetC_CashBook_ID();
             MBankStatement _bankStatement = new MBankStatement(ctx, _bankStatementLine.GetC_BankStatement_ID(), null);
             statementDetail._txtStatementNo = _bankStatement.GetName();
-            //statement Date should be Line StatementDate
-            statementDetail._dtStatementDate = _bankStatementLine.GetStatementLineDate();
-            statementDetail._ctrlCashLine = _bankStatementLine.GetC_CashLine_ID();
+            //When bankStatementLine have C_CashLine_ID then the value set to _ctrlCashLine
+            if (payment_ID == 0 && !_trxType.Equals("CO"))
+            {
+                statementDetail._ctrlCashLine = _bankStatementLine.GetC_CashLine_ID();
+            }
             statementDetail._trxno = (String)_bankStatementLine.Get_Value("TrxNo");
             if (string.IsNullOrEmpty(statementDetail._txtVoucherNo) && !string.IsNullOrEmpty(statementDetail._trxno))
             {
                 statementDetail._txtVoucherNo = statementDetail._trxno;
             }
             statementDetail._txtDifference = Math.Abs(statementDetail._txtTrxAmt) - Math.Abs(statementDetail._txtAmount);
-            if (statementDetail._txtDifference != 0 && payment_ID != 0 && _trxType.Equals("PY"))
+            //either Payment or Prepay Order or Contra by default diffrenceType select as Charge
+            if (statementDetail._txtDifference != 0 && payment_ID != 0 && (_trxType.Equals("PY") || _trxType.Equals("PO") || _trxType.Equals("CO")))
             {
                 statementDetail._cmbDifferenceType = "CH";
             }
@@ -3429,7 +3453,7 @@ namespace VA012.Models
                 + " THEN 'Y' "
                 + " ELSE 'N' "
                 + " END AS ISCONVERTED, "
-                + "  INV.DOCUMENTNO AS INVOICENO,BS.C_BANKSTATEMENT_ID,BS.DOCSTATUS,BSL.C_CASHLINE_ID, BSL.TRXNO "
+                + "  INV.DOCUMENTNO AS INVOICENO,BS.C_BANKSTATEMENT_ID,BS.DOCSTATUS,BSL.C_CASHLINE_ID, BSL.TRXNO, BSL.StatementLineDate "
                + " FROM C_BANKSTATEMENT BS "
                + " INNER JOIN C_BANKSTATEMENTLINE BSL "
                + " ON BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID "
@@ -3536,6 +3560,8 @@ namespace VA012.Models
                         _statement.invoiceno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["INVOICENO"]);
                         _statement.c_cashline_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CASHLINE_ID"]);
                         _statement.trxno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["TRXNO"]);
+                        //get Statement Line Date from the Statement Line
+                        _statement.stmtLineDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[i]["StatementLineDate"]);
                         //if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
                         //{
                         //    MImage _image = new MImage(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]), null);
@@ -5029,13 +5055,16 @@ namespace VA012.Models
                     _ds1.Dispose();
                 }
 
-
-                if (_statementBP == 0 && _statementAmt <= _orderAmt)
+                //both must be same sign statementAmt & orderAmt
+                //if (_statementBP == 0 && _statementAmt <= _orderAmt)
+                if (_statementBP == 0 && ((_statementAmt <= 0 && _orderAmt <= 0) || (_statementAmt >= 0 && _orderAmt >= 0)))
                 {
                     _obj._status = "Success";
                     return _obj;
                 }
-                else if (_statementBP > 0 && (_statementAmt <= _orderAmt && _statementBP == _orderBP))
+                //no need to match the statementAmt with orderAmt
+                //else if (_statementBP > 0 && (_statementAmt <= _orderAmt && _statementBP == _orderBP))
+                else if (_statementBP > 0 && _statementBP == _orderBP)
                 {
 
                     _obj._status = "Success";
@@ -5089,10 +5118,15 @@ namespace VA012.Models
                 {
                     _obj._amount = _payAmt;
                 }
-                else if (_payAmt != _amount)
+                //sign should be same
+                else if (!(_payAmt <= 0 && _amount <= 0) && !(_payAmt >= 0 && _amount >= 0))
                 {
                     _obj._status = "VA012_StatementCashLineNotMatched";
                     return _obj;
+                }
+                else if ((_payAmt <= 0 && _amount <= 0) || (_payAmt >= 0 && _amount >= 0))
+                {
+                    _obj._amount = _amount;
                 }
             }
             else if (_dragDestinationID > 0)
@@ -5162,7 +5196,8 @@ namespace VA012.Models
                 _obj._amount = _paymentAmt;
 
             }
-            if (_statementBP == 0 && _statementAmt == _paymentAmt)
+            //StatementAmt and CashLineAmt should be Equal sign
+            if (_statementBP == 0 && ((_statementAmt <= 0 && _paymentAmt <= 0) || (_statementAmt >= 0 && _paymentAmt >= 0)))
             {
                 _status = true;
                 _obj._amount = _paymentAmt;
@@ -5730,6 +5765,7 @@ namespace VA012.Models
         public string docstatus { get; set; }
         public int c_cashline_id { get; set; }
         public string trxno { get; set; }
+        public DateTime? stmtLineDate { get; internal set; }
     }
     public class ChargeProp
     {
