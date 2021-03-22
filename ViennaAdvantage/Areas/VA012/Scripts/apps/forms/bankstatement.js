@@ -1882,8 +1882,6 @@
                                             //for (var i = 0; i < _scheduleAmount.length; i++) {
                                             //    amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                             //}
-                                            //set Statement Date as Readonly
-                                            _dtStatementDate.find("*").prop("readonly", true);
                                             //_txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                                             _txtTrxAmt.getControl().trigger('blur');
                                         }, 200);

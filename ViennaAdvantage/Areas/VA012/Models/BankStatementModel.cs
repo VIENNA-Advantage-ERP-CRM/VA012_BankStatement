@@ -1093,6 +1093,7 @@ namespace VA012.Models
                     }
                     else
                     {
+                        //Other than Cash to bank Type set txtAmount as TrxAmt
                         if (!_formData[0]._cmbContraType.Equals("CB")) 
                         {
                             _bankStatementLine.SetTrxAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
@@ -5054,9 +5055,9 @@ namespace VA012.Models
                     _ds1.Dispose();
                 }
 
-                //no need to match the statementAmt with orderAmt
+                //both must be same sign statementAmt & orderAmt
                 //if (_statementBP == 0 && _statementAmt <= _orderAmt)
-                if (_statementBP == 0)
+                if (_statementBP == 0 && ((_statementAmt <= 0 && _orderAmt <= 0) || (_statementAmt >= 0 && _orderAmt >= 0)))
                 {
                     _obj._status = "Success";
                     return _obj;
