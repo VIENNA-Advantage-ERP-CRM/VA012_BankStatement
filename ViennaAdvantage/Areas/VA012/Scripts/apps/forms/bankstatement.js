@@ -153,6 +153,10 @@
         var $_ctrlInvoice = null;
         var _invoiceSelectedVal = null;
         //Invoice Control Variables
+        //C_Currency_ID
+        var _txtCurrency = null;
+        //C_ConversionType_ID
+        var _txtConversionType = null;
 
         // End newRecord Form Variables
         //store payment list in array
@@ -305,7 +309,8 @@
             });
             _btnLoadStatement.on(VIS.Events.onTouchStartOrClick, function () {
                 if (_statementDate.val() == "") {
-                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseEnterStatementDate"), null, "", "");
+                    //removed the VIS.Msg.getMsg() function
+                    VIS.ADialog.info("VA012_PleaseEnterStatementDate", null, "", "");
                 }
                 else
                     childDialogs.statementDialog();
@@ -409,7 +414,8 @@
                     });
                 }
                 else {
-                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoRecordSelected"), null, "", "");
+                    // not required the VIS.Msg.getMsg() function
+                    VIS.ADialog.info("VA012_NoRecordSelected", null, "", "");
                 }
 
             });
@@ -418,7 +424,8 @@
             _btnProcess.on(VIS.Events.onTouchStartOrClick, function () {
 
                 if (_cmbBankAccount.val() == null || _cmbBankAccount.val() == "" || _cmbBankAccount.val() == "0") {
-                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectBankAccountFirst"), null, "", "");
+                    // not required the VIS.Msg.getMsg() function
+                    VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                     return;
                 }
                 //if (_statementLinesList.length > 0) {
@@ -519,7 +526,8 @@
                     }
                 }
                 else {
-                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoRecordSelected"), null, "", "");
+                    // not required the VIS.Msg.getMsg() function
+                    VIS.ADialog.info("VA012_NoRecordSelected", null, "", "");
                 }
             });
 
@@ -556,7 +564,8 @@
                 }
                 else {
                     if (new Date(_statementDate.val()) > new Date()) {
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_StatementDateToday"), null, "", "");
+                        // not required the VIS.Msg.getMsg() function
+                        VIS.ADialog.info("VA012_StatementDateToday", null, "", "");
                         _statementDate.val("");
                         return false;
                     }
@@ -985,6 +994,27 @@
                     + '                          <!-- end of col -->'
                     + '                      </div>'
                     + '                      <!-- end of row -->');
+                // Added new fields C_Currency_ID and C_ConversionType_ID
+                divRow10 = $('<div class="row va012-fl-padd" style="width:102%">');
+                divRow10Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                                  <div id="VA012_divCurrency_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Currency") + '</label>'
+                    + '                                      <select tabindex="10" id="VA012_txtCurrency_' + $self.windowNo + '">'
+                    + '                                      </select>'
+                    + '                                  </div>'
+                    + '                                  <!-- end of form-group -->'
+                    + '                              </div>'
+                    + '                              <!-- end of col -->');
+                divRow10Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                                  <div id="VA012_divConversionType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ConversionType") + '</label>'
+                    + '                                      <select tabindex="11" id="VA012_txtConversionType_' + $self.windowNo + '">'
+                    + '                                      </select>'
+                    + '                                  </div>'
+                    + '                                  <!-- end of form-group -->'
+                    + '                              </div>'
+                    + '                              <!-- end of col -->');
+                divRow10.append(divRow10Col1).append(divRow10Col2);
                 //+ '                  </div>');
                 //+ '                  <!-- end of form-wrap -->'
                 payHeaderWrap = $('<div id="VA012_paymentHeaderWrap_' + $self.windowNo + '" class="va012-payment-header-wrap">'
@@ -1081,7 +1111,8 @@
                 row2Col2divAmt.append(row2Col2Lble).append(row2Col2btnIn).append(row2Col2btnOut).append(_txtAmount.getControl()).append(row2Col2btnIcon);
                 row2Col2.append(row2Col2divAmt);
                 divRow2.append(row2Col1).append(row2Col2).append(row2Col3);
-                divformWrap.append(divRow1).append(divRow2).append(divRow3).append(divRow4).append(divRow5).append(divRow6).append(divRow7).append(divRow8).append(divRow9);
+                //appended the added fields of C_Currency_ID and C_ConversionType_ID
+                divformWrap.append(divRow1).append(divRow2).append(divRow10).append(divRow3).append(divRow4).append(divRow5).append(divRow6).append(divRow7).append(divRow8).append(divRow9);
                 divMidWrap.append(divtopWrap).append(divformWrap).append(payHeaderWrap);
                 contentDiv.append(divMidWrap).append(rightWrap);
                 tableTd1.append(contentDiv);
@@ -1775,7 +1806,8 @@
                                     var _dragPaymentID = ($(ui.draggable)).data('uid');
 
                                     if (($(ui.draggable)).hasClass("va012-green-color")) {
-                                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_PaymentAlreadyMatchedOthrStatement"), null, "", "");
+                                        // not required the VIS.Msg.getMsg() function
+                                        VIS.ADialog.info("VA012_PaymentAlreadyMatchedOthrStatement", null, "", "");
                                         return;
                                     }
 
@@ -1795,6 +1827,8 @@
                                             }
                                             _openingFromDrop = true;
                                             $_ctrlPayment.setValue(_dragPaymentID, false, true);
+                                            //Incase of Payment ConversionType field should be Readonly
+                                            _txtConversionType.attr("disabled", true);
                                             //if (_txtVoucherNo.val() == "") {
                                             //    var Voucher = VIS.Utility.Util.getValueOfString(VIS.DB.executeScalar("select trxno from C_Payment where C_Payment_ID=" + _dragPaymentID));
                                             //    _txtVoucherNo.val(Voucher);
@@ -1802,7 +1836,7 @@
                                             loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PY");
                                             // loadFunctions.getOverUnderPayment(($(ui.draggable)).data('uid'));
                                             _openingFromDrop = false;
-                                        }, 200);
+                                        }, 500);// for Accurate Result
                                     }
 
                                 }
@@ -1855,7 +1889,8 @@
                                             //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
                                         }
                                         else {
-                                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
+                                            // not required the VIS.Msg.getMsg() function
+                                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
                                         }
                                         _openingFromDrop = true;
                                         //to get Invoice schedule amount
@@ -1884,7 +1919,7 @@
                                             //}
                                             //_txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                                             _txtTrxAmt.getControl().trigger('blur');
-                                        }, 200);
+                                        }, 500); // for Accurate Result
                                     }
 
                                 }
@@ -1916,7 +1951,7 @@
                                             $_ctrlOrder.setValue(_dragOrderID, false, true);
                                             loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
                                             _openingFromDrop = false;
-                                        }, 200);
+                                        }, 500); // for Accurate Result
                                         //childDialogs.statementOpenEdit($(this).data("uid"));
                                     }
 
@@ -1925,12 +1960,13 @@
                                     //get C_Cash_ID
                                     var _dragCashID = ($(ui.draggable)).data('uid');
                                     if (($(ui.draggable)).hasClass("va012-green-color")) {
-                                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_CashLineAlreadyMatchedOthrStmt"), null, "", "");
+                                        // not required the VIS.Msg.getMsg() function
+                                        VIS.ADialog.info("VA012_CashLineAlreadyMatchedOthrStmt", null, "", "");
                                         return;
                                     }
                                     var _dragStatementID = $(this).data("uid");
                                     if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _txtAmount.getValue())) {
-                                        childDialogs.statementOpenEdit($(this).data("uid"), _dragCashID);
+                                        childDialogs.statementOpenEdit(_dragStatementID, _dragCashID);
 
                                         window.setTimeout(function () {
                                             //Refresh the form when ConversionType not found
@@ -1946,7 +1982,7 @@
                                             _openingFromDrop = true;
                                             $_ctrlCashLine.setValue(_dragCashID, false, true);
                                             _openingFromDrop = false;
-                                        }, 200);
+                                        }, 500); // for Accurate Result
                                     }
 
                                 }
@@ -1970,19 +2006,21 @@
                             if (_cmbTransactionType.val() == "CO") {
                                 if (_cmbVoucherMatch.val() == "C") {
                                     if (_cmbContraType.val() != "CB") {
-                                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_ContraSelectCashToBank"), null, "", "");
+                                        // not required the VIS.Msg.getMsg() function
+                                        VIS.ADialog.info("VA012_ContraSelectCashToBank", null, "", "");
                                         return;
                                     }
                                 }
                                 else {
-                                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectVoucherContra"), null, "", "");
+                                    // not required the VIS.Msg.getMsg() function
+                                    VIS.ADialog.info("VA012_SelectVoucherContra", null, "", "");
                                     return;
                                 }
 
                             }
                             else {
                                 if (_cmbVoucherMatch.val() != "M") {
-                                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectVoucherPayment"), null, "", "");
+                                    VIS.ADialog.info("VA012_SelectVoucherPayment", null, "", ""); //VIS.Msg.getMsg() not required
                                     return;
                                 }
                             }
@@ -1990,16 +2028,29 @@
 
                             if (_cmbTransactionType.val() == "PY") {
                                 if (($(ui.draggable)).hasClass("va012-green-color")) {
-                                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_PaymentAlreadyMatchedOthrStatement"), null, "", "");
+                                    VIS.ADialog.info("VA012_PaymentAlreadyMatchedOthrStatement", null, "", "");
                                     return;
                                 }
                                 if (($(ui.draggable)).data('uid') > 0) {
-                                    if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.getValue())) {
+                                    //Avoid th Check multiple times
+                                    //if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), 0, _txtAmount.getValue())) {
+                                    //return message if try to drag another record while already has the record on the form.
+                                    if (VIS.Utility.Util.getValueOfInt(_paymentSelectedVal) == 0) {
                                         $_ctrlPayment.setValue(($(ui.draggable)).data('uid'), false, true);
+                                    }
+                                    else {
+                                        if (VIS.Utility.Util.getValueOfInt(_paymentSelectedVal) == VIS.Utility.Util.getValueOfInt(($(ui.draggable)).data('uid'))) {
+                                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                                        }
+                                        else {
+                                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                                        }
+                                        return;
+                                    }
                                         //_lstStatement.html("");
                                         //_statementPageNo = 1;
                                         //childDialogs.loadStatement(_statementID);
-                                    }
+                                    //}
                                 }
                             }
 
@@ -2068,6 +2119,8 @@
                                     //}
                                     _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                                     _txtTrxAmt.getControl().trigger('blur');
+                                    //Set the Currency and ConversionType
+                                    setCurrencyandConversionType(_scheduleList.toString());
                                 }
                                 else {
                                     //alert("Notdone");
@@ -2075,13 +2128,27 @@
                             }
                             if (_cmbTransactionType.val() == "PO") {
 
-                                if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _prepayList.toString(), _txtAmount.getValue())) {
+                                //if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _prepayList.toString(), _txtAmount.getValue())) {
                                     // if amount is zero then should pop-up this message
+                                //return message if try to drag another record while already has the record on the form.
+                                if (VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0) {
+                                    if (VIS.Utility.Util.getValueOfInt(_orderSelectedVal) == VIS.Utility.Util.getValueOfInt(($(ui.draggable)).data('uid'))) {
+                                        VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                                    }
+                                    else {
+                                        VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                                    }
+                                    return;
+                                }
+                                else {
+                                    $_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
                                     if (VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue()) == 0) {
                                         VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                         return;
                                     }
-
+                                }
+                                //disable the amount becoz can't change amount for prepay order
+                                //_txtAmount.getControl().attr("disabled", true);
                                     //alert("done");
                                     //newRecordForm.prepayRefresh();
                                     //if (!isInList(parseInt(($(ui.draggable)).data('uid')), _prepayList)) {
@@ -2093,15 +2160,13 @@
                                     //    VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
                                     //}
                                     //_txtPrepayOrder.val(_prepayDataList.toString());
-                                    $_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
-                                    loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
-                                    //disable the amount becoz can't change amount for prepay order
-                                    _txtAmount.getControl().attr("disabled", true);
-                                }
-                                else {
+                                    //$_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
+                                    //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
+                                //}
+                                //else {
                                     //alert("Notdone");
 
-                                }
+                                //}
 
 
                             }
@@ -2114,15 +2179,27 @@
                                         VIS.ADialog.info("VA012_CashLineAlreadyMatchedOthrStmt", null, "", "");
                                         return;
                                     }
-                                    if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.getValue())) {
-                                        // if amount is zero then should pop-up this message
-                                        if (VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue()) == 0) {
-                                            VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
-                                            return;
+                                    //return the Message if If already selected Cash Journal line on the form
+                                    if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0) {
+                                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) == VIS.Utility.Util.getValueOfInt(($(ui.draggable)).data('uid'))) {
+                                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
                                         }
-                                        _txtTrxAmt.setValue(_txtAmount.getValue());
-                                        _txtAmount.getControl().trigger('blur');
-                                        $_ctrlCashLine.setValue(($(ui.draggable)).data('uid'), false, true);
+                                        else {
+                                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                                        }
+                                        return;
+                                    }
+                                    else {
+                                        if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.getValue())) {
+                                            // if amount is zero then should pop-up this message
+                                            if (VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue()) == 0) {
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                                return;
+                                            }
+                                            _txtTrxAmt.setValue(_txtAmount.getValue());
+                                            _txtAmount.getControl().trigger('blur');
+                                            $_ctrlCashLine.setValue(($(ui.draggable)).data('uid'), false, true);
+                                        }
                                     }
                                 }
                             }
@@ -2302,7 +2379,40 @@
                                     _btnOut.attr("v_active", "0");
                                 }
                                 _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(result._trxamount.toFixed(_stdPrecision)));
+                                //Set Currency and Conversion Type
+                                if (result._currency_Id != 0 && VIS.Utility.Util.getValueOfString($_ctrlPayment.value) != null) {
+                                    _txtCurrency.val(_currencyId).prop('selected', true);
+                                    for (var i = 0; _txtCurrency[0].length > i; i++) {
+                                        if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                            $(_txtCurrency[0][i]).show();
+                                        }
+                                        else {
+                                            $(_txtCurrency[0][i]).hide();
+                                        }
+                                    }
+                                    _txtCurrency.removeClass("va012-mandatory");
+                                    _txtCurrency.attr("disabled", false);
+                                    $(_txtConversionType[0][0]).hide();
+                                    _txtConversionType.val(result._conversionType_Id).prop('selected', true);
+                                    _txtConversionType.attr("disabled", true);
+                                }
+                                else {
+                                    _txtCurrency.val(_currencyId).prop('selected', true);
+                                    _txtCurrency.attr("disabled", true);
+                                    _txtCurrency.removeClass("va012-mandatory");
+                                    _txtConversionType.val(result._conversionType_Id).prop('selected', true);
+                                    //_txtConversionType.trigger('change');
+                                }
+                                _txtConversionType.trigger('change');
                                 //_txtTrxAmt.trigger('change');
+                            }
+                            else {
+                                //Incase of drag Payment on new form which is not found ConversionRate then it will return meg
+                                if (_dragDestinationID == 0) {
+                                    newRecordForm.refreshForm();
+                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                    _status = false;
+                                }
                             }
                         }
                         else {
@@ -2427,8 +2537,30 @@
                                         _txtAmount.getControl().removeClass("va012-mandatory");
                                     }
                                 }
-                                //_txtTrxAmt.val((result._amount).toFixed(_stdPrecision));
-                                //_txtTrxAmt.trigger('change');
+                                //Set Currency and Conversion Type
+                                if (result._currency_Id != 0 && VIS.Utility.Util.getValueOfString($_ctrlOrder.value) != null) {
+                                    _txtCurrency.val(result._currency_Id).prop('selected', true);
+                                    for (var i = 0; _txtCurrency[0].length > i; i++) {
+                                        if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == result._currency_Id || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                            $(_txtCurrency[0][i]).show();
+                                        }
+                                        else {
+                                            $(_txtCurrency[0][i]).hide();
+                                        }
+                                    }
+                                    _txtCurrency.removeClass("va012-mandatory");
+                                    _txtCurrency.attr("disabled", false);
+                                    $(_txtConversionType[0][0]).hide();
+                                    _txtConversionType.val(result._conversionType_Id).prop('selected', true);
+                                    _txtConversionType.attr("disabled", false);
+                                }
+                                else {
+                                    _txtCurrency.val(_currencyId).prop('selected', true);
+                                    _txtCurrency.attr("disabled", true);
+                                    _txtCurrency.removeClass("va012-mandatory");
+                                    _txtConversionType.val(result._conversionType_Id).prop('selected', true);
+                                }
+                                _txtConversionType.trigger('change');
                             }
                         }
                         else {
@@ -2486,6 +2618,23 @@
                                 if (_txtAmount.getValue() > 0) {
                                     _txtAmount.getControl().removeClass("va012-mandatory");
                                 }
+                            }
+                            //Set Currency and Conversion Type
+                            if (VIS.Utility.Util.getValueOfString($_ctrlCashLine.value) != null) {
+                                _txtCurrency.val(_currencyId).prop('selected', true);
+                                for (var i = 0; _txtCurrency[0].length > i; i++) {
+                                    if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                        $(_txtCurrency[0][i]).show();
+                                    }
+                                    else {
+                                        $(_txtCurrency[0][i]).hide();
+                                    }
+                                }
+                                _txtCurrency.removeClass("va012-mandatory");
+                                _txtCurrency.attr("disabled", false);
+                                $(_txtConversionType[0][0]).show();
+                                _txtConversionType.val(0).prop('selected', true);
+                                _txtConversionType.attr("disabled", false);
                             }
 
                         }
@@ -2652,6 +2801,53 @@
 
             cartGrid.add(data);
 
+        };
+
+        //Set the Currency and Conversiontype on new Form
+        function setCurrencyandConversionType(_invSchedules) {
+            if (_scheduleList.length > 0) {
+                $.ajax({
+                    url: VIS.Application.contextUrl + "BankStatement/GetCurrencyandConversionType",
+                    dataType: "json",
+                    data: { _invoiceSchedules: _invSchedules },
+                    success: function (data) {
+                        var result = JSON.parse(data);
+                        if (result != null || result != "") {
+                            callSetCurrency(result);
+                        }
+                    }
+                });
+                function callSetCurrency(result) {
+                    if (result.currencyId != 0 && _scheduleList != null) {
+                        _txtCurrency.val(result.currencyId).prop('selected', true);
+                        for (var i = 0; _txtCurrency[0].length > i; i++) {
+                            if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == result.currencyId || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                $(_txtCurrency[0][i]).show();
+                            }
+                            else {
+                                $(_txtCurrency[0][i]).hide();
+                            }
+                        }
+                        _txtCurrency.removeClass("va012-mandatory");
+                        _txtCurrency.attr("disabled", false);
+                        _txtConversionType.val(result.conversionTypeId).prop('selected', true);
+                    }
+                    else {
+                        _txtCurrency.val(_currencyId).prop('selected', true);
+                        _txtCurrency.attr("disabled", true);
+                        _txtCurrency.removeClass("va012-mandatory");
+                        _txtConversionType.val(result.conversionTypeId).prop('selected', true);
+                    }
+                    _txtConversionType.trigger('change');
+                }
+            }
+            else {
+                _txtCurrency.prop('selectedIndex', 0);
+                _txtCurrency.addClass("va012-mandatory");
+                _txtCurrency.attr("disabled", false);
+                _txtConversionType.prop('selectedIndex', 0);
+                _txtConversionType.addClass("va012-mandatory");
+            }
         };
 
         //End Load All Functions
@@ -3713,6 +3909,36 @@
                             $_ctrlInvoice.setValue();
                         }
                     }
+                    // when drag transaction on to the Line then it will return the Currency and ConversionType
+                    // then set the values on the fields
+                    if (_result._txtCurrency != 0) {
+                        _txtCurrency.val(_result._txtCurrency).prop('selected', true);
+                        for (var i = 0; _txtCurrency[0].length > i; i++) {
+                            if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _result._txtCurrency || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                $(_txtCurrency[0][i]).show();
+                            }
+                            else {
+                                $(_txtCurrency[0][i]).hide();
+                            }
+                        }
+                        _txtCurrency.removeClass("va012-mandatory");
+                        _txtCurrency.attr("disabled", false);
+                    }
+                    if (_cmbVoucherMatch.val() == "C") {
+                        _txtConversionType.prop('selectedIndex', 0);
+                        _txtConversionType.addClass("va012-mandatory");
+                        _txtConversionType.attr("disabled", false);
+                    }
+                    else {
+                        _txtConversionType.val(_result._txtConversionType).prop('selected', true);
+                        _txtConversionType.removeClass("va012-mandatory");
+                        if (_result._ctrlPayment > 0) {
+                            _txtConversionType.attr("disabled", true);
+                        }
+                        else {
+                            _txtConversionType.attr("disabled", false);
+                        }
+                    }
 
                     _txtCharge.trigger("focus");
                     //_openingFromDrop = false;
@@ -4227,9 +4453,11 @@
                         _btnIn.attr("v_active", "0");
                     }
                     _txtAmount.getControl().trigger('blur');
+                    //Set the Currency and conversion Type
+                    setCurrencyandConversionType(_scheduleList.toString());
                 }
                 $_divPaymentSchedules.on(VIS.Events.onTouchStartOrClick, removeItem);
-
+                
                 function removeItem(e) {
                     var target = $(e.target);
                     if (target.hasClass('glyphicon-remove')) {
@@ -4296,6 +4524,8 @@
                         if (amount == 0) {
                             $_ctrlBusinessPartner.setValue();
                         }
+                        //Set the Currency and conversion Type
+                        setCurrencyandConversionType(_scheduleList.toString());
                     }
                 }
                 function _getScheduleControls() {
@@ -4306,14 +4536,16 @@
                 }
 
                 function loadPSInvoice() {
-                    _lookupPSInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.Search, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL') AND C_BPartner_ID=" + _psBpSelectedVal);
-                    $_ctrlPSInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.Search, _lookupPSInvoice);
+                    //to handle multiple Invoices used MultiKey and isMultiKeyTextBox properties
+                    _lookupPSInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.MultiKey, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL') AND C_BPartner_ID=" + _psBpSelectedVal);
+                    $_ctrlPSInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.MultiKey, _lookupPSInvoice);
+                    $_ctrlPSInvoice.isMultiKeyTextBox = true;
                     $_ctrlPSInvoice.getControl().addClass("va012-input-size-2");
                     _ctrlPSInvoice.append($_ctrlPSInvoice.getControl());
                     _ctrlPSInvoice.append($_ctrlPSInvoice.getBtn(0));
                     _ctrlPSInvoice.append($_ctrlPSInvoice.getBtn(1));
                     $_ctrlPSInvoice.fireValueChanged = function () {
-                        _psInvoiceSelectedVal = 0;
+                        _psInvoiceSelectedVal = null;
                         _psInvoiceSelectedVal = $_ctrlPSInvoice.value;
                         _cmbPaymentSchedule.html("");
                         loadPaymentSchedule();
@@ -4375,7 +4607,8 @@
                         if (_ds != null) {
                             for (var i = 0; i < _ds.length; i++) {
                                 if (_ds[i].DueAmount == 0) {
-                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                    //return the perticular schedules which is not found the ConversionRate
+                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, " " + VIS.Msg.getMsg("VA012_InvoiceSchedule") + ": " + VIS.Utility.Util.getValueOfString(_ds[i].c_invoicepayschedule_id), "");
                                     return;
                                 }
                                 //_cmbPaymentSchedule.append("<option paymentdata='" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "/" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.businesspartner) + "' value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_invoicepayschedule_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
@@ -4488,6 +4721,9 @@
                 newRecordForm.loadCashBook();
                 newRecordForm.loadDifferenceType();
                 newRecordForm.loadTransferType();
+                //new fields as per Solution Design
+                newRecordForm.loadNewFormCurrency();
+                newRecordForm.loadConversionTypes();
                 newRecordForm.loadCharge();
                 newRecordForm.loadTaxRate();
                 newRecordForm.loadPayment();
@@ -4567,8 +4803,19 @@
                     });
                 };
 
-
-
+                //set Currency Value based on VoucherMatch Type
+                function setCurrencyVal() {
+                    if (_cmbVoucherMatch.val() == "V") {
+                        _txtCurrency.val(_currencyId).prop("selected", true);
+                        _txtCurrency.removeClass("va012-mandatory");
+                        _txtCurrency.attr("disabled", true);
+                    }
+                    else {
+                        $(_txtCurrency[0]).siblings().show();
+                        _txtCurrency.addClass("va012-mandatory");
+                        _txtCurrency.attr("disabled", false);
+                    }
+                }
 
 
 
@@ -4599,6 +4846,8 @@
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
                     newRecordForm.refreshForm();
+                    //set the mandatory class to the Currency field
+                    _txtCurrency.trigger('change');
                     loadFunctions.setPaymentListHeight();
                 });
                 _btnUndo.on(VIS.Events.onTouchStartOrClick, function () {
@@ -4614,7 +4863,8 @@
                     newRecordForm.prepayRefresh();
                     newRecordForm.refreshForm();
                     //}
-
+                    //set the mandatory class to the Currency field
+                    _txtCurrency.trigger('change');
                 });
                 $_formNewRecord.hide();
                 _cmbVoucherMatch.on('change', function () {
@@ -4687,6 +4937,8 @@
                             _cmbTaxRate.prop('selectedIndex', 0);
                             _txtTaxAmount.setValue(0);
                         }
+                        //set or load Currency
+                        setCurrencyVal();
                         //// _divMatch.find("*").prop("disabled", false);
 
                         /////
@@ -4750,10 +5002,8 @@
                         _divCtrlBusinessPartner.hide();
                         _divPrepayOrder.hide();
                         _divPaymentSchedule.hide();
-
-
-
-
+                        //set or load Currency
+                        setCurrencyVal();
 
                         //_divVoucher.find("*").prop("disabled", false);
                         ////_divVoucher.removeClass("va012-disabled");
@@ -4811,7 +5061,8 @@
 
                         _cmbTaxRate.removeClass("va012-mandatory");
                         _txtCharge.removeClass("va012-mandatory");
-
+                        //set or load Currency 
+                        setCurrencyVal();
                     }
                     //remove the mandatory class
                     //_cmbTaxRate.removeClass("va012-mandatory");
@@ -4927,6 +5178,64 @@
                 //    }
 
                 //});
+                //change event for Currency
+                _txtCurrency.on('change', function () {
+                    if (VIS.Utility.Util.getValueOfInt(_txtCurrency.val()) > 0) {
+                        _txtCurrency.removeClass("va012-mandatory");
+                    }
+                    else {
+                        _txtCurrency.addClass("va012-mandatory");
+                    }
+                });
+
+                //on change event for Currency ConversionType
+                _txtConversionType.on('change', function () {
+                    if (VIS.Utility.Util.getValueOfInt(_txtConversionType.val()) > 0) {
+                        var schedules = null;
+                        if (_scheduleList != null && _scheduleList.length > 0) {
+                            schedules = _scheduleList.toString();
+                        }
+                        if (schedules != null || $_ctrlOrder.value != 0) {
+                            $.ajax({
+                                type: 'POST',
+                                url: VIS.Application.contextUrl + "BankStatement/GetConvertedAmount",
+                                contentType: "application/json; charset=utf-8",
+                                data: JSON.stringify({ currency: _currencyId, conversionType: _txtConversionType.val(), stmtDate: _dtStatementDate.val(), _schedules: schedules, _accountId: _cmbBankAccount.val(), orderId: _orderSelectedVal }),
+                                success: function (data) {
+                                    data = JSON.parse(data);
+                                    if (data != null) {
+                                        if (data._convertedAmt == 0) {
+                                            if (data.schedule_Ids != null && data.schedule_Ids.length > 0) {
+                                                _txtAmount.setValue();
+                                                _txtTrxAmt.setValue();
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, " - DocNo: " + data.schedule_Ids.toString(), "");
+                                            }
+                                        }
+                                        else {
+                                            _txtAmount.setValue(data._convertedAmt);
+                                            if (_orderSelectedVal == 0) {
+                                                _txtTrxAmt.setValue(data._convertedAmt);
+                                                _txtAmount.getControl().trigger('blur');
+                                            }
+                                            //_txtAmount.getControl().trigger('blur');
+                                        }
+                                    }
+                                    $(_txtConversionType[0][0]).hide();
+                                    _txtConversionType.removeClass("va012-mandatory");
+                                },
+                                error: function (data) {
+                                    VIS.ADialog.info(data, null, "", "");
+                                }
+                            });
+                        }
+                        else {
+                            _txtConversionType.removeClass("va012-mandatory");
+                        }
+                    }
+                    else {
+                        _txtConversionType.addClass("va012-mandatory");
+                    }
+                });
 
                 _cmbTaxRate.on('change', function () {
                     _txtTaxAmount.setValue(0);
@@ -5067,6 +5376,17 @@
                         VIS.ADialog.info("VA012_PleaseEnterStatementDate", null, "", "");
                         return;
                     }
+                    //C_Currency_ID is madatory
+                    if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtCurrency"]) == 0) {
+                        VIS.ADialog.info("VA012_PleaseSelectCurrency", null, "", "");
+                        return;
+                    }
+                    //C_ConversionType_ID is madatory
+                    if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtConversionType"]) == 0) {
+                        VIS.ADialog.info("VA012_PleaseSelectConversionType", null, "", "");
+                        return;
+                    }
+
                     if (_formData[0]["_txtAmount"] == null || _formData[0]["_txtAmount"] == "" || _formData[0]["_txtAmount"] == "0" || _formData[0]["_txtAmount"] == "0.00") {
                         VIS.ADialog.info("VA012_PleaseEnterAmount", null, "", "");
                         return;
@@ -5779,6 +6099,9 @@
                 _btnAmount = $_formNewRecord.find("#VA012_btnAmount_" + $self.windowNo);
                 _btnIn = $_formNewRecord.find("#VA012_btnIn_" + $self.windowNo);
                 _btnOut = $_formNewRecord.find("#VA012_btnOut_" + $self.windowNo);
+                //new field Id's which is ConversionType and Currency
+                _txtCurrency = $_formNewRecord.find("#VA012_txtCurrency_" + $self.windowNo);
+                _txtConversionType = $_formNewRecord.find("#VA012_txtConversionType_" + $self.windowNo);
             },
 
 
@@ -5953,9 +6276,21 @@
                 _ctrlPayment.append($_ctrlPayment.getBtn(1));
                 $_ctrlPayment.fireValueChanged = function (e) {
 
-
+                    //return message if try to select a record while already has the record on the form.
+                    if (VIS.Utility.Util.getValueOfInt($_ctrlPayment.value) != 0 && VIS.Utility.Util.getValueOfInt(_paymentSelectedVal) != 0) {
+                        if (VIS.Utility.Util.getValueOfInt(_paymentSelectedVal) == $_ctrlPayment.value) {
+                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                        }
+                        else {
+                            $_ctrlPayment.setValue(_paymentSelectedVal, false, true);
+                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                        }
+                        return;
+                    }
                     _paymentSelectedVal = 0;
                     _paymentSelectedVal = $_ctrlPayment.value;
+
+                    //_paymentSelectedVal = _paymentList.toString();
                     //if ($_ctrlPayment.value) {
                     //    loadFunctions.setInvoiceAndBPartner(_paymentSelectedVal, "PY");
                     //}
@@ -5963,6 +6298,7 @@
                         newRecordForm.refreshForm();
                         // loadFunctions.getOverUnderPayment(_paymentSelectedVal);
                     }
+
                     //pratap
                     if (!_openingFromDrop && !_openingFromEdit) {
                         if ($_ctrlPayment.value) {
@@ -5974,6 +6310,11 @@
                                 loadFunctions.setInvoiceAndBPartner(_paymentSelectedVal, "PY");
                                 //loadFunctions.getOverUnderPayment(_paymentSelectedVal);
                             }
+                            //}
+                            //else {
+                            //    _dragPayId = false;
+                            //    loadFunctions.setInvoiceAndBPartner(_paymentSelectedVal, "PY");
+                            //}
                         }
                     }
                     _openingFromEdit = false;
@@ -6001,13 +6342,30 @@
                 _ctrlOrder.append($_ctrlOrder.getBtn(1));
 
                 $_ctrlOrder.fireValueChanged = function () {
+                    //return message if try to select a record while already has the record on the form.
+                    if (VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) != 0 && VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0) {
+                        if (VIS.Utility.Util.getValueOfInt(_orderSelectedVal) == $_ctrlOrder.value) {
+                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                        }
+                        else {
+                            $_ctrlOrder.setValue(_orderSelectedVal, false, true);
+                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                        }
+                        return;
+                    }
+
                     _orderSelectedVal = 0;
                     _orderSelectedVal = $_ctrlOrder.value;
+                    
                     //if ($_ctrlOrder.value) {
                     //    loadFunctions.setInvoiceAndBPartner(_orderSelectedVal, "PO");
                     //}
-                    if ($_ctrlOrder.value) {
+                    //refresh the form if Value is null or zero
+                    if (!$_ctrlOrder.value) {
+                        newRecordForm.refreshForm();
+                    }
 
+                    if ($_ctrlOrder.value) {
                         if (!_openingFromDrop) {
                             // if (!loadFunctions.checkFormPrepayCondition($_ctrlOrder.value, _txtAmount.val())) {
                             if (!loadFunctions.checkPrepayCondition($_ctrlOrder.value, 0, null, _txtAmount.getValue())) {
@@ -6015,6 +6373,8 @@
                             }
                             else {
                                 loadFunctions.setInvoiceAndBPartner(_orderSelectedVal, "PO");
+                                //Set _txtAmount field as ReadOnly
+                                _txtAmount.getControl().attr("disabled", true);
                             }
                         }
                     }
@@ -6048,6 +6408,17 @@
                 _ctrlCashLine.append($_ctrlCashLine.getBtn(1));
 
                 $_ctrlCashLine.fireValueChanged = function () {
+                    //return message if try to select a record while already has the record on the form.
+                    if (VIS.Utility.Util.getValueOfInt($_ctrlCashLine.value) != 0 && VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0) {
+                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) == $_ctrlCashLine.value) {
+                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                        }
+                        else {
+                            $_ctrlCashLine.setValue(_cashLineSelectedVal, false, true);
+                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                        }
+                        return;
+                    }
                     _cashLineSelectedVal = 0;
                     _cashLineSelectedVal = $_ctrlCashLine.value;
 
@@ -6078,15 +6449,17 @@
                 };
             },
             loadInvoice: function () {
-                _lookupInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.Search, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL')");
-                $_ctrlInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.Search, _lookupInvoice);
+                //to handle the Multiple Invoices used MultiKey and isMultiKeyTextBox properties
+                _lookupInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.MultiKey, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL')");
+                $_ctrlInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.MultiKey, _lookupInvoice);
+                $_ctrlInvoice.isMultiKeyTextBox = true;
                 $_ctrlInvoice.getControl().addClass("va012-input-size-2");
                 $_ctrlInvoice.getControl().attr("tabindex", "11");
                 _ctrlInvoice.append($_ctrlInvoice.getControl());
                 _ctrlInvoice.append($_ctrlInvoice.getBtn(0));
                 _ctrlInvoice.append($_ctrlInvoice.getBtn(1));
                 $_ctrlInvoice.fireValueChanged = function () {
-                    _invoiceSelectedVal = 0;
+                    _invoiceSelectedVal = null;
                     _invoiceSelectedVal = $_ctrlInvoice.value;
                     if ($_ctrlInvoice.value) {
                         if (!loadFunctions.checkInvoiceCondition(_invoiceSelectedVal, _txtAmount.getValue())) {
@@ -6148,6 +6521,10 @@
                 }
 
                 formData["_txtDifference"] = _txtDifference.getValue();
+                //C_ConversionType_ID
+                formData["_txtConversionType"] = _txtConversionType.val();
+                //C_Currency_ID
+                formData["_txtCurrency"] = _txtCurrency.val();
 
                 _formData.push(formData);
                 return _formData;
@@ -6167,7 +6544,8 @@
 
                     var _result = $.parseJSON(data);
                     if (_result == "Success") {
-                        _txtStatementLine.val(parseInt(_txtStatementLine.val()) + 10);
+                        //below calling refreshForm() function in that set _txtStatementLine field value
+                        //_txtStatementLine.val(parseInt(_txtStatementLine.val()) + 10);
                         busyIndicator($root, false, "absolute");
                         VIS.ADialog.info("VA012_RecordSaved", null, "", "");
                         //if (parseInt($_formNewRecord.attr("data-uid")) > 0) {
@@ -6193,6 +6571,9 @@
                         newRecordForm.scheduleRefresh();
                         newRecordForm.prepayRefresh();
                         newRecordForm.refreshForm();
+                        //add the Mandatory class to CUrrency and Conversion fields
+                        _txtCurrency.addClass("va012-mandatory");
+                        _txtConversionType.addClass("va012-mandatory");
                     }
                     else {
                         busyIndicator($root, false, "absolute");
@@ -6241,7 +6622,9 @@
                 _bPartnerSelectedVal = 0;
                 _paymentSelectedVal = 0;
                 _orderSelectedVal = 0;
-                _invoiceSelectedVal = 0;
+                //clear the CashLine_ID
+                _cashLineSelectedVal = 0;
+                _invoiceSelectedVal = null;
                 //_btnIn.attr("v_active", "1");
                 _btnIn.trigger('click');
                 //_btnOut.attr("v_active", "0");
@@ -6255,6 +6638,16 @@
                 _cmbCashBook.prop('selectedIndex', 0);
                 _cmbTransferType.prop('selectedIndex', 0);
                 _txtCheckNo.val("");
+                //C_Currency_ID
+                //_txtCurrency.prop('selectedIndex', 0);
+                this.loadNewFormCurrency();
+                _txtConversionType.addClass("va012-mandatory");
+                this.loadConversionTypes();
+                _txtCurrency.addClass("va012-mandatory");
+                //C_ConversionType_ID
+                _txtConversionType.prop('selectedIndex', 0);
+                _txtConversionType.attr("disabled", false);
+                _txtCurrency.attr("disabled", false);
             },
             scheduleRefresh: function () {
                 _scheduleList = [];
@@ -6333,7 +6726,64 @@
                 _invoiceSelectedVal = null;
                 _today = null;
                 now = null;
+                //clear the values
+                _txtCurrency = null;
+                _txtConversionType = null;
             },
+
+            //load Currencies           
+            loadNewFormCurrency: function (callbackCurrency) {
+                $.ajax({
+                    type: 'GET',
+                    datatype: "json",
+                    url: VIS.Application.contextUrl + "VA012/BankStatement/GetCurrency",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        data = JSON.parse(data);
+                        if (data != null && data != "") {
+                            callbackCurrency(data);
+                        }
+                    },
+                    error: function (data) { VIS.ADialog.info(data, null, "", ""); }
+                });
+
+                function callbackCurrency(data) {
+                    _txtCurrency.html("");
+                    _txtCurrency.append("<option value=0 ></option>");
+                    if (data != null && data != "") {
+                        for (var i = 0; data.length > i; i++) {
+                            _txtCurrency.append("<option value=" + VIS.Utility.Util.getValueOfInt(data[i].Value) + ">" + VIS.Utility.encodeText(data[i].Name) + "</option>");
+                        }
+                    }
+                }
+            },
+
+            //load ConversionTypes
+            loadConversionTypes: function (callbackConversion) {
+                $.ajax({
+                    type: 'GET',
+                    datatype: "json",
+                    url: VIS.Application.contextUrl + "VA012/BankStatement/GetConversionTypes",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        data = JSON.parse(data);
+                        if (data != null && data != "") {
+                            callbackConversion(data);
+                        }
+                    },
+                    error: function (data) { VIS.ADialog.info(data, null, "", ""); }
+                });
+
+                function callbackConversion(data) {
+                    _txtConversionType.html("");
+                    _txtConversionType.append("<option value=0 ></option>");
+                    if (data != null && data != "") {
+                        for (var i = 0; data.length > i; i++) {
+                            _txtConversionType.append("<option value=" + VIS.Utility.Util.getValueOfInt(data[i].Value) + ">" + VIS.Utility.encodeText(data[i].Name) + "</option>");
+                        }
+                    }
+                }
+            }
         };
         //End New Record Form
 

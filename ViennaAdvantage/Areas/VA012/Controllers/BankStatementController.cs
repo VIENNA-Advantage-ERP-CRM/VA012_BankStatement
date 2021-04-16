@@ -261,7 +261,14 @@ namespace VA012.Controllers
             retJSON = JsonConvert.SerializeObject(list);
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult SetInvoiceAndBPartner(int _paymentID, string _cmbTransactionType)
+
+        /// <summary>
+        /// Get Invoice and BPartner
+        /// </summary>
+        /// <param name="_paymentID">C_Payment_ID or C_Invoice_ID's or C_Order_ID</param>
+        /// <param name="_cmbTransactionType">Current Transaction Type</param>
+        /// <returns>Object in JSON format</returns>
+        public JsonResult SetInvoiceAndBPartner(string _paymentID, string _cmbTransactionType)
         {
             string retJSON = "";
             string _sendBackData = "";
@@ -273,18 +280,18 @@ namespace VA012.Controllers
             {
                 count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) FROM AD_ModuleInfo WHERE Prefix='VA034_' AND IsActive='Y'"));
                 if (count > 0)
-                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID,VA034_DepositSlipNo FROM C_PAYMENT WHERE C_PAYMENT_ID=" + _paymentID;
+                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID,VA034_DepositSlipNo FROM C_PAYMENT WHERE C_PAYMENT_ID IN(" + _paymentID + ")";
                 else
-                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID FROM C_PAYMENT WHERE C_PAYMENT_ID=" + _paymentID;
+                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID FROM C_PAYMENT WHERE C_PAYMENT_ID IN(" + _paymentID + ")";
             }
             else if (_cmbTransactionType == "IS")
             {
-                _sql = "SELECT INV.C_BPARTNER_ID,  NULL AS C_INVOICE_ID FROM C_INVOICEPAYSCHEDULE PAY INNER JOIN C_INVOICE INV ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID WHERE PAY.C_INVOICEPAYSCHEDULE_ID=" + _paymentID;
+                _sql = "SELECT INV.C_BPARTNER_ID,  NULL AS C_INVOICE_ID FROM C_INVOICEPAYSCHEDULE PAY INNER JOIN C_INVOICE INV ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _paymentID + ")";
 
             }
             else if (_cmbTransactionType == "PO")
             {
-                _sql = "SELECT C_BPARTNER_ID, null AS C_INVOICE_ID FROM C_ORDER WHERE C_ORDER_ID=" + _paymentID;
+                _sql = "SELECT C_BPARTNER_ID, null AS C_INVOICE_ID FROM C_ORDER WHERE C_ORDER_ID IN(" + _paymentID + ")";
 
             }
 
@@ -304,13 +311,19 @@ namespace VA012.Controllers
             retJSON = JsonConvert.SerializeObject(_sendBackData);
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult SetBPartner(int _invoiceID)
+
+        /// <summary>
+        /// Get C_BPARTNER_ID
+        /// </summary>
+        /// <param name="_invoiceID">C_Invoice_ID's</param>
+        /// <returns>C_BPartner_ID</returns>
+        public JsonResult SetBPartner(string _invoiceID)
         {
             string retJSON = "";
             string _sendBackData = "";
             Ctx ctx = Session["ctx"] as Ctx;
             DataSet _ds = new DataSet();
-            string _sql = "SELECT C_BPARTNER_ID FROM C_INVOICE WHERE C_INVOICE_ID =" + _invoiceID;
+            string _sql = "SELECT C_BPARTNER_ID FROM C_INVOICE WHERE C_INVOICE_ID IN (" + _invoiceID + ")";
 
             _ds = DB.ExecuteDataset(_sql, null, null);
             if (_ds != null)
@@ -707,7 +720,14 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult CheckInvoiceCondition(int _invoiceID, decimal _amount)
+
+        /// <summary>
+        ///  Check Invoice condition
+        /// </summary>
+        /// <param name="_invoiceID">C_Invoice_ID's</param>
+        /// <param name="_amount">Amount bind on form</param>
+        /// <returns>string Value in JSON format</returns>
+        public JsonResult CheckInvoiceCondition(string _invoiceID, decimal _amount)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
@@ -729,6 +749,15 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// Check Form Prepay Condition
+        /// </summary>
+        /// <param name="_orderID">C_Order_ID</param>
+        /// <param name="_amount">Amount</param>
+        /// <param name="_currencyId">C_Currency_ID</param>
+        /// <param name="_formBPartnerID">C_BPartner_ID</param>
+        /// <returns>List in JSON format</returns>
         public JsonResult CheckFormPrepayCondition(int _orderID, decimal _amount, int _currencyId, int _formBPartnerID)
         {
             string retJSON = "";
@@ -774,7 +803,7 @@ namespace VA012.Controllers
         /// <param name="accountID">C_BankAccount_ID</param>
         /// <param name="statemtDate">Statement Date</param>
         /// <returns>Invoice PaySchedule list</returns>
-        public JsonResult GetInvPaySchedule(int seltdInvoice, int accountID, DateTime? statemtDate)
+        public JsonResult GetInvPaySchedule(string seltdInvoice, int accountID, DateTime? statemtDate)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
@@ -862,6 +891,74 @@ namespace VA012.Controllers
                 VAdvantage.Utility.Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations tax = new StatementOperations();
                 retJSON = JsonConvert.SerializeObject(tax.CalculateSurcharge(ctx, _tax_ID, _chargeAmt, _stdPrecision));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get the List Currencies
+        /// </summary>
+        /// <returns>List in JSON Format</returns>
+        public JsonResult GetCurrency()
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                VAdvantage.Utility.Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetCurrency(ctx));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get CurrencyConversion Types
+        /// </summary>
+        /// <returns>List</returns>
+        public JsonResult GetConversionTypes()
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                VAdvantage.Utility.Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetConversionTypes(ctx));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Currency and ConversionType
+        /// </summary>
+        /// <param name="_invoiceSchedules">C_InvoicePaySchedule_ID's</param>
+        /// <returns>List</returns>
+        public JsonResult GetCurrencyandConversionType(string _invoiceSchedules) {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetCurrencyandConversionType(ctx, _invoiceSchedules));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Converted Amount when change the Conversion Type
+        /// </summary>
+        /// <param name="currency">C_Currency_ID</param>
+        /// <param name="conversionType">C_ConversionType_ID</param>
+        /// <param name="stmtDate">Statement Date</param>
+        /// <param name="_schedules">C_InvoicePaySchedule_ID</param>
+        /// <returns>Converted Amount</returns>
+        public JsonResult GetConvertedAmount(int currency, int conversionType, DateTime? stmtDate, string _schedules, int _accountId, int orderId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetConvertedAmount(ctx, currency, conversionType, stmtDate, _schedules, _accountId, orderId));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }

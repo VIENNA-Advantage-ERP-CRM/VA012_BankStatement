@@ -27,6 +27,31 @@
         return "";
 
     };
+
+    //Callout to SetConversionType on statement Line
+    VA012_Contra.prototype.SetConversionType = function (ctx, windowNo, mTab, mField, value, oldValue) {
+        if (this.isCalloutActive()) {
+            return "";
+        }
+        this.setCalloutActive(true);
+        if (value == null) {
+            return "";
+        }
+        else {
+            if (VIS.Utility.Util.getValueOfInt(value) > 0) {
+                var paramString = value.toString();
+                var dateAcct = VIS.dataContext.getJSONRecord("Statement/GetCashDetails", paramString);
+                if (dateAcct != null) {
+                    mTab.setValue("DateAcct", dateAcct);
+                }
+                mTab.setValue("C_ConversionType_ID", 0);
+            }
+        }
+        this.setCalloutActive(false);
+        ctx = windowNo = mTab = mField = value = oldValue = null;
+        return "";
+    };
+
     VA012.Model = VA012.Model || {};
     VA012.Model.VA012_Contra = VA012_Contra;
 })(VA012, jQuery);
