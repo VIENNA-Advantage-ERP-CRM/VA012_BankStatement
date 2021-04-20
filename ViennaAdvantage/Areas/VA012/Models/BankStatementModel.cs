@@ -607,43 +607,6 @@ namespace VA012.Models
             }
             else
             {
-                #region Period StartDate and End Date
-                DateTime? _startdate = null;
-                DateTime? _enddate = null;
-                string _sqlDate = @"SELECT STARTDATE
-                                FROM C_PERIOD
-                                WHERE C_YEAR_ID =
-                                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                                    FROM C_YEAR Y
-                                    INNER JOIN C_PERIOD P
-                                    ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                                    WHERE Y.C_CALENDAR_ID =
-                                      (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                                      )
-                                    AND " + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) + @" BETWEEN P.STARTDATE AND P.ENDDATE
-                                    AND P.ISACTIVE = 'Y'
-                                    AND Y.ISACTIVE ='Y'
-                                  )
-                                AND PERIODNO=1";
-                _startdate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
-                _sqlDate = @"SELECT ENDDATE
-                                FROM C_PERIOD
-                                WHERE C_YEAR_ID =
-                                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                                    FROM C_YEAR Y
-                                    INNER JOIN C_PERIOD P
-                                    ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                                    WHERE Y.C_CALENDAR_ID =
-                                      (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                                      )
-                                    AND " + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) + @" BETWEEN P.STARTDATE AND P.ENDDATE
-                                    AND P.ISACTIVE = 'Y'
-                                    AND Y.ISACTIVE ='Y'
-                                  )
-                                AND PERIODNO=12";
-                _enddate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
-
-                #endregion
                 //_qryStmt = "SELECT C_BANKSTATEMENT_ID,DOCSTATUS,0 AS C_PAYMENT_ID, 0 AS C_CHARGE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _formData[0]._txtStatementNo + "' AND TO_CHAR(BS.STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY')";
                 //not required start and end date filters
                 _qryStmt = "SELECT C_BANKSTATEMENT_ID,C_BANKACCOUNT_ID,DOCSTATUS,0 AS C_PAYMENT_ID, 0 AS C_CHARGE_ID, 0 AS C_CASHLINE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _formData[0]._txtStatementNo + "'";/*  AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true)*/
@@ -666,6 +629,8 @@ namespace VA012.Models
                     {
                         if (_statementDocStatus == "CO" || _statementDocStatus == "CL" || _statementDocStatus == "RE" || _statementDocStatus == "VO")
                         {
+                            //closing transaction
+                            trx.Rollback();
                             return "VA012_CompletedRecordCantUpdate";
                         }
 
@@ -677,11 +642,15 @@ namespace VA012.Models
                         {
                             if (_existingAccountID > 0 && _existingAccountID != _formData[0]._cmbBankAccount)
                             {
+                                //closing transaction
+                                trx.Rollback();
                                 return "VA012_StatementAlreadyExistDiffAcc";
                             }
                         }
                         else if (_statementDocStatus == "CO" || _statementDocStatus == "CL" || _statementDocStatus == "RE" || _statementDocStatus == "VO")
                         {
+                            //closing transaction
+                            trx.Rollback();
                             return "VA012_StatementAlreadyExist";
                         }
                     }
@@ -695,6 +664,8 @@ namespace VA012.Models
                     + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) + " AND C_BankAccount_ID = " + _formData[0]._cmbBankAccount, null, trx));
                 if (Util.GetValueOfInt(_qryStmt) > 0)
                 {
+                    //closing transaction
+                    trx.Rollback();
                     return "VIS_BankStatementDate";
                 }
             }
@@ -3910,7 +3881,8 @@ namespace VA012.Models
             {
                 _docBaseType = "APP";
             }
-            return Util.GetValueOfInt(DB.ExecuteScalar("Select  dt.c_doctype_id  From C_doctype DT inner join c_docbasetype DBT On dt.docbasetype=dbt.docbasetype where dbt.docbasetype='" + _docBaseType + "' AND dt.IsActive = 'Y' AND (DT.ad_org_id = " + ctx.GetAD_Org_ID() + " or  DT.ad_org_id = 0) AND DT.AD_Client_ID = " + org_Id));
+            //Used Order By clause and DESC command to get the C_DocType_ID for non zero AD_Org_ID
+            return Util.GetValueOfInt(DB.ExecuteScalar("Select  dt.c_doctype_id  From C_doctype DT inner join c_docbasetype DBT On dt.docbasetype=dbt.docbasetype where dbt.docbasetype='" + _docBaseType + "' AND dt.IsActive = 'Y' AND (DT.ad_org_id = " + org_Id + " or  DT.ad_org_id = 0) AND DT.AD_Client_ID = " + ctx.GetAD_Client_ID() + " ORDER BY DT.AD_Org_ID DESC"));
         }
 
         /// <summary>
@@ -3931,7 +3903,8 @@ namespace VA012.Models
             {
                 docBaseType = "ARR";
             }
-            return Util.GetValueOfInt(DB.ExecuteScalar("Select  MIN(dt.c_doctype_id)  From C_doctype DT inner join c_docbasetype DBT On dt.docbasetype=dbt.docbasetype where dbt.docbasetype='" + docBaseType + "' AND dt.IsActive = 'Y' AND (DT.ad_org_id = " + ctx.GetAD_Org_ID() + " or  DT.ad_org_id = 0) AND DT.AD_Client_ID = " + org_Id));
+            //Used Order By clause and DESC command to get the C_DocType_ID for non zero AD_Org_ID
+            return Util.GetValueOfInt(DB.ExecuteScalar("Select  MIN(dt.c_doctype_id)  From C_doctype DT inner join c_docbasetype DBT On dt.docbasetype=dbt.docbasetype where dbt.docbasetype='" + docBaseType + "' AND dt.IsActive = 'Y' AND (DT.ad_org_id = " + org_Id + " or  DT.ad_org_id = 0) AND DT.AD_Client_ID = " + ctx.GetAD_Client_ID() + " ORDER BY DT.AD_Org_ID DESC"));
         }
         public int GetCurrencyType()
         {
@@ -3968,6 +3941,8 @@ namespace VA012.Models
 
                 if (Util.GetValueOfInt(DB.ExecuteScalar(_sql)) > 0)
                 {
+                    //closing transaction
+                    _trx.Rollback();
                     return "VA012_PaymentAlreadyCreated";
                 }
                 _sql = "";
@@ -4136,33 +4111,26 @@ namespace VA012.Models
                                 return _pay.GetC_Payment_ID().ToString();
                             }
                             else {
-                                //RollBack the transaction
-                                _trx.Rollback();
-                                return _msg;
+                                //if Payment is not Completed then delete the record
+                                if (!_pay.Delete(true, _trx))
+                                {
+                                    _trx.Rollback();
+                                    ValueNamePair pp = VLogger.RetrieveError();
+                                    //some times getting the error pp also
+                                    string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                    if (string.IsNullOrEmpty(error))
+                                    {
+                                        error = pp != null ? pp.GetName() : "";
+                                    }
+                                    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
+                                }
+                                else
+                                {
+                                    //commit the transaction
+                                    _trx.Commit();
+                                    return _msg;
+                                }
                             }
-                            #region Commented Complete Action without using worker
-                            //if (_pay.CompleteIt() == "CO")
-                            //{
-                            //    _pay.SetProcessed(true);
-                            //    _pay.SetDocAction("CL");
-                            //    _pay.SetDocStatus("CO");
-                            //    _pay.Save();
-                            //    _ds.Dispose();
-                            //    //trx.Commit();
-                            //    return _pay.GetC_Payment_ID().ToString();
-                            //}
-                            //else
-                            //{
-                            //    _trx.Rollback();
-                            //    ValueNamePair pp = VLogger.RetrieveError();
-                            //    string error = pp != null ? pp.GetValue() : "";
-                            //    if (string.IsNullOrEmpty(error))
-                            //    {
-                            //        error = pp != null ? pp.GetName() : "";
-                            //    }
-                            //    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
-                            //}
-                            #endregion
                         }
                     }
                     else if (_ds.Tables[0].Rows.Count > 1)
@@ -4199,6 +4167,7 @@ namespace VA012.Models
 
                         if (!_pay.Save())
                         {
+                            //closing transaction
                             _trx.Rollback();
                             ValueNamePair pp = VLogger.RetrieveError();
                             string error = pp != null ? pp.GetValue() : "";
@@ -4343,34 +4312,47 @@ namespace VA012.Models
                             }
                             else
                             {
-                                //Role back the transaction
-                                _trx.Rollback();
-                                return _msg;
-                            }
-                            #region Commented Complete Action without using worker
-                            //if (_pay.CompleteIt() == "CO")
-                            //{
-                            //    _pay.SetProcessed(true);
-                            //    _pay.SetDocAction("CL");
-                            //    _pay.SetDocStatus("CO");
-                            //    _pay.Save();
-                            //    _ds.Dispose();
-                            //    // trx.Commit();
+                                //if Payment is not Completed then delete the record
+                                //get the PaymentAllocate records which is under the Payment
+                                MPaymentAllocate[] pAllocs = MPaymentAllocate.Get(_pay);
+                                if (pAllocs.Length > 0)
+                                {
+                                    for (int j = 0; j < pAllocs.Length; j++)
+                                    {
+                                        if (!pAllocs[j].Delete(true, _trx))
+                                        {
+                                            _trx.Rollback();
+                                            ValueNamePair pp = VLogger.RetrieveError();
+                                            //some times getting the error pp also
+                                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                            if (string.IsNullOrEmpty(error))
+                                            {
+                                                error = pp != null ? pp.GetName() : "";
+                                            }
+                                            return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
+                                        }
 
-                            //    return _pay.GetC_Payment_ID().ToString();
-                            //}
-                            //else
-                            //{
-                            //    // trx.Rollback();
-                            //    ValueNamePair pp = VLogger.RetrieveError();
-                            //    string error = pp != null ? pp.GetValue() : "";
-                            //    if (string.IsNullOrEmpty(error))
-                            //    {
-                            //        error = pp != null ? pp.GetName() : "";
-                            //    }
-                            //    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
-                            //}
-                            #endregion
+                                    }
+                                    if (!_pay.Delete(true, _trx))
+                                    {
+                                        _trx.Rollback();
+                                        ValueNamePair pp = VLogger.RetrieveError();
+                                        //some times getting the error pp also
+                                        string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                        if (string.IsNullOrEmpty(error))
+                                        {
+                                            error = pp != null ? pp.GetName() : "";
+                                        }
+                                        return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
+                                    }
+                                    else
+                                    {
+                                        //commit the transaction
+                                        _trx.Commit();
+                                        return _msg;
+                                    }
+                                }
+                            }
                         }
                     }
                     #endregion under Payment
@@ -4380,6 +4362,8 @@ namespace VA012.Models
                 else
                 {
                     _ds.Dispose();
+                    //closing transaction
+                    _trx.Rollback();
                     return "VA012_NoDataFound";
                 }
 
@@ -4390,7 +4374,8 @@ namespace VA012.Models
                 {
                     _ds.Dispose();
                 }
-                // trx.Close();
+                //closing transaction
+                _trx.Rollback();
                 return e.Message;
             }
             return "";
@@ -4540,28 +4525,6 @@ namespace VA012.Models
                 _pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
                 _pay.SetC_Order_ID(_formData[0]._ctrlOrder);
 
-                //#region OverUnder
-                //if (_formData[0]._txtDifference != 0 && _formData[0]._cmbVoucherMatch == "M")
-                //{
-                //    //DiscountAmount
-                //    if (_formData[0]._cmbDifferenceType == "DA")
-                //    {
-                //        _pay.SetDiscountAmt(_formData[0]._txtDifference);
-                //    }
-                //    //OverUnderPayment
-                //    else if (_formData[0]._cmbDifferenceType == "OU")
-                //    {
-                //        _pay.SetOverUnderAmt(_formData[0]._txtDifference);
-
-                //    }
-                //    //WriteoffAmount
-                //    else if (_formData[0]._cmbDifferenceType == "WO")
-                //    {
-                //        _pay.SetWriteOffAmt(_formData[0]._txtDifference);
-                //    }
-                //}
-                //#endregion OverUnder
-
                 if (!_pay.Save())
                 {
                     _trx.Rollback();
@@ -4585,34 +4548,31 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _trx.Rollback();
-                        return _msg;
+                        //delete the Payment if not record is not completed!
+                        if (!_pay.Delete(true, _trx))
+                        {
+                            _trx.Rollback();
+                            ValueNamePair pp = VLogger.RetrieveError();
+                            //some times getting the error pp also
+                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                            if (string.IsNullOrEmpty(error))
+                            {
+                                error = pp != null ? pp.GetName() : "";
+                            }
+                            return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
+                        }
+                        else
+                        {
+                            //commit the transaction
+                            _trx.Commit();
+                            return _msg;
+                        }
                     }
-                    #region Commented Complete Action without using worker
-                    //if (_pay.CompleteIt() == "CO")
-                    //{
-                    //    _pay.SetProcessed(true);
-                    //    _pay.SetDocAction("CL");
-                    //    _pay.SetDocStatus("CO");
-                    //    _pay.Save();
-                    //    return _pay.GetC_Payment_ID().ToString();
-                    //}
-                    //else
-                    //{
-                    //    _trx.Rollback();
-                    //    ValueNamePair pp = VLogger.RetrieveError();
-                    //    string error = pp != null ? pp.GetValue() : "";
-                    //    if (string.IsNullOrEmpty(error))
-                    //    {
-                    //        error = pp != null ? pp.GetName() : "";
-                    //    }
-                    //    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
-                    //}
-                    #endregion
                 }
             }
             catch (Exception e)
             {
+                _trx.Rollback();
                 return e.Message;
             }
         }
@@ -4697,35 +4657,32 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _trx.Rollback();
-                        return _msg;
+                        //Delete the Payment if Payment is not Completed!
+                        if (!_pay.Delete(true, _trx))
+                        {
+                            _trx.Rollback();
+                            ValueNamePair pp = VLogger.RetrieveError();
+                            //some times getting the error pp also
+                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                            if (string.IsNullOrEmpty(error))
+                            {
+                                error = pp != null ? pp.GetName() : "";
+                            }
+                            return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
+                        }
+                        else
+                        {
+                            //commit the transaction
+                            _trx.Commit();
+                            return _msg;
+                        }
                     }
-
-                    #region Commented Complete Action without using worker
-                    //if (_pay.CompleteIt() == "CO")
-                    //{
-                    //    _pay.SetProcessed(true);
-                    //    _pay.SetDocAction("CL");
-                    //    _pay.SetDocStatus("CO");
-                    //    _pay.Save();
-                    //    return _pay.GetC_Payment_ID().ToString();
-                    //}
-                    //else
-                    //{
-                    //    _trx.Rollback();
-                    //    ValueNamePair pp = VLogger.RetrieveError();
-                    //    string error = pp != null ? pp.GetValue() : "";
-                    //    if (string.IsNullOrEmpty(error))
-                    //    {
-                    //        error = pp != null ? pp.GetName() : "";
-                    //    }
-                    //    return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotProcessed";
-                    //}
-                    #endregion
                 }
             }
             catch (Exception e)
             {
+                //RollBack the Transaction
+                _trx.Rollback();
                 return e.Message;
             }
         }

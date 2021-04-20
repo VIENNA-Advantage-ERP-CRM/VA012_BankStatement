@@ -1954,6 +1954,13 @@
                                         }, 500); // for Accurate Result
                                         //childDialogs.statementOpenEdit($(this).data("uid"));
                                     }
+                                    else {
+                                        //if amount not found then return message
+                                        if (VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue()) == 0) {
+                                            VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                            return;
+                                        }
+                                    }
 
                                 }
                                 if (_cmbTransactionType.val() == "CO") {
@@ -1983,6 +1990,13 @@
                                             $_ctrlCashLine.setValue(_dragCashID, false, true);
                                             _openingFromDrop = false;
                                         }, 500); // for Accurate Result
+                                    }
+                                    else {
+                                        //if amount not found then return message
+                                        if (VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue()) == 0) {
+                                            VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                            return;
+                                        }
                                     }
 
                                 }
@@ -2141,10 +2155,6 @@
                                 }
                                 else {
                                     $_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
-                                    if (VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue()) == 0) {
-                                        VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
-                                        return;
-                                    }
                                 }
                                 //disable the amount becoz can't change amount for prepay order
                                 //_txtAmount.getControl().attr("disabled", true);
@@ -2198,6 +2208,13 @@
                                             _txtTrxAmt.setValue(_txtAmount.getValue());
                                             _txtAmount.getControl().trigger('blur');
                                             $_ctrlCashLine.setValue(($(ui.draggable)).data('uid'), false, true);
+                                        }
+                                        else {
+                                            // if amount is zero then should pop-up this message
+                                            if (VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue()) == 0) {
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                                return;
+                                            }
                                         }
                                     }
                                 }
@@ -2561,6 +2578,10 @@
                                 }
                                 _txtConversionType.trigger('change');
                             }
+                            else {
+                                //if amount not found then return false
+                                _status = false;
+                            }
                         }
                         else {
                             VIS.ADialog.info(result._status, null, "", "");
@@ -2619,7 +2640,7 @@
                                 }
                             }
                             //Set Currency and Conversion Type
-                            if (VIS.Utility.Util.getValueOfString($_ctrlCashLine.value) != null) {
+                            if (result._amount != 0 && VIS.Utility.Util.getValueOfString($_ctrlCashLine.value) != null) {
                                 _txtCurrency.val(_currencyId).prop('selected', true);
                                 for (var i = 0; _txtCurrency[0].length > i; i++) {
                                     if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
@@ -2634,6 +2655,9 @@
                                 $(_txtConversionType[0][0]).show();
                                 _txtConversionType.val(0).prop('selected', true);
                                 _txtConversionType.attr("disabled", false);
+                            }
+                            else {
+                                _status = false;
                             }
 
                         }
@@ -4823,6 +4847,8 @@
                     }
                     else {
                         $(_txtCurrency[0]).siblings().show();
+                        //make it as no selected value
+                        _txtCurrency.val(0).prop("selected", true);
                         _txtCurrency.addClass("va012-mandatory");
                         _txtCurrency.attr("disabled", false);
                     }
@@ -4978,6 +5004,8 @@
                         _divTransferType.find("*").prop("disabled", true);
                         _divCheckNo.find("*").prop("disabled", true);
                         _divContraType.hide();
+                        //clear selected Value if value is present
+                        _cmbContraType.prop('selectedIndex', 0);
                         _divCashBook.hide();
                         _divTransferType.hide();
                         _divCheckNo.hide();
@@ -5069,7 +5097,10 @@
                         _divCtrlBusinessPartner.hide();
                         _divPrepayOrder.hide();
                         _divPaymentSchedule.hide();
-
+                        //when change the Voucher type as Contra with no value set on _cmbContraType then it should be mandatory
+                        if (_cmbContraType.val() == null || _cmbContraType.val() == "" || _cmbContraType.val() == 0) {
+                            _cmbContraType.addClass("va012-mandatory");
+                        }
                         _cmbTaxRate.removeClass("va012-mandatory");
                         _txtCharge.removeClass("va012-mandatory");
                         //set or load Currency 
@@ -5127,6 +5158,13 @@
                 });
 
                 _cmbContraType.on('change', function () {
+                    //when change _cmbContraType as CB then remove mandatory class else mandatory
+                    if (_cmbContraType.val() != null && _cmbContraType.val() != "" && _cmbContraType.val() != 0) {
+                        _cmbContraType.removeClass("va012-mandatory");
+                    }
+                    else {
+                        _cmbContraType.addClass("va012-mandatory");
+                    }
 
                     if (_cmbContraType.val() == "CB") {
                         _divCashBook.find("*").prop("disabled", false);
@@ -5976,7 +6014,7 @@
                                     }
                                     else {
                                         //when it is PO then Amount should be +ve Value and btnIn as Active & disable mode
-                                        _txtAmount.getControl().addClass("va012-mandatory");
+                                        _txtAmount.getControl().removeClass("va012-mandatory");
                                         _txtAmount.getControl().attr("disabled", true);
                                         _btnIn.removeClass("va012-inactive");
                                         _btnIn.addClass("va012-active");
@@ -6393,7 +6431,13 @@
                         if (!_openingFromDrop) {
                             // if (!loadFunctions.checkFormPrepayCondition($_ctrlOrder.value, _txtAmount.val())) {
                             if (!loadFunctions.checkPrepayCondition($_ctrlOrder.value, 0, null, _txtAmount.getValue())) {
+                                _orderSelectedVal = 0;//clear the selected value
                                 $_ctrlOrder.setValue();
+                                //If Amount is not found then return Conversion rate not found
+                                if (VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue()) == 0) {
+                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                    return;
+                                }
                             }
                             else {
                                 loadFunctions.setInvoiceAndBPartner(_orderSelectedVal, "PO");
@@ -6449,7 +6493,12 @@
                     if ($_ctrlCashLine.value) {
                         if (!_openingFromDrop && !_openingFromEdit) {
                             if (!loadFunctions.checkContraCondition($_ctrlCashLine.value, 0, _txtAmount.getValue())) {
+                                _cashLineSelectedVal = 0;//clear the selected cashLine
                                 $_ctrlCashLine.setValue();
+                                //If Amount not found then return message conversion not found
+                                if (VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue()) == 0) {
+                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                }
                             }
                         }
                         _openingFromEdit = false;
@@ -6761,9 +6810,11 @@
                 //clear the previous options
                 $(_txtCurrency[0]).empty();
                 //shown the records only IsMycurrency is true.
+                //VIS.MLookupFactory.get(Context, windowNo, AD_Column_ID, AD_Reference_ID,ColumnName, AD_Reference_Value_ID, IsParent, ValidationCode);
                 var _txtCurrencyLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 457, VIS.DisplayType.TableDir, "C_Currency_ID", 0, false, "IsMyCurrency='Y'");
+                //_txtCurrencyLookUp.getData(mandatory, onlyValidated, onlyActive, temporary);
                 var getCurrency = _txtCurrencyLookUp.getData(true, true, false, false);
-                var flag = 0;
+
                 _txtCurrency.append('<option value="0" ></option>');
                 if (getCurrency != null && getCurrency != undefined && getCurrency.length > 0) {
                     for (var i = 0; i < getCurrency.length; i++) {
@@ -6780,9 +6831,11 @@
                 //clear the previous options
                 $(_txtConversionType[0]).empty();
                 //shown the records only IsActive is true.
+                //VIS.MLookupFactory.get(Context, windowNo, AD_Column_ID, AD_Reference_ID,ColumnName, AD_Reference_Value_ID, IsParent, ValidationCode);
                 var _txtConversionTypeLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 10269, VIS.DisplayType.TableDir, "C_ConversionType_ID", 0, false, "IsActive='Y'");
+                //_txtConversionTypeLookUp.getData(mandatory, onlyValidated, onlyActive, temporary);
                 var getConvType = _txtConversionTypeLookUp.getData(true, true, false, false);
-                var flag = 0;
+
                 _txtConversionType.append('<option value="0" ></option>');
                 if (getConvType != null && getConvType != undefined && getConvType.length > 0) {
                     for (var i = 0; i < getConvType.length; i++) {
