@@ -30,14 +30,15 @@
 
     //Callout to SetConversionType on statement Line
     VA012_Contra.prototype.SetConversionType = function (ctx, windowNo, mTab, mField, value, oldValue) {
-        if (this.isCalloutActive()) {
+        //handled exception when value is null
+        if (this.isCalloutActive() && value == null) {
             return "";
         }
+
         this.setCalloutActive(true);
-        if (value == null) {
-            return "";
-        }
-        else {
+
+        if (value != null) {
+            
             if (VIS.Utility.Util.getValueOfInt(value) > 0) {
                 var paramString = value.toString();
                 var dateAcct = VIS.dataContext.getJSONRecord("Statement/GetCashDetails", paramString);

@@ -2120,7 +2120,9 @@
                                     _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                                     _txtTrxAmt.getControl().trigger('blur');
                                     //Set the Currency and ConversionType
-                                    setCurrencyandConversionType(_scheduleList.toString());
+                                    //handled null exception
+                                    var schdleList = _scheduleList != null ? _scheduleList.toString() : null;
+                                    setCurrencyandConversionType(schdleList);
                                 }
                                 else {
                                     //alert("Notdone");
@@ -2805,7 +2807,7 @@
 
         //Set the Currency and Conversiontype on new Form
         function setCurrencyandConversionType(_invSchedules) {
-            if (_scheduleList.length > 0) {
+            if (_invSchedules != null && _scheduleList.length > 0) {
                 $.ajax({
                     url: VIS.Application.contextUrl + "BankStatement/GetCurrencyandConversionType",
                     dataType: "json",
@@ -4454,7 +4456,13 @@
                     }
                     _txtAmount.getControl().trigger('blur');
                     //Set the Currency and conversion Type
-                    setCurrencyandConversionType(_scheduleList.toString());
+                    //handled null execption
+                    if (_scheduleList != null && _scheduleList.length > 0) {
+                        setCurrencyandConversionType(_scheduleList.toString());
+                    }
+                    else {
+                        setCurrencyandConversionType(null);
+                    }
                 }
                 $_divPaymentSchedules.on(VIS.Events.onTouchStartOrClick, removeItem);
                 
@@ -4525,7 +4533,13 @@
                             $_ctrlBusinessPartner.setValue();
                         }
                         //Set the Currency and conversion Type
-                        setCurrencyandConversionType(_scheduleList.toString());
+                        //handled null execption
+                        if (_scheduleList != null && _scheduleList.length > 0) {
+                            setCurrencyandConversionType(_scheduleList.toString());
+                        }
+                        else {
+                            setCurrencyandConversionType(null);
+                        }
                     }
                 }
                 function _getScheduleControls() {
@@ -5931,6 +5945,8 @@
                             else if ((VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) != 0) && (VIS.Utility.Util.getValueOfInt($_ctrlBusinessPartner.value) != 0)) {
                                 transtype = "PO";
                                 _recordId = $_ctrlOrder.value;
+                                //when change the statement date if $_ctrlOrder.value is not null then amount should be readonly
+                                _txtAmount.getControl().attr("disabled", true);
                             }
                         }
                         else if (_cmbVoucherMatch.val() == "C") {
@@ -5960,6 +5976,17 @@
                                     if (transtype != "PO") {
                                         _txtTrxAmt.setValue(amt);
                                         _txtAmount.getControl().trigger('blur');
+                                    }
+                                    else {
+                                        //when it is PO then Amount should be +ve Value and btnIn as Active & disable mode
+                                        _txtAmount.getControl().addClass("va012-mandatory");
+                                        _txtAmount.getControl().attr("disabled", true);
+                                        _btnIn.removeClass("va012-inactive");
+                                        _btnIn.addClass("va012-active");
+                                        _btnIn.attr("v_active", "1");
+                                        _btnOut.removeClass("va012-active");
+                                        _btnOut.addClass("va012-inactive");
+                                        _btnOut.attr("v_active", "0");
                                     }
                                 }
                                 else {
@@ -6732,56 +6759,40 @@
             },
 
             //load Currencies           
-            loadNewFormCurrency: function (callbackCurrency) {
-                $.ajax({
-                    type: 'GET',
-                    datatype: "json",
-                    url: VIS.Application.contextUrl + "VA012/BankStatement/GetCurrency",
-                    contentType: "application/json; charset=utf-8",
-                    success: function (data) {
-                        data = JSON.parse(data);
-                        if (data != null && data != "") {
-                            callbackCurrency(data);
-                        }
-                    },
-                    error: function (data) { VIS.ADialog.info(data, null, "", ""); }
-                });
-
-                function callbackCurrency(data) {
-                    _txtCurrency.html("");
-                    _txtCurrency.append("<option value=0 ></option>");
-                    if (data != null && data != "") {
-                        for (var i = 0; data.length > i; i++) {
-                            _txtCurrency.append("<option value=" + VIS.Utility.Util.getValueOfInt(data[i].Value) + ">" + VIS.Utility.encodeText(data[i].Name) + "</option>");
-                        }
+            loadNewFormCurrency: function () {
+                var getCurrency = null;
+                //clear the previous options
+                $(_txtCurrency[0]).empty();
+                //shown the records only IsMycurrency is true.
+                var _txtCurrencyLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 457, VIS.DisplayType.TableDir, "C_Currency_ID", 0, false, "IsMyCurrency='Y'");
+                var getCurrency = _txtCurrencyLookUp.getData(true, true, false, false);
+                var flag = 0;
+                _txtCurrency.append('<option value="0" ></option>');
+                if (getCurrency != null && getCurrency != undefined && getCurrency.length > 0) {
+                    for (var i = 0; i < getCurrency.length; i++) {
+                        _txtCurrency.append('<option value=' + getCurrency[i].Key + '>' + getCurrency[i].Name + '</option>');
                     }
+                    _txtCurrency.val(0);
+                    _txtCurrency.addClass('va012-mandatory');
                 }
             },
 
             //load ConversionTypes
-            loadConversionTypes: function (callbackConversion) {
-                $.ajax({
-                    type: 'GET',
-                    datatype: "json",
-                    url: VIS.Application.contextUrl + "VA012/BankStatement/GetConversionTypes",
-                    contentType: "application/json; charset=utf-8",
-                    success: function (data) {
-                        data = JSON.parse(data);
-                        if (data != null && data != "") {
-                            callbackConversion(data);
-                        }
-                    },
-                    error: function (data) { VIS.ADialog.info(data, null, "", ""); }
-                });
-
-                function callbackConversion(data) {
-                    _txtConversionType.html("");
-                    _txtConversionType.append("<option value=0 ></option>");
-                    if (data != null && data != "") {
-                        for (var i = 0; data.length > i; i++) {
-                            _txtConversionType.append("<option value=" + VIS.Utility.Util.getValueOfInt(data[i].Value) + ">" + VIS.Utility.encodeText(data[i].Name) + "</option>");
-                        }
+            loadConversionTypes: function () {
+                var getConvType = null;
+                //clear the previous options
+                $(_txtConversionType[0]).empty();
+                //shown the records only IsActive is true.
+                var _txtConversionTypeLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 10269, VIS.DisplayType.TableDir, "C_ConversionType_ID", 0, false, "IsActive='Y'");
+                var getConvType = _txtConversionTypeLookUp.getData(true, true, false, false);
+                var flag = 0;
+                _txtConversionType.append('<option value="0" ></option>');
+                if (getConvType != null && getConvType != undefined && getConvType.length > 0) {
+                    for (var i = 0; i < getConvType.length; i++) {
+                        _txtConversionType.append('<option value=' + getConvType[i].Key + '>' + getConvType[i].Name + '</option>');
                     }
+                    _txtConversionType.val(0);
+                    _txtConversionType.addClass('va012-mandatory');
                 }
             }
         };

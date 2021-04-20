@@ -896,38 +896,6 @@ namespace VA012.Controllers
         }
 
         /// <summary>
-        /// Get the List Currencies
-        /// </summary>
-        /// <returns>List in JSON Format</returns>
-        public JsonResult GetCurrency()
-        {
-            string retJSON = "";
-            if (Session["ctx"] != null)
-            {
-                VAdvantage.Utility.Ctx ctx = Session["ctx"] as Ctx;
-                StatementOperations _model = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(_model.GetCurrency(ctx));
-            }
-            return Json(retJSON, JsonRequestBehavior.AllowGet);
-        }
-
-        /// <summary>
-        /// Get CurrencyConversion Types
-        /// </summary>
-        /// <returns>List</returns>
-        public JsonResult GetConversionTypes()
-        {
-            string retJSON = "";
-            if (Session["ctx"] != null)
-            {
-                VAdvantage.Utility.Ctx ctx = Session["ctx"] as Ctx;
-                StatementOperations _model = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(_model.GetConversionTypes(ctx));
-            }
-            return Json(retJSON, JsonRequestBehavior.AllowGet);
-        }
-
-        /// <summary>
         /// Get Currency and ConversionType
         /// </summary>
         /// <param name="_invoiceSchedules">C_InvoicePaySchedule_ID's</param>
