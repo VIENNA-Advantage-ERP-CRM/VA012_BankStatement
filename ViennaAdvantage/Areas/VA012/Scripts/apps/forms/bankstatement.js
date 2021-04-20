@@ -2124,9 +2124,6 @@
                                     var schdleList = _scheduleList != null ? _scheduleList.toString() : null;
                                     setCurrencyandConversionType(schdleList);
                                 }
-                                else {
-                                    //alert("Notdone");
-                                }
                             }
                             if (_cmbTransactionType.val() == "PO") {
 
