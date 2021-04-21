@@ -631,6 +631,10 @@ namespace VA012.Models
                         {
                             //closing transaction
                             trx.Rollback();
+                            //close the transaction
+                            trx.Close();
+                            //clear the object
+                            trx = null;
                             return "VA012_CompletedRecordCantUpdate";
                         }
 
@@ -644,6 +648,10 @@ namespace VA012.Models
                             {
                                 //closing transaction
                                 trx.Rollback();
+                                //close the transaction
+                                trx.Close();
+                                //clear the object
+                                trx = null;
                                 return "VA012_StatementAlreadyExistDiffAcc";
                             }
                         }
@@ -651,6 +659,10 @@ namespace VA012.Models
                         {
                             //closing transaction
                             trx.Rollback();
+                            //close the transaction
+                            trx.Close();
+                            //clear the object
+                            trx = null;
                             return "VA012_StatementAlreadyExist";
                         }
                     }
@@ -666,6 +678,10 @@ namespace VA012.Models
                 {
                     //closing transaction
                     trx.Rollback();
+                    //close the transaction
+                    trx.Close();
+                    //clear the object
+                    trx = null;
                     return "VIS_BankStatementDate";
                 }
             }
@@ -689,8 +705,10 @@ namespace VA012.Models
                 }
                 else
                 {
-                    //closing the transaction
+                    //close the transaction
                     trx.Close();
+                    //clear the object
+                    trx = null;
                     return schedulePaymentResult;
                 }
             }
@@ -703,8 +721,10 @@ namespace VA012.Models
                 }
                 else
                 {
-                    //closing the transaction
+                    //close the transaction
                     trx.Close();
+                    //clear the object
+                    trx = null;
                     return orderPaymentResult;
                 }
             }
@@ -718,8 +738,10 @@ namespace VA012.Models
                 }
                 else
                 {
-                    //closing the transaction
+                    //close the transaction
                     trx.Close();
+                    //clear the object
+                    trx = null;
                     return chargePaymentResult;
                 }
             }
@@ -763,7 +785,10 @@ namespace VA012.Models
                 {
                     //used transaction trx
                     trx.Rollback();
+                    //close the transaction
                     trx.Close();
+                    //set object value as null
+                    trx = null;
                     ValueNamePair pp = VLogger.RetrieveError();
                     string error = pp != null ? pp.GetValue() : "";
                     if (string.IsNullOrEmpty(error))
@@ -906,7 +931,10 @@ namespace VA012.Models
                         if (!paymentrecord.Save()) {
                             //Used transaction 
                             trx.Rollback();
+                            //close the transaction
                             trx.Close();
+                            //clear the object
+                            trx = null;
                             //Used ValueNamePair class to get the Error
                             ValueNamePair pp = VLogger.RetrieveError();
                             string error = pp != null ? pp.GetValue() : "";
@@ -1204,7 +1232,10 @@ namespace VA012.Models
             {
                 //Used transaction 
                 trx.Rollback();
+                //close the transaction
                 trx.Close();
+                //clear the object
+                trx = null;
                 //Used ValueNamePair class to get the Error
                 ValueNamePair pp = VLogger.RetrieveError();
                 string error = pp != null ? pp.GetValue() : "";
@@ -1239,7 +1270,10 @@ namespace VA012.Models
                         {
                             //Used transaction 
                             trx.Rollback();
+                            //close the transaction
                             trx.Close();
+                            //clear the object
+                            trx = null;
                             ValueNamePair pp = VLogger.RetrieveError();
                             string error = pp != null ? pp.GetValue() : "";
                             if (string.IsNullOrEmpty(error))
@@ -1302,7 +1336,10 @@ namespace VA012.Models
             }
             //closed the transaction after commit
             trx.Commit();
+            //close the transaction
             trx.Close();
+            //clear the object
+            trx = null;
             return "Success";
         }
 
