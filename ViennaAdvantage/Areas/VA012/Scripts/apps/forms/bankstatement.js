@@ -2899,27 +2899,38 @@
         //handle culture for Amounts
         function convertAmtCulture(_convAmt) {
             var val = 0;
-            dotFormatter = $self.dotFormatter;
+            dotFormatter = $self.dotFormatter;// checl dotFomatter true or false
+            //check _convAmt type is string or not if not then convert into string
             typeof _convAmt === "string" ? _convAmt : _convAmt = _convAmt.toString();
             if (!dotFormatter) {
+                //for example in slovanian culture we get '−' for -ve Values
+                //so if _convAmt is negative as well it's haven't thousand separator like '.' in case of slovanian 
+                //then it will execute this condition
                 if (_convAmt.contains("−") && !_convAmt.contains(".")) {
                     _convAmt = (-1 * format.GetConvertedNumber(_convAmt, dotFormatter)).toString();
                 }
+                //so if _convAmt is negative as well it's have thousand separator like '.' in case of slovanian 
+                //then it will execute this condition
                 else if (_convAmt.contains("−") && _convAmt.contains(".")) {
                     _convAmt = (-1 * format.GetConvertedNumber(_convAmt, dotFormatter)).toString();
                 }
+                //_convAmt is positive value then this condition will execute
                 else if (_convAmt.contains(",")) {
                     _convAmt = format.GetConvertedNumber(_convAmt, dotFormatter).toString();
                 }
+                //_convAmt have value then return _convAmt else return val
                 val = _convAmt != "" ? _convAmt : val;
             }
             else {
+                //if _convAmt contains negative value then this will execute that to this special symbol '−'
                 if (_convAmt.contains("−")) {
                     _convAmt = (-1 * format.GetConvertedNumber(_convAmt, dotFormatter)).toString();
                 }
+                //this will execute when the values contains '.'
                 else if (_convAmt.contains(".")) {
                     _convAmt = format.GetConvertedNumber(_convAmt, dotFormatter).toString();
                 }
+                //_convAmt have value then return _convAmt else return val
                 val = _convAmt != "" ? _convAmt : val;
             }
             return parseFloat(val).toFixed(_stdPrecision);
