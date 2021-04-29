@@ -1175,16 +1175,13 @@ namespace VA012.Models
                 {
                     _bankStatementLine.SetC_BPartner_ID(0);
                 }
-                //_formData[0]._ctrlInvoice - Type is changed int to string so according to that check the value using IsNullOrEmpty() method
-                if (!string.IsNullOrEmpty(_formData[0]._ctrlInvoice))
+                //If Invoice is have then set Invoice from Payment
+                //_bankStatementLine.SetC_Invoice_ID(_formData[0]._ctrlInvoice);
+                //when drag the record at that time _formData[0]._ctrlInvoice is null 
+                //not need to used condtion not null of _formData[0]._ctrlInvoice
+                if (paymentrecord != null)
                 {
-                    //If Invoice is have then set Invoice from Payment
-                    //_bankStatementLine.SetC_Invoice_ID(_formData[0]._ctrlInvoice);
-                    //to avoid null exception used condition
-                    if (paymentrecord != null)
-                    {
-                        _bankStatementLine.SetC_Invoice_ID(paymentrecord.GetC_Invoice_ID());
-                    }
+                    _bankStatementLine.SetC_Invoice_ID(paymentrecord.GetC_Invoice_ID());
                 }
                 else
                 {
@@ -5446,6 +5443,7 @@ namespace VA012.Models
             string _sql = "";
             decimal _payAmt = 0;
             int _currency_Id = 0;
+            int _conversionType_Id = 0;
             if (_dragDestinationID == 0)
             {
                 int _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) AS COUNT FROM C_BANKSTATEMENTLINE BSL INNER JOIN C_BANKSTATEMENT BS ON BS.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID  WHERE BS.DOCSTATUS!='VO' AND BSL.C_CASHLINE_ID=" + _dragSourceID));
@@ -5461,7 +5459,7 @@ namespace VA012.Models
                                             THEN CURRENCYCONVERT(csl.amount, csl.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statementDat, true) +
                                             @", csl.C_ConversionType_ID, cs.AD_Client_ID, cs.AD_Org_ID) 
                                             ELSE ROUND(csl.amount,NVL(BCURR.StdPrecision,2))
-                                          END AS AMOUNT, csl.C_Currency_ID
+                                          END AS AMOUNT, csl.C_Currency_ID, csl.C_ConversionType_ID
                                         FROM C_Cashline csl
                                         inner join C_Cash cs on cs.C_Cash_id=csl.C_Cash_id
                                         LEFT JOIN C_CURRENCY BCURR
@@ -5475,6 +5473,8 @@ namespace VA012.Models
                 {
                     _payAmt = Decimal.Negate(Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["AMOUNT"]));
                     _currency_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_Currency_ID"]);
+                    //ConversionType also want on the form when select CashLine as per requirement
+                    _conversionType_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_ConversionType_ID"]);
                 }
 
                 if (_amount == 0)
@@ -5502,6 +5502,8 @@ namespace VA012.Models
             }
             //set the Property _currency_Id with new value
             _obj._currency_Id = _currency_Id;
+            //set the ConversionType
+            _obj._conversionType_Id = _conversionType_Id;
             _obj._status = "Success";
             return _obj;
 
@@ -6026,6 +6028,7 @@ namespace VA012.Models
         public decimal _amount { get; set; }
         public string _status { get; set; }
         public int _currency_Id { get; set; }
+        public int _conversionType_Id { get; internal set; }
     }
     public class PaymentResponse
     {

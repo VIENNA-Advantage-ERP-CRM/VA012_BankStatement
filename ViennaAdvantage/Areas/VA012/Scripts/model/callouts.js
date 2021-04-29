@@ -40,12 +40,27 @@
         if (value != null) {
             
             if (VIS.Utility.Util.getValueOfInt(value) > 0) {
-                var paramString = value.toString();
-                var dateAcct = VIS.dataContext.getJSONRecord("Statement/GetCashDetails", paramString);
-                if (dateAcct != null) {
-                    mTab.setValue("DateAcct", dateAcct);
+                //defining variable to pass as a parameter which is holding some individual Values
+                var paramString = value.toString() + "," + mTab.getValue("C_Currency_ID").toString() + "," + mTab.getValue("StatementLineDate").toString() + "," + mTab.getValue("AD_Org_ID").toString();
+                //changed the variable name dateAcct as data 
+                //Updating the DateAcct, TrxAmt and Stmt Amount according to conditions
+                var data = VIS.dataContext.getJSONRecord("Statement/GetCashDetails", paramString);
+                if (data != null) {
+                    if (data.Amount != 0) {
+                        mTab.setValue("DateAcct", data.DateAcct);
+                        mTab.setValue("TrxAmt", data.Amount);
+                        mTab.setValue("C_ConversionType_ID", data.C_ConversionType_ID);
+                        if (VIS.Utility.Util.getValueOfDecimal(mTab.getValue("StmtAmt")) == 0) {
+                            mTab.setValue("StmtAmt", data.Amount);
+                        }
+                    }
+                    else {
+                        mTab.setValue("TrxAmt", 0);
+                        mTab.setValue("C_ConversionType_ID", 0);
+                        mTab.setValue("C_CashLine_ID", 0);
+                        VIS.ADialog.info("VA012_ConversionRateNotFound");
+                    }
                 }
-                mTab.setValue("C_ConversionType_ID", 0);
             }
         }
         this.setCalloutActive(false);
