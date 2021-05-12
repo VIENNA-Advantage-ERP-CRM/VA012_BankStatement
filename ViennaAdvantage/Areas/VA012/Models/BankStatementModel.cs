@@ -603,13 +603,16 @@ namespace VA012.Models
                         INNER JOIN C_BANKSTATEMENTLINE BSL
                         ON BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID
                         WHERE BS.ISACTIVE       ='Y' 
-                        AND BSL.C_BANKSTATEMENTLINE_ID=" + _formData[0]._bankStatementLineID;
+                        AND BSL.C_BANKSTATEMENTLINE_ID=" + _formData[0]._bankStatementLineID + 
+                        " AND BS.AD_Client_ID = " + ctx.GetAD_Client_ID();
             }
             else
             {
                 //_qryStmt = "SELECT C_BANKSTATEMENT_ID,DOCSTATUS,0 AS C_PAYMENT_ID, 0 AS C_CHARGE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _formData[0]._txtStatementNo + "' AND TO_CHAR(BS.STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY')";
                 //not required start and end date filters
-                _qryStmt = "SELECT C_BANKSTATEMENT_ID,C_BANKACCOUNT_ID,DOCSTATUS,0 AS C_PAYMENT_ID, 0 AS C_CHARGE_ID, 0 AS C_CASHLINE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _formData[0]._txtStatementNo + "'";/*  AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true)*/
+                _qryStmt = @"SELECT C_BANKSTATEMENT_ID,C_BANKACCOUNT_ID,DOCSTATUS,0 AS C_PAYMENT_ID,
+                            0 AS C_CHARGE_ID, 0 AS C_CASHLINE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED 
+                            FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND NAME='" + _formData[0]._txtStatementNo + "'";/*  AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true)*/
             }
             //used transaction trx
             _ds = DB.ExecuteDataset(_qryStmt, null, trx);
@@ -819,7 +822,7 @@ namespace VA012.Models
 
                 //string trxNumOnPmt = Util.GetValueOfString(DB.ExecuteScalar("SELECT CP.TRXNO, CP.VA034_DEPOSITSLIPNO FROM C_PAYMENT CP LEFT JOIN VA009_PAYMENTMETHOD PM ON PM.VA009_PAYMENTMETHOD_ID = CP.VA009_PAYMENTMETHOD_ID WHERE (PM.VA009_PAYMENTBASETYPE = 'K' OR PM.VA009_PAYMENTBASETYPE = 'C') AND CP.C_PAYMENT_ID= " + _formData[0]._ctrlPayment));
 
-                int _CountVA034 = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(AD_MODULEINFO_ID) FROM AD_MODULEINFO WHERE PREFIX='VA034_' AND IsActive='Y'"));
+                int _CountVA034 = Env.IsModuleInstalled("VA034_") ? 1 : 0;
 
                 string trxNumOnPmt = "";
 
@@ -852,7 +855,7 @@ namespace VA012.Models
                 //{
                 //}
 
-                int _CountVA034 = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(AD_MODULEINFO_ID) FROM AD_MODULEINFO WHERE PREFIX='VA034_' AND IsActive='Y'"));
+                int _CountVA034 = Env.IsModuleInstalled("VA034_") ? 1 : 0;
 
                 string trxNumOnPmt = "";
 
