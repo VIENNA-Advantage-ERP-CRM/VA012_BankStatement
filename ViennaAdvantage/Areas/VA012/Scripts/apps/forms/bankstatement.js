@@ -789,6 +789,8 @@
                 _txtDifference = new VIS.Controls.VAmountTextBox("VA012_txtDifference_" + $self.windowNo + "", false, true, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
                 _txtDifference.getControl().addClass('va012-right-align');
                 _txtDifference.setValue(0);
+                // Disable or enabled, Diffrence type based on diffreence amount
+                _txtDifference.getControl().trigger("change");
                 divRow4Col2Diff.append(divRow4Col2DiffLbl).append(_txtDifference.getControl());
                 divRow4Col2.append(divRow4Col2Diff);
                 //$('                                   <input disabled tabindex="9" vchangable="Y" id="VA012_txtDifference_' + $self.windowNo + '" type="number" class="va012-right-align">'
@@ -2070,9 +2072,9 @@
                                         }
                                         return;
                                     }
-                                        //_lstStatement.html("");
-                                        //_statementPageNo = 1;
-                                        //childDialogs.loadStatement(_statementID);
+                                    //_lstStatement.html("");
+                                    //_statementPageNo = 1;
+                                    //childDialogs.loadStatement(_statementID);
                                     //}
                                 }
                             }
@@ -2152,7 +2154,7 @@
                             if (_cmbTransactionType.val() == "PO") {
 
                                 //if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _prepayList.toString(), _txtAmount.getValue())) {
-                                    // if amount is zero then should pop-up this message
+                                // if amount is zero then should pop-up this message
                                 //return message if try to drag another record while already has the record on the form.
                                 if (VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0) {
                                     if (VIS.Utility.Util.getValueOfInt(_orderSelectedVal) == VIS.Utility.Util.getValueOfInt(($(ui.draggable)).data('uid'))) {
@@ -2168,22 +2170,22 @@
                                 }
                                 //disable the amount becoz can't change amount for prepay order
                                 //_txtAmount.getControl().attr("disabled", true);
-                                    //alert("done");
-                                    //newRecordForm.prepayRefresh();
-                                    //if (!isInList(parseInt(($(ui.draggable)).data('uid')), _prepayList)) {
-                                    //    _prepayList.push(parseInt(($(ui.draggable)).data('uid')));
-                                    //    _prepayDataList.push($(ui.draggable).attr('paymentdata'));
+                                //alert("done");
+                                //newRecordForm.prepayRefresh();
+                                //if (!isInList(parseInt(($(ui.draggable)).data('uid')), _prepayList)) {
+                                //    _prepayList.push(parseInt(($(ui.draggable)).data('uid')));
+                                //    _prepayDataList.push($(ui.draggable).attr('paymentdata'));
 
-                                    //}
-                                    //else {
-                                    //    VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
-                                    //}
-                                    //_txtPrepayOrder.val(_prepayDataList.toString());
-                                    //$_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
-                                    //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
                                 //}
                                 //else {
-                                    //alert("Notdone");
+                                //    VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
+                                //}
+                                //_txtPrepayOrder.val(_prepayDataList.toString());
+                                //$_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
+                                //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
+                                //}
+                                //else {
+                                //alert("Notdone");
 
                                 //}
 
@@ -3694,9 +3696,12 @@
 
             },
             setStatementListHeight: function () {
-                //$(".va012-content-area").height($("#VA012_mainContainer_" + $self.windowNo).height() - 20);
-                //$(".va012-right-content").height($(".va012-right-wrap").height() - $(".va012-right-top").height() - 18)
-                $("#VA012_contentArea_" + $self.windowNo).height($("#VA012_mainContainer_" + $self.windowNo).height() - 20);
+                // Handle Form Load on  browser refresh with mutiple tab
+                var h = $("#VA012_mainContainer_" + $self.windowNo).height();
+                if (h == 0) {
+                    h = window.innerHeight - (40 + 43 + 24); // window height - (Header panel - Title Panel - Footer panel)
+                }
+                $("#VA012_contentArea_" + $self.windowNo).height(h - 20);
                 $("#VA012_lstStatement_" + $self.windowNo).height($("#VA012_rightWrap_" + $self.windowNo).height() - $("#VA012_rightTop_" + $self.windowNo).height() - 18)
             },
 
@@ -3884,6 +3889,8 @@
                     if ((_cmbVoucherMatch.val() == "M" || _cmbVoucherMatch.val() == "C") && convertAmtCulture(_txtTrxAmt.getControl().val()) != 0) {
                         var _diffAmt = VIS.Utility.Util.getValueOfDecimal(_result._txtDifference.toFixed(_stdPrecision));
                         _txtDifference.setValue(_diffAmt);
+                        // Disable or enabled, Diffrence type based on diffreence amount
+                        _txtDifference.getControl().trigger("change");
                         //get the Amount in standard format
                         if (convertAmtCulture(_txtDifference.getControl().val()) <= 0) {
                             _txtDifference.getControl().addClass('va012-mandatory');
@@ -4556,7 +4563,7 @@
                     }
                 }
                 $_divPaymentSchedules.on(VIS.Events.onTouchStartOrClick, removeItem);
-                
+
                 function removeItem(e) {
                     var target = $(e.target);
                     if (target.hasClass('glyphicon-remove')) {
@@ -5393,7 +5400,7 @@
                         _cmbTaxRate.addClass("va012-mandatory");
                         _txtTrxAmt.getControl().trigger("blur");
                     }
-                    
+
                 });
 
                 _btnMore.on(VIS.Events.onTouchStartOrClick, function () {
@@ -5933,10 +5940,19 @@
                                     _txtDifference.getControl().removeClass('va012-mandatory');
                                 }
                             }
-                            // when diff amount have then it must selected diff.Type as Charge in case of Payment
-                            if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 && VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) != 0) {
+                            // when diff amount have then it must selected diff.Type as Charge in case of Payment / cash journal
+                            if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 &&
+                                (VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) != 0 || (VIS.Utility.Util.getValueOfInt($_ctrlCashLine.getValue()) != 0)) ) {
                                 _cmbDifferenceType.val("CH").prop('selected', true);
                                 _cmbDifferenceType.trigger('change');
+                                _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
+                                _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
+                                _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
+                                _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                            }
+                            else if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 &&
+                                _scheduleList.toString() != "") {
+                                // when Invoice Schedule is selected, and Difference amount != 0 then dont't do anything 
                             }
                             else {
                                 _cmbDifferenceType.val("0").prop('selected', true);
@@ -5954,6 +5970,16 @@
 
                 });
 
+                // Disable or enabled, Diffrence type based on diffreence amount
+                _txtDifference.getControl().on("change", function () {
+                    //get the Amount in standard format
+                    if (convertAmtCulture(_txtDifference.getControl().val()) == 0 || convertAmtCulture(_txtDifference.getControl().val()) == null) {
+                        _divDifferenceType.find("*").prop("disabled", true);
+                    }
+                    else {
+                        _divDifferenceType.find("*").prop("disabled", false);
+                    }
+                });
 
                 _txtAmount.getControl().on("blur", function (event, _txtAmt, _txtTrxAmount) {
                     if (VIS.Utility.Util.getValueOfDecimal(_txtAmt) != 0) {
@@ -6033,7 +6059,8 @@
                     $root.find(".va012-div-tooltip").remove();
                 });
                 //on change event of Statement Date to set background color logic
-                _dtStatementDate.on("change", function () {
+                // change eventy from "Change" to "blur" - bcz when we set date manual, at that time system send a request on key down
+                _dtStatementDate.on("blur", function () {
                     if (_dtStatementDate.val() == "") {
                         _dtStatementDate.addClass("va012-mandatory");
                     }
@@ -6068,13 +6095,15 @@
                             }
                         }
                         if (transtype != null && _recordId != null) {
-                            VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: _recordId, bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() }, callbackGetConvtAmt);
+                                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: _recordId, bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() }, callbackGetConvtAmt);
                             function callbackGetConvtAmt(_ds) {
                                 for (var i = 0; i < _ds.length; i++) {
                                     if (_ds.length == 0 || _ds[i].DueAmount == 0) {
                                         _txtAmount.setValue();
                                         _txtTrxAmt.setValue();
                                         _txtDifference.setValue();
+                                        // Disable or enabled, Diffrence type based on diffreence amount
+                                        _txtDifference.getControl().trigger("change");
                                         //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
                                         _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
                                         VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
@@ -6107,6 +6136,8 @@
                                     _txtAmount.setValue();
                                     _txtTrxAmt.setValue();
                                     _txtDifference.setValue();
+                                    // Disable or enabled, Diffrence type based on diffreence amount
+                                    _txtDifference.getControl().trigger("change");
                                     VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                     return;
                                 }
@@ -6484,7 +6515,7 @@
 
                     _orderSelectedVal = 0;
                     _orderSelectedVal = $_ctrlOrder.value;
-                    
+
                     //if ($_ctrlOrder.value) {
                     //    loadFunctions.setInvoiceAndBPartner(_orderSelectedVal, "PO");
                     //}
@@ -6744,6 +6775,8 @@
                 _txtAmount.setValue(0);
                 _txtTrxAmt.setValue(0);
                 _txtDifference.setValue(0);
+                // Disable or enabled, Diffrence type based on diffreence amount
+                _txtDifference.getControl().trigger("change");
                 _txtDifference.getControl().attr("vchangable", "Y");
                 _cmbDifferenceType.prop('selectedIndex', 0);
                 _txtDescription.val("");
@@ -6951,7 +6984,12 @@
         };
         this.setSize = function () {
             //_table.height($(".va012-main-container").height());
-            _table.height($("#VA012_mainContainer_" + $self.windowNo).height());
+            // Set Form Design, on refresh with mutiple tabs
+            var h = $("#VA012_mainContainer_" + $self.windowNo).height();
+            if (h == 0) {
+                h = window.innerHeight - (40 + 43 + 24); // window height - (Header panel - Title Panel - Footer panel)
+            }
+            _table.height(h);
 
         };
         this.disposeComponents = function () {
@@ -7031,9 +7069,10 @@
 
     };
 
-    //bankStatement.prototype.sizeChanged = function (height) {
-    //    this.setSize(height);
-    //};
+    bankStatement.prototype.sizeChanged = function (height) {
+        _table.height(height);
+    };
+
     bankStatement.prototype.dispose = function () {
         this.disposeComponents();
         if (this.frame)
