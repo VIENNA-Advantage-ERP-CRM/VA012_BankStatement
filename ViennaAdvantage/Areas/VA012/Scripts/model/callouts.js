@@ -31,35 +31,39 @@
     //Callout to SetConversionType on statement Line
     VA012_Contra.prototype.SetConversionType = function (ctx, windowNo, mTab, mField, value, oldValue) {
         //handled exception when value is null
-        if (this.isCalloutActive() && value == null) {
+        if (this.isCalloutActive() || value == null || value.toString() == "") {
             return "";
         }
 
         this.setCalloutActive(true);
 
-        if (value != null) {
-            
-            if (VIS.Utility.Util.getValueOfInt(value) > 0) {
-                //defining variable to pass as a parameter which is holding some individual Values
-                var paramString = value.toString() + "," + mTab.getValue("C_Currency_ID").toString() + "," + mTab.getValue("StatementLineDate").toString() + "," + mTab.getValue("AD_Org_ID").toString();
-                //changed the variable name dateAcct as data 
-                //Updating the DateAcct, TrxAmt and Stmt Amount according to conditions
-                var data = VIS.dataContext.getJSONRecord("Statement/GetCashDetails", paramString);
-                if (data != null) {
-                    if (data.Amount != 0) {
-                        mTab.setValue("DateAcct", data.DateAcct);
-                        mTab.setValue("TrxAmt", data.Amount);
-                        mTab.setValue("C_ConversionType_ID", data.C_ConversionType_ID);
-                        if (VIS.Utility.Util.getValueOfDecimal(mTab.getValue("StmtAmt")) == 0) {
-                            mTab.setValue("StmtAmt", data.Amount);
-                        }
-                    }
-                    else {
-                        mTab.setValue("TrxAmt", 0);
-                        mTab.setValue("C_ConversionType_ID", 0);
-                        mTab.setValue("C_CashLine_ID", 0);
-                        VIS.ADialog.info("VA012_ConversionRateNotFound");
-                    }
+        if (VIS.Utility.Util.getValueOfInt(mTab.getValue("C_CashLine_ID")) > 0) {
+
+            var DateAcct = mTab.getValue("DateAcct");
+            if (DateAcct == null) {
+                mTab.setValue("C_CashLine_ID", 0);
+                this.setCalloutActive(false);
+                return "PlzSelectStmtDate";
+            }
+
+            //defining variable to pass as a parameter which is holding some individual Values
+            var paramString = mTab.getValue("C_CashLine_ID").toString() + "," + mTab.getValue("C_Currency_ID").toString() + "," + DateAcct.toString() + "," + mTab.getValue("AD_Org_ID").toString();
+            //changed the variable name dateAcct as data 
+            //Updating the DateAcct, TrxAmt and Stmt Amount according to conditions
+            var data = VIS.dataContext.getJSONRecord("VA012/Statement/GetCashDetails", paramString);
+            if (data != null) {
+                if (data.Amount != 0) {
+                    /* Now, statement line date and Account date are same, so no to overwrite with Cash Journal Account date
+                    mTab.setValue("DateAcct", data.DateAcct);*/
+                    mTab.setValue("TrxAmt", data.Amount);
+                    mTab.setValue("C_ConversionType_ID", data.C_ConversionType_ID);
+                    mTab.setValue("StmtAmt", data.Amount);
+                }
+                else {
+                    mTab.setValue("TrxAmt", 0);
+                    mTab.setValue("C_ConversionType_ID", 0);
+                    mTab.setValue("C_CashLine_ID", 0);
+                    VIS.ADialog.info("VA012_ConversionRateNotFound");
                 }
             }
         }
