@@ -2059,6 +2059,14 @@ namespace VA012.Models
         //    return _obj;
 
         //}
+        /// <summary>
+        /// Get PaymentAmt and Transaction Amount
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_dragPaymentID">C_Payment_ID</param>
+        /// <param name="_dragStatementID">C_BankStatementLine_ID</param>
+        /// <param name="statementDate">Statement Date</param>
+        /// <returns>list of class object</returns>
         public PaymentResponse MatchByDrag(Ctx ctx, int _dragPaymentID, int _dragStatementID, DateTime? statementDate)
         {
             int _count = 0;
@@ -2070,6 +2078,8 @@ namespace VA012.Models
             decimal _trxAmt = 0;
             string _authCode = "";
             string _stateDesc = "";
+            DateTime? _stateLineDate = null;
+            DateTime? _acctDate = null;
             DataSet _ds = new DataSet();
             DataSet _ds1 = new DataSet();
             bool _status = false;
@@ -2089,7 +2099,7 @@ namespace VA012.Models
                 return _obj;
             }
 
-            _qry = @" SELECT C_BPARTNER_ID, STMTAMT, TRXAMT, TRXNO AS DESCRIPTION  
+            _qry = @" SELECT C_BPARTNER_ID, STMTAMT, TRXAMT, TRXNO AS DESCRIPTION, StatementLineDate  
                     FROM C_BANKSTATEMENTLINE
                     WHERE C_BANKSTATEMENTLINE_id      =" + _dragStatementID;
             _ds = DB.ExecuteDataset(_qry);
@@ -2098,6 +2108,8 @@ namespace VA012.Models
                 _statementBP = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BPARTNER_ID"]);
                 _statementAmt = Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["TRXAMT"]);
                 _stateDesc = Util.GetValueOfString(_ds.Tables[0].Rows[0]["DESCRIPTION"]);
+                //Get the StatementLine Date 
+                _stateLineDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[0]["StatementLineDate"]);
                 _ds.Dispose();
             }
             _qry = @" SELECT PAY.C_BPARTNER_ID,
@@ -2106,9 +2118,9 @@ namespace VA012.Models
                         THEN
                             CASE
                             WHEN (DT.DOCBASETYPE='ARR')
-                            THEN CURRENCYCONVERT(PAY.PAYAMT, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statementDate, true) + @", PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) 
+                            THEN CURRENCYCONVERT(PAY.PAYAMT, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(_stateLineDate, true) + @", PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) 
                             WHEN (DT.DOCBASETYPE='APP')
-                            THEN CURRENCYCONVERT(PAY.PAYAMT * -1, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statementDate, true) + @", PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) 
+                            THEN CURRENCYCONVERT(PAY.PAYAMT * -1, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(_stateLineDate, true) + @", PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) 
                             END
                         ELSE
                             CASE
@@ -2120,10 +2132,10 @@ namespace VA012.Models
                         END AS AMOUNT,
                         CASE
                         WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                        THEN CURRENCYCONVERT(PAY.PAYAMT, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statementDate, true) + @", PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) 
+                        THEN CURRENCYCONVERT(PAY.PAYAMT, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(_stateLineDate, true) + @", PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) 
                         ELSE ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))
                       END AS TRXAMOUNT,
-                        PAY.TrxNo
+                        PAY.TrxNo, PAY.DateAcct
                     FROM C_PAYMENT PAY
                     INNER JOIN C_DOCTYPE DT
                     ON DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID
@@ -2140,8 +2152,17 @@ namespace VA012.Models
                 _paymentAmt = Util.GetValueOfDecimal(_ds1.Tables[0].Rows[0]["AMOUNT"]);
                 _trxAmt = Util.GetValueOfDecimal(_ds1.Tables[0].Rows[0]["TRXAMOUNT"]);
                 _authCode = Util.GetValueOfString(_ds1.Tables[0].Rows[0]["TrxNo"]);
+                //Get the Payment AcctDate 
+                _acctDate = Util.GetValueOfDateTime(_ds1.Tables[0].Rows[0]["DateAcct"]);
                 _ds1.Dispose();
             }
+            //StatementLine Date can't be less than the AcctDate of Payment when Drag the payment on to the Line
+            if (_stateLineDate < _acctDate)
+            {
+                _obj._status = "VA012_StmtDateCantlessTrxDate";
+                return _obj;
+            }
+
             if ((_authCode == "" || _authCode == null) || (!string.IsNullOrEmpty(_authCode) && string.IsNullOrEmpty(_stateDesc)))
             {
                 if (_statementAmt == 0)
@@ -2179,23 +2200,6 @@ namespace VA012.Models
             }
             else
             {
-                //if (_stateDesc.Contains(_authCode))
-                //{
-                //    if (_statementAmt == 0)
-                //    {
-                //        _status = true;
-                //        _obj._amount = _paymentAmt;
-                //        _obj._trxamount = _trxAmt;
-                //        return _obj;
-
-                //    }
-                //    else
-                //    {
-                //        _status = true;
-                //        _obj._status = "Success";
-                //        return _obj;
-                //    }
-                //}
                 if (!string.IsNullOrEmpty(_authCode) && !string.IsNullOrEmpty(_stateDesc))
                 {
                     if (_authCode.ToLower().Trim().Contains(_stateDesc.ToLower().Trim()))
@@ -2235,90 +2239,14 @@ namespace VA012.Models
                     return _obj;
                 }
             }
-
-            ////
-
-            //            _qry = @"SELECT COUNT(*) AS COUNT
-            //                    FROM C_BANKSTATEMENTLINE
-            //                    WHERE C_BANKSTATEMENTLINE_id      =" + _dragStatementID + @"
-            //                    AND (C_BPARTNER_ID, TRXAMT) IN
-            //                        (
-            //                    SELECT PAY.C_BPARTNER_ID,
-            //                        CASE
-            //                        WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-            //                        THEN
-            //                            CASE
-            //                            WHEN (DT.DOCBASETYPE='ARR')
-            //                            THEN ROUND(PAY.PAYAMT*(
-            //                          CASE
-            //                            WHEN CCR.MULTIPLYRATE IS NOT NULL
-            //                            THEN CCR.MULTIPLYRATE
-            //                            ELSE CCR1.DIVIDERATE
-            //                          END),NVL(BCURR.StdPrecision,2))
-            //                            WHEN (DT.DOCBASETYPE='APP')
-            //                            THEN ROUND((PAY.PAYAMT*(
-            //                          CASE
-            //                            WHEN CCR.MULTIPLYRATE IS NOT NULL
-            //                            THEN CCR.MULTIPLYRATE
-            //                            ELSE CCR1.DIVIDERATE
-            //                          END)),NVL(BCURR.StdPrecision,2))*-1
-            //                            END
-            //                        ELSE
-            //                            CASE
-            //                            WHEN (DT.DOCBASETYPE='ARR')
-            //                            THEN PAY.PAYAMT
-            //                            WHEN (DT.DOCBASETYPE='APP')
-            //                            THEN PAY.PAYAMT*-1
-            //                            END
-            //                        END AS AMOUNT
-            //                    FROM C_PAYMENT PAY
-            //                    INNER JOIN C_DOCTYPE DT
-            //                    ON DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID
-            //                    INNER JOIN C_BANKACCOUNT AC
-            //                    ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
-            //                    LEFT JOIN C_CURRENCY BCURR
-            //                    ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID
-            //                    LEFT JOIN C_CONVERSION_RATE CCR
-            //                    ON (CCR.C_CURRENCY_ID   =PAY.C_CURRENCY_ID
-            //                    AND CCR.ISACTIVE        ='Y'
-            //                    AND CCR.C_CURRENCY_TO_ID=AC.C_CURRENCY_ID
-            //                          AND CCR.AD_CLIENT_ID    =pay.AD_CLIENT_ID
-            //                            AND CCR.AD_ORG_ID      IN (pay.AD_ORG_ID,0)
-            //                    AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
-            //
-            //                    LEFT JOIN C_CONVERSION_RATE CCR1
-            //                    ON (CCR1.C_CURRENCY_ID   =AC.C_CURRENCY_ID
-            //                    AND CCR1.C_CURRENCY_TO_ID=PAY.C_CURRENCY_ID
-            //                    AND CCR1.ISACTIVE        ='Y'
-            //                          AND CCR1.AD_CLIENT_ID    =pay.AD_CLIENT_ID
-            //                            AND CCR1.AD_ORG_ID      IN (pay.AD_ORG_ID,0)
-            //                    AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)
-            //                    WHERE C_PAYMENT_ID=" + _dragPaymentID + ")";
-
-
-            //_count = Util.GetValueOfInt(DB.ExecuteScalar(_qry));
-            //if (_count > 0)
-            //{
-            //    MBankStatementLine _bankStatementLine = new MBankStatementLine(ctx, _dragStatementID, null);
-            //    _bankStatementLine.SetC_Payment_ID(_dragPaymentID);
-            //    _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
-            //    if (_bankStatementLine.Save())
-            //    {
-            //        return "Success";
-            //    }
-            //    else
-            //    {
-            //        return "VA012_ErrorMatching";
-            //    }
-
-            //}
-            //else
-            //{
-            //    return "VA012_StatementPaymentNotMatched";
-
-            //}
-
         }
+
+        /// <summary>
+        /// Update the Statement Line(unmatch line with Payment, Charge or Cash Journal Line)
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_statementLinesList">C_BankStatementLine_ID's</param>
+        /// <returns>object of class returns string message</returns>
         public List<UnMatchResponse> UnmatchStatement(Ctx ctx, string _statementLinesList)
         {
 
@@ -2332,6 +2260,9 @@ namespace VA012.Models
             //    return e.Message;
             //}
             //return "Success";
+            //Using transaction to handle the Exception while Saving the data
+            Trx trx = Trx.GetTrx(Trx.CreateTrxName("SUTrx"));
+
             int status = 1;
             List<UnMatchResponse> _lstObj = new List<UnMatchResponse>();
             UnMatchResponse _unObj = new UnMatchResponse();
@@ -2342,7 +2273,8 @@ namespace VA012.Models
                 {
                     for (int i = 0; i < _statementLinesListArray.Length; i++)
                     {
-                        MBankStatementLine _obj = new MBankStatementLine(ctx, Util.GetValueOfInt(_statementLinesListArray[i]), null);
+                        //replaced null with Transation
+                        MBankStatementLine _obj = new MBankStatementLine(ctx, Util.GetValueOfInt(_statementLinesListArray[i]), trx);
                         if (_obj.GetC_Payment_ID() <= 0)
                         {
                             if (_obj.GetC_Charge_ID() > 0)
@@ -2358,7 +2290,8 @@ namespace VA012.Models
                                 continue;
                             }
                         }
-                        MBankStatement _objSt = new MBankStatement(ctx, _obj.GetC_BankStatement_ID(), null);
+                        //replaced null with Transation
+                        MBankStatement _objSt = new MBankStatement(ctx, _obj.GetC_BankStatement_ID(), trx);
                         if (_objSt.GetDocStatus() == "CO")
                         {
                             status = 0;
@@ -2394,22 +2327,44 @@ namespace VA012.Models
                             {
                                 _obj.SetC_CashLine_ID(0);
                             }
+                            //Clear ConversionType
+                            _obj.Set_Value("C_ConversionType_ID", 0);
+
                             _obj.SetVA012_IsMatchingConfirmed(false);
                             if (!_obj.Save())
                             {
                                 status = 0;
-                                if (_unObj._statementNoNotUpdate == null)
+                                trx.Rollback();
+                                //Used ValueNamePair to get Error
+                                ValueNamePair pp = VLogger.RetrieveError();
+                                //some times getting the error pp also
+                                string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                if (string.IsNullOrEmpty(error))
                                 {
-                                    _unObj._statementNoNotUpdate = _objSt.GetName() + "/" + _obj.GetLine();
+                                    error = pp != null ? pp.GetName() : "";
                                 }
-                                else
-                                {
-                                    _unObj._statementNoNotUpdate = _unObj._statementNoNotUpdate + ", " + _objSt.GetName() + "/" + _obj.GetLine();
-                                }
+
+                                _unObj._statementNoNotUpdate = !string.IsNullOrEmpty(error) ? error : _objSt.GetName() + "/" + _obj.GetLine();
+
+                                _lstObj.Add(_unObj);
+                                trx.Close();
+                                trx = null;
+                                return _lstObj;
+                                //Used ValueNamePair to get Error
+                                //if (_unObj._statementNoNotUpdate == null)
+                                //{
+                                //    _unObj._statementNoNotUpdate = _objSt.GetName() + "/" + _obj.GetLine();
+                                //}
+                                //else
+                                //{
+                                //    _unObj._statementNoNotUpdate = _unObj._statementNoNotUpdate + ", " + _objSt.GetName() + "/" + _obj.GetLine();
+                                //}
 
                             }
                             else
                             {
+                                //Commit the transaction
+                                trx.Commit();
                                 if (_unObj._statementOk == null)
                                 {
                                     _unObj._statementOk = _objSt.GetName() + "/" + _obj.GetLine();
@@ -2429,6 +2384,10 @@ namespace VA012.Models
                 status = 0;
                 _unObj._error = e.Message;
                 _lstObj.Add(_unObj);
+                //Roll back the Transaction
+                trx.Rollback();
+                trx.Close();
+                trx = null;
                 return _lstObj;
             }
             if (status == 1)
@@ -2440,6 +2399,9 @@ namespace VA012.Models
             {
                 _lstObj.Add(_unObj);
             }
+            //Close the transaction
+            trx.Close();
+            trx = null;
             return _lstObj;
         }
         public List<ProcessResponse> ProcessStatement(Ctx ctx, string _statementLinesList, int _accountID)
@@ -4957,6 +4919,16 @@ namespace VA012.Models
             //for existing record
             else if (_dragDestinationID > 0)
             {
+                //Compare the StatementLine Date with DueDate of the Schedule and StatementLineDate Can't less than the DueDate
+                if (int.TryParse(_listToCheck, out int _scheduleId))
+                {
+                    DateTime? _stmtDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT StatementLineDate FROM C_BANKSTATEMENTLINE WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
+                    DateTime? _dueDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT DueDate FROM C_InvoicePaySchedule WHERE C_InvoicePaySchedule_ID =" + _scheduleId));
+                    if (_stmtDate < _dueDate)
+                    {
+                        return "VA012_StmtDateCantlessTrxDate";
+                    }
+                }
                 try
                 {
                     _amt = Util.GetValueOfDecimal(DB.ExecuteScalar("SELECT StmtAmt FROM C_BANKSTATEMENTLINE WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
@@ -5349,6 +5321,19 @@ namespace VA012.Models
             }
             return "Success";
         }
+
+        /// <summary>
+        /// Check PrepayCondition and return string object either success or Error Value
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_dragSourceID">C_Order_ID</param>
+        /// <param name="_dragDestinationID">C_BankStatementLine_ID</param>
+        /// <param name="_listToCheck">PrepayOrder List</param>
+        /// <param name="_amount">Amount</param>
+        /// <param name="_currencyId">C_Currency_ID</param>
+        /// <param name="_formBPartnerID">C_BPartner_ID</param>
+        /// <param name="statementDate">Statement Date</param>
+        /// <returns>return string object</returns>
         public PrepayResponse CheckPrepayCondition(Ctx ctx, int _dragSourceID, int _dragDestinationID, string _listToCheck, decimal _amount, int _currencyId, int _formBPartnerID, DateTime? statementDate)
         {
             PrepayResponse _obj = new PrepayResponse();
@@ -5370,9 +5355,11 @@ namespace VA012.Models
                 decimal _statementAmt = 0;
                 int _orderBP = 0;
                 decimal _orderAmt = 0;
+                DateTime? _stateLineDate = null;
+                DateTime? _acctDate = null;
                 DataSet _ds = new DataSet();
                 DataSet _ds1 = new DataSet();
-                _qry = @" SELECT C_BPARTNER_ID, StmtAmt as TRXAMT 
+                _qry = @" SELECT C_BPARTNER_ID, StmtAmt as TRXAMT, StatementLineDate 
                     FROM C_BANKSTATEMENTLINE
                     WHERE C_BANKSTATEMENTLINE_id      =" + _dragDestinationID;
                 _ds = DB.ExecuteDataset(_qry);
@@ -5380,6 +5367,8 @@ namespace VA012.Models
                 {
                     _statementBP = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BPARTNER_ID"]);
                     _statementAmt = Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["TRXAMT"]);
+                    //Get the StatementLine Date 
+                    _stateLineDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[0]["StatementLineDate"]);
                     _ds.Dispose();
                 }
 
@@ -5387,9 +5376,9 @@ namespace VA012.Models
                                         CASE
                                             WHEN(ord.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
                                             THEN CURRENCYCONVERT(ord.GrandTotal, ord.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, "
-                                                + GlobalVariable.TO_DATE(statementDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, ord.AD_Org_ID) 
+                                                + GlobalVariable.TO_DATE(_stateLineDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, ord.AD_Org_ID) 
                                             ELSE ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2))
-                                          END AS AMOUNT
+                                          END AS AMOUNT, ORD.DateAcct
                                         FROM C_ORDER ORD
                                         LEFT JOIN C_CURRENCY BCURR
                                         ON " + _currencyId + @" =BCURR.C_CURRENCY_ID                
@@ -5399,7 +5388,16 @@ namespace VA012.Models
                 {
                     _orderBP = Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_BPARTNER_ID"]);
                     _orderAmt = Util.GetValueOfDecimal(_ds1.Tables[0].Rows[0]["AMOUNT"]);
+                    //Get the Order AcctDate 
+                    _acctDate = Util.GetValueOfDateTime(_ds1.Tables[0].Rows[0]["DateAcct"]);
                     _ds1.Dispose();
+                }
+
+                //StatementLine Date can't be less than the AcctDate of Order when Drag the PrePayOrder on to the Line
+                if (_stateLineDate < _acctDate)
+                {
+                    _obj._status = "VA012_StmtDateCantlessTrxDate";
+                    return _obj;
                 }
 
                 //both must be same sign statementAmt & orderAmt
@@ -5512,6 +5510,16 @@ namespace VA012.Models
 
 
         }
+
+        /// <summary>
+        /// Get the Contra values if success otherwise get error Value
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_dragPaymentID">C_CashLine_ID</param>
+        /// <param name="_dragStatementID">C_BankStatementLine_ID</param>
+        /// <param name="_currencyId">C_Currency_ID</param>
+        /// <param name="statementDat">StatementDate</param>
+        /// <returns>Object of the ContraResponse class</returns>
         public ContraResponse MatchContraByDrag(Ctx ctx, int _dragPaymentID, int _dragStatementID, int _currencyId, DateTime? statementDat)
         {
             int _count = 0;
@@ -5520,6 +5528,8 @@ namespace VA012.Models
             decimal _statementAmt = 0;
             int _paymentBP = 0;
             decimal _paymentAmt = 0;
+            DateTime? _stateLineDate = null;
+            DateTime? _acctDate = null;
             DataSet _ds = new DataSet();
             DataSet _ds1 = new DataSet();
             bool _status = false;
@@ -5534,7 +5544,7 @@ namespace VA012.Models
                 return _obj;
             }
 
-            _qry = @" SELECT C_BPARTNER_ID, StmtAmt as TRXAMT 
+            _qry = @" SELECT C_BPARTNER_ID, StmtAmt as TRXAMT, StatementLineDate 
                     FROM C_BANKSTATEMENTLINE
                     WHERE C_BANKSTATEMENTLINE_id      =" + _dragStatementID;
             _ds = DB.ExecuteDataset(_qry);
@@ -5542,15 +5552,17 @@ namespace VA012.Models
             {
                 _statementBP = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BPARTNER_ID"]);
                 _statementAmt = Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["TRXAMT"]);
+                //Get the StatementLine Date 
+                _stateLineDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[0]["StatementLineDate"]);
                 _ds.Dispose();
             }
             _qry = @" SELECT csl.C_BPARTNER_ID,
                                         CASE
                                             WHEN(csl.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                                            THEN CURRENCYCONVERT(csl.amount, csl.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statementDat, true) +
+                                            THEN CURRENCYCONVERT(csl.amount, csl.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(_stateLineDate, true) +
                                             @", csl.C_ConversionType_ID, cs.AD_Client_ID, cs.AD_Org_ID) 
                                             ELSE ROUND(csl.amount,NVL(BCURR.StdPrecision,2))
-                                          END AS AMOUNT, csl.C_Currency_ID
+                                          END AS AMOUNT, csl.C_Currency_ID, cs.DateAcct
                                         FROM C_Cashline csl
                                         inner join C_Cash cs on cs.C_Cash_id=csl.C_Cash_id
                                         LEFT JOIN C_CURRENCY BCURR
@@ -5563,7 +5575,16 @@ namespace VA012.Models
                 _paymentBP = Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_BPARTNER_ID"]);
                 _paymentAmt = Decimal.Negate(Util.GetValueOfDecimal(_ds1.Tables[0].Rows[0]["AMOUNT"]));
                 _currency_Id= Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_Currency_ID"]);//get the C_Currency_ID from CashJournalLine
+                //Get the Cash AcctDate 
+                _acctDate = Util.GetValueOfDateTime(_ds1.Tables[0].Rows[0]["DateAcct"]);
                 _ds1.Dispose();
+            }
+
+            //StatementLine Date can't be less than the AcctDate of Cash Journal when Drag the Cash Journal on to the Line
+            if (_stateLineDate < _acctDate)
+            {
+                _obj._status = "VA012_StmtDateCantlessTrxDate";
+                return _obj;
             }
 
             if (_statementAmt == 0)
@@ -5890,8 +5911,9 @@ namespace VA012.Models
                 sql.Append("SELECT trl.name, rl.value  FROM AD_Ref_List rl ")
                .Append("  INNER JOIN AD_Ref_List_Trl trl ON rl.AD_Ref_List_ID = trl.AD_Ref_List_ID ");
             }
+            //Excluded the Invoice and Order Values
             sql.Append(@" WHERE rl.isactive = 'Y' AND rl.ad_reference_id IN (SELECT AD_Reference_ID FROM AD_Reference
-                        WHERE upper(NAME) LIKE upper('VA012_MatchingBase')) ");
+                        WHERE upper(NAME) LIKE upper('VA012_MatchingBase'))  AND rl.value NOT IN ('OR','IN')");
             if (!isBase)
                 sql.Append(" AND trl.AD_Language='" + Env.GetAD_Language(ct) + "'");
 

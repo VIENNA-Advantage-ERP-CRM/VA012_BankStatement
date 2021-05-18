@@ -385,17 +385,23 @@
                                 data = $.parseJSON(data);
                                 if (data[0]._status == "Success") {
                                     if (data[0]._statementOk != null) {
-                                        VIS.ADialog.info(data[0]._statementOk + " " + VIS.Msg.getMsg("VA012_StatementsUnmatched"), null, "", "");
+                                        //VIS.ADialog.info(data[0]._statementOk + " " + VIS.Msg.getMsg("VA012_StatementsUnmatched"), null, "", "");
+                                        //ajusted parameters as per requirement
+                                        VIS.ADialog.info("VA012_StatementsUnmatched", null, " " + data[0]._statementOk, "");
                                     }
                                 }
                                 if (data[0]._error != null) {
                                     VIS.ADialog.info(data[0]._error, null, "", "");
                                 }
                                 if (data[0]._statementNo != null) {
-                                    VIS.ADialog.info(data[0]._statementNo + " " + VIS.Msg.getMsg("VA012_CompletedRecord"), null, "", "");
+                                    //VIS.ADialog.info(data[0]._statementNo + " " + VIS.Msg.getMsg("VA012_CompletedRecord"), null, "", "");
+                                    //ajusted parameters as per requirement
+                                    VIS.ADialog.info("VA012_CompletedRecord", null, " " + data[0]._statementNo, "");
                                 }
                                 if (data[0]._statementNoNotUpdate != null) {
-                                    VIS.ADialog.info(data[0]._statementNoNotUpdate + " " + VIS.Msg.getMsg("VA012_ErrorSaving"), null, "", "");
+                                    //VIS.ADialog.info(data[0]._statementNoNotUpdate + " " + VIS.Msg.getMsg("VA012_ErrorSaving"), null, "", "");
+                                    //ajusted parameters as per requirement
+                                    VIS.ADialog.info("VA012_ErrorSaving", null, " " + data[0]._statementNoNotUpdate, "");
                                 }
 
                                 newRecordForm.scheduleRefresh();
@@ -790,7 +796,8 @@
                 _txtDifference.getControl().addClass('va012-right-align');
                 _txtDifference.setValue(0);
                 // Disable or enabled, Diffrence type based on diffreence amount
-                _txtDifference.getControl().trigger("change");
+                //changed event change to blur
+                _txtDifference.getControl().trigger("blur");
                 divRow4Col2Diff.append(divRow4Col2DiffLbl).append(_txtDifference.getControl());
                 divRow4Col2.append(divRow4Col2Diff);
                 //$('                                   <input disabled tabindex="9" vchangable="Y" id="VA012_txtDifference_' + $self.windowNo + '" type="number" class="va012-right-align">'
@@ -1837,7 +1844,7 @@
                                             _openingFromDrop = true;
                                             $_ctrlPayment.setValue(_dragPaymentID, false, true);
                                             //Incase of Payment ConversionType field should be Readonly
-                                            _txtConversionType.attr("disabled", true);
+                                            //_txtConversionType.attr("disabled", true);//not using
                                             //if (_txtVoucherNo.val() == "") {
                                             //    var Voucher = VIS.Utility.Util.getValueOfString(VIS.DB.executeScalar("select trxno from C_Payment where C_Payment_ID=" + _dragPaymentID));
                                             //    _txtVoucherNo.val(Voucher);
@@ -2401,6 +2408,9 @@
                                     _btnIn.removeClass("va012-active");
                                     _btnIn.addClass("va012-inactive");
                                     _btnIn.attr("v_active", "0");
+                                    //added class mandatory
+                                    _txtAmount.getControl().addClass('va012-mandatory');
+                                    _txtTrxAmt.getControl().addClass('va012-mandatory');
                                 }
                                 else {
                                     _btnIn.removeClass("va012-inactive");
@@ -2409,6 +2419,9 @@
                                     _btnOut.removeClass("va012-active");
                                     _btnOut.addClass("va012-inactive");
                                     _btnOut.attr("v_active", "0");
+                                    //removed class mandatory
+                                    _txtAmount.getControl().removeClass('va012-mandatory');
+                                    _txtTrxAmt.getControl().removeClass('va012-mandatory');
                                 }
                                 _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(result._trxamount.toFixed(_stdPrecision)));
                                 //Set Currency and Conversion Type
@@ -2426,7 +2439,7 @@
                                     _txtCurrency.attr("disabled", false);
                                     $(_txtConversionType[0][0]).hide();
                                     _txtConversionType.val(result._conversionType_Id).prop('selected', true);
-                                    _txtConversionType.attr("disabled", true);
+                                    //_txtConversionType.attr("disabled", true);//not using this attr
                                 }
                                 else {
                                     _txtCurrency.val(_currencyId).prop('selected', true);
@@ -2586,7 +2599,7 @@
                                     _txtCurrency.attr("disabled", false);
                                     $(_txtConversionType[0][0]).hide();
                                     _txtConversionType.val(result._conversionType_Id).prop('selected', true);
-                                    _txtConversionType.attr("disabled", false);
+                                    //_txtConversionType.attr("disabled", false);
                                 }
                                 else {
                                     _txtCurrency.val(_currencyId).prop('selected', true);
@@ -2672,11 +2685,12 @@
                                 }
                                 _txtCurrency.removeClass("va012-mandatory");
                                 _txtCurrency.attr("disabled", false);
-                                //$(_txtConversionType[0][0]).show();
+                                $(_txtConversionType[0][0]).hide();
                                 //requirement: get ConversionType from the CashLine and set as readOnly
                                 _txtConversionType.val(result._conversionType_Id).prop('selected', true);
                                 _txtConversionType.removeClass("va012-mandatory");
-                                _txtConversionType.attr("disabled", true);
+                                //requirement changed - ConversionType should be editable
+                                //_txtConversionType.attr("disabled", true);
                             }
                             else {
                                 _status = false;
@@ -2929,7 +2943,9 @@
                     _convAmt = (-1 * format.GetConvertedNumber(_convAmt, dotFormatter)).toString();
                 }
                 //this will execute when the values contains '.'
-                else if (_convAmt.contains(".")) {
+                //if user entered three digits then it will get ',' then need to convert the amount
+                //so according to that removed else if condition
+                else /*if (_convAmt.contains("."))*/ {
                     _convAmt = format.GetConvertedNumber(_convAmt, dotFormatter).toString();
                 }
                 //_convAmt have value then return _convAmt else return val
@@ -3890,7 +3906,8 @@
                         var _diffAmt = VIS.Utility.Util.getValueOfDecimal(_result._txtDifference.toFixed(_stdPrecision));
                         _txtDifference.setValue(_diffAmt);
                         // Disable or enabled, Diffrence type based on diffreence amount
-                        _txtDifference.getControl().trigger("change");
+                        //replace 'change' to 'blur' to avoid the _txtDifference value change when trigger the function
+                        _txtDifference.getControl().trigger("blur");
                         //get the Amount in standard format
                         if (convertAmtCulture(_txtDifference.getControl().val()) <= 0) {
                             _txtDifference.getControl().addClass('va012-mandatory');
@@ -4024,17 +4041,18 @@
                     if (_cmbVoucherMatch.val() == "C") {
                         _txtConversionType.prop('selectedIndex', 0);
                         _txtConversionType.addClass("va012-mandatory");
-                        _txtConversionType.attr("disabled", false);
+                        //_txtConversionType.attr("disabled", false);
                     }
                     else {
                         _txtConversionType.val(_result._txtConversionType).prop('selected', true);
                         _txtConversionType.removeClass("va012-mandatory");
-                        if (_result._ctrlPayment > 0) {
-                            _txtConversionType.attr("disabled", true);
-                        }
-                        else {
-                            _txtConversionType.attr("disabled", false);
-                        }
+                        //always field should be disabled false
+                        //if (_result._ctrlPayment > 0) {
+                        //    _txtConversionType.attr("disabled", true);
+                        //}
+                        //else {
+                        //    _txtConversionType.attr("disabled", false);
+                        //}
                     }
 
                     _txtCharge.trigger("focus");
@@ -5686,7 +5704,8 @@
                         else {
                             chargeAmt = VIS.Utility.Util.getValueOfDecimal(_formData[0]["_txtAmount"]);
                         }
-                        if (_tax_ID > 0) {
+                        //chargeAmt is not equals to zero then execute the GetTaxAmount()
+                        if (_tax_ID > 0 && chargeAmt != 0) {
                             GetTaxAmount(_formData[0]["_cmbTaxRate"], chargeAmt, _stdPrecision, callbackamt);
                             function callbackamt(data) {
                                 data = JSON.parse(data);
@@ -5925,38 +5944,41 @@
                         }
                         //get the Amount in standard format
                         //Get tax Amount if user selected TaxRate and have _txtDifference
-                        GetTaxAmount(_cmbTaxRate.val(), convertAmtCulture(_txtDifference.getControl().val()), _stdPrecision, callbackamt);
-                        //callback function
-                        function callbackamt(data) {
-                            data = JSON.parse(data);
-                            if (data != null && data != 0) {
-                                _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(data["TaxAmt"]).toFixed(_stdPrecision)));
-                            }
-                            if (_cmbTaxRate.val() > 0 && VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0) {
-                                if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) < 0) {
-                                    _txtDifference.getControl().addClass('va012-mandatory');//color change
+                        //used Condition to avoid to excute the GetTaxAmount() when diffAmt is zero and tax_id is zero
+                        if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 && _cmbTaxRate.val() > 0) {
+                            GetTaxAmount(_cmbTaxRate.val(), convertAmtCulture(_txtDifference.getControl().val()), _stdPrecision, callbackamt);
+                            //callback function
+                            function callbackamt(data) {
+                                data = JSON.parse(data);
+                                if (data != null && data != 0) {
+                                    _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(data["TaxAmt"]).toFixed(_stdPrecision)));
+                                }
+                                if (_cmbTaxRate.val() > 0 && VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0) {
+                                    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) < 0) {
+                                        _txtDifference.getControl().addClass('va012-mandatory');//color change
+                                    }
+                                    else {
+                                        _txtDifference.getControl().removeClass('va012-mandatory');
+                                    }
+                                }
+                                // when diff amount have then it must selected diff.Type as Charge in case of Payment / cash journal
+                                if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 &&
+                                    (VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) != 0 || (VIS.Utility.Util.getValueOfInt($_ctrlCashLine.getValue()) != 0))) {
+                                    _cmbDifferenceType.val("CH").prop('selected', true);
+                                    _cmbDifferenceType.trigger('change');
+                                    _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
+                                    _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
+                                    _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
+                                    _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                                }
+                                else if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 &&
+                                    _scheduleList.toString() != "") {
+                                    // when Invoice Schedule is selected, and Difference amount != 0 then dont't do anything 
                                 }
                                 else {
-                                    _txtDifference.getControl().removeClass('va012-mandatory');
+                                    _cmbDifferenceType.val("0").prop('selected', true);
+                                    _cmbDifferenceType.trigger('change');
                                 }
-                            }
-                            // when diff amount have then it must selected diff.Type as Charge in case of Payment / cash journal
-                            if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 &&
-                                (VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) != 0 || (VIS.Utility.Util.getValueOfInt($_ctrlCashLine.getValue()) != 0)) ) {
-                                _cmbDifferenceType.val("CH").prop('selected', true);
-                                _cmbDifferenceType.trigger('change');
-                                _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
-                                _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
-                                _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
-                                _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
-                            }
-                            else if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 &&
-                                _scheduleList.toString() != "") {
-                                // when Invoice Schedule is selected, and Difference amount != 0 then dont't do anything 
-                            }
-                            else {
-                                _cmbDifferenceType.val("0").prop('selected', true);
-                                _cmbDifferenceType.trigger('change');
                             }
                         }
                     }
@@ -5971,7 +5993,8 @@
                 });
 
                 // Disable or enabled, Diffrence type based on diffreence amount
-                _txtDifference.getControl().on("change", function () {
+                //changed the event 'change' to 'blur' to avoid the changing value when trigger the function
+                _txtDifference.getControl().on("blur", function () {
                     //get the Amount in standard format
                     if (convertAmtCulture(_txtDifference.getControl().val()) == 0 || convertAmtCulture(_txtDifference.getControl().val()) == null) {
                         _divDifferenceType.find("*").prop("disabled", true);
@@ -6022,8 +6045,8 @@
                         _btnOut.attr("v_active", "0");
                         _txtAmount.getControl().removeClass("va012-mandatory");
                     }
-                    //when TaxRate is have value then only execute the GetTaxAmount()
-                    if (VIS.Utility.Util.getValueOfInt(_cmbTaxRate.val()) > 0 && _cmbVoucherMatch.val() == "V") {
+                    //when TaxRate is have value and amount is greather or less than zero then only execute the GetTaxAmount()
+                    if (VIS.Utility.Util.getValueOfInt(_cmbTaxRate.val()) > 0 && convertAmtCulture(_txtAmount.getControl().val()) != 0 && _cmbVoucherMatch.val() == "V") {
                         // get tax amt if we have tax_Id and _txtAmount
                         GetTaxAmount(_cmbTaxRate.val(), convertAmtCulture(_txtAmount.getControl().val()), _stdPrecision, callbackamt);
 
@@ -6103,7 +6126,7 @@
                                         _txtTrxAmt.setValue();
                                         _txtDifference.setValue();
                                         // Disable or enabled, Diffrence type based on diffreence amount
-                                        _txtDifference.getControl().trigger("change");
+                                        _txtDifference.getControl().trigger("blur");//used blur to avoid to change the _txtDifference Value when trigger this function
                                         //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
                                         _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
                                         VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
@@ -6137,7 +6160,8 @@
                                     _txtTrxAmt.setValue();
                                     _txtDifference.setValue();
                                     // Disable or enabled, Diffrence type based on diffreence amount
-                                    _txtDifference.getControl().trigger("change");
+                                    //used blur to avoid to change the _txtDifference Value when trigger this function
+                                    _txtDifference.getControl().trigger("blur");
                                     VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                     return;
                                 }
@@ -6776,7 +6800,8 @@
                 _txtTrxAmt.setValue(0);
                 _txtDifference.setValue(0);
                 // Disable or enabled, Diffrence type based on diffreence amount
-                _txtDifference.getControl().trigger("change");
+                //changed to blur to avoid the _txtDifference value being change when trigger this function
+                _txtDifference.getControl().trigger("blur");
                 _txtDifference.getControl().attr("vchangable", "Y");
                 _cmbDifferenceType.prop('selectedIndex', 0);
                 _txtDescription.val("");
@@ -6819,7 +6844,8 @@
                 _txtCurrency.addClass("va012-mandatory");
                 //C_ConversionType_ID
                 _txtConversionType.prop('selectedIndex', 0);
-                _txtConversionType.attr("disabled", false);
+                //_txtConversionType disabled always false so no need to use this
+                //_txtConversionType.attr("disabled", false);
                 _txtCurrency.attr("disabled", false);
             },
             scheduleRefresh: function () {
