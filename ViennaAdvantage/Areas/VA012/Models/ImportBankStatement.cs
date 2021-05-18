@@ -12,6 +12,7 @@ using VAdvantage.Model;
 using VAdvantage.DataBase;
 using System.Net;
 using System.Web;
+using VAdvantage.Logging;
 
 namespace VA012.Models
 {
@@ -213,8 +214,15 @@ namespace VA012.Models
                                         _BnkStatm.SetBeginningBalance(Convert.ToDecimal(dt.Rows[i][9]));
                                         if (!_BnkStatm.Save())
                                         {
-
-                                            _obj._error = "VA012_BankStatementHeaderNotSaved";
+                                            //Used ValueNamePair to get error
+                                            ValueNamePair pp = VLogger.RetrieveError();
+                                            //some times getting the error pp also
+                                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                            if (string.IsNullOrEmpty(error))
+                                            {
+                                                error = pp != null ? pp.GetName() : "";
+                                            }
+                                            _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_BankStatementHeaderNotSaved";
                                             //_obj._error = "VA012_Header Not Saved Of Bank Statement";
                                             return _obj;
                                         }
@@ -292,6 +300,12 @@ namespace VA012.Models
                                                 _BnkStmtLine.SetTrxAmt(_payAmt);
                                             }
                                         }
+
+                                        //Set TrxNo Value if exists in Excel sheet
+                                        if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i]["TrxNo"])))
+                                        {
+                                            _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i]["TrxNo"]));
+                                        }
                                         //PyDS = DB.ExecuteDataset("SELECT cp.c_payment_id as c_payment_id,  cd.name as doctype,cp.c_invoice_id as c_invoice_id,cp.c_bpartner_id as c_bpartner_id FROM c_payment cp inner join c_doctype cd on cd.c_doctype_id= cp.c_doctype_id WHERE cp.c_bankaccount_id=" + _C_BankAccount_ID + " AND cp.c_currency_id     = " + _C_Currency_ID + " AND cp.checkno           ='" + Convert.ToString(dt.Rows[i][4]) + "' AND cp.payamt =" + _payAmt + "");
                                         //if (PyDS != null)
                                         //{
@@ -334,7 +348,15 @@ namespace VA012.Models
                                         //}
                                         if (!_BnkStmtLine.Save())
                                         {
-                                            _obj._error = "VA012_StatementLineNotSaved";
+                                            //Used ValueNamePair to get error
+                                            ValueNamePair pp = VLogger.RetrieveError();
+                                            //some times getting the error pp also
+                                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                            if (string.IsNullOrEmpty(error))
+                                            {
+                                                error = pp != null ? pp.GetName() : "";
+                                            }
+                                            _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_StatementLineNotSaved";
                                             //_obj._error = "VA012_Statement Line Not Saved";
                                             return _obj;
                                         }
@@ -395,7 +417,11 @@ namespace VA012.Models
                                             }
                                         }
 
-
+                                        //Set TrxNo Value if exists in Excel sheet
+                                        if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i]["TrxNo"])))
+                                        {
+                                            _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i]["TrxNo"]));
+                                        }
                                         //PyDS = DB.ExecuteDataset("SELECT cp.c_payment_id as c_payment_id,  cd.name as doctype,cp.c_invoice_id as c_invoice_id,cp.c_bpartner_id as c_bpartner_id FROM c_payment cp inner join c_doctype cd on cd.c_doctype_id= cp.c_doctype_id WHERE cp.c_bankaccount_id=" + _C_BankAccount_ID + " AND cp.c_currency_id     = " + _C_Currency_ID + "  AND cp.payamt =" + _payAmt + "");
                                         //if (PyDS != null)
                                         //{
@@ -438,7 +464,16 @@ namespace VA012.Models
                                         //}
                                         if (!_BnkStmtLine.Save())
                                         {
-
+                                            //Used ValueNamePair to get error
+                                            ValueNamePair pp = VLogger.RetrieveError();
+                                            //some times getting the error pp also
+                                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                            if (string.IsNullOrEmpty(error))
+                                            {
+                                                error = pp != null ? pp.GetName() : "";
+                                            }
+                                            _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_StatementLineNotSaved";
+                                            return _obj;
                                         }
                                     }
 
@@ -448,7 +483,15 @@ namespace VA012.Models
                                 _BnkStatm.SetEndingBalance(_BnkStatm.GetBeginningBalance() + _BnkStatm.GetStatementDifference());
                                 if (!_BnkStatm.Save())
                                 {
-                                    _obj._error = "VA012_BeginningBalanceNotUpdated";
+                                    //Used ValueNamePair to get error
+                                    ValueNamePair pp = VLogger.RetrieveError();
+                                    //some times getting the error pp also
+                                    string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                    if (string.IsNullOrEmpty(error))
+                                    {
+                                        error = pp != null ? pp.GetName() : "";
+                                    }
+                                    _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_BeginningBalanceNotUpdated";
                                     // _obj._error = "Beginning Balance Not Updated";
                                     return _obj;
                                 }

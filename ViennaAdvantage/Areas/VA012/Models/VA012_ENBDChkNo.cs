@@ -347,8 +347,24 @@ namespace VA012.Models
                                                 }
                                             }
 
+                                            //Set TrxNo Value if exists in Excel sheet
+                                            if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i]["TrxNo"])))
+                                            {
+                                                _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i]["TrxNo"]));
+                                            }
+
                                             if (!_BnkStmtLine.Save())
                                             {
+                                                //Used ValueNamePair to get error
+                                                ValueNamePair pp = VLogger.RetrieveError();
+                                                //some times getting the error pp also
+                                                string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                                if (string.IsNullOrEmpty(error))
+                                                {
+                                                    error = pp != null ? pp.GetName() : "";
+                                                }
+                                                _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_StatementLineNotSaved";
+                                                return _obj;
                                             }
                                         }
                                         else
