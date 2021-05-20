@@ -1251,39 +1251,42 @@ namespace VA012.Models
             }
             else
             {
+                //Commmented code StatementDate shouldn't update according to Line AcctDate - requirement changed
+                #region Update StatementDate on header
                 //when the statement is existed then set the Statement Date as latest Date which is AcctDate in StatementLine
-                if (_existingStatementID > 0)
-                {
-                    DateTime? acctDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT MAX(DateAcct) FROM C_BankStatementLine WHERE IsActive='Y' AND C_BankStatement_ID=" + _existingStatementID, null, null));
-                    if (acctDate != null)
-                    {
-                        if (_formData[0]._dtStatementDate > acctDate)
-                        {
-                            _bankStatement.SetStatementDate(_formData[0]._dtStatementDate);
-                        }
-                        else
-                        {
-                            _bankStatement.SetStatementDate(acctDate);
-                        }
+                //if (_existingStatementID > 0)
+                //{
+                //    DateTime? acctDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT MAX(DateAcct) FROM C_BankStatementLine WHERE IsActive='Y' AND C_BankStatement_ID=" + _existingStatementID, null, null));
+                //    if (acctDate != null)
+                //    {
+                //        if (_formData[0]._dtStatementDate > acctDate)
+                //        {
+                //            _bankStatement.SetStatementDate(_formData[0]._dtStatementDate);
+                //        }
+                //        else
+                //        {
+                //            _bankStatement.SetStatementDate(acctDate);
+                //        }
 
-                        if (!_bankStatement.Save())
-                        {
-                            //Used transaction 
-                            trx.Rollback();
-                            //close the transaction
-                            trx.Close();
-                            //clear the object
-                            trx = null;
-                            ValueNamePair pp = VLogger.RetrieveError();
-                            string error = pp != null ? pp.GetValue() : "";
-                            if (string.IsNullOrEmpty(error))
-                            {
-                                error = pp != null ? pp.GetName() : "";
-                            }
-                            return !string.IsNullOrEmpty(error) ? error : "VA012_ErrorSavingBankStatement";
-                        }
-                    }
-                }
+                //        if (!_bankStatement.Save())
+                //        {
+                //            //Used transaction 
+                //            trx.Rollback();
+                //            //close the transaction
+                //            trx.Close();
+                //            //clear the object
+                //            trx = null;
+                //            ValueNamePair pp = VLogger.RetrieveError();
+                //            string error = pp != null ? pp.GetValue() : "";
+                //            if (string.IsNullOrEmpty(error))
+                //            {
+                //                error = pp != null ? pp.GetName() : "";
+                //            }
+                //            return !string.IsNullOrEmpty(error) ? error : "VA012_ErrorSavingBankStatement";
+                //        }
+                //    }
+                //}
+                #endregion
 
                 if (_formData[0]._chkUseNextTime && _formData[0]._bankStatementLineID <= 0)
                 {
@@ -1433,8 +1436,10 @@ namespace VA012.Models
         /// <param name="schedules">C_InvoicePaySchedule_ID's</param>
         /// <param name="_accountId">C_BankAccount_ID</param>
         /// <param name="orderId">C_Order_ID</param>
+        /// <param name="paymentId">C_Payment_ID</param>
+        /// <param name="cashLineId">C_CashLine_ID</param>
         /// <returns>List</returns>
-        public Dictionary<String, Object> GetConvertedAmount(Ctx ctx, int currency, int conversionType, DateTime? stmtDate, string schedules, int _accountId, int orderId)
+        public Dictionary<String, Object> GetConvertedAmount(Ctx ctx, int currency, int conversionType, DateTime? stmtDate, string schedules, int _accountId, int orderId, int paymentId, int cashLineId)
         {
             decimal _convertedAmt = 0;
             DataSet _ds = null;
@@ -1474,7 +1479,8 @@ namespace VA012.Models
                             ON " + currency + @" = BCURR.C_CURRENCY_ID
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + schedules + ")";
             }
-            else if (orderId != 0) {
+            else if (orderId != 0)
+            {
 
                 _query = @"SELECT 
                     CASE 
@@ -1485,6 +1491,56 @@ namespace VA012.Models
                         INNER JOIN C_OrderLine ol ON ORD.C_ORDER_ID=ol.C_ORDER_ID
                         INNER JOIN C_DOCTYPE DT ON ORD.C_DocTypeTarget_ID=dt.C_DocType_ID WHERE ORD.IsActive='Y' AND ORD.C_ORDER_ID=" + orderId;
             }
+            //added for to Get the Converted PaymentAmount
+            else if (paymentId != 0)
+            {
+                _query = @"SELECT
+                        CASE
+                        WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                        THEN
+                            CASE
+                                WHEN (DT.DOCBASETYPE='ARR')
+                                THEN CURRENCYCONVERT(PAY.PAYAMT, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(stmtDate, true) + "," + conversionType + @", PAY.AD_Client_ID, PAY.AD_Org_ID) 
+                                WHEN (DT.DOCBASETYPE='APP')
+                                THEN CURRENCYCONVERT(PAY.PAYAMT * -1, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(stmtDate, true) + "," + conversionType + @", PAY.AD_Client_ID, PAY.AD_Org_ID) 
+                            END
+                        ELSE
+                            CASE
+                            WHEN (DT.DOCBASETYPE='ARR')
+                            THEN PAY.PAYAMT
+                            WHEN (DT.DOCBASETYPE='APP')
+                            THEN PAY.PAYAMT*-1
+                            END
+                        END AS DueAmt, PAY.DocumentNo 
+                    FROM C_PAYMENT PAY
+                    INNER JOIN C_DOCTYPE DT
+                    ON DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID
+                    INNER JOIN C_BANKACCOUNT AC
+                    ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
+
+                    LEFT JOIN C_BANKSTATEMENTLINE BSL 
+                    ON PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID 
+
+                    LEFT JOIN C_CURRENCY BCURR
+                    ON " + currency + @" =BCURR.C_CURRENCY_ID
+                   WHERE PAY.C_PAYMENT_ID=" + paymentId;
+            }
+            //added for to Get the Converted Cash Jounrnal Line Amount
+            else if (cashLineId != 0)
+            {
+                _query = @"SELECT  CASE
+                                       WHEN(csl.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                                            THEN CURRENCYCONVERT(csl.amount, csl.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(stmtDate, true) +
+                                                 ", " + conversionType + @", cs.AD_Client_ID, cs.AD_Org_ID) 
+                                            ELSE ROUND(csl.amount,NVL(BCURR.StdPrecision,2))
+                                 END AS DueAmt, csl.Line AS DocumentNo
+                           FROM C_Cashline csl
+                           inner join C_Cash cs on cs.C_Cash_id=csl.C_Cash_id
+                           LEFT JOIN C_CURRENCY BCURR
+                           ON " + currency + @" =BCURR.C_CURRENCY_ID
+                           WHERE csl.C_cashline_ID=" + cashLineId;
+
+            }
 
             _ds = DB.ExecuteDataset(_query, null, null);
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
@@ -1493,7 +1549,15 @@ namespace VA012.Models
                 ids = new string[_ds.Tables[0].Rows.Count];
                 for (int  i=0; _ds.Tables[0].Rows.Count>i; i++) {
                     //amount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), currency, stmtDate, conversionType, ctx.GetAD_Client_ID(), _org_ID);
-                    amount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]);
+                    //Incase of cashLine It should change the sign
+                    if (cashLineId != 0)
+                    {
+                        amount = Decimal.Negate(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]));
+                    }
+                    else
+                    {
+                        amount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]);
+                    }
                     if (amount != 0)
                     {
                         _convertedAmt += amount;
@@ -1990,7 +2054,7 @@ namespace VA012.Models
                             WHEN(csl.C_Currency_ID!=bcurr.C_Currency_ID)
                             THEN CURRENCYCONVERT(csl.Amount * -1, csl.C_Currency_ID, bcurr.C_Currency_ID, " + GlobalVariable.TO_DATE(statementDetail._dtStatementDate, true) + @", csl.C_ConversionType_ID, cs.AD_Client_ID, " + _bankStatementLine.GetAD_Org_ID() + @") 
                             ELSE ROUND(csl.Amount * -1 ,NVL(bcurr.StdPrecision,2))
-                            END AS Amount, csl.C_Currency_ID FROM C_CashLine csl
+                            END AS Amount, csl.C_Currency_ID, csl.C_ConversionType_ID FROM C_CashLine csl
                             INNER JOIN C_Cash cs ON csl.C_Cash_ID = cs.C_Cash_ID 
                             LEFT JOIN C_Currency bcurr ON " + _bankStatementLine.GetC_Currency_ID() + @" = bcurr.C_Currency_ID WHERE csl.IsActive='Y' AND csl.C_CashLine_ID =" + payment_ID, null, null);
 
@@ -2000,6 +2064,8 @@ namespace VA012.Models
                     statementDetail._ctrlCashLine = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_CashLine_ID"]);
                     //get Currency_ID
                     statementDetail._txtCurrency = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]);
+                    //Get C_ConversionType_ID
+                    statementDetail._txtConversionType = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_ConversionType_ID"]);
                 }
             }
 
@@ -5355,6 +5421,7 @@ namespace VA012.Models
                 decimal _statementAmt = 0;
                 int _orderBP = 0;
                 decimal _orderAmt = 0;
+                decimal _unConvtOrderAmt = 0;
                 DateTime? _stateLineDate = null;
                 DateTime? _acctDate = null;
                 DataSet _ds = new DataSet();
@@ -5378,7 +5445,7 @@ namespace VA012.Models
                                             THEN CURRENCYCONVERT(ord.GrandTotal, ord.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, "
                                                 + GlobalVariable.TO_DATE(_stateLineDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, ord.AD_Org_ID) 
                                             ELSE ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2))
-                                          END AS AMOUNT, ORD.DateAcct
+                                          END AS AMOUNT, ORD.DateAcct, ord.GrandTotal
                                         FROM C_ORDER ORD
                                         LEFT JOIN C_CURRENCY BCURR
                                         ON " + _currencyId + @" =BCURR.C_CURRENCY_ID                
@@ -5388,6 +5455,8 @@ namespace VA012.Models
                 {
                     _orderBP = Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_BPARTNER_ID"]);
                     _orderAmt = Util.GetValueOfDecimal(_ds1.Tables[0].Rows[0]["AMOUNT"]);
+                    //actual Amount (UnconvertedAmt if Currencies are not same)
+                    _unConvtOrderAmt = Util.GetValueOfDecimal(_ds1.Tables[0].Rows[0]["GrandTotal"]);
                     //Get the Order AcctDate 
                     _acctDate = Util.GetValueOfDateTime(_ds1.Tables[0].Rows[0]["DateAcct"]);
                     _ds1.Dispose();
@@ -5397,6 +5466,12 @@ namespace VA012.Models
                 if (_stateLineDate < _acctDate)
                 {
                     _obj._status = "VA012_StmtDateCantlessTrxDate";
+                    return _obj;
+                }
+                //_orderAmt is zero and _unConvtOrderAmt is have non zero amount then it means no ConversionRate found return the message
+                if (_orderAmt == 0 && _unConvtOrderAmt != 0)
+                {
+                    _obj._status = "VA012_ConversionRateNotFound";
                     return _obj;
                 }
 
@@ -5443,6 +5518,7 @@ namespace VA012.Models
             ContraResponse _obj = new ContraResponse();
             string _sql = "";
             decimal _payAmt = 0;
+            decimal _unConvtpayAmt = 0;
             int _currency_Id = 0;
             int _conversionType_Id = 0;
             if (_dragDestinationID == 0)
@@ -5460,7 +5536,7 @@ namespace VA012.Models
                                             THEN CURRENCYCONVERT(csl.amount, csl.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(statementDat, true) +
                                             @", csl.C_ConversionType_ID, cs.AD_Client_ID, cs.AD_Org_ID) 
                                             ELSE ROUND(csl.amount,NVL(BCURR.StdPrecision,2))
-                                          END AS AMOUNT, csl.C_Currency_ID, csl.C_ConversionType_ID
+                                          END AS AMOUNT, csl.C_Currency_ID, csl.C_ConversionType_ID, csl.amount AS actualAmt
                                         FROM C_Cashline csl
                                         inner join C_Cash cs on cs.C_Cash_id=csl.C_Cash_id
                                         LEFT JOIN C_CURRENCY BCURR
@@ -5473,11 +5549,18 @@ namespace VA012.Models
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
                 {
                     _payAmt = Decimal.Negate(Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["AMOUNT"]));
+                    //UnConverted Amount or Actual amount
+                    _unConvtpayAmt = Decimal.Negate(Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["actualAmt"]));
                     _currency_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_Currency_ID"]);
                     //ConversionType also want on the form when select CashLine as per requirement
                     _conversionType_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_ConversionType_ID"]);
                 }
-
+                //if payAmt is getting zero means it does have ConversionRate for that selected StatementDate when Currencies are not same and _unConvtpayAmt is actual Amount
+                if (_payAmt == 0 && _unConvtpayAmt != 0)
+                {
+                    _obj._status = "VA012_ConversionRateNotFound";
+                    return _obj;
+                }
                 if (_amount == 0)
                 {
                     _obj._amount = _payAmt;
@@ -5528,12 +5611,14 @@ namespace VA012.Models
             decimal _statementAmt = 0;
             int _paymentBP = 0;
             decimal _paymentAmt = 0;
+            decimal _unConvtpaymentAmt = 0;
             DateTime? _stateLineDate = null;
             DateTime? _acctDate = null;
             DataSet _ds = new DataSet();
             DataSet _ds1 = new DataSet();
             bool _status = false;
             int _currency_Id = 0;
+            int _conversionType_Id = 0;
             ContraResponse _obj = new ContraResponse();
 
 
@@ -5562,7 +5647,7 @@ namespace VA012.Models
                                             THEN CURRENCYCONVERT(csl.amount, csl.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(_stateLineDate, true) +
                                             @", csl.C_ConversionType_ID, cs.AD_Client_ID, cs.AD_Org_ID) 
                                             ELSE ROUND(csl.amount,NVL(BCURR.StdPrecision,2))
-                                          END AS AMOUNT, csl.C_Currency_ID, cs.DateAcct
+                                          END AS AMOUNT, csl.C_Currency_ID, csl.C_ConversionType_ID, cs.DateAcct, csl.amount as actualAmt
                                         FROM C_Cashline csl
                                         inner join C_Cash cs on cs.C_Cash_id=csl.C_Cash_id
                                         LEFT JOIN C_CURRENCY BCURR
@@ -5574,7 +5659,11 @@ namespace VA012.Models
             {
                 _paymentBP = Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_BPARTNER_ID"]);
                 _paymentAmt = Decimal.Negate(Util.GetValueOfDecimal(_ds1.Tables[0].Rows[0]["AMOUNT"]));
-                _currency_Id= Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_Currency_ID"]);//get the C_Currency_ID from CashJournalLine
+                //unConvertedAmount
+                _unConvtpaymentAmt = Decimal.Negate(Util.GetValueOfDecimal(_ds1.Tables[0].Rows[0]["actualAmt"]));
+                _currency_Id = Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_Currency_ID"]);//get the C_Currency_ID from CashJournalLine
+                 //ConversionType also want on the form when select CashLine as per requirement
+                _conversionType_Id = Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_ConversionType_ID"]);
                 //Get the Cash AcctDate 
                 _acctDate = Util.GetValueOfDateTime(_ds1.Tables[0].Rows[0]["DateAcct"]);
                 _ds1.Dispose();
@@ -5584,6 +5673,12 @@ namespace VA012.Models
             if (_stateLineDate < _acctDate)
             {
                 _obj._status = "VA012_StmtDateCantlessTrxDate";
+                return _obj;
+            }
+            //_paymentAmt is zero and _unConvtpaymentAmt is have non zero amount then it means no ConversionRate found return the message
+            if (_paymentAmt == 0 && _unConvtpaymentAmt != 0)
+            {
+                _obj._status = "VA012_ConversionRateNotFound";
                 return _obj;
             }
 
@@ -5600,6 +5695,8 @@ namespace VA012.Models
                 _obj._amount = _paymentAmt;
                 _obj._status = "Success";
                 _obj._currency_Id = _currency_Id;
+                //set the ConversionType
+                _obj._conversionType_Id = _conversionType_Id;
                 return _obj;
             }
             // _statementAmt & _paymentAmt should be same sign but not same amount
@@ -5609,6 +5706,8 @@ namespace VA012.Models
                 _obj._amount = _paymentAmt;
                 _obj._status = "Success";
                 _obj._currency_Id = _currency_Id;
+                //set the ConversionType
+                _obj._conversionType_Id = _conversionType_Id;
                 return _obj;
             }
             else
@@ -5822,6 +5921,7 @@ namespace VA012.Models
             PrepayResponse _obj = new PrepayResponse();
             string _sql = "";
             decimal _payAmt = 0;
+            decimal _unConvtpayAmt = 0;
             int currency_Id = 0;
             int conversionType = 0;
             DataSet _ds = new DataSet();
@@ -5845,7 +5945,7 @@ namespace VA012.Models
                             THEN CURRENCYCONVERT(ord.GrandTotal, ord.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, "
                                         + GlobalVariable.TO_DATE(statementDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, ord.AD_Org_ID) 
                             ELSE ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2))
-                          END AS AMOUNT,ORD.C_BPARTNER_ID, ORD.C_Currency_ID, ORD.C_ConversionType_ID
+                          END AS AMOUNT,ORD.C_BPARTNER_ID, ORD.C_Currency_ID, ORD.C_ConversionType_ID, ord.GrandTotal
                         FROM C_ORDER ORD
                         LEFT JOIN C_CURRENCY BCURR
                         ON " + _currencyId + @" =BCURR.C_CURRENCY_ID
@@ -5858,6 +5958,16 @@ namespace VA012.Models
                         currency_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_Currency_ID"]);
                         conversionType = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_ConversionType_ID"]);
                         _payAmt = Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["AMOUNT"]);
+                        //Actual amount
+                        _unConvtpayAmt = Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["GrandTotal"]);
+
+                        //_orderAmt is zero and _unConvtOrderAmt is have non zero amount then it means no ConversionRate found return the message
+                        if (_payAmt == 0 && _unConvtpayAmt != 0)
+                        {
+                            _obj._status = "VA012_ConversionRateNotFound";
+                            return _obj;
+                        }
+
                         if (_amount == 0)
                         {
                             _obj._amount = _payAmt;

@@ -37,8 +37,12 @@
 
         this.setCalloutActive(true);
 
-        if (value != null) {
-            
+        //clear the ConversionType value when Cash Journal is zero or null
+        if (VIS.Utility.Util.getValueOfInt(value) == 0) {
+            mTab.setValue("C_ConversionType_ID", 0);
+        }
+        else {
+
             if (VIS.Utility.Util.getValueOfInt(value) > 0) {
                 //defining variable to pass as a parameter which is holding some individual Values
                 var paramString = value.toString() + "," + mTab.getValue("C_Currency_ID").toString() + "," + mTab.getValue("StatementLineDate").toString() + "," + mTab.getValue("AD_Org_ID").toString();

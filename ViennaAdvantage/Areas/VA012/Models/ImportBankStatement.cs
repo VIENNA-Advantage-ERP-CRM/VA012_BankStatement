@@ -302,9 +302,10 @@ namespace VA012.Models
                                         }
 
                                         //Set TrxNo Value if exists in Excel sheet
-                                        if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i]["TrxNo"])))
+                                        //changed ColumnName to ColumnIndex to avoid the Exception while fetching data
+                                        if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i][11])))
                                         {
-                                            _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i]["TrxNo"]));
+                                            _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i][11]));
                                         }
                                         //PyDS = DB.ExecuteDataset("SELECT cp.c_payment_id as c_payment_id,  cd.name as doctype,cp.c_invoice_id as c_invoice_id,cp.c_bpartner_id as c_bpartner_id FROM c_payment cp inner join c_doctype cd on cd.c_doctype_id= cp.c_doctype_id WHERE cp.c_bankaccount_id=" + _C_BankAccount_ID + " AND cp.c_currency_id     = " + _C_Currency_ID + " AND cp.checkno           ='" + Convert.ToString(dt.Rows[i][4]) + "' AND cp.payamt =" + _payAmt + "");
                                         //if (PyDS != null)
@@ -418,9 +419,10 @@ namespace VA012.Models
                                         }
 
                                         //Set TrxNo Value if exists in Excel sheet
-                                        if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i]["TrxNo"])))
+                                        //changed ColumnName to ColumnIndex to avoid the Exception while fetching data
+                                        if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i][11])))
                                         {
-                                            _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i]["TrxNo"]));
+                                            _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i][11]));
                                         }
                                         //PyDS = DB.ExecuteDataset("SELECT cp.c_payment_id as c_payment_id,  cd.name as doctype,cp.c_invoice_id as c_invoice_id,cp.c_bpartner_id as c_bpartner_id FROM c_payment cp inner join c_doctype cd on cd.c_doctype_id= cp.c_doctype_id WHERE cp.c_bankaccount_id=" + _C_BankAccount_ID + " AND cp.c_currency_id     = " + _C_Currency_ID + "  AND cp.payamt =" + _payAmt + "");
                                         //if (PyDS != null)

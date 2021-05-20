@@ -223,7 +223,15 @@ namespace VA012.Models
                                             _BnkStatm.SetStatementDate(DateTime.Now);
                                             if (!_BnkStatm.Save())
                                             {
-                                                _obj._error = "VA012_BankStatementHeaderNotSaved";
+                                                //Used ValueNamePair to get error
+                                                ValueNamePair pp = VLogger.RetrieveError();
+                                                //some times getting the error pp also
+                                                string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                                if (string.IsNullOrEmpty(error))
+                                                {
+                                                    error = pp != null ? pp.GetName() : "";
+                                                }
+                                                _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_BankStatementHeaderNotSaved";
                                                 return _obj;
                                             }
                                             else
@@ -348,9 +356,10 @@ namespace VA012.Models
                                             }
 
                                             //Set TrxNo Value if exists in Excel sheet
-                                            if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i]["TrxNo"])))
+                                            //changed ColumnName to ColumnIndex to avoid the Exception while fetching data from Excel
+                                            if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i][8])))
                                             {
-                                                _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i]["TrxNo"]));
+                                                _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i][8]));
                                             }
 
                                             if (!_BnkStmtLine.Save())
