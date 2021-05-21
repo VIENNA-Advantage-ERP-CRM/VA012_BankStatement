@@ -1,4 +1,4 @@
-﻿; VA012 = window.VA012 || {};
+; VA012 = window.VA012 || {};
 ; (function (VA012, $) {
     var Level = VIS.Logging.Level;
     var Util = VIS.Utility.Util;
@@ -66,6 +66,11 @@
                     VIS.ADialog.info("VA012_ConversionRateNotFound");
                 }
             }
+        }
+        else
+        {
+            //clear the ConversionType value when Cash Journal is zero or null
+            mTab.setValue("C_ConversionType_ID", 0);
         }
         this.setCalloutActive(false);
         ctx = windowNo = mTab = mField = value = oldValue = null;

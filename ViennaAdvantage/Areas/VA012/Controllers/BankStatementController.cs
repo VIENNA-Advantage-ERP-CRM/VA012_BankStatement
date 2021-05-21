@@ -918,15 +918,19 @@ namespace VA012.Controllers
         /// <param name="conversionType">C_ConversionType_ID</param>
         /// <param name="stmtDate">Statement Date</param>
         /// <param name="_schedules">C_InvoicePaySchedule_ID</param>
+        /// <param name="_accountId">C_BankAccount_ID</param>
+        /// <param name="orderId">C_Order_ID</param>
+        /// <param name="paymentId">C_Payment_ID</param>
+        /// <param name="cashLineId">C_CashLine_ID</param>
         /// <returns>Converted Amount</returns>
-        public JsonResult GetConvertedAmount(int currency, int conversionType, DateTime? stmtDate, string _schedules, int _accountId, int orderId)
+        public JsonResult GetConvertedAmount(int currency, int conversionType, DateTime? stmtDate, string _schedules, int _accountId, int orderId, int paymentId, int cashLineId)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations _model = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(_model.GetConvertedAmount(ctx, currency, conversionType, stmtDate, _schedules, _accountId, orderId));
+                retJSON = JsonConvert.SerializeObject(_model.GetConvertedAmount(ctx, currency, conversionType, stmtDate, _schedules, _accountId, orderId, paymentId, cashLineId));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
