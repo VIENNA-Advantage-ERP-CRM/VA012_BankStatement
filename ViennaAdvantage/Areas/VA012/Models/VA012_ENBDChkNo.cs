@@ -223,7 +223,15 @@ namespace VA012.Models
                                             _BnkStatm.SetStatementDate(DateTime.Now);
                                             if (!_BnkStatm.Save())
                                             {
-                                                _obj._error = "VA012_BankStatementHeaderNotSaved";
+                                                //Used ValueNamePair to get error
+                                                ValueNamePair pp = VLogger.RetrieveError();
+                                                //some times getting the error pp also
+                                                string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                                if (string.IsNullOrEmpty(error))
+                                                {
+                                                    error = pp != null ? pp.GetName() : "";
+                                                }
+                                                _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_BankStatementHeaderNotSaved";
                                                 return _obj;
                                             }
                                             else
@@ -251,7 +259,7 @@ namespace VA012.Models
                                                 _date = dt.Rows[i][0].ToString();
                                             _BnkStmtLine = new MBankStatementLine(_BnkStatm);
                                             _BnkStmtLine.SetAD_Client_ID(ctx.GetAD_Client_ID());
-                                            _BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                            _BnkStmtLine.SetAD_Org_ID(_AD_Org_ID);
                                             _BnkStmtLine.SetVA012_Page(pageno);
                                             _BnkStmtLine.SetLine(lineno);
                                             lineno = lineno + 10;
@@ -347,8 +355,25 @@ namespace VA012.Models
                                                 }
                                             }
 
+                                            //Set TrxNo Value if exists in Excel sheet
+                                            //changed ColumnName to ColumnIndex to avoid the Exception while fetching data from Excel
+                                            if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i][8])))
+                                            {
+                                                _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i][8]));
+                                            }
+
                                             if (!_BnkStmtLine.Save())
                                             {
+                                                //Used ValueNamePair to get error
+                                                ValueNamePair pp = VLogger.RetrieveError();
+                                                //some times getting the error pp also
+                                                string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                                if (string.IsNullOrEmpty(error))
+                                                {
+                                                    error = pp != null ? pp.GetName() : "";
+                                                }
+                                                _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_StatementLineNotSaved";
+                                                return _obj;
                                             }
                                         }
                                         else
