@@ -3743,16 +3743,16 @@ namespace VA012.Models
                 + " BSL.VA012_ISUSENEXTTIME, "
                 + " BSL.C_CHARGE_ID ,"
                 + " BCURR.ISO_CODE AS BASECURRENCY,  "
-                + " CASE  "
-                + " WHEN(BSL.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID) "
-                + " THEN ROUND(BSL.StmtAmt*( "
-                  + " CASE "
-                   + "  WHEN CCR.MULTIPLYRATE IS NOT NULL "
-                   + "  THEN CCR.MULTIPLYRATE "
-                    + " ELSE CCR1.DIVIDERATE "
-                 + "  END),NVL(CURR.StdPrecision,2)) "
-                + " ELSE ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2))  "
-                + " END AS CONVERTEDAMOUNT, "
+                //+ " CASE  "
+                //+ " WHEN(BSL.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID) "
+                //+ " THEN ROUND(BSL.StmtAmt*( "
+                //  + " CASE "
+                //   + "  WHEN CCR.MULTIPLYRATE IS NOT NULL "
+                //   + "  THEN CCR.MULTIPLYRATE "
+                //    + " ELSE CCR1.DIVIDERATE "
+                // + "  END),NVL(CURR.StdPrecision,2)) "
+                //+ " ELSE ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2))  "
+                //+ " END AS CONVERTEDAMOUNT, "
                 + " CASE "
                 + " WHEN(BSL.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID) "
                 + " THEN 'Y' "
@@ -3784,21 +3784,21 @@ namespace VA012.Models
                 + " ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID  "
                 + " LEFT JOIN C_CURRENCY BCURR  "
                 + " ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID  "
-                + " LEFT JOIN C_CONVERSION_RATE CCR  "
-                + " ON (CCR.C_CURRENCY_ID   =BSL.C_CURRENCY_ID  "
-                + " AND CCR.ISACTIVE        ='Y'  "
-                + " AND CCR.C_CURRENCY_TO_ID=AC.C_CURRENCY_ID  "
-                 + "  AND CCR.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
-                 + "  AND CCR.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)  "
-                + " AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)  "
+                //+ " LEFT JOIN C_CONVERSION_RATE CCR  "
+                //+ " ON (CCR.C_CURRENCY_ID   =BSL.C_CURRENCY_ID  "
+                //+ " AND CCR.ISACTIVE        ='Y'  "
+                //+ " AND CCR.C_CURRENCY_TO_ID=AC.C_CURRENCY_ID  "
+                // + "  AND CCR.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
+                // + "  AND CCR.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)  "
+                //+ " AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)  "
 
-                + " LEFT JOIN C_CONVERSION_RATE CCR1 "
-                + " ON (CCR1.C_CURRENCY_ID   =AC.C_CURRENCY_ID "
-                + " AND CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID "
-                + " AND CCR1.ISACTIVE        ='Y' "
-                  + "  AND CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
-                 + "  AND CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)  "
-                + " AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) "
+                //+ " LEFT JOIN C_CONVERSION_RATE CCR1 "
+                //+ " ON (CCR1.C_CURRENCY_ID   =AC.C_CURRENCY_ID "
+                //+ " AND CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID "
+                //+ " AND CCR1.ISACTIVE        ='Y' "
+                //  + "  AND CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
+                // + "  AND CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)  "
+                //+ " AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) "
 
               + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS NOT IN ( 'VO','CO') AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
             // + "  WHERE BS.C_BANKSTATEMENT_ID IN (" + _statementID + ")";
@@ -3860,7 +3860,7 @@ namespace VA012.Models
                         //_statement.bpgroup = Util.GetValueOfString(_ds.Tables[0].Rows[i]["BPGROUP"]);
                         _statement.docstatus = Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCSTATUS"]);
                         _statement.basecurrency = Util.GetValueOfString(_ds.Tables[0].Rows[i]["BASECURRENCY"]);
-                        _statement.convertedamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["CONVERTEDAMOUNT"]);
+                        //_statement.convertedamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["CONVERTEDAMOUNT"]);
                         _statement.isconverted = Util.GetValueOfString(_ds.Tables[0].Rows[i]["ISCONVERTED"]);
                         _statement.invoiceno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["INVOICENO"]);
                         _statement.c_cashline_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CASHLINE_ID"]);

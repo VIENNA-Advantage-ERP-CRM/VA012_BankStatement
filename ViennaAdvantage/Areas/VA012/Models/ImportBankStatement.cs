@@ -133,8 +133,10 @@ namespace VA012.Models
 
 
 
-            _AD_Org_ID = Util.GetValueOfInt(ctx.GetAD_Org_ID());
+            //_AD_Org_ID = Util.GetValueOfInt(ctx.GetAD_Org_ID());
             _C_BankAccount_ID = _bankaccount;
+            //Get Org_ID from the BankAccount
+            _AD_Org_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BankAccount_ID=" + _C_BankAccount_ID));
             string _accountType = Util.GetValueOfString(DB.ExecuteScalar("Select BankAccountType from C_BankAccount Where C_BankAccount_ID=" + _C_BankAccount_ID));
 
 
@@ -248,7 +250,9 @@ namespace VA012.Models
                                         _BnkStmtLine = new MBankStatementLine(_BnkStatm);
 
                                         _BnkStmtLine.SetAD_Client_ID(ctx.GetAD_Client_ID());
-                                        _BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                        //_BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                        //Set Statement Line Organization from the BankAccount 
+                                        _BnkStmtLine.SetAD_Org_ID(_AD_Org_ID);
                                         _BnkStmtLine.SetVA012_Page(pageno);
                                         _BnkStmtLine.SetLine(lineno);
                                         lineno = lineno + 10;
@@ -367,7 +371,9 @@ namespace VA012.Models
                                     {
                                         _BnkStmtLine = new MBankStatementLine(_BnkStatm);
                                         _BnkStmtLine.SetAD_Client_ID(ctx.GetAD_Client_ID());
-                                        _BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                        //_BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                        //Set Statement Line Organization from the BankAccount 
+                                        _BnkStmtLine.SetAD_Org_ID(_AD_Org_ID);
                                         _BnkStmtLine.SetVA012_Page(pageno);
                                         _BnkStmtLine.SetLine(lineno);
                                         lineno = lineno + 10;

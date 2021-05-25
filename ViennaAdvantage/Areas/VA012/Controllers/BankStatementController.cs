@@ -22,6 +22,18 @@ namespace VA012.Controllers
             ViewBag.WindowNumber = windowno;
             return PartialView();
         }
+        /// <summary>
+        /// Import Statement and Get C_BankStatement_ID
+        /// </summary>
+        /// <param name="_path">File Path</param>
+        /// <param name="_filename">File Name</param>
+        /// <param name="_bankaccount">C_BankAccount_ID</param>
+        /// <param name="_bankAccountCurrency">C_Currency_ID</param>
+        /// <param name="_statementno">Statement No</param>
+        /// <param name="_statementClassName">Statement Class Name</param>
+        /// <param name="_statementCharges">Statement charges</param>
+        /// <param name="statementDate">Statement Date</param>
+        /// <returns>class Object that returns C_BankStatement_ID or Error Message in the JSON format</returns>
         public JsonResult ImportStatement(string _path, string _filename, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementClassName, string _statementCharges, DateTime? statementDate)
         {
             Ctx ctx = Session["ctx"] as Ctx;
@@ -46,13 +58,26 @@ namespace VA012.Controllers
             }
             else
             {
-                return Json(ExecuteClass(_className, ctx, _filename, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges), JsonRequestBehavior.AllowGet);
+                return Json(ExecuteClass(_className, ctx, _filename, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate), JsonRequestBehavior.AllowGet);
 
             }
 
         }
 
-        private static StatementResponse ExecuteClass(string _className, Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges)
+        /// <summary>
+        /// Import Statement and Get C_BankStatement_ID
+        /// </summary>
+        /// <param name="_className">Statement Class Name</param>
+        /// <param name="ctx">Context</param>
+        /// <param name="FileName">File Name</param>
+        /// <param name="_path">File Path</param>
+        /// <param name="_bankaccount">C_BankAccount_ID</param>
+        /// <param name="_bankAccountCurrency">C_Currency_ID</param>
+        /// <param name="_statementno">Statement Name</param>
+        /// <param name="_statementCharges">Statement Charges</param>
+        /// <param name="statementDate">Statement Date</param>
+        /// <returns>class Object that returns C_BankStatement_ID or Error Message</returns>
+        private static StatementResponse ExecuteClass(string _className, Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate)
         {
             StatementResponse _obj = new StatementResponse();
             MethodInfo methodInfo = null;
@@ -85,7 +110,16 @@ namespace VA012.Controllers
                     {
                         object _classobj = Activator.CreateInstance(type);
                         MethodInfo method = type.GetMethod(methodName);
-                        object[] obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges };
+                        object[] obj;
+                        //_className is Equal to VA012_ENBDChkNo then pass the extra parameter statementDate in obj object array
+                        if (_className.Equals("VA012.Models.VA012_ENBDChkNo"))
+                        {
+                            obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate };
+                        }
+                        else
+                        {
+                            obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges };
+                        }
                         return (StatementResponse)method.Invoke(_classobj, obj);
                     }
                     else

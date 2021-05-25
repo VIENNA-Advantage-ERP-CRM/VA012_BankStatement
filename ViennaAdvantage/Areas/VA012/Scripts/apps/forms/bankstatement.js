@@ -1965,6 +1965,10 @@
                                             _openingFromDrop = true;
                                             $_ctrlOrder.setValue(_dragOrderID, false, true);
                                             loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
+                                            //when difference Amt is not zero then enable all options on differeneceType dropdown
+                                            if (convertAmtCulture(_txtDifference.getControl().val()) != 0) {
+                                                _divDifferenceType.find("*").prop("disabled", false);
+                                            }
                                             _openingFromDrop = false;
                                         }, 500); // for Accurate Result
                                         //childDialogs.statementOpenEdit($(this).data("uid"));
@@ -4071,6 +4075,13 @@
                             _txtConversionType.attr("disabled", false);
                         }
                     }
+                    //Set disable the Difference Type options except the Charge incase of Payment or CashLine
+                    if (VIS.Utility.Util.getValueOfDecimal(_result._txtDifference.toFixed(_stdPrecision)) != 0 && _scheduleList.length == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0) {
+                        _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
+                        _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
+                        _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
+                        _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                    }
 
                     _txtCharge.trigger("focus");
                     //_openingFromDrop = false;
@@ -5268,6 +5279,13 @@
                         _txtCharge.removeClass("va012-mandatory");
                         _cmbTaxRate.removeClass("va012-mandatory");
                     }
+                    //Set Mandatory Class
+                    if (_cmbDifferenceType.val() == 0) {
+                        _cmbDifferenceType.addClass("va012-mandatory");
+                    }
+                    else {
+                        _cmbDifferenceType.removeClass("va012-mandatory");
+                    }
 
                     loadFunctions.setPaymentListHeight();
                 });
@@ -5975,7 +5993,20 @@
                                 else {
                                     _txtDifference.getControl().removeClass('va012-mandatory');
                                 }
+                                //disable the Options Except the Charge incase of Payment or Contra if txtDifference is non-zero
                                 _divDifferenceType.find("*").prop("disabled", false);
+                                if (_scheduleList.length == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0) {
+                                    _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
+                                    _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
+                                    _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
+                                    _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                                }
+                                _cmbDifferenceType.addClass('va012-mandatory');
+                                //_divDifferenceType.find("*").prop("disabled", false);
+                            }
+                            else {
+                                _divDifferenceType.find("*").prop("disabled", true);
+                                _cmbDifferenceType.removeClass('va012-mandatory');
                             }
                         }
                         //get the Amount in standard format
@@ -6002,10 +6033,12 @@
                                     (VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) != 0 || (VIS.Utility.Util.getValueOfInt($_ctrlCashLine.getValue()) != 0))) {
                                     _cmbDifferenceType.val("CH").prop('selected', true);
                                     _cmbDifferenceType.trigger('change');
-                                    _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
-                                    _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
-                                    _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
-                                    _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                                    //if (_scheduleList.length == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0) {
+                                    //    _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
+                                    //    _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
+                                    //    _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
+                                    //    _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                                    //}
                                 }
                                 else if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 &&
                                     _scheduleList.toString() != "") {
@@ -6840,6 +6873,8 @@
                 _txtDifference.getControl().trigger("blur");
                 _txtDifference.getControl().attr("vchangable", "Y");
                 _cmbDifferenceType.prop('selectedIndex', 0);
+                //remove the Mandatory class
+                _cmbDifferenceType.removeClass('va012-mandatory');
                 _txtDescription.val("");
                 _txtVoucherNo.val("");
                 _cmbCharge.prop('selectedIndex', 0);
