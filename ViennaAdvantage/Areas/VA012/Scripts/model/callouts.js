@@ -32,6 +32,13 @@
     VA012_Contra.prototype.SetConversionType = function (ctx, windowNo, mTab, mField, value, oldValue) {
         //handled exception when value is null
         if (this.isCalloutActive() || value == null || value.toString() == "") {
+            //clear Values
+            mTab.setValue("StmtAmt", 0);
+            mTab.setValue("TrxAmt", 0);
+            mTab.setValue("C_ConversionType_ID", 0);
+            mTab.setValue("C_CashLine_ID", 0);
+            //setCalloutActive as false
+            this.setCalloutActive(false);
             return "";
         }
 
@@ -60,6 +67,8 @@
                     mTab.setValue("StmtAmt", data.Amount);
                 }
                 else {
+                    //reset stmtAmt
+                    mTab.setValue("StmtAmt", 0);
                     mTab.setValue("TrxAmt", 0);
                     mTab.setValue("C_ConversionType_ID", 0);
                     mTab.setValue("C_CashLine_ID", 0);
