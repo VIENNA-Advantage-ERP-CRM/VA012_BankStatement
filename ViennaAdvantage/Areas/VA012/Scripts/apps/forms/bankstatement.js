@@ -6006,6 +6006,8 @@
                             }
                             else {
                                 _divDifferenceType.find("*").prop("disabled", true);
+                                //if difference amt is zero then reset the _cmbDifferenceType
+                                _cmbDifferenceType.val("0").prop('selected', true);
                                 _cmbDifferenceType.removeClass('va012-mandatory');
                             }
                         }
