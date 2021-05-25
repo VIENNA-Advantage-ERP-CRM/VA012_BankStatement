@@ -60,8 +60,9 @@ namespace VA012.Models
         /// <param name="_bankAccountCurrency"></param>
         /// <param name="_statementno"></param>
         /// <param name="_statementCharges"></param>
+        /// <param name="statementDate">Statement Date</param>
         /// <returns>StatementResponse Object</returns>
-        public VA012.Models.StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges)
+        public VA012.Models.StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate)
         {
             VA012.Models.StatementResponse _obj = new VA012.Models.StatementResponse();
             string _branchName = "";
@@ -148,7 +149,7 @@ namespace VA012.Models
                         #endregion
                     }
                 }
-                _AD_Org_ID = Util.GetValueOfInt(ctx.GetAD_Org_ID());
+                //_AD_Org_ID = Util.GetValueOfInt(ctx.GetAD_Org_ID());
                 _C_BankAccount_ID = _bankaccount;
                 _AD_Org_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BankAccount_ID=" + _C_BankAccount_ID));
                 string _accountType = Util.GetValueOfString(DB.ExecuteScalar("Select BankAccountType from C_BankAccount Where C_BankAccount_ID=" + _C_BankAccount_ID));
@@ -220,7 +221,9 @@ namespace VA012.Models
                                             _BnkStatm.SetAD_Org_ID(_AD_Org_ID);
                                             _BnkStatm.SetC_BankAccount_ID(_C_BankAccount_ID);
                                             _BnkStatm.SetName(_statementno);
-                                            _BnkStatm.SetStatementDate(DateTime.Now);
+                                            //_BnkStatm.SetStatementDate(DateTime.Now);
+                                            //update from the Statement Date which is selected on the form
+                                            _BnkStatm.SetStatementDate(statementDate);
                                             if (!_BnkStatm.Save())
                                             {
                                                 //Used ValueNamePair to get error
@@ -259,7 +262,9 @@ namespace VA012.Models
                                                 _date = dt.Rows[i][0].ToString();
                                             _BnkStmtLine = new MBankStatementLine(_BnkStatm);
                                             _BnkStmtLine.SetAD_Client_ID(ctx.GetAD_Client_ID());
-                                            _BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                            //_BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                            //Set Statement Line Organization from the BankAccount 
+                                            _BnkStmtLine.SetAD_Org_ID(_AD_Org_ID);
                                             _BnkStmtLine.SetVA012_Page(pageno);
                                             _BnkStmtLine.SetLine(lineno);
                                             lineno = lineno + 10;
