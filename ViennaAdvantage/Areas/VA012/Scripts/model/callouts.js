@@ -36,9 +36,10 @@
             mTab.setValue("StmtAmt", 0);
             mTab.setValue("TrxAmt", 0);
             mTab.setValue("C_ConversionType_ID", 0);
-            mTab.setValue("C_CashLine_ID", 0);
+            //avoid looping Commented C_CashLine_ID set as Zero
+            //mTab.setValue("C_CashLine_ID", 0);
             //setCalloutActive as false
-            this.setCalloutActive(false);
+            //this.setCalloutActive(false);
             return "";
         }
 
