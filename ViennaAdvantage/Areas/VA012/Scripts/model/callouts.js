@@ -35,6 +35,7 @@
             //clear Values
             mTab.setValue("StmtAmt", 0);
             mTab.setValue("TrxAmt", 0);
+            mTab.setValue("ChargeAmt", 0);//clear chargeAmt 
             mTab.setValue("C_ConversionType_ID", 0);
             //avoid looping Commented C_CashLine_ID set as Zero
             //mTab.setValue("C_CashLine_ID", 0);
@@ -63,9 +64,10 @@
                 if (data.Amount != 0) {
                     /* Now, statement line date and Account date are same, so no to overwrite with Cash Journal Account date
                     mTab.setValue("DateAcct", data.DateAcct);*/
+                    //rearrage the fields
+                    mTab.setValue("StmtAmt", data.Amount);
                     mTab.setValue("TrxAmt", data.Amount);
                     mTab.setValue("C_ConversionType_ID", data.C_ConversionType_ID);
-                    mTab.setValue("StmtAmt", data.Amount);
                 }
                 else {
                     //reset stmtAmt
@@ -82,6 +84,17 @@
             //clear the ConversionType value when Cash Journal is zero or null
             mTab.setValue("C_ConversionType_ID", 0);
         }
+        //Update the Charge Amount
+        var stmt = VIS.Utility.Util.getValueOfDecimal(mTab.getValue("StmtAmt"));
+        var trx = VIS.Utility.Util.getValueOfDecimal(mTab.getValue("TrxAmt"));
+
+        var bd = stmt - trx;
+        // Calculate Charge
+        var interest = VIS.Utility.Util.getValueOfDecimal(mTab.getValue("InterestAmt"));
+
+        bd = bd - interest;
+        mTab.setValue("ChargeAmt", bd);
+
         this.setCalloutActive(false);
         ctx = windowNo = mTab = mField = value = oldValue = null;
         return "";
