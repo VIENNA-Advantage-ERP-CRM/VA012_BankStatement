@@ -1844,7 +1844,14 @@
                                             _openingFromDrop = true;
                                             $_ctrlPayment.setValue(_dragPaymentID, false, true);
                                             //Incase of Payment ConversionType field should be Readonly
-                                            _txtConversionType.attr("disabled", true);
+                                            //I found sometimes not getting ConversionType from the Payment becoz ConversiontType reference not 
+                                            //present on the Payment record so to avoid that take a condition here
+                                            if (_txtConversionType.val() > 0) {
+                                                _txtConversionType.attr("disabled", true);
+                                            }
+                                            else {
+                                                _txtConversionType.attr("disabled", false);
+                                            }
                                             //if (_txtVoucherNo.val() == "") {
                                             //    var Voucher = VIS.Utility.Util.getValueOfString(VIS.DB.executeScalar("select trxno from C_Payment where C_Payment_ID=" + _dragPaymentID));
                                             //    _txtVoucherNo.val(Voucher);
@@ -1966,9 +1973,9 @@
                                             $_ctrlOrder.setValue(_dragOrderID, false, true);
                                             loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
                                             //when difference Amt is not zero then enable all options on differeneceType dropdown
-                                            if (convertAmtCulture(_txtDifference.getControl().val()) != 0) {
-                                                _divDifferenceType.find("*").prop("disabled", false);
-                                            }
+                                            //if (convertAmtCulture(_txtDifference.getControl().val()) != 0) {
+                                            //    _divDifferenceType.find("*").prop("disabled", false);
+                                            //}//not required
                                             _openingFromDrop = false;
                                         }, 500); // for Accurate Result
                                         //childDialogs.statementOpenEdit($(this).data("uid"));
@@ -4075,8 +4082,10 @@
                             _txtConversionType.attr("disabled", false);
                         }
                     }
+                    //check StatementLine Id has a value or not incase of match drag the transaction into Unconciled Line
                     //Set disable the Difference Type options except the Charge incase of Payment or CashLine
-                    if (VIS.Utility.Util.getValueOfDecimal(_result._txtDifference.toFixed(_stdPrecision)) != 0 && _scheduleList.length == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0) {
+                    if (VIS.Utility.Util.getValueOfDecimal(_result._txtDifference.toFixed(_stdPrecision)) != 0 && _scheduleList.length == 0
+                        && (VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0 && $_formNewRecord.attr("data-uid") == 0) || ($_formNewRecord.attr("data-uid") != 0)) {
                         _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
                         _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
                         _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
@@ -5033,6 +5042,10 @@
                 _cmbVoucherMatch.on('change', function () {
 
                     if (_cmbVoucherMatch.val() == "M") {
+                        //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
+                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0 || VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0) {
+                            newRecordForm.refreshSelectedValues();
+                        }
 
                         _divCtrlCashLine.find("*").prop("disabled", true);
                         _divCtrlCashLine.hide();
@@ -5121,6 +5134,10 @@
                         //_divVoucher.hide();
                     }
                     else if (_cmbVoucherMatch.val() == "V") {
+                        //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
+                        if (_cashLineSelectedVal != 0 || _paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0) {
+                            newRecordForm.refreshSelectedValues();
+                        }
 
                         _divCtrlCashLine.find("*").prop("disabled", true);
                         _divCtrlCashLine.hide();
@@ -5185,6 +5202,11 @@
                         //_divPaymentSchedule.hide();
                     }
                     else if (_cmbVoucherMatch.val() == "C") {
+                        //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
+                        if (_paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0) {
+                            newRecordForm.refreshSelectedValues();
+                        }
+
                         _divContraType.show();
                         //Commented For Contra-29-1-16
                         //_divCashBook.show();
@@ -5260,7 +5282,8 @@
                             _cmbTaxRate.addClass("va012-mandatory");
                         }
                     }
-                    else if (_cmbVoucherMatch.val() == "M") {
+                    //added if _cmbVoucherMatch as Contra then it re-arrange the fields
+                    else if (_cmbVoucherMatch.val() == "M" || _cmbVoucherMatch.val() == "C") {
                         //_divVoucherNo.find("*").prop("disabled", true);
                         _divCharge.find("*").prop("disabled", true);
                         _divTaxRate.find("*").prop("disabled", true);
@@ -5461,16 +5484,15 @@
                                 if (data != null) {
                                     _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(data["TaxAmt"]));
                                     _cmbTaxRate.removeClass("va012-mandatory");
-                                    _txtTrxAmt.getControl().trigger("blur");
+                                    //_txtTrxAmt.getControl().trigger("blur");//not required
                                 }
                             }
                         }
-                        //_cmbTaxRate.removeClass("va012-mandatory");
                     }
                     // Mandatory when have charge
                     else {
                         _cmbTaxRate.addClass("va012-mandatory");
-                        _txtTrxAmt.getControl().trigger("blur");
+                        //_txtTrxAmt.getControl().trigger("blur");//not required
                     }
 
                 });
@@ -5995,19 +6017,28 @@
                                 }
                                 //disable the Options Except the Charge incase of Payment or Contra if txtDifference is non-zero
                                 _divDifferenceType.find("*").prop("disabled", false);
-                                if (_scheduleList.length == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0) {
+                                //check StatementLine Id has a value or not incase of match drag the transaction into Unconciled Line
+                                if (_scheduleList.length == 0 && (VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0 && $_formNewRecord.attr("data-uid") == 0)
+                                    || ($_formNewRecord.attr("data-uid") != 0)) {//$_formNewRecord.attr("data-uid") - C_StatementLine_ID
                                     _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
                                     _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
                                     _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
                                     _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
                                 }
-                                _cmbDifferenceType.addClass('va012-mandatory');
-                                //_divDifferenceType.find("*").prop("disabled", false);
+                                //considered _cmbDifferenceType value not zero then remove mandatory class
+                                if (_cmbDifferenceType.val() != 0) {
+                                    _cmbDifferenceType.removeClass('va012-mandatory');
+                                }
+                                else {
+                                    _cmbDifferenceType.addClass('va012-mandatory');
+                                }
                             }
                             else {
                                 _divDifferenceType.find("*").prop("disabled", true);
                                 //if difference amt is zero then reset the _cmbDifferenceType
                                 _cmbDifferenceType.val("0").prop('selected', true);
+                                //call on change event after reset the value to arrange the fields accordingly
+                                _cmbDifferenceType.trigger('change');
                                 _cmbDifferenceType.removeClass('va012-mandatory');
                             }
                         }
@@ -6743,7 +6774,7 @@
 
                 formData["_bankStatementLineID"] = $_formNewRecord.attr("data-uid");
                 formData["_txtStatementNo"] = _txtStatementNo.val();
-                formData["_txtStatementPage"] = _txtStatementPage.val()
+                formData["_txtStatementPage"] = _txtStatementPage.val();
                 formData["_txtStatementLine"] = _txtStatementLine.val();
                 formData["_dtStatementDate"] = _dtStatementDate.val();
                 formData["_cmbPaymentMethod"] = _cmbPaymentMethod.val();
@@ -6933,6 +6964,70 @@
                 _prepayList = [];
                 _prepayDataList = [];
                 _txtPrepayOrder.val("");
+            },
+            // refreshForm when change the Match/Voucher Type 
+            // when user change after drag the transaction
+            refreshSelectedValues: function () {
+                $_formNewRecord.attr("data-uid", 0);
+                // _btnCreatePayment.hide();
+                loadFunctions.getMaxStatement("LO");
+                //Statement Date set readonly false
+                _dtStatementDate.attr("readonly", false);
+                //get BankStatement Date and set as Statement Date for new Record
+                var stateDate = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetStatementDate", { bankAcct: _cmbBankAccount.val() });
+                if (stateDate != "" && stateDate != null) {
+                    _dtStatementDate.val(Globalize.format(new Date(stateDate), "yyyy-MM-dd"));
+                }
+                else {
+                    _dtStatementDate.val(_today);
+                }
+                _cmbPaymentMethod.prop('selectedIndex', 0);
+                _txtAmount.getControl().attr("disabled", false);
+                _txtAmount.setValue(0);
+                _txtTrxAmt.setValue(0);
+                _txtDifference.setValue(0);
+                // Disable or enabled, Diffrence type based on diffreence amount
+                //changed to blur to avoid the _txtDifference value being change when trigger this function
+                _txtDifference.getControl().trigger("blur");
+                _txtDifference.getControl().attr("vchangable", "Y");
+                _cmbDifferenceType.prop('selectedIndex', 0);
+                //remove the Mandatory class
+                _cmbDifferenceType.removeClass('va012-mandatory');
+                _txtDescription.val("");
+                _txtVoucherNo.val("");
+                _cmbCharge.prop('selectedIndex', 0);
+                _txtCharge.attr('chargeid', 0);
+                _txtCharge.val("");
+                _cmbTaxRate.prop('selectedIndex', 0);
+                _txtTaxAmount.setValue(0);
+                _chkUseNextTime.attr('checked', false);
+                $_ctrlPayment.setValue();
+                $_ctrlOrder.setValue();
+                $_ctrlCashLine.setValue();
+                $_ctrlBusinessPartner.setValue();
+                $_ctrlInvoice.setValue();
+                _bPartnerSelectedVal = 0;
+                _paymentSelectedVal = 0;
+                _orderSelectedVal = 0;
+                //clear the CashLine_ID
+                _cashLineSelectedVal = 0;
+                _invoiceSelectedVal = null;
+                //_btnIn.attr("v_active", "1");
+                _btnIn.trigger('click');
+
+                _cmbContraType.prop('selectedIndex', 0);
+                _cmbCashBook.prop('selectedIndex', 0);
+                _cmbTransferType.prop('selectedIndex', 0);
+                _txtCheckNo.val("");
+                this.loadNewFormCurrency();
+                _txtConversionType.addClass("va012-mandatory");
+                this.loadConversionTypes();
+                _txtCurrency.addClass("va012-mandatory");
+                //C_ConversionType_ID
+                _txtConversionType.prop('selectedIndex', 0);
+                //_txtConversionType disabled false 
+                _txtConversionType.attr("disabled", false);
+                _txtCurrency.attr("disabled", false);
             },
             newRecordDispose: function () {
                 $_formNewRecord = null;

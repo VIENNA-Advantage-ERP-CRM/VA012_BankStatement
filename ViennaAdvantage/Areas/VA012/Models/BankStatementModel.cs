@@ -610,9 +610,10 @@ namespace VA012.Models
             {
                 //_qryStmt = "SELECT C_BANKSTATEMENT_ID,DOCSTATUS,0 AS C_PAYMENT_ID, 0 AS C_CHARGE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _formData[0]._txtStatementNo + "' AND TO_CHAR(BS.STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY')";
                 //not required start and end date filters
+                //get the record based on BankAccount and DocStatus not with the Name of the Bank Statement
                 _qryStmt = @"SELECT C_BANKSTATEMENT_ID,C_BANKACCOUNT_ID,DOCSTATUS,0 AS C_PAYMENT_ID,
                             0 AS C_CHARGE_ID, 0 AS C_CASHLINE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED 
-                            FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND NAME='" + _formData[0]._txtStatementNo + "'";/*  AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true)*/
+                            FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DocStatus NOT IN('RE','VO','CO','CL') AND AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND C_BANKACCOUNT_ID=" + _formData[0]._cmbBankAccount;/*NAME='" + _formData[0]._txtStatementNo + "'";  AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true)*/
             }
             //used transaction trx
             _ds = DB.ExecuteDataset(_qryStmt, null, trx);
@@ -657,17 +658,28 @@ namespace VA012.Models
                                 trx = null;
                                 return "VA012_StatementAlreadyExistDiffAcc";
                             }
+                            //if both are same for Existed record and bank account from the form 
+                            //then it should not allow to create another Bankstatement with same bank
+                            else if (_existingAccountID == _formData[0]._cmbBankAccount) {
+                                //closing transaction
+                                trx.Rollback();
+                                //close the transaction
+                                trx.Close();
+                                //clear the object
+                                trx = null;
+                                return "VA012_StatementAlreadyOpenSameAcct";
+                            }
                         }
-                        else if (_statementDocStatus == "CO" || _statementDocStatus == "CL" || _statementDocStatus == "RE" || _statementDocStatus == "VO")
-                        {
-                            //closing transaction
-                            trx.Rollback();
-                            //close the transaction
-                            trx.Close();
-                            //clear the object
-                            trx = null;
-                            return "VA012_StatementAlreadyExist";
-                        }
+                        //else if (_statementDocStatus == "CO" || _statementDocStatus == "CL" || _statementDocStatus == "RE" || _statementDocStatus == "VO")
+                        //{
+                        //    //closing transaction
+                        //    trx.Rollback();
+                        //    //close the transaction
+                        //    trx.Close();
+                        //    //clear the object
+                        //    trx = null;
+                        //    return "VA012_StatementAlreadyExist";
+                        //}
                     }
                 }
             }
