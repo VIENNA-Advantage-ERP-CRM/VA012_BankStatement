@@ -4084,8 +4084,10 @@
                     }
                     //check StatementLine Id has a value or not incase of match drag the transaction into Unconciled Line
                     //Set disable the Difference Type options except the Charge incase of Payment or CashLine
-                    if (VIS.Utility.Util.getValueOfDecimal(_result._txtDifference.toFixed(_stdPrecision)) != 0 && _scheduleList.length == 0
-                        && (VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0 && $_formNewRecord.attr("data-uid") == 0) || ($_formNewRecord.attr("data-uid") != 0)) {
+                    //applied one more condition to set readonly options according to the Statement amount and Transaction amounts in case of drag into unconciled line
+                    if (VIS.Utility.Util.getValueOfDecimal(_result._txtDifference.toFixed(_stdPrecision)) != 0 &&
+                        (_scheduleList.length == 0 || (_scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) < Math.abs(convertAmtCulture(_txtAmount.getControl().val()))))
+                        && ((VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0 && $_formNewRecord.attr("data-uid") == 0) || $_formNewRecord.attr("data-uid") != 0)) {
                         _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
                         _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
                         _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
@@ -5303,7 +5305,8 @@
                         _cmbTaxRate.removeClass("va012-mandatory");
                     }
                     //Set Mandatory Class
-                    if (_cmbDifferenceType.val() == 0) {
+                    //_cmbDifferenceType.val() will check condition null or "" or 0 and get right result
+                    if (_cmbDifferenceType.val() <= 0) {
                         _cmbDifferenceType.addClass("va012-mandatory");
                     }
                     else {
@@ -6018,19 +6021,26 @@
                                 //disable the Options Except the Charge incase of Payment or Contra if txtDifference is non-zero
                                 _divDifferenceType.find("*").prop("disabled", false);
                                 //check StatementLine Id has a value or not incase of match drag the transaction into Unconciled Line
-                                if (_scheduleList.length == 0 && (VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0 && $_formNewRecord.attr("data-uid") == 0)
-                                    || ($_formNewRecord.attr("data-uid") != 0)) {//$_formNewRecord.attr("data-uid") - C_StatementLine_ID
+                                //applied one more condition to set readonly options according to the Statement amount and Transaction amounts in case of drag into unconciled line
+                                if ((_scheduleList.length == 0 || (_scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) < Math.abs(convertAmtCulture(_txtAmount.getControl().val()))))
+                                    && ((VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0 && $_formNewRecord.attr("data-uid") == 0)
+                                        || $_formNewRecord.attr("data-uid") != 0)) {//$_formNewRecord.attr("data-uid") - C_StatementLine_ID
                                     _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
                                     _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
                                     _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
                                     _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                                    //When User change the amount then it will clear previous value and set as Empty.
+                                    if (_cmbDifferenceType.val() != "CH") {
+                                        _cmbDifferenceType.val("0").prop('selected', true);
+                                    }
                                 }
                                 //considered _cmbDifferenceType value not zero then remove mandatory class
-                                if (_cmbDifferenceType.val() != 0) {
-                                    _cmbDifferenceType.removeClass('va012-mandatory');
+                                //changed != to <= to check null also
+                                if (_cmbDifferenceType.val() <= 0) {
+                                    _cmbDifferenceType.addClass('va012-mandatory');
                                 }
                                 else {
-                                    _cmbDifferenceType.addClass('va012-mandatory');
+                                    _cmbDifferenceType.removeClass('va012-mandatory');
                                 }
                             }
                             else {
@@ -6220,7 +6230,7 @@
                             }
                         }
                         if (transtype != null && _recordId != null) {
-                                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: _recordId, bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() }, callbackGetConvtAmt);
+                            VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: _recordId, bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() }, callbackGetConvtAmt);
                             function callbackGetConvtAmt(_ds) {
                                 for (var i = 0; i < _ds.length; i++) {
                                     if (_ds.length == 0 || _ds[i].DueAmount == 0) {
