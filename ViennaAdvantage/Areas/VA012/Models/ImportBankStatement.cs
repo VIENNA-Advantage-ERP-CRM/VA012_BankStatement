@@ -40,96 +40,106 @@ namespace VA012.Models
             StatementResponse _obj = new StatementResponse();
 
             #region Period StartDate and End Date
-            DateTime? _startdate = null;
-            DateTime? _enddate = null;
-            string _sqlDate = @"SELECT STARTDATE
-                                FROM C_PERIOD
-                                WHERE C_YEAR_ID =
-                                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                                        FROM C_YEAR Y
-                                        INNER JOIN C_PERIOD P
-                                        ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                                        WHERE Y.C_CALENDAR_ID =
-                                          (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                                          )
-                                        AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
-                                        AND P.ISACTIVE = 'Y'
-                                        AND Y.ISACTIVE ='Y'
-                                  )
-                                AND PERIODNO=1";
-            _startdate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
-            _sqlDate = @"SELECT ENDDATE
-                                FROM C_PERIOD
-                                WHERE C_YEAR_ID =
-                                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                                            FROM C_YEAR Y
-                                            INNER JOIN C_PERIOD P
-                                            ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                                            WHERE Y.C_CALENDAR_ID =
-                                              (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                                              )
-                                            AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
-                                            AND P.ISACTIVE = 'Y'
-                                            AND Y.ISACTIVE ='Y'
-                                  )
-                                AND PERIODNO=12";
-            _enddate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
+            //DateTime? _startdate = null;//not required
+            //DateTime? _enddate = null;
+            //string _sqlDate = @"SELECT STARTDATE
+            //                    FROM C_PERIOD
+            //                    WHERE C_YEAR_ID =
+            //                      (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
+            //                            FROM C_YEAR Y
+            //                            INNER JOIN C_PERIOD P
+            //                            ON P.C_YEAR_ID        = Y.C_YEAR_ID
+            //                            WHERE Y.C_CALENDAR_ID =
+            //                              (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
+            //                              )
+            //                            AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
+            //                            AND P.ISACTIVE = 'Y'
+            //                            AND Y.ISACTIVE ='Y'
+            //                      )
+            //                    AND PERIODNO=1";
+            //_startdate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
+            //_sqlDate = @"SELECT ENDDATE
+            //                    FROM C_PERIOD
+            //                    WHERE C_YEAR_ID =
+            //                      (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
+            //                                FROM C_YEAR Y
+            //                                INNER JOIN C_PERIOD P
+            //                                ON P.C_YEAR_ID        = Y.C_YEAR_ID
+            //                                WHERE Y.C_CALENDAR_ID =
+            //                                  (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
+            //                                  )
+            //                                AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
+            //                                AND P.ISACTIVE = 'Y'
+            //                                AND Y.ISACTIVE ='Y'
+            //                      )
+            //                    AND PERIODNO=12";
+            //_enddate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
 
             #endregion
 
 
-            int _existingStatementID = 0;
-            string _statementDocStatus = "";
+            //int _existingStatementID = 0;
+            //string _statementDocStatus = "";
             int pageno = 1;
             int lineno = 10;
 
 
-            DataSet _ds = new DataSet();
+            //DataSet _ds = new DataSet();
             //_ds = DB.ExecuteDataset("SELECT C_BANKSTATEMENT_ID,DOCSTATUS FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _statementno + "'  AND TO_CHAR(STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY') ", null);
-            _ds = DB.ExecuteDataset("SELECT C_BANKSTATEMENT_ID,DOCSTATUS FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _statementno + "' AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true), null);
-            if (_ds != null)
-            {
-                if (_ds.Tables[0].Rows.Count > 0)
-                {
-                    _existingStatementID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BANKSTATEMENT_ID"]);
-                    _statementDocStatus = Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCSTATUS"]);
-                    if (_statementDocStatus == "CO")
-                    {
+            //_ds = DB.ExecuteDataset("SELECT C_BANKSTATEMENT_ID,DOCSTATUS FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _statementno + "' AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true), null);
+            //Statement Name is not Unique and Changed query to fetch the C_BANKSTATEMENT_ID which is drafted or Inprogress record for selected Bank
+            int _existingStatementID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DocStatus NOT IN('RE','VO','CO','CL') AND AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND C_BANKACCOUNT_ID=" + _bankaccount, null, null));
+            //if (_ds != null)// not required this code because '_ds' is commented
+            //{
+            //    if (_ds.Tables[0].Rows.Count > 0)
+            //    {
+            //_existingStatementID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BANKSTATEMENT_ID"]);
+            //_statementDocStatus = Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCSTATUS"]);
+            //if (_statementDocStatus == "CO")
+            //{
 
-                        _obj._error = "VA012_StatementAlreadyExist";
-                        return _obj;
-                    }
-                    #region Get Page And Line
-                    string _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE
+            //    _obj._error = "VA012_StatementAlreadyExist";
+            //    return _obj;
+            //}
+            #region Get Page And Line
+            //Merge two queries as single query
+            string _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE
                     FROM C_BANKSTATEMENTLINE BSL
                     INNER JOIN C_BANKSTATEMENT BS
                     ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + _existingStatementID;
-                    pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
-                    if (pageno <= 0)
-                    {
-                        pageno = 1;
-                    }
-
-                    //            _sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
-                    //                    FROM C_BANKSTATEMENTLINE BSL
-                    //                    INNER JOIN C_BANKSTATEMENT BS
-                    //                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.NAME ='" + _statementno + "' AND BSL.VA012_PAGE='" + pageno + "' AND TO_CHAR(BS.STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY')  ";
-                    _sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
-                    FROM C_BANKSTATEMENTLINE BSL
-                    INNER JOIN C_BANKSTATEMENT BS
-                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + _existingStatementID + " AND BSL.VA012_PAGE='" + pageno + "'";
-
-                    lineno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
-                    if (lineno <= 0)
-                    {
-                        lineno = 10;
-                    }
-                    #endregion
-
-
-                }
-
+            DataSet _data = DB.ExecuteDataset(_sql, null, null);
+            if (_data != null && _data.Tables[0].Rows.Count > 0)
+            {
+                pageno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["PAGE"]);
+                lineno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["LINE"]);
             }
+            //pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+            if (pageno <= 0)
+            {
+                pageno = 1;
+            }
+
+            //            _sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
+            //                    FROM C_BANKSTATEMENTLINE BSL
+            //                    INNER JOIN C_BANKSTATEMENT BS
+            //                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.NAME ='" + _statementno + "' AND BSL.VA012_PAGE='" + pageno + "' AND TO_CHAR(BS.STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY')  ";
+            //Get Line Included in above query
+            //_sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
+            //        FROM C_BANKSTATEMENTLINE BSL
+            //        INNER JOIN C_BANKSTATEMENT BS
+            //        ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + _existingStatementID + " AND BSL.VA012_PAGE='" + pageno + "'";
+
+            //lineno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+            if (lineno <= 0)
+            {
+                lineno = 10;
+            }
+            #endregion
+
+
+            //    }
+
+            //}
 
 
 

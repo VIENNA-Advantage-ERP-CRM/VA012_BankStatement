@@ -77,23 +77,23 @@
                     mTab.setValue("C_CashLine_ID", 0);
                     VIS.ADialog.info("VA012_ConversionRateNotFound");
                 }
+                //Update the Charge Amount
+                var stmt = VIS.Utility.Util.getValueOfDecimal(mTab.getValue("StmtAmt"));
+                var trx = VIS.Utility.Util.getValueOfDecimal(mTab.getValue("TrxAmt"));
+
+                var bd = stmt - trx;
+                // Calculate Charge
+                var interest = VIS.Utility.Util.getValueOfDecimal(mTab.getValue("InterestAmt"));
+
+                bd = bd - interest;
+                mTab.setValue("ChargeAmt", bd);
             }
         }
-        else
-        {
+        //Couldn't change the ConversionType when change the statemntLine date and when reference of Payment is present
+        else if (mTab.getValue("C_Payment_ID") <= 0) {
             //clear the ConversionType value when Cash Journal is zero or null
             mTab.setValue("C_ConversionType_ID", 0);
         }
-        //Update the Charge Amount
-        var stmt = VIS.Utility.Util.getValueOfDecimal(mTab.getValue("StmtAmt"));
-        var trx = VIS.Utility.Util.getValueOfDecimal(mTab.getValue("TrxAmt"));
-
-        var bd = stmt - trx;
-        // Calculate Charge
-        var interest = VIS.Utility.Util.getValueOfDecimal(mTab.getValue("InterestAmt"));
-
-        bd = bd - interest;
-        mTab.setValue("ChargeAmt", bd);
 
         this.setCalloutActive(false);
         ctx = windowNo = mTab = mField = value = oldValue = null;
