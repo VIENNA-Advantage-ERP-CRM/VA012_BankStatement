@@ -4080,6 +4080,7 @@
                         }
                         else {
                             _txtConversionType.attr("disabled", false);
+                            $(_txtConversionType[0][0]).hide();//after set the ConversionType don't show the empty option
                         }
                     }
                     //check StatementLine Id has a value or not incase of match drag the transaction into Unconciled Line

@@ -805,10 +805,11 @@ namespace VA012.Models
                     //set object value as null
                     trx = null;
                     ValueNamePair pp = VLogger.RetrieveError();
-                    string error = pp != null ? pp.GetValue() : "";
+                    //Check first GetName() then GetValue() to get proper Error Message
+                    string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                     if (string.IsNullOrEmpty(error))
                     {
-                        error = pp != null ? pp.GetName() : "";
+                        error = pp != null ? pp.GetValue() : "";
                     }
                     return !string.IsNullOrEmpty(error) ? error : "VA012_ErrorSavingBankStatement";
                 }
@@ -940,10 +941,13 @@ namespace VA012.Models
 
                     if (_CountVA034 > 0)
                     {
-                        paymentrecord.SetVA034_DepositSlipNo(HttpUtility.HtmlDecode(_formData[0]._txtVoucherNo));
+                        //paymentrecord.SetVA034_DepositSlipNo(HttpUtility.HtmlDecode(_formData[0]._txtVoucherNo));
+                        int _paymentUpdated = Util.GetValueOfInt(DB.ExecuteScalar("UPDATE C_Payment SET VA034_DepositSlipNo='" + _formData[0]._txtVoucherNo + "' WHERE IsActive='Y' AND C_Payment_ID=" + paymentrecord.GetC_Payment_ID(), null, trx));
                         //paymentrecord.Save();
                         //Used condition to check payment Saved or not
-                        if (!paymentrecord.Save()) {
+                        //if (!paymentrecord.Save())
+                        if (_paymentUpdated < 0)
+                        {
                             //Used transaction 
                             trx.Rollback();
                             //close the transaction
@@ -952,14 +956,11 @@ namespace VA012.Models
                             trx = null;
                             //Used ValueNamePair class to get the Error
                             ValueNamePair pp = VLogger.RetrieveError();
-                            string error = pp != null ? pp.GetValue() : "";
+                            //Check first GetName() then GetValue() to get proper Error Message
+                            string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                             if (string.IsNullOrEmpty(error))
                             {
-                                error = pp != null ? pp.GetName() : "";
-                                if (string.IsNullOrEmpty(error))
-                                {
-                                    error = pp != null ? pp.ToString() : "";
-                                }
+                                error = pp != null ? pp.GetValue() : "";
                             }
                             return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                         }
@@ -1250,14 +1251,11 @@ namespace VA012.Models
                 trx = null;
                 //Used ValueNamePair class to get the Error
                 ValueNamePair pp = VLogger.RetrieveError();
-                string error = pp != null ? pp.GetValue() : "";
+                //Check first GetName() then GetValue() to get proper Error Message
+                string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                 if (string.IsNullOrEmpty(error))
                 {
-                    error = pp != null ? pp.GetName() : "";
-                    if (string.IsNullOrEmpty(error))
-                    {
-                        error = pp != null ? pp.ToString() : "";
-                    }
+                    error = pp != null ? pp.GetValue() : "";
                 }
                 return !string.IsNullOrEmpty(error) ? error : "VA012_ErrorSavingBankStatementLine";
             }
@@ -2416,10 +2414,11 @@ namespace VA012.Models
                                 //Used ValueNamePair to get Error
                                 ValueNamePair pp = VLogger.RetrieveError();
                                 //some times getting the error pp also
-                                string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                //Check first GetName() then GetValue() to get proper Error Message
+                                string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                                 if (string.IsNullOrEmpty(error))
                                 {
-                                    error = pp != null ? pp.GetName() : "";
+                                    error = pp != null ? pp.GetValue() : "";
                                 }
 
                                 _unObj._statementNoNotUpdate = !string.IsNullOrEmpty(error) ? error : _objSt.GetName() + "/" + _obj.GetLine();
@@ -4171,10 +4170,11 @@ namespace VA012.Models
                             _trx.Rollback();
                             ValueNamePair pp = VLogger.RetrieveError();
                             //some times getting the error pp also
-                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                            //Check first GetName() then GetValue() to get proper Error Message
+                            string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                             if (string.IsNullOrEmpty(error))
                             {
-                                error = pp != null ? pp.GetName() : "";
+                                error = pp != null ? pp.GetValue() : "";
                             }
                             return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                         }
@@ -4194,10 +4194,11 @@ namespace VA012.Models
                                     _trx.Rollback();
                                     ValueNamePair pp = VLogger.RetrieveError();
                                     //some times getting the error pp also
-                                    string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                    //Check first GetName() then GetValue() to get proper Error Message
+                                    string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                                     if (string.IsNullOrEmpty(error))
                                     {
-                                        error = pp != null ? pp.GetName() : "";
+                                        error = pp != null ? pp.GetValue() : "";
                                     }
                                     return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
                                 }
@@ -4247,10 +4248,11 @@ namespace VA012.Models
                             //closing transaction
                             _trx.Rollback();
                             ValueNamePair pp = VLogger.RetrieveError();
-                            string error = pp != null ? pp.GetValue() : "";
+                            //Check first GetName() then GetValue() to get proper Error Message
+                            string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                             if (string.IsNullOrEmpty(error))
                             {
-                                error = pp != null ? pp.GetName() : "";
+                                error = pp != null ? pp.GetValue() : "";
                             }
                             return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                         }
@@ -4369,10 +4371,11 @@ namespace VA012.Models
                                 {
                                     _trx.Rollback();
                                     ValueNamePair pp = VLogger.RetrieveError();
-                                    string error = pp != null ? pp.GetValue() : "";
+                                    //Check first GetName() then GetValue() to get proper Error Message
+                                    string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                                     if (string.IsNullOrEmpty(error))
                                     {
-                                        error = pp != null ? pp.GetName() : "";
+                                        error = pp != null ? pp.GetValue() : "";
                                     }
                                     return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                                 }
@@ -4401,10 +4404,11 @@ namespace VA012.Models
                                             _trx.Rollback();
                                             ValueNamePair pp = VLogger.RetrieveError();
                                             //some times getting the error pp also
-                                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                            //Check first GetName() then GetValue() to get proper Error Message
+                                            string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                                             if (string.IsNullOrEmpty(error))
                                             {
-                                                error = pp != null ? pp.GetName() : "";
+                                                error = pp != null ? pp.GetValue() : "";
                                             }
                                             return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
                                         }
@@ -4415,10 +4419,11 @@ namespace VA012.Models
                                         _trx.Rollback();
                                         ValueNamePair pp = VLogger.RetrieveError();
                                         //some times getting the error pp also
-                                        string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                        //Check first GetName() then GetValue() to get proper Error Message
+                                        string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                                         if (string.IsNullOrEmpty(error))
                                         {
-                                            error = pp != null ? pp.GetName() : "";
+                                            error = pp != null ? pp.GetValue() : "";
                                         }
                                         return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
                                     }
@@ -4606,10 +4611,11 @@ namespace VA012.Models
                 {
                     _trx.Rollback();
                     ValueNamePair pp = VLogger.RetrieveError();
-                    string error = pp != null ? pp.GetValue() : "";
+                    //Check first GetName() then GetValue() to get proper Error Message
+                    string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                     if (string.IsNullOrEmpty(error))
                     {
-                        error = pp != null ? pp.GetName() : "";
+                        error = pp != null ? pp.GetValue() : "";
                     }
                     return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                 }
@@ -4631,10 +4637,11 @@ namespace VA012.Models
                             _trx.Rollback();
                             ValueNamePair pp = VLogger.RetrieveError();
                             //some times getting the error pp also
-                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                            //Check first GetName() then GetValue() to get proper Error Message
+                            string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                             if (string.IsNullOrEmpty(error))
                             {
-                                error = pp != null ? pp.GetName() : "";
+                                error = pp != null ? pp.GetValue() : "";
                             }
                             return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
                         }
@@ -4715,10 +4722,11 @@ namespace VA012.Models
                 {
                     _trx.Rollback();
                     ValueNamePair pp = VLogger.RetrieveError();
-                    string error = pp != null ? pp.GetValue() : "";
+                    //Check first GetName() then GetValue() to get proper Error Message
+                    string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                     if (string.IsNullOrEmpty(error))
                     {
-                        error = pp != null ? pp.GetName() : "";
+                        error = pp != null ? pp.GetValue() : "";
                     }
                     return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotSaved";
                 }
@@ -4740,10 +4748,11 @@ namespace VA012.Models
                             _trx.Rollback();
                             ValueNamePair pp = VLogger.RetrieveError();
                             //some times getting the error pp also
-                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                            //Check first GetName() then GetValue() to get proper Error Message
+                            string error = pp != null ? pp.ToString() ?? pp.GetName() : "";
                             if (string.IsNullOrEmpty(error))
                             {
-                                error = pp != null ? pp.GetName() : "";
+                                error = pp != null ? pp.GetValue() : "";
                             }
                             return !string.IsNullOrEmpty(error) ? error : "VA012_PaymentNotDeleted";
                         }
