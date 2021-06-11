@@ -175,7 +175,15 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult MaxStatement(int _bankAccount, string _origin)
+
+        /// <summary>
+        /// Get Max Statement PageNo, LineNo and StatementName
+        /// </summary>
+        /// <param name="_bankAccount">C_BankAccount_ID</param>
+        /// <param name="_origin">origin differentiate weather it is Existing Statement or New Statement</param>
+        /// <param name="_pageNo">PageNo</param>
+        /// <returns>return JSON string which contains PageNo,LineNo and StatementNo</returns>
+        public JsonResult MaxStatement(int _bankAccount, string _origin, int _pageNo)
         {
             string retJSON = "";
             string _sql = "";
@@ -257,24 +265,39 @@ namespace VA012.Controllers
                     //    _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
                     //    statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     //}
+                    //Get the Max LineNo based on PageNo
+                    string pageNo;
+                    if (_pageNo > 0)
+                    {
+                        pageNo = _pageNo.ToString();
+                    }
+                    else
+                    {
+                        pageNo = "SELECT MAX(BL.VA012_PAGE) AS PAGE FROM C_BANKSTATEMENTLINE BL WHERE BL.C_BANKSTATEMENT_ID = " + statementID;
+                    }
 
-
-                    _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE
-                    FROM C_BANKSTATEMENTLINE BSL
-                    INNER JOIN C_BANKSTATEMENT BS
-                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + statementID + "  AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
-                    pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+                    _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE FROM C_BANKSTATEMENTLINE BSL
+                    WHERE BSL.VA012_PAGE=(" + pageNo + @") 
+                    AND BSL.C_BANKSTATEMENT_ID =" + statementID + "  AND BSL.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    //pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+                    //No need of PageNo condition to fetch the LineNo so get both PageNo and LineNo in One dB Query
+                    DataSet _data = DB.ExecuteDataset(_sql, null, null);
+                    if (_data != null && _data.Tables[0].Rows.Count > 0)
+                    {
+                        pageno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["PAGE"]);
+                        lineno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["LINE"]);
+                    }
                     if (pageno <= 0)
                     {
                         pageno = 1;
                     }
 
-
-                    _sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
-                    FROM C_BANKSTATEMENTLINE BSL
-                    INNER JOIN C_BANKSTATEMENT BS
-                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + statementID + " AND BSL.VA012_PAGE='" + pageno + "'  AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
-                    lineno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+                    //No need of PageNo condition to fetch the LineNo
+                    //_sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
+                    //FROM C_BANKSTATEMENTLINE BSL
+                    //INNER JOIN C_BANKSTATEMENT BS
+                    //ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + statementID + " AND BSL.VA012_PAGE='" + pageno + "'  AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    //lineno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
                     if (lineno <= 0)
                     {
                         lineno = 10;
@@ -561,6 +584,16 @@ namespace VA012.Controllers
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
 
+        /// <summary>
+        /// Match the Statement Lines
+        /// </summary>
+        /// <param name="_matchingBaseItemList">Matching Item List</param>
+        /// <param name="_cmbMatchingCriteria">Matching Criteria</param>
+        /// <param name="_BankAccount">C_BankAccount</param>
+        /// <param name="_StatementNo">StatementNo</param>
+        /// <param name="_BankCharges">Bank Charges</param>
+        /// <param name="_TaxRate">C_TaxRate_ID</param>
+        /// <returns>returns Matched Lines result</returns>
         public JsonResult MatchStatementGridData(string _matchingBaseItemList, string _cmbMatchingCriteria, int _BankAccount, int _StatementNo, int _BankCharges, int _TaxRate)
         {
             string retJSON = "";

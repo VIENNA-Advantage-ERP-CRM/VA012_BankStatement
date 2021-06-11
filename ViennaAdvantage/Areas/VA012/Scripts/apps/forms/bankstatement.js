@@ -1253,11 +1253,15 @@
                 });
             },
             getMaxStatement: function (_origin) {
+                //always zero becoz this parameter 
+                //used in other function with calling this Same Controller
+                var page_No = 0;
+
                 $.ajax({
                     url: VIS.Application.contextUrl + "BankStatement/MaxStatement",
                     type: "GET",
                     datatype: "json",
-                    data: ({ _bankAccount: _cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _origin: _origin }),
+                    data: ({ _bankAccount: _cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _origin: _origin, _pageNo: page_No }),
                     contentType: "application/json; charset=utf-8",
                     success: function (data) {
                         if (data != null && data != "") {
@@ -5774,6 +5778,15 @@
                         VIS.ADialog.info("MoreScheduleAmount", null, "", "");
                         return;
                     }
+
+                    //When user click save button with out selecting Order/Payment/Schedule then return validation message
+                    if (VIS.Utility.Util.getValueOfString(_formData[0]["_scheduleList"]) == "" && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlPayment"]) == 0
+                        && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlOrder"]) == 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) == 0
+                        && VIS.Utility.Util.getValueOfInt(_formData[0]["_cmbCharge"]) == 0 ) {
+                        VIS.ADialog.info("VA012_PleaseSelectAnyOne", null, "", "");
+                        return;
+                    }
+
                     //get the Surcharge Amount when select the TaxRate
                     if (VIS.Utility.Util.getValueOfString(_formData[0]["_cmbDifferenceType"]) == "CH" || VIS.Utility.Util.getValueOfString(_formData[0]["_cmbVoucherMatch"]) == "V") {
                         var _tax_ID = VIS.Utility.Util.getValueOfInt(_formData[0]["_cmbTaxRate"]);
@@ -5949,7 +5962,37 @@
                     if (event.which != 8 && event.which != 0 && (event.which < 48 || event.which > 57)) {
                         return false;
                     }
-                    _txtStatementLine.val("10");
+                });
+
+                //hangled on change of Statement PageNo
+                _txtStatementPage.on("change", function (event) {
+
+                    //When change the _txtStatementPage it will call and set the Page and LineNo accordingly
+                    _origin = "LO";
+                    $.ajax({
+                        url: VIS.Application.contextUrl + "BankStatement/MaxStatement",
+                        type: "GET",
+                        datatype: "json",
+                        data: ({ _bankAccount: _cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _origin: _origin, _pageNo: _txtStatementPage.val() <= 0 ? 0 : _txtStatementPage.val() }),
+                        contentType: "application/json; charset=utf-8",
+                        success: function (data) {
+                            if (data != null && data != "") {
+                                data = $.parseJSON($.parseJSON(data));
+                                if (_txtStatementPage.val() <= 0 && _txtStatementNo.val() == data.statementNo) {
+                                    _txtStatementLine.val(data.lineno);
+                                    _txtStatementPage.val(data.pageno);
+                                    VIS.ADialog.info("VA012_NotAcceptZero", null, "", "");
+                                }
+                                else if (_txtStatementPage.val() > 0 && _txtStatementNo.val() == data.statementNo) {
+                                    _txtStatementLine.val(data.lineno);
+                                }
+                                else if (_txtStatementPage.val() <= 0) {
+                                    _txtStatementPage.val("1");
+                                    VIS.ADialog.info("VA012_NotAcceptZero", null, "", "");
+                                }
+                            }
+                        },
+                    });
                 });
                 _btnStatementNo.on(VIS.Events.onTouchStartOrClick, function () {
                     newRecordForm.scheduleRefresh();
@@ -5962,8 +6005,9 @@
                     loadFunctions.getMaxStatement("BT");
                     $_formNewRecord.attr("data-uid", 0);
                     // _txtStatementNo.val(parseInt(_txtStatementNo.val()) + 1);
-                    _txtStatementPage.val("1");
-                    _txtStatementLine.val("10");
+                    //not required below two lines, we are updating pageno and lineno by using call above getMaxStatement()
+                    //_txtStatementPage.val("1");
+                    //_txtStatementLine.val("10");
                 });
                 //_btnStatementNo.on('focus', function () { _btnStatementNo.trigger('click') });
                 _txtTaxAmount.getControl().on("change", function () {
@@ -6892,7 +6936,10 @@
             refreshForm: function () {
                 $_formNewRecord.attr("data-uid", 0);
                 // _btnCreatePayment.hide();
-                loadFunctions.getMaxStatement("LO");
+                //when it is statementNo onchange event then it will skipt to call getMaxStatement
+                if (event.currentTarget.id != _btnStatementNo[0].id) {
+                    loadFunctions.getMaxStatement("LO");
+                }
                 //_txtStatementPage.val("1");
                 //_txtStatementLine.val("");
                 //Statement Date set readonly false

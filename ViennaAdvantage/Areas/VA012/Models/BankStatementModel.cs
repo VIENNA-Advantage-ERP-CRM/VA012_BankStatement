@@ -658,28 +658,7 @@ namespace VA012.Models
                                 trx = null;
                                 return "VA012_StatementAlreadyExistDiffAcc";
                             }
-                            //if both are same for Existed record and bank account from the form 
-                            //then it should not allow to create another Bankstatement with same bank
-                            else if (_existingAccountID == _formData[0]._cmbBankAccount) {
-                                //closing transaction
-                                trx.Rollback();
-                                //close the transaction
-                                trx.Close();
-                                //clear the object
-                                trx = null;
-                                return "VA012_StatementAlreadyOpenSameAcct";
-                            }
                         }
-                        //else if (_statementDocStatus == "CO" || _statementDocStatus == "CL" || _statementDocStatus == "RE" || _statementDocStatus == "VO")
-                        //{
-                        //    //closing transaction
-                        //    trx.Rollback();
-                        //    //close the transaction
-                        //    trx.Close();
-                        //    //clear the object
-                        //    trx = null;
-                        //    return "VA012_StatementAlreadyExist";
-                        //}
                     }
                 }
             }
@@ -1128,7 +1107,8 @@ namespace VA012.Models
                     else
                     {
                         //Other than Cash to bank Type set txtAmount as TrxAmt
-                        if (!_formData[0]._cmbContraType.Equals("CB"))
+                        //to avoid NullReferenceException Used Util.GetValueOfString()
+                        if (!Util.GetValueOfString(_formData[0]._cmbContraType).Equals("CB"))
                         {
                             _bankStatementLine.SetTrxAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
                         }
@@ -1880,12 +1860,14 @@ namespace VA012.Models
 
             DataSet _ds = DB.ExecuteDataset(_sqlCon, null, null);
             List<ConcileStatement> _statements = new List<ConcileStatement>();
-            ConcileStatement conOrunconcile = new ConcileStatement();
+            //ConcileStatement conOrunconcile = new ConcileStatement();
+            ConcileStatement conOrunconcile = null;
 
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
                 for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                 {
+                    conOrunconcile = new ConcileStatement();
                     conOrunconcile.basecurrency = Util.GetValueOfString(_ds.Tables[0].Rows[i]["BASECURRENCY"]);
                     conOrunconcile.reconciled = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["RECONCILED"]);
                     conOrunconcile.unreconciled = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["UNRECONCILED"]);
@@ -3022,10 +3004,21 @@ namespace VA012.Models
         #endregion matching statement
 
 
-        //
+        /// <summary>
+        /// Get Total Pages Count of StatementLines 
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_cmbBankAccount">C_BankAccount_ID</param>
+        /// <param name="_statementPageNo">Statement Line Page No</param>
+        /// <param name="_PAGESIZE">Size of the Page</param>
+        /// <param name="_SEARCHREQUEST">Search Request</param>
+        /// <param name="_txtSearch">Search Text</param>
+        /// <returns>return Page Count</returns>
         public int LoadStatementsPages(Ctx ctx, int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch)
         {
             string _sql = "";
+            //fetch the record count according to the BankAccount_Organization
+            int _bankOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + _cmbBankAccount));
 
             _sql = "SELECT COUNT(*) AS Records "
                + " FROM C_BANKSTATEMENT BS "
@@ -3050,12 +3043,13 @@ namespace VA012.Models
                 + " LEFT JOIN C_CURRENCY BCURR  "
                 + " ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID  "
 
-               + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+            //+ " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+            + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS NOT IN ('VO','RE','CO','CL') AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
 
-
-            if (ctx.GetAD_Org_ID() != 0)
+            //if (ctx.GetAD_Org_ID() != 0)
+            if (_bankOrg_ID > 0)
             {
-                _sql += " AND BS.AD_ORG_ID=" + ctx.GetAD_Org_ID();
+                _sql += " AND BS.AD_ORG_ID=" + _bankOrg_ID;
             }
 
             if (_SEARCHREQUEST)
@@ -3712,6 +3706,17 @@ namespace VA012.Models
             }
             return _payments;
         }
+
+        /// <summary>
+        /// Get Statement Lines
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_cmbBankAccount">C_BankAccount_ID</param>
+        /// <param name="_statementPageNo">Statement Page No</param>
+        /// <param name="_PAGESIZE">Page Size</param>
+        /// <param name="_SEARCHREQUEST">Search Request</param>
+        /// <param name="_txtSearch">Search Text</param>
+        /// <returns>List of Statement Lines</returns>
         public List<StatementLineProp> LoadStatements(Ctx ctx, int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch)
         {
             string _sql = "";
@@ -3810,8 +3815,8 @@ namespace VA012.Models
                 //  + "  AND CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
                 // + "  AND CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)  "
                 //+ " AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) "
-
-              + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS NOT IN ( 'VO','CO') AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                //Consider RE, CL(Reverse & Completed) into DocStatus
+              + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS NOT IN ('RE','VO','CO','CL') AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
             // + "  WHERE BS.C_BANKSTATEMENT_ID IN (" + _statementID + ")";
 
             int org_Id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND C_BankAccount_ID=" + _cmbBankAccount, null, null));
@@ -3833,7 +3838,7 @@ namespace VA012.Models
             //_sql += " ORDER BY BSL.StatementLineDate DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+')) DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
             _sql += " ORDER BY ( CASE  WHEN BS.DOCSTATUS='DR' THEN 1 ELSE 0 END) DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+'), '999999999999') DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
             List<StatementLineProp> _statements = new List<StatementLineProp>();
-            StatementLineProp _statement = new StatementLineProp();
+            StatementLineProp _statement = null; // new StatementLineProp();//no use of this Object
             DataSet _ds = new DataSet();
             try
             {
@@ -4462,96 +4467,99 @@ namespace VA012.Models
             }
             return "";
         }
-        public int CreateViewAllocation(Ctx ctx, List<StatementProp> _formData, DataSet _ds, int _paymentID)
-        {
-            MPayment _pay = new MPayment(ctx, _paymentID, null);
-            MAllocationHdr alloc = new MAllocationHdr(ctx, true,	//	manual
-                   _pay.GetDateTrx(), _pay.GetC_Currency_ID(), ctx.GetContext("#AD_User_Name"), null);
-            alloc.SetAD_Org_ID(ctx.GetAD_Org_ID());
-            if (!alloc.Save())
-            {
-            }
-            else
-            {
-                decimal _toAllocateAmount = _pay.GetPayAmt();
-                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
-                {
-                    decimal overUnderAmt = 0;
-                    decimal _amount = 0;
+
+        #region CreateViewAllocation --> Not in Use so commented
+        //public int CreateViewAllocation(Ctx ctx, List<StatementProp> _formData, DataSet _ds, int _paymentID)
+        //{
+        //    MPayment _pay = new MPayment(ctx, _paymentID, null);
+        //    MAllocationHdr alloc = new MAllocationHdr(ctx, true,	//	manual
+        //           _pay.GetDateTrx(), _pay.GetC_Currency_ID(), ctx.GetContext("#AD_User_Name"), null);
+        //    alloc.SetAD_Org_ID(ctx.GetAD_Org_ID());
+        //    if (!alloc.Save())
+        //    {
+        //    }
+        //    else
+        //    {
+        //        decimal _toAllocateAmount = _pay.GetPayAmt();
+        //        for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+        //        {
+        //            decimal overUnderAmt = 0;
+        //            decimal _amount = 0;
 
 
-                    if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "ARI")
-                    {
-                        _amount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]);
-                    }
-                    else
-                    {
-                        _amount = -1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]);
-                    }
-                    if (Math.Abs(_toAllocateAmount) - Math.Abs(_amount) > Math.Abs(_amount))
-                    {
-                        _toAllocateAmount = _toAllocateAmount - _amount;
-                        overUnderAmt = 0;
-                        MAllocationLine aLine = new MAllocationLine(ctx, 0, null);
-                        aLine.SetAmount(_amount);
-                        aLine.SetC_AllocationHdr_ID(alloc.GetC_AllocationHdr_ID());
-                        aLine.SetDiscountAmt(Env.ZERO);
-                        aLine.SetWriteOffAmt(Env.ZERO);
-                        aLine.SetOverUnderAmt(Env.ZERO);
-                        aLine.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
+        //            if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "ARI")
+        //            {
+        //                _amount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]);
+        //            }
+        //            else
+        //            {
+        //                _amount = -1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]);
+        //            }
+        //            if (Math.Abs(_toAllocateAmount) - Math.Abs(_amount) > Math.Abs(_amount))
+        //            {
+        //                _toAllocateAmount = _toAllocateAmount - _amount;
+        //                overUnderAmt = 0;
+        //                MAllocationLine aLine = new MAllocationLine(ctx, 0, null);
+        //                aLine.SetAmount(_amount);
+        //                aLine.SetC_AllocationHdr_ID(alloc.GetC_AllocationHdr_ID());
+        //                aLine.SetDiscountAmt(Env.ZERO);
+        //                aLine.SetWriteOffAmt(Env.ZERO);
+        //                aLine.SetOverUnderAmt(Env.ZERO);
+        //                aLine.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
 
-                        aLine.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
+        //                aLine.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
 
-                        MInvoice inv = new MInvoice(ctx, aLine.GetC_Invoice_ID(), null);
-                        if (Util.GetValueOfInt(inv.GetC_Order_ID()) > 0)
-                        {
-                            aLine.SetC_Order_ID(Util.GetValueOfInt(inv.GetC_Order_ID()));
-                        }
-                        aLine.SetC_Payment_ID(_paymentID);
-                        aLine.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
-                        if (!aLine.Save())
-                        {
-                        }
-                    }
-                    else
-                    {
+        //                MInvoice inv = new MInvoice(ctx, aLine.GetC_Invoice_ID(), null);
+        //                if (Util.GetValueOfInt(inv.GetC_Order_ID()) > 0)
+        //                {
+        //                    aLine.SetC_Order_ID(Util.GetValueOfInt(inv.GetC_Order_ID()));
+        //                }
+        //                aLine.SetC_Payment_ID(_paymentID);
+        //                aLine.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
+        //                if (!aLine.Save())
+        //                {
+        //                }
+        //            }
+        //            else
+        //            {
 
-                        overUnderAmt = Math.Abs(_amount) - Math.Abs(_toAllocateAmount);
-                        MAllocationLine aLine = new MAllocationLine(ctx, 0, null);
-                        aLine.SetAmount(_amount);
-                        aLine.SetC_AllocationHdr_ID(alloc.GetC_AllocationHdr_ID());
-                        aLine.SetDiscountAmt(Env.ZERO);
-                        aLine.SetWriteOffAmt(Env.ZERO);
-                        aLine.SetOverUnderAmt(overUnderAmt);
-                        aLine.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
+        //                overUnderAmt = Math.Abs(_amount) - Math.Abs(_toAllocateAmount);
+        //                MAllocationLine aLine = new MAllocationLine(ctx, 0, null);
+        //                aLine.SetAmount(_amount);
+        //                aLine.SetC_AllocationHdr_ID(alloc.GetC_AllocationHdr_ID());
+        //                aLine.SetDiscountAmt(Env.ZERO);
+        //                aLine.SetWriteOffAmt(Env.ZERO);
+        //                aLine.SetOverUnderAmt(overUnderAmt);
+        //                aLine.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
 
-                        aLine.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
+        //                aLine.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
 
-                        MInvoice inv = new MInvoice(ctx, aLine.GetC_Invoice_ID(), null);
-                        if (Util.GetValueOfInt(inv.GetC_Order_ID()) > 0)
-                        {
-                            aLine.SetC_Order_ID(Util.GetValueOfInt(inv.GetC_Order_ID()));
-                        }
-                        aLine.SetC_Payment_ID(_paymentID);
-                        aLine.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
-                        if (!aLine.Save())
-                        {
-                        }
-                    }
-                }
-                if (alloc.CompleteIt() == "CO")
-                {
-                    alloc.SetProcessed(true);
-                    alloc.SetDocAction("CL");
-                    alloc.SetDocStatus("CO");
-                    alloc.Save();
-                    _ds.Dispose();
+        //                MInvoice inv = new MInvoice(ctx, aLine.GetC_Invoice_ID(), null);
+        //                if (Util.GetValueOfInt(inv.GetC_Order_ID()) > 0)
+        //                {
+        //                    aLine.SetC_Order_ID(Util.GetValueOfInt(inv.GetC_Order_ID()));
+        //                }
+        //                aLine.SetC_Payment_ID(_paymentID);
+        //                aLine.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
+        //                if (!aLine.Save())
+        //                {
+        //                }
+        //            }
+        //        }
+        //        if (alloc.CompleteIt() == "CO")
+        //        {
+        //            alloc.SetProcessed(true);
+        //            alloc.SetDocAction("CL");
+        //            alloc.SetDocStatus("CO");
+        //            alloc.Save();
+        //            _ds.Dispose();
 
-                    return alloc.GetC_AllocationHdr_ID();
-                }
-            }
-            return 0;
-        }
+        //            return alloc.GetC_AllocationHdr_ID();
+        //        }
+        //    }
+        //    return 0;
+        //}
+        #endregion
 
         /// <summary>
         /// Create Payment against PrePayOrder
@@ -4772,118 +4780,120 @@ namespace VA012.Models
                 return e.Message;
             }
         }
-        public string CreatePaymentFromCash(Ctx ctx, List<StatementProp> _formData)
-        {
+        #region CreatePaymentFromCash --> Not in Use
+        //public string CreatePaymentFromCash(Ctx ctx, List<StatementProp> _formData)
+        //{
 
-            try
-            {
-                int _fromCurr = 0;
-                int _toCurr = 0;
-                _fromCurr = _formData[0]._cmbCurrency;
-                _toCurr = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_CASHBOOK WHERE C_CASHBOOK_ID=" + _formData[0]._cmbCashBook));
-                decimal _amt = Decimal.Negate(_formData[0]._txtAmount);
-                _amt = MConversionRate.Convert(ctx, _amt, _fromCurr, _toCurr, ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID());
-                int C_doctype_ID = Util.GetValueOfInt(DB.ExecuteScalar("select c_doctype_id from C_DocType where docbasetype='CMC' and name ='Cash Journal' and ad_client_id=" + ctx.GetAD_Client_ID(), null, null));
-                MCashBook _cashbook = new MCashBook(ctx, Util.GetValueOfInt(_formData[0]._cmbCashBook), null);
-                MCash _cash = new MCash(ctx, 0, null);
-                _cash.SetC_CashBook_ID(Util.GetValueOfInt(_formData[0]._cmbCashBook));
-                _cash.SetName(DateTime.Now.ToShortDateString());
-                _cash.SetC_DocType_ID(C_doctype_ID);
-                _cash.SetStatementDate(System.DateTime.Now);
-                _cash.SetDateAcct(System.DateTime.Now);
-                _cash.SetBeginningBalance(_cashbook.GetCompletedBalance());
-                if (!_cash.Save())
-                {
-                    return "VA012_CashJournalNotSaved";
-                }
-                else
-                {
-                    MCashLine _cashLine = new MCashLine(ctx, 0, null);
-                    _cashLine.SetC_Cash_ID(_cash.GetC_Cash_ID());
-                    _cashLine.SetCashType("C");
-                    _cashLine.SetDescription(_formData[0]._txtDescription);
-                    _cashLine.SetC_Charge_ID(_formData[0]._cmbCharge);
-                    _cashLine.SetAmount(_amt);
-                    _cashLine.SetC_Tax_ID(_formData[0]._cmbTaxRate);
-                    if (_amt > 0)
-                    {
-                        _cashLine.SetTaxAmt(MConversionRate.Convert(ctx, Math.Abs(_formData[0]._txtTaxAmount), _fromCurr, _toCurr, ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID()));
-                    }
-                    else
-                    {
-                        _cashLine.SetTaxAmt(MConversionRate.Convert(ctx, Math.Abs(_formData[0]._txtTaxAmount), _fromCurr, _toCurr, ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID()) * -1);
-                    }
-                    _cashLine.SetC_Currency_ID(_formData[0]._cmbCurrency);
-                    _cashLine.SetC_BankAccount_ID(_formData[0]._cmbBankAccount);
-                    //_cashLine.SetTransferType(_formData[0]._cmbTransferType);
-                    // if (_formData[0]._cmbTransferType == "CK")
+        //    try
+        //    {
+        //        int _fromCurr = 0;
+        //        int _toCurr = 0;
+        //        _fromCurr = _formData[0]._cmbCurrency;
+        //        _toCurr = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_CASHBOOK WHERE C_CASHBOOK_ID=" + _formData[0]._cmbCashBook));
+        //        decimal _amt = Decimal.Negate(_formData[0]._txtAmount);
+        //        _amt = MConversionRate.Convert(ctx, _amt, _fromCurr, _toCurr, ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID());
+        //        int C_doctype_ID = Util.GetValueOfInt(DB.ExecuteScalar("select c_doctype_id from C_DocType where docbasetype='CMC' and name ='Cash Journal' and ad_client_id=" + ctx.GetAD_Client_ID(), null, null));
+        //        MCashBook _cashbook = new MCashBook(ctx, Util.GetValueOfInt(_formData[0]._cmbCashBook), null);
+        //        MCash _cash = new MCash(ctx, 0, null);
+        //        _cash.SetC_CashBook_ID(Util.GetValueOfInt(_formData[0]._cmbCashBook));
+        //        _cash.SetName(DateTime.Now.ToShortDateString());
+        //        _cash.SetC_DocType_ID(C_doctype_ID);
+        //        _cash.SetStatementDate(System.DateTime.Now);
+        //        _cash.SetDateAcct(System.DateTime.Now);
+        //        _cash.SetBeginningBalance(_cashbook.GetCompletedBalance());
+        //        if (!_cash.Save())
+        //        {
+        //            return "VA012_CashJournalNotSaved";
+        //        }
+        //        else
+        //        {
+        //            MCashLine _cashLine = new MCashLine(ctx, 0, null);
+        //            _cashLine.SetC_Cash_ID(_cash.GetC_Cash_ID());
+        //            _cashLine.SetCashType("C");
+        //            _cashLine.SetDescription(_formData[0]._txtDescription);
+        //            _cashLine.SetC_Charge_ID(_formData[0]._cmbCharge);
+        //            _cashLine.SetAmount(_amt);
+        //            _cashLine.SetC_Tax_ID(_formData[0]._cmbTaxRate);
+        //            if (_amt > 0)
+        //            {
+        //                _cashLine.SetTaxAmt(MConversionRate.Convert(ctx, Math.Abs(_formData[0]._txtTaxAmount), _fromCurr, _toCurr, ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID()));
+        //            }
+        //            else
+        //            {
+        //                _cashLine.SetTaxAmt(MConversionRate.Convert(ctx, Math.Abs(_formData[0]._txtTaxAmount), _fromCurr, _toCurr, ctx.GetAD_Client_ID(), ctx.GetAD_Org_ID()) * -1);
+        //            }
+        //            _cashLine.SetC_Currency_ID(_formData[0]._cmbCurrency);
+        //            _cashLine.SetC_BankAccount_ID(_formData[0]._cmbBankAccount);
+        //            //_cashLine.SetTransferType(_formData[0]._cmbTransferType);
+        //            // if (_formData[0]._cmbTransferType == "CK")
 
-                    if (_formData[0]._txtCheckNo != null || _formData[0]._txtCheckNo != "")
-                    {
-                        _cashLine.SetCheckNo(_formData[0]._txtCheckNo);
-                        _cashLine.SetCheckDate(System.DateTime.Now);
-                    }
-                    if (_amt > 0)
-                    {
-                        _cashLine.SetVSS_PAYMENTTYPE("R");
-                    }
-                    else
-                    {
-                        _cashLine.SetVSS_PAYMENTTYPE("P");
-                    }
+        //            if (_formData[0]._txtCheckNo != null || _formData[0]._txtCheckNo != "")
+        //            {
+        //                _cashLine.SetCheckNo(_formData[0]._txtCheckNo);
+        //                _cashLine.SetCheckDate(System.DateTime.Now);
+        //            }
+        //            if (_amt > 0)
+        //            {
+        //                _cashLine.SetVSS_PAYMENTTYPE("R");
+        //            }
+        //            else
+        //            {
+        //                _cashLine.SetVSS_PAYMENTTYPE("P");
+        //            }
 
-                    if (!_cashLine.Save())
-                    {
-                        return "VA012_CashJournalLineNotSaved";
-                    }
-                    else
-                    {
+        //            if (!_cashLine.Save())
+        //            {
+        //                return "VA012_CashJournalLineNotSaved";
+        //            }
+        //            else
+        //            {
 
-                        if (_cash.CompleteIt() == "CO")
-                        {
-                            _cash.SetProcessed(true);
-                            _cash.SetDocAction("CL");
-                            _cash.SetDocStatus("CO");
-                            _cash.Save();
+        //                if (_cash.CompleteIt() == "CO")
+        //                {
+        //                    _cash.SetProcessed(true);
+        //                    _cash.SetDocAction("CL");
+        //                    _cash.SetDocStatus("CO");
+        //                    _cash.Save();
 
-                            //                            #region Get Payment ID
-                            //                            string _sql = @"SELECT C_PAYMENT_ID
-                            //                                        FROM C_PAYMENT PAY
-                            //                                        WHERE PAY.DOCUMENTNO    ='" + _cash.GetName() + @"'
-                            //                                        AND PAY.C_BANKACCOUNT_ID=" + _cashLine.GetC_BankAccount_ID() + @"
-                            //                                        AND PAY.AD_CLIENT_ID    =" + _cashLine.GetAD_Client_ID() + @"
-                            //                                        AND PAY.AD_ORG_ID       =" + _cashLine.GetAD_Org_ID() + @"
-                            //                                        AND PAY.TRXTYPE         ='X'
-                            //                                        AND PAY.PAYAMT          = " + Decimal.Negate(_cashLine.GetAmount()) + @"
-                            //                                        AND PAY.CREATED          >= " + GlobalVariable.TO_DATE(_cashLine.GetCreated(), false);
-                            //                            int _pyID = 0;
-                            //                            _pyID = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
-                            //                            if (_pyID > 0)
-                            //                            {
-                            //                                _isPaymentFromCash = true;
-                            //                                return _pyID.ToString();
-                            //                            }
-                            //                            else
-                            //                            {
-                            //                                //return "VA012_PaymentNotCreated";
+        //                    //                            #region Get Payment ID
+        //                    //                            string _sql = @"SELECT C_PAYMENT_ID
+        //                    //                                        FROM C_PAYMENT PAY
+        //                    //                                        WHERE PAY.DOCUMENTNO    ='" + _cash.GetName() + @"'
+        //                    //                                        AND PAY.C_BANKACCOUNT_ID=" + _cashLine.GetC_BankAccount_ID() + @"
+        //                    //                                        AND PAY.AD_CLIENT_ID    =" + _cashLine.GetAD_Client_ID() + @"
+        //                    //                                        AND PAY.AD_ORG_ID       =" + _cashLine.GetAD_Org_ID() + @"
+        //                    //                                        AND PAY.TRXTYPE         ='X'
+        //                    //                                        AND PAY.PAYAMT          = " + Decimal.Negate(_cashLine.GetAmount()) + @"
+        //                    //                                        AND PAY.CREATED          >= " + GlobalVariable.TO_DATE(_cashLine.GetCreated(), false);
+        //                    //                            int _pyID = 0;
+        //                    //                            _pyID = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+        //                    //                            if (_pyID > 0)
+        //                    //                            {
+        //                    //                                _isPaymentFromCash = true;
+        //                    //                                return _pyID.ToString();
+        //                    //                            }
+        //                    //                            else
+        //                    //                            {
+        //                    //                                //return "VA012_PaymentNotCreated";
 
-                            //                            }
-                            //                            #endregion Get Payment ID
-                            return "0";
+        //                    //                            }
+        //                    //                            #endregion Get Payment ID
+        //                    return "0";
 
-                        }
-                        else
-                        {
-                            return "VA012_CashJournalNotProcessed";
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                return e.Message;
-            }
-        }
+        //                }
+        //                else
+        //                {
+        //                    return "VA012_CashJournalNotProcessed";
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return e.Message;
+        //    }
+        //}
+        #endregion
 
         /// <summary>
         /// Get Payment Amount and Tranaction Amounts

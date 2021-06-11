@@ -129,11 +129,10 @@ namespace VA012.Models
                 //    _obj._error = "VA012_StatementAlreadyExist";
                 //    return _obj;
                 //}
-                #region Get Page And Line
-                string _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE
-                    FROM C_BANKSTATEMENTLINE BSL
-                    INNER JOIN C_BANKSTATEMENT BS
-                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + _existingStatementID;
+                #region Get Max PageNo and based on that PageNo get Max LineNo 
+                string _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE FROM C_BANKSTATEMENTLINE BSL
+                    WHERE BSL.VA012_PAGE=(SELECT MAX(BL.VA012_PAGE) AS PAGE FROM C_BANKSTATEMENTLINE BL WHERE BL.C_BANKSTATEMENT_ID =" + _existingStatementID + @") 
+                    AND BSL.C_BANKSTATEMENT_ID =" + _existingStatementID;
                 DataSet _data = DB.ExecuteDataset(_sql, null, null);
                 if (_data != null && _data.Tables[0].Rows.Count > 0)
                 {
@@ -296,9 +295,10 @@ namespace VA012.Models
                                             //set charge id if charge value is available in Bank Statement 7 column
                                             if (Util.GetValueOfString(dt.Rows[i][7]) != "")
                                             {
+                                                //'Value' replaced with 'Name' - 'Name' contains string Value
                                                 _C_Charge_ID = Util.GetValueOfInt(DB.ExecuteScalar(@"SELECT C_Charge_ID FROM C_Charge
                                                     WHERE AD_Client_ID IN (0,  " + ctx.GetAD_Client_ID() +
-                                                    @") AND LOWER(Value)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][7])) + ")"));
+                                                    @") AND LOWER(Name)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][7])) + ")"));
                                                 _BnkStmtLine.SetC_Charge_ID(_C_Charge_ID);
                                                 //If chanrge id is available then set charge amount and statement amount on bank statement line suggested by Ashish.
                                                 if (_C_Currency_ID > 0)
