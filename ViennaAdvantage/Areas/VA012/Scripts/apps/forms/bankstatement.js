@@ -5781,7 +5781,8 @@
 
                     //When user click save button with out selecting Order/Payment/Schedule then return validation message
                     if (VIS.Utility.Util.getValueOfString(_formData[0]["_scheduleList"]) == "" && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlPayment"]) == 0
-                        && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlOrder"]) == 0) {
+                        && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlOrder"]) == 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) == 0
+                        && VIS.Utility.Util.getValueOfInt(_formData[0]["_cmbCharge"]) == 0 ) {
                         VIS.ADialog.info("VA012_PleaseSelectAnyOne", null, "", "");
                         return;
                     }
