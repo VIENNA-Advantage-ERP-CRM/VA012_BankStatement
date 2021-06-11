@@ -102,11 +102,10 @@ namespace VA012.Models
             //    return _obj;
             //}
             #region Get Page And Line
-            //Merge two queries as single query
-            string _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE
-                    FROM C_BANKSTATEMENTLINE BSL
-                    INNER JOIN C_BANKSTATEMENT BS
-                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + _existingStatementID;
+            //Merge two queries as single query & Get the Max LineNo with respect to PageNo
+            string _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE FROM C_BANKSTATEMENTLINE BSL
+                    WHERE BSL.VA012_PAGE=(SELECT MAX(BL.VA012_PAGE) AS PAGE FROM C_BANKSTATEMENTLINE BL WHERE BL.C_BANKSTATEMENT_ID =" + _existingStatementID + @") 
+                    AND BSL.C_BANKSTATEMENT_ID =" + _existingStatementID;
             DataSet _data = DB.ExecuteDataset(_sql, null, null);
             if (_data != null && _data.Tables[0].Rows.Count > 0)
             {
