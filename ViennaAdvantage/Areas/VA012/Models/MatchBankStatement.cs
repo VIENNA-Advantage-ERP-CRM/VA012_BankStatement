@@ -1629,58 +1629,58 @@ namespace VA012.Models
                             }
                         }
                         #endregion Charge
-                        #region Invoice Not in Use
-                        //if (_BaseItemList.Contains("IN") && _matchingCriteria > _matchingCount)
-                        //{
-                        //    if (Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_INVOICE_ID"]) > 0)
-                        //    {
-                        //        _invoiceID = Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_INVOICE_ID"]);
-                        //    }
-                        //    else
-                        //    {
-                        //        //passed ad_Org_Id paramenter to the Invoice() to get _invoiceID based on BankAccount Org_Id
-                        //        _invoiceID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
-                        //    }
-                        //    if (_invoiceID > 0)
-                        //    {
-                        //        _conditionTemp.Append(_condition).Append(" AND PAY.C_INVOICE_ID=" + _invoiceID);
-                        //        //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
-                        //        _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
-                        //        if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
-                        //        {
-                        //            _condition.Append(" AND PAY.C_INVOICE_ID=" + _invoiceID);
-                        //            _matchingCount++;
-                        //        }
+                        #region Invoice 
+                        if (_BaseItemList.Contains("IN") && _matchingCriteria > _matchingCount)
+                        {
+                            if (Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_INVOICE_ID"]) > 0)
+                            {
+                                _invoiceID = Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_INVOICE_ID"]);
+                            }
+                            else
+                            {
+                                //passed ad_Org_Id paramenter to the Invoice() to get _invoiceID based on BankAccount Org_Id
+                                _invoiceID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
+                            }
+                            if (_invoiceID > 0)
+                            {
+                                _conditionTemp.Append(_condition).Append(" AND PAY.C_INVOICE_ID=" + _invoiceID);
+                                //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
+                                if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
+                                {
+                                    _condition.Append(" AND PAY.C_INVOICE_ID=" + _invoiceID);
+                                    _matchingCount++;
+                                }
 
-                        //    }
+                            }
 
-                        //}
+                        }
                         #endregion Invoice
-                        #region Order  Not in Use
-                        //if (_BaseItemList.Contains("OR") && _matchingCriteria > _matchingCount)
-                        //{
-                        //    if (Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_ORDER_ID"]) > 0)
-                        //    {
-                        //        _orderID = Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_ORDER_ID"]);
-                        //    }
-                        //    else
-                        //    {
-                        //        //passed ad_Org_Id paramenter to the Invoice() to get _orderID based on BankAccount Org_Id
-                        //        _orderID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
-                        //    }
-                        //    if (_orderID > 0)
-                        //    {
-                        //        _conditionTemp.Append(_condition).Append(" AND PAY.C_ORDER_ID=" + _orderID);
-                        //        //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
-                        //        _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
-                        //        if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
-                        //        {
-                        //            _condition.Append(" AND PAY.C_ORDER_ID=" + _orderID);
-                        //            _matchingCount++;
-                        //        }
+                        #region Order  
+                        if (_BaseItemList.Contains("OR") && _matchingCriteria > _matchingCount)
+                        {
+                            if (Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_ORDER_ID"]) > 0)
+                            {
+                                _orderID = Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_ORDER_ID"]);
+                            }
+                            else
+                            {
+                                //passed ad_Org_Id paramenter to the Invoice() to get _orderID based on BankAccount Org_Id
+                                _orderID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
+                            }
+                            if (_orderID > 0)
+                            {
+                                _conditionTemp.Append(_condition).Append(" AND PAY.C_ORDER_ID=" + _orderID);
+                                //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
+                                if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
+                                {
+                                    _condition.Append(" AND PAY.C_ORDER_ID=" + _orderID);
+                                    _matchingCount++;
+                                }
 
-                        //    }
-                        //}
+                            }
+                        }
                         #endregion Order
 
 
