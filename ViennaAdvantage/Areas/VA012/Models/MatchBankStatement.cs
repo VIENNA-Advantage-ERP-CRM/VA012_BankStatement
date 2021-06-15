@@ -1098,7 +1098,7 @@ namespace VA012.Models
                               PAY.C_INVOICE_ID,
                               INV.DOCUMENTNO AS INVOICENO,
                               PAY.C_ORDER_ID,
-                              ORD.DOCUMENTNO AS ORDERNO
+                              ORD.DOCUMENTNO AS ORDERNO, PAY.C_ConversionType_ID
                             FROM C_PAYMENT PAY
                             INNER JOIN C_BANKACCOUNT AC
                             ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
@@ -1133,7 +1133,8 @@ namespace VA012.Models
                             WHERE PAY.ISACTIVE           ='Y'
                             AND PAY.ISRECONCILED         ='N'
                             AND PAY.DOCSTATUS           IN ('CO','CL')
-                            AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) ");
+                            AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) 
+                            AND Pay.C_Payment_ID NOT IN (SELECT BSL.C_Payment_ID FROM C_BankStatementLine BSL WHERE BSL.C_Payment_ID IS NOT NULL)");
 
             _sql.Append(@" AND PAY.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
@@ -1275,7 +1276,7 @@ namespace VA012.Models
                               (ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2))*-1) AS PAYMENTAMOUNT,
                               CSL.CHECKNO,
                               CSL.C_CHARGE_ID,
-                              chrg.NAME AS CHARGE
+                              chrg.NAME AS CHARGE, CSL.C_ConversionType_ID
                         FROM C_CASH CS
                         INNER JOIN C_CASHLINE CSL
                         ON CS.C_CASH_ID=CSL.C_CASH_ID
@@ -1289,7 +1290,8 @@ namespace VA012.Models
                         AND CSL.CashType           ='C'
                         AND chrg.dtd001_chargetype ='CON' 
                         AND CSL.VA012_ISRECONCILED  ='N'
-                        AND CS.DOCSTATUS           IN ('CO','CL')");
+                        AND CS.DOCSTATUS           IN ('CO','CL')
+                        AND CSL.C_CASHLINE_ID NOT IN (SELECT BSL.C_CASHLINE_ID FROM C_BankStatementLine BSL WHERE BSL.C_CASHLINE_ID IS NOT NULL)");
             _sql.Append(@" AND CSL.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
             //Get Org_ID form the BankAccount
@@ -1627,7 +1629,7 @@ namespace VA012.Models
                             }
                         }
                         #endregion Charge
-                        #region Invoice
+                        #region Invoice 
                         if (_BaseItemList.Contains("IN") && _matchingCriteria > _matchingCount)
                         {
                             if (Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_INVOICE_ID"]) > 0)
@@ -1654,7 +1656,7 @@ namespace VA012.Models
 
                         }
                         #endregion Invoice
-                        #region Order
+                        #region Order  
                         if (_BaseItemList.Contains("OR") && _matchingCriteria > _matchingCount)
                         {
                             if (Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_ORDER_ID"]) > 0)
@@ -1689,6 +1691,9 @@ namespace VA012.Models
                             _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
                             _bankStatementLine.SetC_Payment_ID(Util.GetValueOfInt(_dsPayments.Tables[0].Rows[0]["C_PAYMENT_ID"]));
                             _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
+
+                            //Set ConversionType_Id
+                            _bankStatementLine.Set_Value("C_ConversionType_ID", Util.GetValueOfInt(_dsPayments.Tables[0].Rows[0]["C_ConversionType_ID"]));
 
                             if (_businessPartnerID > 0)
                             {
@@ -1918,7 +1923,8 @@ namespace VA012.Models
                                     _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
                                     _bankStatementLine.SetC_CashLine_ID(Util.GetValueOfInt(_dsCashLine.Tables[0].Rows[0]["C_CASHLINE_ID"]));
                                     _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
-
+                                    //Set ConversionType_Id
+                                    _bankStatementLine.Set_Value("C_ConversionType_ID", Util.GetValueOfInt(_dsCashLine.Tables[0].Rows[0]["C_ConversionType_ID"]));
 
                                     if (_checkNo != "")
                                     {
