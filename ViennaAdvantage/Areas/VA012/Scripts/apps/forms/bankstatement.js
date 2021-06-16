@@ -1923,7 +1923,7 @@
                                         _openingFromDrop = true;
                                         //to get Invoice schedule amount
                                         childDialogs.statementOpenEdit($(this).data("uid"), _dragScheduleID);
-                                        loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
+                                        //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
                                         _txtPaymentSchedule.val(_scheduleDataList.toString());
 
                                         window.setTimeout(function () {
@@ -1937,6 +1937,8 @@
                                                 VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                                 return;
                                             }
+                                            //to avoid execution if Conversion Not found replaced to here
+                                            loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
                                             //set Statement Date as Readonly
                                             _dtStatementDate.attr("readonly", true);
                                             if (_scheduleAmount.length == 1) {
@@ -4170,7 +4172,7 @@
                     + "</select></div> "
                     //added Accept button manually
                     + "<div class='va012-frm-btn va012-btn-blue' style='float: right;'>"
-                    + "<label id ='VA012_accept_" + $self.windowNo + "'>" + VIS.Msg.getMsg("VA012_Accept") + "</label></div> "
+                    + "<label style='font-weight: normal;' id ='VA012_accept_" + $self.windowNo + "'>" + VIS.Msg.getMsg("VA012_Accept") + "</label></div> "
 
                     + "</div>";
                 $match.append(_match);
@@ -6946,7 +6948,7 @@
                 $_formNewRecord.attr("data-uid", 0);
                 // _btnCreatePayment.hide();
                 //when it is statementNo onchange event then it will skipt to call getMaxStatement
-                if (event.currentTarget.id != _btnStatementNo[0].id) {
+                if (event == undefined || event.currentTarget.id != _btnStatementNo[0].id) {
                     loadFunctions.getMaxStatement("LO");
                 }
                 //_txtStatementPage.val("1");
