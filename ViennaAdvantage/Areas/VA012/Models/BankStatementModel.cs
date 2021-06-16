@@ -5240,26 +5240,29 @@ namespace VA012.Models
                 {
                     return "VA012_BPNotSame";
                 }
-                if (_amount < 0 && (_inputDocBaseType == "ARI" || _inputDocBaseType == "APC"))
+                //not required this conditions
+                //if (_amount < 0 && (_inputDocBaseType == "ARI" || _inputDocBaseType == "APC"))
+                //{
+                //    //return "VA012_SelectAPI_ARC";
+                //}
+                //else if (_amount > 0 && (_inputDocBaseType == "API" || _inputDocBaseType == "ARC"))
+                //{
+                //    //return "VA012_SelectARI_APC";
+                //}
+                //else if (_amount == 0)
+                //{
+                //    // return "VA012_StatementAmountZero";
+                //}
+                //not required
+                //if (Math.Abs(_amount) < Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["AMOUNT"]))
+                //{
+                //    //return "VA012_StatementAmountLessThnSchedules";
+                //}
+                /*else*/
+                if (_listToCheck != "" && listToCheck.Length > 0)
                 {
-                    //return "VA012_SelectAPI_ARC";
-                }
-                else if (_amount > 0 && (_inputDocBaseType == "API" || _inputDocBaseType == "ARC"))
-                {
-                    //return "VA012_SelectARI_APC";
-                }
-                else if (_amount == 0)
-                {
-                    // return "VA012_StatementAmountZero";
-                }
-
-                if (Math.Abs(_amount) < Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["AMOUNT"]))
-                {
-                    //return "VA012_StatementAmountLessThnSchedules";
-                }
-                else if (_listToCheck != "" && listToCheck.Length > 0)
-                {
-                    _sql = @"SELECT UNIQUE DT.DOCBASETYPE
+                    //replaced UNIQUE to DISTINCT to Excute query in Postgre as well
+                    _sql = @"SELECT DISTINCT DT.DOCBASETYPE
                             FROM C_INVOICEPAYSCHEDULE PAY
                             INNER JOIN C_INVOICE INV
                             ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID
@@ -5367,53 +5370,53 @@ namespace VA012.Models
                     //                            ON DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID 
                     //                            WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _listToCheck + ")";
 
+                    //Not using this query and Condition
+                    //_sql = @"SELECT SUM(CASE
+                    //            WHEN(inv.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                    //            THEN
+                    //                 ROUND(PAY.DueAmt       *(
+                    //                  CASE
+                    //                    WHEN CCR.MULTIPLYRATE IS NOT NULL
+                    //                    THEN CCR.MULTIPLYRATE
+                    //                    ELSE CCR1.DIVIDERATE
+                    //                  END),NVL(BCURR.StdPrecision,2))
+                    //            ELSE
+                    //                 ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))
+                    //          END) AS AMOUNT
+                    //        FROM C_INVOICEPAYSCHEDULE PAY
+                    //        INNER JOIN C_INVOICE INV
+                    //        ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID
+                    //        LEFT JOIN C_CURRENCY BCURR
+                    //        ON " + _currencyId + @" =BCURR.C_CURRENCY_ID
 
-                    _sql = @"SELECT SUM(CASE
-                                WHEN(inv.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                                THEN
-                                     ROUND(PAY.DueAmt       *(
-                                      CASE
-                                        WHEN CCR.MULTIPLYRATE IS NOT NULL
-                                        THEN CCR.MULTIPLYRATE
-                                        ELSE CCR1.DIVIDERATE
-                                      END),NVL(BCURR.StdPrecision,2))
-                                ELSE
-                                     ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))
-                              END) AS AMOUNT
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV
-                            ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID
-                            LEFT JOIN C_CURRENCY BCURR
-                            ON " + _currencyId + @" =BCURR.C_CURRENCY_ID
+                    //        LEFT JOIN C_CONVERSION_RATE CCR
+                    //        ON (CCR.C_CURRENCY_ID =inv.C_CURRENCY_ID
+                    //        AND CCR.C_CURRENCY_TO_ID=" + _currencyId + @"
+                    //        AND CCR.ISACTIVE      ='Y'
+                    //        AND CCR.AD_CLIENT_ID    =inv.AD_CLIENT_ID
+                    //        AND CCR.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
+                    //        AND CCR.C_ConversionType_ID = inv.C_ConversionType_ID
+                    //        AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
 
-                            LEFT JOIN C_CONVERSION_RATE CCR
-                            ON (CCR.C_CURRENCY_ID =inv.C_CURRENCY_ID
-                            AND CCR.C_CURRENCY_TO_ID=" + _currencyId + @"
-                            AND CCR.ISACTIVE      ='Y'
-                            AND CCR.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                            AND CCR.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
-                            AND CCR.C_ConversionType_ID = inv.C_ConversionType_ID
-                            AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
+                    //        LEFT JOIN C_CONVERSION_RATE CCR1
+                    //        ON (CCR1.C_CURRENCY_ID   =" + _currencyId + @"
+                    //        AND CCR1.C_CURRENCY_TO_ID=inv.C_CURRENCY_ID
+                    //        AND CCR1.ISACTIVE        ='Y'
+                    //        AND CCR1.AD_CLIENT_ID    =inv.AD_CLIENT_ID
+                    //        AND CCR1.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
+                    //        AND CCR1.C_ConversionType_ID = inv.C_ConversionType_ID
+                    //        AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) 
 
-                            LEFT JOIN C_CONVERSION_RATE CCR1
-                            ON (CCR1.C_CURRENCY_ID   =" + _currencyId + @"
-                            AND CCR1.C_CURRENCY_TO_ID=inv.C_CURRENCY_ID
-                            AND CCR1.ISACTIVE        ='Y'
-                            AND CCR1.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                            AND CCR1.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
-                            AND CCR1.C_ConversionType_ID = inv.C_ConversionType_ID
-                            AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) 
+                    //        INNER JOIN C_DOCTYPE DT
+                    //        ON DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID 
+                    //        WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _listToCheck + ")";
+                    //_existingAmount = Util.GetValueOfDecimal(Util.GetValueOfDecimal(DB.ExecuteScalar(_sql)));
 
-                            INNER JOIN C_DOCTYPE DT
-                            ON DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID 
-                            WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _listToCheck + ")";
-                    _existingAmount = Util.GetValueOfDecimal(Util.GetValueOfDecimal(DB.ExecuteScalar(_sql)));
-
-                    if (Math.Abs(_amount) < _existingAmount + Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["AMOUNT"]))
-                    {
-                        //pratap
-                        //return "VA012_StatementAmountLessThnSchedules";
-                    }
+                    //if (Math.Abs(_amount) < _existingAmount + Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["AMOUNT"]))
+                    //{
+                    //    //pratap
+                    //    //return "VA012_StatementAmountLessThnSchedules";
+                    //}
                 }
             }
             return "Success";
