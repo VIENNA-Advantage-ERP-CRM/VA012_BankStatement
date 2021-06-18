@@ -3578,18 +3578,17 @@
                                     if ((data[i].c_cashline_id != null && data[i].c_cashline_id != "0" && data[i].c_cashline_id != 0) /*&& data[i].usenexttime == true*/) {
                                         status = "va012-green-color";
                                     }
-                                    else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
-
-                                        if (data[i].STMTAMT == data[i].trxamount)
-                                            status = "va012-green-color";
-                                        else
-                                            status = "va012-red-color";
-                                    }
-                                    else if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
-                                        status = "va012-red-color";
-                                    }
-
-
+                                    //removed condtion, set status as green incase of CashLine or Payment reference is present
+                                    //else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
+                                        
+                                    //    if (data[i].STMTAMT == data[i].trxamount)
+                                    //        status = "va012-green-color";
+                                    //    else
+                                    //    status = "va012-red-color";
+                                    //}
+                                    //else if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
+                                    //    status = "va012-red-color";
+                                    //}
                                     else {
                                         status = "va012-red-color";
                                     }
@@ -4467,6 +4466,11 @@
                             + " <a class='va012-remove-icon'>"
                             + " <span data-uid='" + _cmbMatchingBase.val() + "'class='glyphicon glyphicon-remove'></span></a>"
                             + " <span>" + _cmbMatchingBase.children()[_cmbMatchingBase[0].selectedIndex].text; +"</span> </div>";
+                        //after match the Lines, if user again select matchCriteria those values are override if not remove w2ui grid classes
+                        //for that $_divMatchingBase contains classes first remove classes and then append the values.
+                        if ($($_divMatchingBase)[0] != undefined && $($_divMatchingBase)[0].classList.contains("w2ui-reset", "w2ui-grid")) {
+                            $_divMatchingBase.removeClass("w2ui-reset w2ui-grid");
+                        }
                         $_divMatchingBase.append(_addMatchingBaseItem);
 
                     }
@@ -7081,6 +7085,8 @@
                 //clear the CashLine_ID
                 _cashLineSelectedVal = 0;
                 _invoiceSelectedVal = null;
+                //clear InvoiceSchedules
+                newRecordForm.scheduleRefresh();
                 //_btnIn.attr("v_active", "1");
                 _btnIn.trigger('click');
 

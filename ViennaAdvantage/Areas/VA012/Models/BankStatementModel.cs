@@ -3857,6 +3857,7 @@ namespace VA012.Models
                         _statement.page = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["PAGE"]);
                         _statement.line = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["LINE"]);
                         _statement.c_payment_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_PAYMENT_ID"]);
+                        _statement.c_cashline_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CASHLINE_ID"]);
                         _statement.currency = Util.GetValueOfString(_ds.Tables[0].Rows[i]["CURRENCY"]);
                         _statement.statementno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["STATEMENTNO"]);
                         _statement.c_bankstatementline_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]);
@@ -3865,7 +3866,8 @@ namespace VA012.Models
                         _statement.trxamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]);
                         _statement.STMTAMT = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"]);
                         //if charge id is there and Statement amount is Equal to Charge Amount then make it Matching Confirmed.
-                        if (Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CHARGE_ID"]) > 0)
+                        //when payment or cashLine reference is there on Line then only VA012_ISMATCHINGCONFIRMED set as true
+                        if (Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CHARGE_ID"]) > 0 && (_statement.c_payment_id > 0 || _statement.c_cashline_id > 0))
                         {
                             if (Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]).Equals(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"])))
                             {
@@ -3879,7 +3881,7 @@ namespace VA012.Models
                         //_statement.convertedamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["CONVERTEDAMOUNT"]);
                         _statement.isconverted = Util.GetValueOfString(_ds.Tables[0].Rows[i]["ISCONVERTED"]);
                         _statement.invoiceno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["INVOICENO"]);
-                        _statement.c_cashline_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CASHLINE_ID"]);
+                        //_statement.c_cashline_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CASHLINE_ID"]);
                         _statement.trxno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["TRXNO"]);
                         //get Statement Line Date from the Statement Line
                         _statement.stmtLineDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[i]["StatementLineDate"]);
