@@ -3578,17 +3578,17 @@
                                     if ((data[i].c_cashline_id != null && data[i].c_cashline_id != "0" && data[i].c_cashline_id != 0) /*&& data[i].usenexttime == true*/) {
                                         status = "va012-green-color";
                                     }
-                                    //removed condtion, set status as green incase of CashLine or Payment reference is present
-                                    //else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
+                                    //set status as green incase of Charge reference is present
+                                    else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
                                         
-                                    //    if (data[i].STMTAMT == data[i].trxamount)
-                                    //        status = "va012-green-color";
-                                    //    else
-                                    //    status = "va012-red-color";
-                                    //}
-                                    //else if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
-                                    //    status = "va012-red-color";
-                                    //}
+                                        if (data[i].STMTAMT == data[i].trxamount)
+                                            status = "va012-green-color";
+                                        else
+                                        status = "va012-red-color";
+                                    }
+                                    else if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
+                                        status = "va012-red-color";
+                                    }
                                     else {
                                         status = "va012-red-color";
                                     }

@@ -3866,8 +3866,8 @@ namespace VA012.Models
                         _statement.trxamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]);
                         _statement.STMTAMT = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"]);
                         //if charge id is there and Statement amount is Equal to Charge Amount then make it Matching Confirmed.
-                        //when payment or cashLine reference is there on Line then only VA012_ISMATCHINGCONFIRMED set as true
-                        if (Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CHARGE_ID"]) > 0 && (_statement.c_payment_id > 0 || _statement.c_cashline_id > 0))
+                        //when charge reference is there on Line then VA012_ISMATCHINGCONFIRMED set as true
+                        if (Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CHARGE_ID"]) > 0)
                         {
                             if (Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]).Equals(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"])))
                             {
