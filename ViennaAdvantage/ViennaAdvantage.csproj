@@ -184,6 +184,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Areas\VA012\Controllers\BankStatementController.cs" />
+    <Compile Include="Areas\VA012\Controllers\StatementController.cs" />
     <Compile Include="Areas\VA012\Controllers\UploadExcelController.cs" />
     <Compile Include="Areas\VA012\Models\BankStatementModel.cs" />
     <Compile Include="Areas\VA012\Models\CreatePaymentFromStatement.cs" />
@@ -193,6 +194,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Areas\VA012\Models\MatchBankStatement.cs" />
+    <Compile Include="Areas\VA012\Models\StatementModel.cs" />
     <Compile Include="Areas\VA012\Models\VA012_DMAKS.cs" />
     <Compile Include="Areas\VA012\Models\VA012_ENBD.cs" />
     <Compile Include="Areas\VA012\Models\VA012_ENBDChkNo.cs" />

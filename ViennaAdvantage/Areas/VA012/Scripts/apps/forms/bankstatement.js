@@ -153,10 +153,18 @@
         var $_ctrlInvoice = null;
         var _invoiceSelectedVal = null;
         //Invoice Control Variables
+        //C_Currency_ID
+        var _txtCurrency = null;
+        //C_ConversionType_ID
+        var _txtConversionType = null;
 
         // End newRecord Form Variables
         //store payment list in array
         storepaymentdata = [];
+
+        //to handle the amounts in culture
+        var format = VIS.DisplayType.GetNumberFormat(VIS.DisplayType.Amount);
+        this.dotFormatter = VIS.Env.isDecimalPoint();
 
         //End Variable Declaration
 
@@ -305,7 +313,8 @@
             });
             _btnLoadStatement.on(VIS.Events.onTouchStartOrClick, function () {
                 if (_statementDate.val() == "") {
-                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_PleaseEnterStatementDate"), null, "", "");
+                    //removed the VIS.Msg.getMsg() function
+                    VIS.ADialog.info("VA012_PleaseEnterStatementDate", null, "", "");
                 }
                 else
                     childDialogs.statementDialog();
@@ -376,17 +385,23 @@
                                 data = $.parseJSON(data);
                                 if (data[0]._status == "Success") {
                                     if (data[0]._statementOk != null) {
-                                        VIS.ADialog.info(data[0]._statementOk + " " + VIS.Msg.getMsg("VA012_StatementsUnmatched"), null, "", "");
+                                        //VIS.ADialog.info(data[0]._statementOk + " " + VIS.Msg.getMsg("VA012_StatementsUnmatched"), null, "", "");
+                                        //ajusted parameters as per requirement
+                                        VIS.ADialog.info("VA012_StatementsUnmatched", null, " " + data[0]._statementOk, "");
                                     }
                                 }
                                 if (data[0]._error != null) {
                                     VIS.ADialog.info(data[0]._error, null, "", "");
                                 }
                                 if (data[0]._statementNo != null) {
-                                    VIS.ADialog.info(data[0]._statementNo + " " + VIS.Msg.getMsg("VA012_CompletedRecord"), null, "", "");
+                                    //VIS.ADialog.info(data[0]._statementNo + " " + VIS.Msg.getMsg("VA012_CompletedRecord"), null, "", "");
+                                    //ajusted parameters as per requirement
+                                    VIS.ADialog.info("VA012_CompletedRecord", null, " " + data[0]._statementNo, "");
                                 }
                                 if (data[0]._statementNoNotUpdate != null) {
-                                    VIS.ADialog.info(data[0]._statementNoNotUpdate + " " + VIS.Msg.getMsg("VA012_ErrorSaving"), null, "", "");
+                                    //VIS.ADialog.info(data[0]._statementNoNotUpdate + " " + VIS.Msg.getMsg("VA012_ErrorSaving"), null, "", "");
+                                    //ajusted parameters as per requirement
+                                    VIS.ADialog.info("VA012_ErrorSaving", null, " " + data[0]._statementNoNotUpdate, "");
                                 }
 
                                 newRecordForm.scheduleRefresh();
@@ -409,7 +424,8 @@
                     });
                 }
                 else {
-                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoRecordSelected"), null, "", "");
+                    // not required the VIS.Msg.getMsg() function
+                    VIS.ADialog.info("VA012_NoRecordSelected", null, "", "");
                 }
 
             });
@@ -418,7 +434,8 @@
             _btnProcess.on(VIS.Events.onTouchStartOrClick, function () {
 
                 if (_cmbBankAccount.val() == null || _cmbBankAccount.val() == "" || _cmbBankAccount.val() == "0") {
-                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectBankAccountFirst"), null, "", "");
+                    // not required the VIS.Msg.getMsg() function
+                    VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                     return;
                 }
                 //if (_statementLinesList.length > 0) {
@@ -519,7 +536,8 @@
                     }
                 }
                 else {
-                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_NoRecordSelected"), null, "", "");
+                    // not required the VIS.Msg.getMsg() function
+                    VIS.ADialog.info("VA012_NoRecordSelected", null, "", "");
                 }
             });
 
@@ -544,8 +562,8 @@
                         $(e.target).closest(".row").find(":checkbox").prop('checked', true);
                     }
                 }
-
-                _txtAmount.getControl().trigger('blur');
+                //to avoid the sign differences when change the event passed current Values in Array 
+                _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
             });
             _statementDate.addClass("va012-mandatory");
             //Change event of Statement Date Filter
@@ -556,7 +574,8 @@
                 }
                 else {
                     if (new Date(_statementDate.val()) > new Date()) {
-                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_StatementDateToday"), null, "", "");
+                        // not required the VIS.Msg.getMsg() function
+                        VIS.ADialog.info("VA012_StatementDateToday", null, "", "");
                         _statementDate.val("");
                         return false;
                     }
@@ -776,6 +795,9 @@
                 _txtDifference = new VIS.Controls.VAmountTextBox("VA012_txtDifference_" + $self.windowNo + "", false, true, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
                 _txtDifference.getControl().addClass('va012-right-align');
                 _txtDifference.setValue(0);
+                // Disable or enabled, Diffrence type based on diffreence amount
+                //changed event change to blur
+                _txtDifference.getControl().trigger("blur");
                 divRow4Col2Diff.append(divRow4Col2DiffLbl).append(_txtDifference.getControl());
                 divRow4Col2.append(divRow4Col2Diff);
                 //$('                                   <input disabled tabindex="9" vchangable="Y" id="VA012_txtDifference_' + $self.windowNo + '" type="number" class="va012-right-align">'
@@ -879,7 +901,8 @@
                 divRow6Col3 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
                 divRow6Col3divTax = $('<div id="VA012_divTaxAmount_' + $self.windowNo + '" class="va012-form-group va012-form-data">');
                 divRow6Col3divTaxLbl = $('<label>' + VIS.Msg.getMsg("VA012_TaxAmount") + '</label>');
-                _txtTaxAmount = new VIS.Controls.VAmountTextBox("VA012_txtTaxAmount_" + $self.windowNo + "", false, false, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
+                // _txtTaxAmount should be readonly
+                _txtTaxAmount = new VIS.Controls.VAmountTextBox("VA012_txtTaxAmount_" + $self.windowNo + "", false, true, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
                 _txtTaxAmount.setValue(0);
                 _txtTaxAmount.getControl().addClass('va012-right-align');
                 divRow6Col3divTax.append(divRow6Col3divTaxLbl).append(_txtTaxAmount.getControl());
@@ -984,6 +1007,27 @@
                     + '                          <!-- end of col -->'
                     + '                      </div>'
                     + '                      <!-- end of row -->');
+                // Added new fields C_Currency_ID and C_ConversionType_ID
+                divRow10 = $('<div class="row va012-fl-padd" style="width:102%">');
+                divRow10Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                                  <div id="VA012_divCurrency_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Currency") + '</label>'
+                    + '                                      <select tabindex="10" id="VA012_txtCurrency_' + $self.windowNo + '">'
+                    + '                                      </select>'
+                    + '                                  </div>'
+                    + '                                  <!-- end of form-group -->'
+                    + '                              </div>'
+                    + '                              <!-- end of col -->');
+                divRow10Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                                  <div id="VA012_divConversionType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ConversionType") + '</label>'
+                    + '                                      <select tabindex="11" id="VA012_txtConversionType_' + $self.windowNo + '">'
+                    + '                                      </select>'
+                    + '                                  </div>'
+                    + '                                  <!-- end of form-group -->'
+                    + '                              </div>'
+                    + '                              <!-- end of col -->');
+                divRow10.append(divRow10Col1).append(divRow10Col2);
                 //+ '                  </div>');
                 //+ '                  <!-- end of form-wrap -->'
                 payHeaderWrap = $('<div id="VA012_paymentHeaderWrap_' + $self.windowNo + '" class="va012-payment-header-wrap">'
@@ -1080,7 +1124,8 @@
                 row2Col2divAmt.append(row2Col2Lble).append(row2Col2btnIn).append(row2Col2btnOut).append(_txtAmount.getControl()).append(row2Col2btnIcon);
                 row2Col2.append(row2Col2divAmt);
                 divRow2.append(row2Col1).append(row2Col2).append(row2Col3);
-                divformWrap.append(divRow1).append(divRow2).append(divRow3).append(divRow4).append(divRow5).append(divRow6).append(divRow7).append(divRow8).append(divRow9);
+                //appended the added fields of C_Currency_ID and C_ConversionType_ID
+                divformWrap.append(divRow1).append(divRow2).append(divRow10).append(divRow3).append(divRow4).append(divRow5).append(divRow6).append(divRow7).append(divRow8).append(divRow9);
                 divMidWrap.append(divtopWrap).append(divformWrap).append(payHeaderWrap);
                 contentDiv.append(divMidWrap).append(rightWrap);
                 tableTd1.append(contentDiv);
@@ -1208,11 +1253,15 @@
                 });
             },
             getMaxStatement: function (_origin) {
+                //always zero becoz this parameter 
+                //used in other function with calling this Same Controller
+                var page_No = 0;
+
                 $.ajax({
                     url: VIS.Application.contextUrl + "BankStatement/MaxStatement",
                     type: "GET",
                     datatype: "json",
-                    data: ({ _bankAccount: _cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _origin: _origin }),
+                    data: ({ _bankAccount: _cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _origin: _origin, _pageNo: page_No }),
                     contentType: "application/json; charset=utf-8",
                     success: function (data) {
                         if (data != null && data != "") {
@@ -1774,18 +1823,39 @@
                                     var _dragPaymentID = ($(ui.draggable)).data('uid');
 
                                     if (($(ui.draggable)).hasClass("va012-green-color")) {
-                                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_PaymentAlreadyMatchedOthrStatement"), null, "", "");
+                                        // not required the VIS.Msg.getMsg() function
+                                        VIS.ADialog.info("VA012_PaymentAlreadyMatchedOthrStatement", null, "", "");
                                         return;
                                     }
 
                                     var _dragStatementID = $(this).data("uid");
-                                    if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _txtAmount.getValue())) {
+                                    if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), convertAmtCulture(_txtAmount.getControl().val()))) {
                                         childDialogs.statementOpenEdit($(this).data("uid"), _dragPaymentID);
 
 
                                         window.setTimeout(function () {
+                                            //Refresh the form when ConversionType not found
+                                            //get the Amount in standard format
+                                            if (convertAmtCulture(_txtTrxAmt.getControl().val()) == 0) {
+                                                var stDate = _dtStatementDate.val();
+                                                newRecordForm.refreshForm();
+                                                _dtStatementDate.val(stDate);
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                                return;
+                                            }
+                                            //set Statement Date as Readonly
+                                            _dtStatementDate.attr("readonly", true);
                                             _openingFromDrop = true;
                                             $_ctrlPayment.setValue(_dragPaymentID, false, true);
+                                            //Incase of Payment ConversionType field should be Readonly
+                                            //I found sometimes not getting ConversionType from the Payment becoz ConversiontType reference not 
+                                            //present on the Payment record so to avoid that take a condition here
+                                            if (_txtConversionType.val() > 0) {
+                                                _txtConversionType.attr("disabled", true);
+                                            }
+                                            else {
+                                                _txtConversionType.attr("disabled", false);
+                                            }
                                             //if (_txtVoucherNo.val() == "") {
                                             //    var Voucher = VIS.Utility.Util.getValueOfString(VIS.DB.executeScalar("select trxno from C_Payment where C_Payment_ID=" + _dragPaymentID));
                                             //    _txtVoucherNo.val(Voucher);
@@ -1793,7 +1863,7 @@
                                             loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PY");
                                             // loadFunctions.getOverUnderPayment(($(ui.draggable)).data('uid'));
                                             _openingFromDrop = false;
-                                        }, 200);
+                                        }, 500);// for Accurate Result
                                     }
 
                                 }
@@ -1803,7 +1873,8 @@
                                     if (parseInt($_formNewRecord.attr("data-uid")) != $(this).data("uid")) {
                                         newRecordForm.scheduleRefresh();
                                     }
-                                    if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _scheduleList.toString(), _txtAmount.getValue())) {
+                                    //get the Amount in standard format
+                                    if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _scheduleList.toString(), convertAmtCulture(_txtAmount.getControl().val()))) {
                                         if (!isInList(parseInt(($(ui.draggable)).data('uid')), _scheduleList)) {
                                             _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                             _scheduleDataList.push($(ui.draggable).attr('paymentdata'));
@@ -1846,59 +1917,122 @@
                                             //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
                                         }
                                         else {
-                                            VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
+                                            // not required the VIS.Msg.getMsg() function
+                                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
                                         }
                                         _openingFromDrop = true;
                                         //to get Invoice schedule amount
                                         childDialogs.statementOpenEdit($(this).data("uid"), _dragScheduleID);
-                                        loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
+                                        //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
                                         _txtPaymentSchedule.val(_scheduleDataList.toString());
 
                                         window.setTimeout(function () {
-                                            var amount = 0;
-                                            for (var i = 0; i < _scheduleAmount.length; i++) {
-                                                amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
+                                            //Refresh the form when ConversionType not found
+                                            //get the Amount in standard format
+                                            if (convertAmtCulture(_txtTrxAmt.getControl().val()) == 0) {
+                                                var stDate = _dtStatementDate.val();
+                                                newRecordForm.refreshForm();
+                                                newRecordForm.scheduleRefresh();
+                                                _dtStatementDate.val(stDate);
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                                return;
                                             }
-                                            _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
-                                            _txtTrxAmt.getControl().trigger('blur');
-                                        }, 200);
+                                            //to avoid execution if Conversion Not found replaced to here
+                                            loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
+                                            //set Statement Date as Readonly
+                                            _dtStatementDate.attr("readonly", true);
+                                            if (_scheduleAmount.length == 1) {
+                                                _scheduleAmount[0] = VIS.Utility.Util.getValueOfString(convertAmtCulture(_txtTrxAmt.getControl().val()));
+                                            }
+                                            //get the Amount in standard format
+                                            _txtTrxAmt.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                                        }, 500); // for Accurate Result
                                     }
 
                                 }
                                 else if (_cmbTransactionType.val() == "PO") {
+                                    //get C_Order_ID
+                                    var _dragOrderID = ($(ui.draggable)).data('uid');
+
                                     if (parseInt($_formNewRecord.attr("data-uid")) != $(this).data("uid")) {
                                         newRecordForm.prepayRefresh();
                                     }
-                                    if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _prepayList.toString(), _txtAmount.getValue())) {
+                                    if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _prepayList.toString(), convertAmtCulture(_txtAmount.getControl().val()))) {
+                                        //get _txtTrxAmt from prepay order
+                                        childDialogs.statementOpenEdit($(this).data("uid"), _dragOrderID);
 
-                                        childDialogs.statementOpenEdit($(this).data("uid"));
                                         //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
                                         window.setTimeout(function () {
+                                            //Refresh the form when ConversionType not found
+                                            //get the Amount in standard format
+                                            if (convertAmtCulture(_txtTrxAmt.getControl().val()) == 0) {
+                                                var stDate = _dtStatementDate.val();
+                                                newRecordForm.refreshForm();
+                                                newRecordForm.prepayRefresh();
+                                                _dtStatementDate.val(stDate);
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                                return;
+                                            }
+                                            //set Statement Date as Readonly
+                                            _dtStatementDate.attr("readonly", true);
                                             _openingFromDrop = true;
-                                            $_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
+                                            $_ctrlOrder.setValue(_dragOrderID, false, true);
                                             loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
+                                            //when difference Amt is not zero then enable all options on differeneceType dropdown
+                                            //if (convertAmtCulture(_txtDifference.getControl().val()) != 0) {
+                                            //    _divDifferenceType.find("*").prop("disabled", false);
+                                            //}//not required
                                             _openingFromDrop = false;
-                                        }, 200);
+                                        }, 500); // for Accurate Result
                                         //childDialogs.statementOpenEdit($(this).data("uid"));
                                     }
+                                    //else {
+                                    //    //if amount not found then return message
+                                    //    //get the Amount in standard format
+                                    //    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) == 0) {
+                                    //        VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                    //        return;
+                                    //    }
+                                    //}
 
                                 }
                                 if (_cmbTransactionType.val() == "CO") {
-                                    var _dragPaymentID = ($(ui.draggable)).data('uid');
+                                    //get C_Cash_ID
+                                    var _dragCashID = ($(ui.draggable)).data('uid');
                                     if (($(ui.draggable)).hasClass("va012-green-color")) {
-                                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_CashLineAlreadyMatchedOthrStmt"), null, "", "");
+                                        // not required the VIS.Msg.getMsg() function
+                                        VIS.ADialog.info("VA012_CashLineAlreadyMatchedOthrStmt", null, "", "");
                                         return;
                                     }
                                     var _dragStatementID = $(this).data("uid");
-                                    if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _txtAmount.getValue())) {
-                                        childDialogs.statementOpenEdit($(this).data("uid"));
+                                    if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), convertAmtCulture(_txtAmount.getControl().val()))) {
+                                        childDialogs.statementOpenEdit(_dragStatementID, _dragCashID);
 
                                         window.setTimeout(function () {
+                                            //Refresh the form when ConversionType not found
+                                            //get the Amount in standard format
+                                            if (convertAmtCulture(_txtTrxAmt.getControl().val()) == 0) {
+                                                var stDate = _dtStatementDate.val();
+                                                newRecordForm.refreshForm();
+                                                _dtStatementDate.val(stDate);
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                                return;
+                                            }
+                                            //set Statement Date as Readonly
+                                            _dtStatementDate.attr("readonly", true);
                                             _openingFromDrop = true;
-                                            $_ctrlCashLine.setValue(_dragPaymentID, false, true);
+                                            $_ctrlCashLine.setValue(_dragCashID, false, true);
                                             _openingFromDrop = false;
-                                        }, 200);
+                                        }, 500); // for Accurate Result
                                     }
+                                    //else {
+                                    //    //if amount not found then return message
+                                    //    //get the Amount in standard format
+                                    //    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) == 0) {
+                                    //        VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                    //        return;
+                                    //    }
+                                    //}
 
                                 }
 
@@ -1921,19 +2055,21 @@
                             if (_cmbTransactionType.val() == "CO") {
                                 if (_cmbVoucherMatch.val() == "C") {
                                     if (_cmbContraType.val() != "CB") {
-                                        VIS.ADialog.info(VIS.Msg.getMsg("VA012_ContraSelectCashToBank"), null, "", "");
+                                        // not required the VIS.Msg.getMsg() function
+                                        VIS.ADialog.info("VA012_ContraSelectCashToBank", null, "", "");
                                         return;
                                     }
                                 }
                                 else {
-                                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectVoucherContra"), null, "", "");
+                                    // not required the VIS.Msg.getMsg() function
+                                    VIS.ADialog.info("VA012_SelectVoucherContra", null, "", "");
                                     return;
                                 }
 
                             }
                             else {
                                 if (_cmbVoucherMatch.val() != "M") {
-                                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_SelectVoucherPayment"), null, "", "");
+                                    VIS.ADialog.info("VA012_SelectVoucherPayment", null, "", ""); //VIS.Msg.getMsg() not required
                                     return;
                                 }
                             }
@@ -1941,22 +2077,35 @@
 
                             if (_cmbTransactionType.val() == "PY") {
                                 if (($(ui.draggable)).hasClass("va012-green-color")) {
-                                    VIS.ADialog.info(VIS.Msg.getMsg("VA012_PaymentAlreadyMatchedOthrStatement"), null, "", "");
+                                    VIS.ADialog.info("VA012_PaymentAlreadyMatchedOthrStatement", null, "", "");
                                     return;
                                 }
                                 if (($(ui.draggable)).data('uid') > 0) {
-                                    if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.getValue())) {
+                                    //Avoid th Check multiple times
+                                    //if (loadFunctions.checkPaymentCondition(($(ui.draggable)).data('uid'), 0, _txtAmount.getValue())) {
+                                    //return message if try to drag another record while already has the record on the form.
+                                    if (VIS.Utility.Util.getValueOfInt(_paymentSelectedVal) == 0) {
                                         $_ctrlPayment.setValue(($(ui.draggable)).data('uid'), false, true);
-                                        //_lstStatement.html("");
-                                        //_statementPageNo = 1;
-                                        //childDialogs.loadStatement(_statementID);
                                     }
+                                    else {
+                                        if (VIS.Utility.Util.getValueOfInt(_paymentSelectedVal) == VIS.Utility.Util.getValueOfInt(($(ui.draggable)).data('uid'))) {
+                                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                                        }
+                                        else {
+                                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                                        }
+                                        return;
+                                    }
+                                    //_lstStatement.html("");
+                                    //_statementPageNo = 1;
+                                    //childDialogs.loadStatement(_statementID);
+                                    //}
                                 }
                             }
 
                             if (_cmbTransactionType.val() == "IS") {
-
-                                if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _scheduleList.toString(), _txtAmount.getValue())) {
+                                //get the Amount in standard format
+                                if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _scheduleList.toString(), convertAmtCulture(_txtAmount.getControl().val()))) {
                                     //alert("done");
                                     var amount = 0;
                                     if (!isInList(parseInt(($(ui.draggable)).data('uid')), _scheduleList)) {
@@ -1997,6 +2146,9 @@
                                             _btnOut.removeClass("va012-active");
                                             _btnOut.addClass("va012-inactive");
                                             _btnOut.attr("v_active", "0");
+                                            if (amount > 0) {
+                                                _txtAmount.getControl().removeClass("va012-mandatory");
+                                            }
                                         }
                                         _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                                         //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
@@ -2015,33 +2167,51 @@
                                     //    amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                     //}
                                     _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
-                                    _txtTrxAmt.getControl().trigger('blur');
-                                }
-                                else {
-                                    //alert("Notdone");
+                                    //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                                    _txtTrxAmt.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                                    //Set the Currency and ConversionType
+                                    //handled null exception
+                                    var schdleList = _scheduleList != null ? _scheduleList.toString() : null;
+                                    setCurrencyandConversionType(schdleList);
                                 }
                             }
                             if (_cmbTransactionType.val() == "PO") {
 
-                                if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _prepayList.toString(), _txtAmount.getValue())) {
-                                    //alert("done");
-                                    //newRecordForm.prepayRefresh();
-                                    //if (!isInList(parseInt(($(ui.draggable)).data('uid')), _prepayList)) {
-                                    //    _prepayList.push(parseInt(($(ui.draggable)).data('uid')));
-                                    //    _prepayDataList.push($(ui.draggable).attr('paymentdata'));
-
-                                    //}
-                                    //else {
-                                    //    VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
-                                    //}
-                                    //_txtPrepayOrder.val(_prepayDataList.toString());
-                                    $_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
-                                    loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
+                                //if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _prepayList.toString(), _txtAmount.getValue())) {
+                                // if amount is zero then should pop-up this message
+                                //return message if try to drag another record while already has the record on the form.
+                                if (VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0) {
+                                    if (VIS.Utility.Util.getValueOfInt(_orderSelectedVal) == VIS.Utility.Util.getValueOfInt(($(ui.draggable)).data('uid'))) {
+                                        VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                                    }
+                                    else {
+                                        VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                                    }
+                                    return;
                                 }
                                 else {
-                                    //alert("Notdone");
-
+                                    $_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
                                 }
+                                //disable the amount becoz can't change amount for prepay order
+                                //_txtAmount.getControl().attr("disabled", true);
+                                //alert("done");
+                                //newRecordForm.prepayRefresh();
+                                //if (!isInList(parseInt(($(ui.draggable)).data('uid')), _prepayList)) {
+                                //    _prepayList.push(parseInt(($(ui.draggable)).data('uid')));
+                                //    _prepayDataList.push($(ui.draggable).attr('paymentdata'));
+
+                                //}
+                                //else {
+                                //    VIS.ADialog.info(VIS.Msg.getMsg("VA012_AlreadySelected"), null, "", "");
+                                //}
+                                //_txtPrepayOrder.val(_prepayDataList.toString());
+                                //$_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
+                                //loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
+                                //}
+                                //else {
+                                //alert("Notdone");
+
+                                //}
 
 
                             }
@@ -2054,8 +2224,35 @@
                                         VIS.ADialog.info("VA012_CashLineAlreadyMatchedOthrStmt", null, "", "");
                                         return;
                                     }
-                                    if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _txtAmount.getValue())) {
-                                        $_ctrlCashLine.setValue(($(ui.draggable)).data('uid'), false, true);
+                                    //return the Message if If already selected Cash Journal line on the form
+                                    if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0) {
+                                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) == VIS.Utility.Util.getValueOfInt(($(ui.draggable)).data('uid'))) {
+                                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                                        }
+                                        else {
+                                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                                        }
+                                        return;
+                                    }
+                                    else {
+                                        //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                                        if (loadFunctions.checkContraCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), convertAmtCulture(_txtAmount.getControl().val()))) {
+                                            // if amount is zero then should pop-up this message
+                                            if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) == 0) {
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                                return;
+                                            }
+                                            _txtTrxAmt.setValue(convertAmtCulture(_txtAmount.getControl().val()));
+                                            _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                                            $_ctrlCashLine.setValue(($(ui.draggable)).data('uid'), false, true);
+                                        }
+                                        //else {
+                                        //    // if amount is zero then should pop-up this message
+                                        //    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) == 0) {
+                                        //        VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                        //        return;
+                                        //    }
+                                        //}
                                     }
                                 }
                             }
@@ -2084,7 +2281,8 @@
                             if (result._amount != null && result._amount != 0) {
 
                                 _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
-                                if (_txtAmount.getValue() < 0) {
+                                //get the Amount in standard format
+                                if (convertAmtCulture(_txtAmount.getControl().val()) < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
@@ -2138,7 +2336,8 @@
                             if (result._amount > 0) {
 
                                 _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
-                                if (_txtAmount.getValue() < 0) {
+                                //get the Amount in standard format
+                                if (convertAmtCulture(_txtAmount.getControl().val()) < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
@@ -2218,13 +2417,17 @@
                             if (result._amount != null && result._amount != 0) {
 
                                 _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
-                                if (_txtAmount.getValue() < 0) {
+                                //get the Amount in standard format
+                                if (convertAmtCulture(_txtAmount.getControl().val()) < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
                                     _btnIn.removeClass("va012-active");
                                     _btnIn.addClass("va012-inactive");
                                     _btnIn.attr("v_active", "0");
+                                    //added class mandatory
+                                    _txtAmount.getControl().addClass('va012-mandatory');
+                                    _txtTrxAmt.getControl().addClass('va012-mandatory');
                                 }
                                 else {
                                     _btnIn.removeClass("va012-inactive");
@@ -2233,9 +2436,45 @@
                                     _btnOut.removeClass("va012-active");
                                     _btnOut.addClass("va012-inactive");
                                     _btnOut.attr("v_active", "0");
+                                    //removed class mandatory
+                                    _txtAmount.getControl().removeClass('va012-mandatory');
+                                    _txtTrxAmt.getControl().removeClass('va012-mandatory');
                                 }
                                 _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(result._trxamount.toFixed(_stdPrecision)));
+                                //Set Currency and Conversion Type
+                                if (result._currency_Id != 0 && VIS.Utility.Util.getValueOfString($_ctrlPayment.value) != null) {
+                                    _txtCurrency.val(_currencyId).prop('selected', true);
+                                    for (var i = 0; _txtCurrency[0].length > i; i++) {
+                                        if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                            $(_txtCurrency[0][i]).show();
+                                        }
+                                        else {
+                                            $(_txtCurrency[0][i]).hide();
+                                        }
+                                    }
+                                    _txtCurrency.removeClass("va012-mandatory");
+                                    _txtCurrency.attr("disabled", false);
+                                    $(_txtConversionType[0][0]).hide();
+                                    _txtConversionType.val(result._conversionType_Id).prop('selected', true);
+                                    _txtConversionType.attr("disabled", true);//using this attr
+                                }
+                                else {
+                                    _txtCurrency.val(_currencyId).prop('selected', true);
+                                    _txtCurrency.attr("disabled", true);
+                                    _txtCurrency.removeClass("va012-mandatory");
+                                    _txtConversionType.val(result._conversionType_Id).prop('selected', true);
+                                    //_txtConversionType.trigger('change');
+                                }
+                                _txtConversionType.trigger('change');
                                 //_txtTrxAmt.trigger('change');
+                            }
+                            else {
+                                //Incase of drag Payment on new form which is not found ConversionRate then it will return meg
+                                if (_dragDestinationID == 0) {
+                                    newRecordForm.refreshForm();
+                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                    _status = false;
+                                }
                             }
                         }
                         else {
@@ -2325,6 +2564,7 @@
                     _formBPartnerID = $_ctrlBusinessPartner.value;
                 }
                 var _status = false;
+                var stmtLine_Id = _dragDestinationID;
 
                 $.ajax({
                     url: VIS.Application.contextUrl + "BankStatement/CheckPrepayCondition",
@@ -2339,9 +2579,10 @@
                         result = $.parseJSON(result);
                         if (result._status == "Success") {
                             _status = true;
-                            if (result._amount > 0) {
+                            if (result._amount != 0) {
                                 _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
-                                if (_txtAmount.getValue() < 0) {
+                                //get the Amount in standard format
+                                if (convertAmtCulture(_txtAmount.getControl().val()) < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
@@ -2356,9 +2597,46 @@
                                     _btnOut.removeClass("va012-active");
                                     _btnOut.addClass("va012-inactive");
                                     _btnOut.attr("v_active", "0");
+                                    //get the Amount in standard format
+                                    if (convertAmtCulture(_txtAmount.getControl().val()) > 0) {
+                                        _txtAmount.getControl().removeClass("va012-mandatory");
+                                    }
                                 }
-                                //_txtTrxAmt.val((result._amount).toFixed(_stdPrecision));
-                                //_txtTrxAmt.trigger('change');
+                                //Set Currency and Conversion Type
+                                if (result._currency_Id != 0 && VIS.Utility.Util.getValueOfString($_ctrlOrder.value) != null) {
+                                    _txtCurrency.val(result._currency_Id).prop('selected', true);
+                                    for (var i = 0; _txtCurrency[0].length > i; i++) {
+                                        if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == result._currency_Id || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                            $(_txtCurrency[0][i]).show();
+                                        }
+                                        else {
+                                            $(_txtCurrency[0][i]).hide();
+                                        }
+                                    }
+                                    _txtCurrency.removeClass("va012-mandatory");
+                                    _txtCurrency.attr("disabled", false);
+                                    $(_txtConversionType[0][0]).hide();
+                                    _txtConversionType.val(result._conversionType_Id).prop('selected', true);
+                                    //Incase of Prepay we should allow to change the ConversionType becoz Payment will create against this Type
+                                    _txtConversionType.attr("disabled", false);
+                                }
+                                else {
+                                    _txtCurrency.val(_currencyId).prop('selected', true);
+                                    _txtCurrency.attr("disabled", true);
+                                    _txtCurrency.removeClass("va012-mandatory");
+                                    _txtConversionType.val(result._conversionType_Id).prop('selected', true);
+                                }
+                                _txtConversionType.trigger('change');
+                            }
+                            else {
+                                //when drap the Order on to Line then It should be true
+                                if (stmtLine_Id > 0) {
+                                    _status = true;
+                                }
+                                else {
+                                    //if amount not found then return false
+                                    _status = false;
+                                }
                             }
                         }
                         else {
@@ -2377,7 +2655,6 @@
 
             //strictly advised that condider amount only in case of new record otherwise get from destination
             checkContraCondition: function (_dragSourceID, _dragDestinationID, _amount) {
-
                 var _formBPartnerID = 0;
                 if ($_ctrlBusinessPartner.value) {//will evaluate to true if value is not:  null, undefined, NaN, empty string (""), 0,false
                     _formBPartnerID = $_ctrlBusinessPartner.value;
@@ -2398,7 +2675,8 @@
                             _status = true;
 
                             _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
-                            if (_txtAmount.getValue() < 0) {
+                            //get the Amount in standard format
+                            if (convertAmtCulture(_txtAmount.getControl().val()) < 0) {
                                 _btnOut.removeClass("va012-inactive");
                                 _btnOut.addClass("va012-active");
                                 _btnOut.attr("v_active", "1");
@@ -2413,6 +2691,39 @@
                                 _btnOut.removeClass("va012-active");
                                 _btnOut.addClass("va012-inactive");
                                 _btnOut.attr("v_active", "0");
+                                //get the Amount in standard format
+                                if (convertAmtCulture(_txtAmount.getControl().val()) > 0) {
+                                    _txtAmount.getControl().removeClass("va012-mandatory");
+                                }
+                            }
+                            //Set Currency and Conversion Type
+                            if (result._amount != 0 && VIS.Utility.Util.getValueOfString($_ctrlCashLine.value) != null) {
+                                _txtCurrency.val(_currencyId).prop('selected', true);
+                                for (var i = 0; _txtCurrency[0].length > i; i++) {
+                                    if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                        $(_txtCurrency[0][i]).show();
+                                    }
+                                    else {
+                                        $(_txtCurrency[0][i]).hide();
+                                    }
+                                }
+                                _txtCurrency.removeClass("va012-mandatory");
+                                _txtCurrency.attr("disabled", false);
+                                $(_txtConversionType[0][0]).hide();
+                                //requirement: get ConversionType from the CashLine and set as readOnly
+                                _txtConversionType.val(result._conversionType_Id).prop('selected', true);
+                                _txtConversionType.removeClass("va012-mandatory");
+                                //requirement changed - ConversionType should be readOnly
+                                _txtConversionType.attr("disabled", true);
+                            }
+                            else {
+                                if (VIS.Utility.Util.getValueOfInt(_dragDestinationID) > 0) {
+                                    _status = true;
+                                }
+                                else {
+                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                    _status = false;
+                                }
                             }
 
                         }
@@ -2445,7 +2756,8 @@
                             _status = true;
                             if (result._amount != null && result._amount != 0) {
                                 _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(result._amount.toFixed(_stdPrecision)));
-                                if (_txtAmount.getValue() < 0) {
+                                //get the Amount in standard format
+                                if (convertAmtCulture(_txtAmount.getControl().val()) < 0) {
                                     _btnOut.removeClass("va012-inactive");
                                     _btnOut.addClass("va012-active");
                                     _btnOut.attr("v_active", "1");
@@ -2497,7 +2809,9 @@
                 _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(evt.newValue.toFixed(_stdPrecision)));
             }
             else if (evt.propertyName == "VA012_txtAmount_" + $self.windowNo + "") {
-                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(evt.newValue.toFixed(_stdPrecision)));
+                //get the Amount in standard format
+                var _newValue = convertAmtCulture(_txtAmount.getControl().val());
+                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(_newValue).toFixed(_stdPrecision)));
             }
         };
         /*
@@ -2581,6 +2895,94 @@
 
         };
 
+        //Set the Currency and Conversiontype on new Form
+        function setCurrencyandConversionType(_invSchedules) {
+            if (_invSchedules != null && _scheduleList.length > 0) {
+                $.ajax({
+                    url: VIS.Application.contextUrl + "BankStatement/GetCurrencyandConversionType",
+                    dataType: "json",
+                    data: { _invoiceSchedules: _invSchedules },
+                    success: function (data) {
+                        var result = JSON.parse(data);
+                        if (result != null || result != "") {
+                            callSetCurrency(result);
+                        }
+                    }
+                });
+                function callSetCurrency(result) {
+                    if (result.currencyId != 0 && _scheduleList != null) {
+                        _txtCurrency.val(result.currencyId).prop('selected', true);
+                        for (var i = 0; _txtCurrency[0].length > i; i++) {
+                            if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == result.currencyId || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                $(_txtCurrency[0][i]).show();
+                            }
+                            else {
+                                $(_txtCurrency[0][i]).hide();
+                            }
+                        }
+                        _txtCurrency.removeClass("va012-mandatory");
+                        _txtCurrency.attr("disabled", false);
+                        _txtConversionType.val(result.conversionTypeId).prop('selected', true);
+                    }
+                    else {
+                        _txtCurrency.val(_currencyId).prop('selected', true);
+                        _txtCurrency.attr("disabled", true);
+                        _txtCurrency.removeClass("va012-mandatory");
+                        _txtConversionType.val(result.conversionTypeId).prop('selected', true);
+                    }
+                    _txtConversionType.trigger('change');
+                }
+            }
+            else {
+                _txtCurrency.prop('selectedIndex', 0);
+                _txtCurrency.addClass("va012-mandatory");
+                _txtCurrency.attr("disabled", false);
+                _txtConversionType.prop('selectedIndex', 0);
+                _txtConversionType.addClass("va012-mandatory");
+            }
+        };
+
+        //handle culture for Amounts
+        function convertAmtCulture(_convAmt) {
+            var val = 0;
+            dotFormatter = $self.dotFormatter;// checl dotFomatter true or false
+            //check _convAmt type is string or not if not then convert into string
+            typeof _convAmt === "string" ? _convAmt : _convAmt = _convAmt.toString();
+            if (!dotFormatter) {
+                //for example in slovanian culture we get '−' for -ve Values
+                //so if _convAmt is negative as well it's haven't thousand separator like '.' in case of slovanian 
+                //then it will execute this condition
+                if (_convAmt.contains("−") && !_convAmt.contains(".")) {
+                    _convAmt = (-1 * format.GetConvertedNumber(_convAmt, dotFormatter)).toString();
+                }
+                //so if _convAmt is negative as well it's have thousand separator like '.' in case of slovanian 
+                //then it will execute this condition
+                else if (_convAmt.contains("−") && _convAmt.contains(".")) {
+                    _convAmt = (-1 * format.GetConvertedNumber(_convAmt, dotFormatter)).toString();
+                }
+                //_convAmt is positive value then this condition will execute
+                else if (_convAmt.contains(",")) {
+                    _convAmt = format.GetConvertedNumber(_convAmt, dotFormatter).toString();
+                }
+                //_convAmt have value then return _convAmt else return val
+                val = _convAmt != "" ? _convAmt : val;
+            }
+            else {
+                //if _convAmt contains negative value then this will execute that to this special symbol '−'
+                if (_convAmt.contains("−")) {
+                    _convAmt = (-1 * format.GetConvertedNumber(_convAmt, dotFormatter)).toString();
+                }
+                //this will execute when the values contains '.'
+                //if user entered three digits then it will get ',' then need to convert the amount
+                //so according to that removed else if condition
+                else /*if (_convAmt.contains("."))*/ {
+                    _convAmt = format.GetConvertedNumber(_convAmt, dotFormatter).toString();
+                }
+                //_convAmt have value then return _convAmt else return val
+                val = _convAmt != "" ? _convAmt : val;
+            }
+            return parseFloat(val).toFixed(_stdPrecision);
+        }
         //End Load All Functions
 
         //Load Child Dialogs
@@ -3176,18 +3578,17 @@
                                     if ((data[i].c_cashline_id != null && data[i].c_cashline_id != "0" && data[i].c_cashline_id != 0) /*&& data[i].usenexttime == true*/) {
                                         status = "va012-green-color";
                                     }
+                                    //set status as green incase of Charge reference is present
                                     else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
-
+                                        
                                         if (data[i].STMTAMT == data[i].trxamount)
                                             status = "va012-green-color";
                                         else
-                                            status = "va012-red-color";
+                                        status = "va012-red-color";
                                     }
                                     else if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
                                         status = "va012-red-color";
                                     }
-
-
                                     else {
                                         status = "va012-red-color";
                                     }
@@ -3207,6 +3608,7 @@
                                 + ' <input type="checkbox" data-uid="' + data[i].c_bankstatementline_id + '" >'
                                 // + ' <div class="va012-form-text"> <span style="background: #999;color: white; padding: 3px;margin-left: 2px;">' + data[i].page + '/' + data[i].line + '</span>'
                                 + ' <div class="va012-form-text"> <span style="background: rgba(var(--v-c-on-secondary), .4);color: rgba(var(--v-c-on-primary), 1); padding: 3px;margin-left: 2px;">' + data[i].statementno + '/' + data[i].page + '/' + data[i].line + '</span>'
+                                + '<label>' + new Date(data[i].stmtLineDate).toLocaleDateString() + '</label>' //StatementLine Date 
                                 + '<label>' + data[i].currency + ' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
 
                             //if (data[i].isconverted == "Y") {
@@ -3339,22 +3741,25 @@
 
             },
             setStatementListHeight: function () {
-                //$(".va012-content-area").height($("#VA012_mainContainer_" + $self.windowNo).height() - 20);
-                //$(".va012-right-content").height($(".va012-right-wrap").height() - $(".va012-right-top").height() - 18)
-                $("#VA012_contentArea_" + $self.windowNo).height($("#VA012_mainContainer_" + $self.windowNo).height() - 20);
+                // Handle Form Load on  browser refresh with mutiple tab
+                var h = $("#VA012_mainContainer_" + $self.windowNo).height();
+                if (h == 0) {
+                    h = window.innerHeight - (40 + 43 + 24); // window height - (Header panel - Title Panel - Footer panel)
+                }
+                $("#VA012_contentArea_" + $self.windowNo).height(h - 20);
                 $("#VA012_lstStatement_" + $self.windowNo).height($("#VA012_rightWrap_" + $self.windowNo).height() - $("#VA012_rightTop_" + $self.windowNo).height() - 18)
             },
 
 
 
             statementOpenEdit: function (_bankStatementLineID, _dragPaymentID) {
-                _btnNewRecord.attr("activestatus", "0");
+                _btnNewRecord.attr("activestatus", "1"); // adjust the scrolling
                 _btnNewRecord.attr("src", "Areas/VA012/Images/hide.png");
                 _btnNewRecord.attr("title", "Collapse");
                 _btnNewRecord.removeClass("vis vis-plus");
                 _btnNewRecord.addClass("fa fa-minus");
                 $_formNewRecord.show();
-                loadFunctions.setPaymentListHeight()
+                loadFunctions.setPaymentListHeight();
                 childDialogs.statementListRecordEdit(_bankStatementLineID, _dragPaymentID);
                 _bankStatementLineID = 0;
                 return true;
@@ -3367,7 +3772,7 @@
                 var _dragPaymentID = 0;//to avoid undefined issue
                 if (target.hasClass('glyphicon-edit')) {
                     _bankStatementLineID = target.data("uid");
-                    _btnNewRecord.attr("activestatus", "0");
+                    _btnNewRecord.attr("activestatus", "1"); // adjust the scrolling
                     _btnNewRecord.attr("src", "Areas/VA012/Images/hide.png");
                     _btnNewRecord.attr("title", "Collapse");
                     $_formNewRecord.show();
@@ -3432,8 +3837,10 @@
                 }
             },
             statementListRecordEdit: function (_bankStatementLineID, _dragPaymentID) {
-
-                newRecordForm.refreshForm();
+                //should refresh the form when _dragPaymentID is Zero
+                if (VIS.Utility.Util.getValueOfInt(_dragPaymentID) == 0) {
+                    newRecordForm.refreshForm();
+                }
                 childDialogs.getStatementLineForEdit(_bankStatementLineID, _dragPaymentID, childDialogs.afterRecordGet);
 
             },
@@ -3455,7 +3862,7 @@
                     type: 'POST',
                     url: VIS.Application.contextUrl + "VA012/BankStatement/GetStatementLine",
                     contentType: "application/json; charset=utf-8",
-                    data: JSON.stringify({ _bankStatementLineID: _bankStatementLineID, trxType: _cmbTransactionType.val(), payment_ID: _dragPaymentID != null ? _dragPaymentID : 0, _statementDt: _dtStatementDate.val() }),
+                    data: JSON.stringify({ _bankStatementLineID: _bankStatementLineID, trxType: _cmbTransactionType.val(), payment_ID: _dragPaymentID != null ? _dragPaymentID : 0 }),
                     success: function (data) { callback(data); },
                     error: function (data) { VIS.ADialog.info(data, null, "", ""); }
                 });
@@ -3508,16 +3915,38 @@
                     _txtCheckNo.val(_result._txtCheckNo);
                     _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_result._txtAmount.toFixed(_stdPrecision)));
                     _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(_result._txtTrxAmt.toFixed(_stdPrecision)));
-                    if (_cmbVoucherMatch.val() == "M" && _txtTrxAmt.getValue() != 0) {
-                        _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal(Math.abs(_result._txtDifference.toFixed(_stdPrecision))));
-                        if (_result._txtDifference != 0) {
-                            _txtDifference.getControl().attr("vchangable", "N");
-                            _divDifferenceType.find("*").prop("disabled", false);
+                    //get the Amount in standard format
+                    if (convertAmtCulture(_txtAmount.getControl().val()) <= 0) {
+                        _txtAmount.getControl().addClass('va012-mandatory');
+                    }
+                    else {
+                        _txtAmount.getControl().removeClass('va012-mandatory');
+                    }
+                    //get the Amount in standard format
+                    if (convertAmtCulture(_txtTrxAmt.getControl().val()) <= 0) {
+                        _txtTrxAmt.getControl().addClass('va012-mandatory');
+                    }
+                    else {
+                        _txtTrxAmt.getControl().removeClass('va012-mandatory');
+                    }
+                    //Calculate the DiffAmt in case of contra also
+                    //get the Amount in standard format
+                    if ((_cmbVoucherMatch.val() == "M" || _cmbVoucherMatch.val() == "C") && convertAmtCulture(_txtTrxAmt.getControl().val()) != 0) {
+                        var _diffAmt = VIS.Utility.Util.getValueOfDecimal(_result._txtDifference.toFixed(_stdPrecision));
+                        _txtDifference.setValue(_diffAmt);
+                        // Disable or enabled, Diffrence type based on diffreence amount
+                        //replace 'change' to 'blur' to avoid the _txtDifference value change when trigger the function
+                        _txtDifference.getControl().trigger("blur");
+                        //get the Amount in standard format
+                        if (convertAmtCulture(_txtDifference.getControl().val()) <= 0) {
+                            _txtDifference.getControl().addClass('va012-mandatory');
                         }
                         else {
-                            _txtDifference.getControl().attr("vchangable", "Y");
+                            _txtDifference.getControl().removeClass('va012-mandatory');
                         }
-
+                        if (_cmbVoucherMatch.val() == "C") {
+                            _cmbVoucherMatch.trigger('change');
+                        }
                     }
                     if (_result._cmbDifferenceType != null && _result._cmbDifferenceType != "") {
                         _divDifferenceType.find("*").prop("disabled", false);
@@ -3528,7 +3957,8 @@
                     }
                     _cmbDifferenceType.trigger('change');
                     //_txtTrxAmt.trigger('change');
-                    if (_txtAmount.getValue() < 0) {
+                    //get the Amount in standard format
+                    if (convertAmtCulture(_txtAmount.getControl().val()) < 0) {
                         _btnOut.removeClass("va012-inactive");
                         _btnOut.addClass("va012-active");
                         _btnOut.attr("v_active", "1");
@@ -3622,6 +4052,53 @@
                             $_ctrlInvoice.setValue();
                         }
                     }
+                    // when drag transaction on to the Line then it will return the Currency and ConversionType
+                    // then set the values on the fields
+                    if (_result._txtCurrency != 0) {
+                        _txtCurrency.val(_result._txtCurrency).prop('selected', true);
+                        for (var i = 0; _txtCurrency[0].length > i; i++) {
+                            if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _result._txtCurrency || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                $(_txtCurrency[0][i]).show();
+                            }
+                            else {
+                                $(_txtCurrency[0][i]).hide();
+                            }
+                        }
+                        _txtCurrency.removeClass("va012-mandatory");
+                        _txtCurrency.attr("disabled", false);
+                    }
+                    //Incase of Contra also should update the ConversionType if not found ConversionType then the field is mandatory
+                    if (_result._txtConversionType == 0) {
+                        _txtConversionType.prop('selectedIndex', 0);
+                        _txtConversionType.addClass("va012-mandatory");
+                        _txtConversionType.attr("disabled", false);
+                    }
+                    else {
+                        _txtConversionType.val(_result._txtConversionType).prop('selected', true);
+                        _txtConversionType.removeClass("va012-mandatory");
+                        //based on Payment or CashLine _txtConversionType set as ReadOnly true or false
+                        if (_result._ctrlPayment > 0) {
+                            _txtConversionType.attr("disabled", true);
+                        }
+                        else if (_result._ctrlCashLine > 0) {
+                            _txtConversionType.attr("disabled", true);
+                        }
+                        else {
+                            _txtConversionType.attr("disabled", false);
+                            $(_txtConversionType[0][0]).hide();//after set the ConversionType don't show the empty option
+                        }
+                    }
+                    //check StatementLine Id has a value or not incase of match drag the transaction into Unconciled Line
+                    //Set disable the Difference Type options except the Charge incase of Payment or CashLine
+                    //applied one more condition to set readonly options according to the Statement amount and Transaction amounts in case of drag into unconciled line
+                    if (VIS.Utility.Util.getValueOfDecimal(_result._txtDifference.toFixed(_stdPrecision)) != 0 &&
+                        (_scheduleList.length == 0 || (_scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) < Math.abs(convertAmtCulture(_txtAmount.getControl().val()))))
+                        && ((VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0 && $_formNewRecord.attr("data-uid") == 0) || $_formNewRecord.attr("data-uid") != 0)) {
+                        _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
+                        _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
+                        _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
+                        _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                    }
 
                     _txtCharge.trigger("focus");
                     //_openingFromDrop = false;
@@ -3694,7 +4171,7 @@
                     + "</select></div> "
                     //added Accept button manually
                     + "<div class='va012-frm-btn va012-btn-blue' style='float: right;'>"
-                    + "<label id ='VA012_accept_" + $self.windowNo + "'>" + VIS.Msg.getMsg("VA012_Accept") + "</label></div> "
+                    + "<label style='font-weight: normal;' id ='VA012_accept_" + $self.windowNo + "'>" + VIS.Msg.getMsg("VA012_Accept") + "</label></div> "
 
                     + "</div>";
                 $match.append(_match);
@@ -3989,6 +4466,11 @@
                             + " <a class='va012-remove-icon'>"
                             + " <span data-uid='" + _cmbMatchingBase.val() + "'class='glyphicon glyphicon-remove'></span></a>"
                             + " <span>" + _cmbMatchingBase.children()[_cmbMatchingBase[0].selectedIndex].text; +"</span> </div>";
+                        //after match the Lines, if user again select matchCriteria those values are override if not remove w2ui grid classes
+                        //for that $_divMatchingBase contains classes first remove classes and then append the values.
+                        if ($($_divMatchingBase)[0] != undefined && $($_divMatchingBase)[0].classList.contains("w2ui-reset", "w2ui-grid")) {
+                            $_divMatchingBase.removeClass("w2ui-reset w2ui-grid");
+                        }
                         $_divMatchingBase.append(_addMatchingBaseItem);
 
                     }
@@ -4103,7 +4585,8 @@
 
                 _cmbPaymentSchedule.on('change', function () {
                     if (_cmbPaymentSchedule.val() > 0) {
-                        if (loadFunctions.checkScheduleCondition(_cmbPaymentSchedule.val(), parseInt($_formNewRecord.attr("data-uid")), _scheduleList.toString(), _txtAmount.getValue())) {
+                        //get the Amount in standard format
+                        if (loadFunctions.checkScheduleCondition(_cmbPaymentSchedule.val(), parseInt($_formNewRecord.attr("data-uid")), _scheduleList.toString(), convertAmtCulture(_txtAmount.getControl().val()))) {
                             //alert("done");
                             // fixed Issue while checking condition with interger like 123 compare with "123"
                             if (!isInList(parseInt(_cmbPaymentSchedule.val()), _scheduleList)) {
@@ -4141,10 +4624,20 @@
                     //assign the total AMount to the fields
                     _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(paySumAmt.toFixed(_stdPrecision)));
                     _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(paySumAmt.toFixed(_stdPrecision)));
-                    if (_txtAmount.getValue() < 0) {
+                    //get the Amount in standard format
+                    if (convertAmtCulture(_txtAmount.getControl().val()) < 0) {
                         _btnIn.attr("v_active", "0");
                     }
-                    _txtAmount.getControl().trigger('blur');
+                    //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                    _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                    //Set the Currency and conversion Type
+                    //handled null execption
+                    if (_scheduleList != null && _scheduleList.length > 0) {
+                        setCurrencyandConversionType(_scheduleList.toString());
+                    }
+                    else {
+                        setCurrencyandConversionType(null);
+                    }
                 }
                 $_divPaymentSchedules.on(VIS.Events.onTouchStartOrClick, removeItem);
 
@@ -4210,9 +4703,18 @@
                         }
                         _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                         _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
-                        _txtAmount.getControl().trigger('blur');
+                        //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                        _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
                         if (amount == 0) {
                             $_ctrlBusinessPartner.setValue();
+                        }
+                        //Set the Currency and conversion Type
+                        //handled null execption
+                        if (_scheduleList != null && _scheduleList.length > 0) {
+                            setCurrencyandConversionType(_scheduleList.toString());
+                        }
+                        else {
+                            setCurrencyandConversionType(null);
                         }
                     }
                 }
@@ -4224,14 +4726,16 @@
                 }
 
                 function loadPSInvoice() {
-                    _lookupPSInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.Search, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL') AND C_BPartner_ID=" + _psBpSelectedVal);
-                    $_ctrlPSInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.Search, _lookupPSInvoice);
+                    //to handle multiple Invoices used MultiKey and isMultiKeyTextBox properties
+                    _lookupPSInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.MultiKey, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL') AND C_BPartner_ID=" + _psBpSelectedVal);
+                    $_ctrlPSInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.MultiKey, _lookupPSInvoice);
+                    $_ctrlPSInvoice.isMultiKeyTextBox = true;
                     $_ctrlPSInvoice.getControl().addClass("va012-input-size-2");
                     _ctrlPSInvoice.append($_ctrlPSInvoice.getControl());
                     _ctrlPSInvoice.append($_ctrlPSInvoice.getBtn(0));
                     _ctrlPSInvoice.append($_ctrlPSInvoice.getBtn(1));
                     $_ctrlPSInvoice.fireValueChanged = function () {
-                        _psInvoiceSelectedVal = 0;
+                        _psInvoiceSelectedVal = null;
                         _psInvoiceSelectedVal = $_ctrlPSInvoice.value;
                         _cmbPaymentSchedule.html("");
                         loadPaymentSchedule();
@@ -4293,7 +4797,8 @@
                         if (_ds != null) {
                             for (var i = 0; i < _ds.length; i++) {
                                 if (_ds[i].DueAmount == 0) {
-                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                    //return the perticular schedules which is not found the ConversionRate
+                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, " " + VIS.Msg.getMsg("VA012_InvoiceSchedule") + ": " + VIS.Utility.Util.getValueOfString(_ds[i].c_invoicepayschedule_id), "");
                                     return;
                                 }
                                 //_cmbPaymentSchedule.append("<option paymentdata='" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "/" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.businesspartner) + "' value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_invoicepayschedule_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
@@ -4406,6 +4911,9 @@
                 newRecordForm.loadCashBook();
                 newRecordForm.loadDifferenceType();
                 newRecordForm.loadTransferType();
+                //new fields as per Solution Design
+                newRecordForm.loadNewFormCurrency();
+                newRecordForm.loadConversionTypes();
                 newRecordForm.loadCharge();
                 newRecordForm.loadTaxRate();
                 newRecordForm.loadPayment();
@@ -4414,7 +4922,8 @@
                 newRecordForm.loadInvoice();
                 newRecordForm.loadCashLine();
                 //to check mandatory fields and their logic to set background color
-                if (_txtAmount.getValue() <= 0)
+                //get the Amount in standard format
+                if (convertAmtCulture(_txtAmount.getControl().val()) <= 0)
                     _txtAmount.getControl().addClass("va012-mandatory");
                 if (_txtStatementNo.val() != "")
                     _txtStatementNo.removeClass("va012-mandatory");
@@ -4485,8 +4994,21 @@
                     });
                 };
 
-
-
+                //set Currency Value based on VoucherMatch Type
+                function setCurrencyVal() {
+                    if (_cmbVoucherMatch.val() == "V") {
+                        _txtCurrency.val(_currencyId).prop("selected", true);
+                        _txtCurrency.removeClass("va012-mandatory");
+                        _txtCurrency.attr("disabled", true);
+                    }
+                    else {
+                        $(_txtCurrency[0]).siblings().show();
+                        //make it as no selected value
+                        _txtCurrency.val(0).prop("selected", true);
+                        _txtCurrency.addClass("va012-mandatory");
+                        _txtCurrency.attr("disabled", false);
+                    }
+                }
 
 
 
@@ -4508,7 +5030,8 @@
                         _btnNewRecord.attr("title", "Expand");
                     }
                     //to check mandatory fields and their logic to set background color
-                    if (_txtAmount.getValue() <= 0)
+                    //get the Amount in standard format
+                    if (convertAmtCulture(_txtAmount.getControl().val()) <= 0)
                         _txtAmount.getControl().addClass("va012-mandatory");
                     if (_txtStatementNo.val() != "")
                         _txtStatementNo.removeClass("va012-mandatory");
@@ -4517,6 +5040,8 @@
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
                     newRecordForm.refreshForm();
+                    //set the mandatory class to the Currency field
+                    _txtCurrency.trigger('change');
                     loadFunctions.setPaymentListHeight();
                 });
                 _btnUndo.on(VIS.Events.onTouchStartOrClick, function () {
@@ -4532,12 +5057,17 @@
                     newRecordForm.prepayRefresh();
                     newRecordForm.refreshForm();
                     //}
-
+                    //set the mandatory class to the Currency field
+                    _txtCurrency.trigger('change');
                 });
                 $_formNewRecord.hide();
                 _cmbVoucherMatch.on('change', function () {
 
                     if (_cmbVoucherMatch.val() == "M") {
+                        //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
+                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0 || VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0) {
+                            newRecordForm.refreshSelectedValues();
+                        }
 
                         _divCtrlCashLine.find("*").prop("disabled", true);
                         _divCtrlCashLine.hide();
@@ -4569,9 +5099,12 @@
                         _divTaxRate.find("*").prop("disabled", true);
                         _divTaxAmount.find("*").prop("disabled", true);
 
-                        _divCharge.hide();
-                        _divTaxRate.hide();
-                        _divTaxAmount.hide();
+                        //hide incase of Payment as Voucher/Match and other than charge as diffType
+                        if (_cmbDifferenceType.val() != "CH") {
+                            _divCharge.hide();
+                            _divTaxRate.hide();
+                            _divTaxAmount.hide();
+                        }
 
                         divRow4Col1TrxAmt.show();
                         _divDifference.show();
@@ -4593,6 +5126,17 @@
 
                         _cmbTaxRate.removeClass("va012-mandatory");
                         _txtCharge.removeClass("va012-mandatory");
+
+                        //clear incase of Payment as Voucher/Match and other than charge as diffType
+                        if (_cmbDifferenceType.val() != "CH") {
+                            _cmbContraType.prop('selectedIndex', 0);
+                            _txtCharge.attr('chargeid', 0);
+                            _txtCharge.val("");
+                            _cmbTaxRate.prop('selectedIndex', 0);
+                            _txtTaxAmount.setValue(0);
+                        }
+                        //set or load Currency
+                        setCurrencyVal();
                         //// _divMatch.find("*").prop("disabled", false);
 
                         /////
@@ -4612,6 +5156,10 @@
                         //_divVoucher.hide();
                     }
                     else if (_cmbVoucherMatch.val() == "V") {
+                        //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
+                        if (_cashLineSelectedVal != 0 || _paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0) {
+                            newRecordForm.refreshSelectedValues();
+                        }
 
                         _divCtrlCashLine.find("*").prop("disabled", true);
                         _divCtrlCashLine.hide();
@@ -4621,6 +5169,8 @@
                         _divTransferType.find("*").prop("disabled", true);
                         _divCheckNo.find("*").prop("disabled", true);
                         _divContraType.hide();
+                        //clear selected Value if value is present
+                        _cmbContraType.prop('selectedIndex', 0);
                         _divCashBook.hide();
                         _divTransferType.hide();
                         _divCheckNo.hide();
@@ -4632,10 +5182,16 @@
                         _divVoucherNo.find("*").prop("disabled", false);
                         _divCharge.find("*").prop("disabled", false);
                         _divTaxRate.find("*").prop("disabled", false);
-                        _divTaxAmount.find("*").prop("disabled", false);
+                        //_divTaxAmount.find("*").prop("disabled", false);
 
-                        _txtCharge.addClass("va012-mandatory");
-                        _cmbTaxRate.addClass("va012-mandatory");
+                        //when _txtCharge should not have chargeid then add mandatory class
+                        if (VIS.Utility.Util.getValueOfInt(_txtCharge.attr('chargeid')) == 0) {
+                            _txtCharge.addClass("va012-mandatory");
+                        }
+                        //when _cmbTaxRate is Zero or null then add mandatory class
+                        if (VIS.Utility.Util.getValueOfInt(_cmbTaxRate.val()) == 0) {
+                            _cmbTaxRate.addClass("va012-mandatory");
+                        }
                         _divCtrlPayment.find("*").prop("disabled", true);
                         _divCtrlInvoice.find("*").prop("disabled", true);
                         _divCtrlBusinessPartner.find("*").prop("disabled", false);
@@ -4650,10 +5206,8 @@
                         _divCtrlBusinessPartner.hide();
                         _divPrepayOrder.hide();
                         _divPaymentSchedule.hide();
-
-
-
-
+                        //set or load Currency
+                        setCurrencyVal();
 
                         //_divVoucher.find("*").prop("disabled", false);
                         ////_divVoucher.removeClass("va012-disabled");
@@ -4670,6 +5224,11 @@
                         //_divPaymentSchedule.hide();
                     }
                     else if (_cmbVoucherMatch.val() == "C") {
+                        //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
+                        if (_paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0) {
+                            newRecordForm.refreshSelectedValues();
+                        }
+
                         _divContraType.show();
                         //Commented For Contra-29-1-16
                         //_divCashBook.show();
@@ -4680,17 +5239,21 @@
                         //_divCashBook.find("*").prop("disabled", false);
                         _divTransferType.find("*").prop("disabled", false);
                         //_divCheckNo.find("*").prop("disabled", false);
+                        divRow4Col1TrxAmt.show();
+                        _divDifference.show();
+                        _divDifferenceType.show();
+                        //get the Amount in standard format
+                        if (convertAmtCulture(_txtDifference.getControl().val()) == 0) {
 
-
-                        _divVoucherNo.find("*").prop("disabled", true);
-                        _divCharge.find("*").prop("disabled", true);
-                        _divTaxRate.find("*").prop("disabled", true);
-                        _divTaxAmount.find("*").prop("disabled", true);
-                        _divVoucherNo.hide();
-                        _divCharge.hide();
-                        _divTaxRate.hide();
-                        _divTaxAmount.hide();
-
+                            _divVoucherNo.find("*").prop("disabled", true);
+                            _divCharge.find("*").prop("disabled", true);
+                            _divTaxRate.find("*").prop("disabled", true);
+                            _divTaxAmount.find("*").prop("disabled", true);
+                            _divVoucherNo.hide();
+                            _divCharge.hide();
+                            _divTaxRate.hide();
+                            _divTaxAmount.hide();
+                        }
 
 
                         _divCtrlPayment.find("*").prop("disabled", true);
@@ -4699,26 +5262,23 @@
                         _divPrepayOrder.find("*").prop("disabled", true);
                         _divPaymentSchedule.find("*").prop("disabled", true);
                         _btnPaymentSchedule.css('pointer-events', 'none');
-                        divRow4Col1TrxAmt.hide();
-                        _divDifference.hide();
-                        _divDifferenceType.hide();
                         _divCtrlPayment.hide();
                         _divCtrlInvoice.hide();
                         _divCtrlBusinessPartner.hide();
                         _divPrepayOrder.hide();
                         _divPaymentSchedule.hide();
-
+                        //when change the Voucher type as Contra with no value set on _cmbContraType then it should be mandatory
+                        if (_cmbContraType.val() == null || _cmbContraType.val() == "" || _cmbContraType.val() == 0) {
+                            _cmbContraType.addClass("va012-mandatory");
+                        }
                         _cmbTaxRate.removeClass("va012-mandatory");
                         _txtCharge.removeClass("va012-mandatory");
-
+                        //set or load Currency 
+                        setCurrencyVal();
                     }
                     //remove the mandatory class
                     //_cmbTaxRate.removeClass("va012-mandatory");
                     //_txtCharge.removeClass("va012-mandatory");
-                    _cmbContraType.prop('selectedIndex', 0);
-                    _txtCharge.attr('chargeid', 0);
-                    _txtCharge.val("");
-                    _cmbTaxRate.prop('selectedIndex', 0);
 
                     //_divMore.show();
                     _btnMore.text(VIS.Msg.getMsg("VA012_More"));
@@ -4735,12 +5295,17 @@
                         _divVoucherNo.find("*").prop("disabled", false);
                         _divCharge.find("*").prop("disabled", false);
                         _divTaxRate.find("*").prop("disabled", false);
-                        _divTaxAmount.find("*").prop("disabled", false);
-                        //mandatory fields
-                        _txtCharge.addClass("va012-mandatory");
-                        _cmbTaxRate.addClass("va012-mandatory");
+                        //_divTaxAmount.find("*").prop("disabled", false);
+                        //mandatory fields and have value then not add mandatory class
+                        if (_txtCharge.val() == null || _txtCharge.val() == "") {
+                            _txtCharge.addClass("va012-mandatory");
+                        }
+                        if (_cmbTaxRate.val() == 0) {
+                            _cmbTaxRate.addClass("va012-mandatory");
+                        }
                     }
-                    else if (_cmbVoucherMatch.val() == "M") {
+                    //added if _cmbVoucherMatch as Contra then it re-arrange the fields
+                    else if (_cmbVoucherMatch.val() == "M" || _cmbVoucherMatch.val() == "C") {
                         //_divVoucherNo.find("*").prop("disabled", true);
                         _divCharge.find("*").prop("disabled", true);
                         _divTaxRate.find("*").prop("disabled", true);
@@ -4759,11 +5324,26 @@
                         _txtCharge.removeClass("va012-mandatory");
                         _cmbTaxRate.removeClass("va012-mandatory");
                     }
+                    //Set Mandatory Class
+                    //_cmbDifferenceType.val() will check condition null or "" or 0 and get right result
+                    if (_cmbDifferenceType.val() <= 0) {
+                        _cmbDifferenceType.addClass("va012-mandatory");
+                    }
+                    else {
+                        _cmbDifferenceType.removeClass("va012-mandatory");
+                    }
 
                     loadFunctions.setPaymentListHeight();
                 });
 
                 _cmbContraType.on('change', function () {
+                    //when change _cmbContraType as CB then remove mandatory class else mandatory
+                    if (_cmbContraType.val() != null && _cmbContraType.val() != "" && _cmbContraType.val() != 0) {
+                        _cmbContraType.removeClass("va012-mandatory");
+                    }
+                    else {
+                        _cmbContraType.addClass("va012-mandatory");
+                    }
 
                     if (_cmbContraType.val() == "CB") {
                         _divCashBook.find("*").prop("disabled", false);
@@ -4794,7 +5374,7 @@
                         _divVoucherNo.find("*").prop("disabled", false);
                         _divCharge.find("*").prop("disabled", false);
                         _divTaxRate.find("*").prop("disabled", false);
-                        _divTaxAmount.find("*").prop("disabled", false);
+                        //_divTaxAmount.find("*").prop("disabled", false);
                         //should be mandatory
                         _txtCharge.addClass("va012-mandatory");
                         _cmbTaxRate.addClass("va012-mandatory");
@@ -4804,12 +5384,15 @@
                         _divCtrlCashLine.find("*").prop("disabled", false);
 
                         _divVoucherNo.find("*").prop("disabled", true);
-                        _divCharge.find("*").prop("disabled", true);
-                        _divTaxRate.find("*").prop("disabled", true);
-                        _divTaxAmount.find("*").prop("disabled", true);
-                        _divVoucherNo.hide();
-                        _divCharge.hide();
-                        _divTaxRate.hide();
+                        //get the Amount in standard format
+                        if (convertAmtCulture(_txtDifference.getControl().val()) == 0) {
+                            _divCharge.find("*").prop("disabled", true);
+                            _divTaxRate.find("*").prop("disabled", true);
+                            _divTaxAmount.find("*").prop("disabled", true);
+                            _divCharge.hide();
+                            _divTaxRate.hide();
+                            _divTaxAmount.hide();
+                        }
                         _divTaxAmount.hide();
                     }
 
@@ -4824,17 +5407,117 @@
                 //    }
 
                 //});
+                //change event for Currency
+                _txtCurrency.on('change', function () {
+                    if (VIS.Utility.Util.getValueOfInt(_txtCurrency.val()) > 0) {
+                        _txtCurrency.removeClass("va012-mandatory");
+                    }
+                    else {
+                        _txtCurrency.addClass("va012-mandatory");
+                    }
+                });
+
+                //on change event for Currency ConversionType
+                _txtConversionType.on('change', function () {
+                    if (VIS.Utility.Util.getValueOfInt(_txtConversionType.val()) > 0) {
+                        var schedules = null;
+                        if (_scheduleList != null && _scheduleList.length > 0) {
+                            schedules = _scheduleList.toString();
+                        }
+                        if (schedules != null || VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) != 0 || VIS.Utility.Util.getValueOfInt($_ctrlPayment.value) != 0 || VIS.Utility.Util.getValueOfInt($_ctrlCashLine.value) != 0) {
+                            $.ajax({
+                                type: 'POST',
+                                url: VIS.Application.contextUrl + "BankStatement/GetConvertedAmount",
+                                contentType: "application/json; charset=utf-8",
+                                data: JSON.stringify({ currency: _currencyId, conversionType: _txtConversionType.val(), stmtDate: _dtStatementDate.val(), _schedules: schedules, _accountId: _cmbBankAccount.val(), orderId: _orderSelectedVal, paymentId: _paymentSelectedVal, cashLineId: _cashLineSelectedVal }),
+                                success: function (data) {
+                                    data = JSON.parse(data);
+                                    if (data != null) {
+                                        if (data._convertedAmt == 0) {
+                                            if (data.schedule_Ids != null && data.schedule_Ids.length > 0) {
+                                                //incase of unconciled Line
+                                                if (VIS.Utility.Util.getValueOfInt($_formNewRecord.attr("data-uid")) == 0) {
+                                                    _txtAmount.setValue();
+                                                }
+                                                _txtTrxAmt.setValue();
+                                                _txtAmount.getControl().addClass("va012-mandatory");
+                                                _txtTrxAmt.getControl().addClass("va012-mandatory");
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, " - DocNo: " + data.schedule_Ids.toString(), "");
+                                            }
+                                        }
+                                        else {
+                                            //when change the ConversionType dragged transaction on to the StatementLine It will update Only transaction Amt on Edit form
+                                            if (VIS.Utility.Util.getValueOfInt($_formNewRecord.attr("data-uid")) == 0) {
+                                                _txtAmount.setValue(data._convertedAmt);
+                                                if (data._convertedAmt > 0) {
+                                                    _txtAmount.getControl().removeClass("va012-mandatory");
+                                                }
+                                                else {
+                                                    _txtAmount.getControl().addClass("va012-mandatory");
+                                                }
+                                            }
+                                            else {
+                                                _txtTrxAmt.setValue(data._convertedAmt);
+                                                //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                                                _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                                            }
+                                            if (_orderSelectedVal == 0 && VIS.Utility.Util.getValueOfInt($_formNewRecord.attr("data-uid")) == 0) {
+                                                _txtTrxAmt.setValue(data._convertedAmt);
+                                                //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                                                _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                                            }
+                                            //_txtAmount.getControl().trigger('blur');
+                                        }
+                                    }
+                                    $(_txtConversionType[0][0]).hide();
+                                    _txtConversionType.removeClass("va012-mandatory");
+                                },
+                                error: function (data) {
+                                    VIS.ADialog.info(data, null, "", "");
+                                }
+                            });
+                        }
+                        else {
+                            _txtConversionType.removeClass("va012-mandatory");
+                        }
+                    }
+                    else {
+                        _txtConversionType.addClass("va012-mandatory");
+                    }
+                });
 
                 _cmbTaxRate.on('change', function () {
                     _txtTaxAmount.setValue(0);
                     if (_cmbTaxRate.val() > 0) {
-                        var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        //_txtTaxAmount.setValue(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1)));
-                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision));//handle precision
-                        //_txtTaxAmount.val(((_txtAmount.val() * _rate) / 100).toFixed(_stdPrecision));
-                        _cmbTaxRate.removeClass("va012-mandatory");
+                        // Get the Tax amount when select a TaxRate
+                        var _amount = 0;
+                        //Except the Voucher Type Calculate Tax for Difference Amt
+                        //get the Amount in standard format
+                        if (convertAmtCulture(_txtDifference.getControl().val()) != 0 && _cmbVoucherMatch.val() != "V") {
+                            _amount = convertAmtCulture(_txtDifference.getControl().val());
+                        }
+                        else {
+                            _amount = convertAmtCulture(_txtAmount.getControl().val());
+                        }
+                        if (_amount != 0) {
+                            GetTaxAmount(_cmbTaxRate.val(), _amount, _stdPrecision, callbackamt);
+                            //callback function
+                            function callbackamt(data) {
+                                data = JSON.parse(data);
+                                if (data != null) {
+                                    _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(data["TaxAmt"]));
+                                    _cmbTaxRate.removeClass("va012-mandatory");
+                                    //_txtTrxAmt.getControl().trigger("blur");//not required
+                                }
+                            }
+                        }
                     }
-                    _txtTrxAmt.getControl().trigger("blur");
+                    // Mandatory when have charge
+                    else {
+                        _cmbTaxRate.addClass("va012-mandatory");
+                        //_txtTrxAmt.getControl().trigger("blur");//not required
+                    }
+
                 });
 
                 _btnMore.on(VIS.Events.onTouchStartOrClick, function () {
@@ -4942,6 +5625,17 @@
                         VIS.ADialog.info("VA012_PleaseEnterStatementDate", null, "", "");
                         return;
                     }
+                    //C_Currency_ID is madatory
+                    if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtCurrency"]) == 0) {
+                        VIS.ADialog.info("VA012_PleaseSelectCurrency", null, "", "");
+                        return;
+                    }
+                    //C_ConversionType_ID is madatory
+                    if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtConversionType"]) == 0) {
+                        VIS.ADialog.info("VA012_PleaseSelectConversionType", null, "", "");
+                        return;
+                    }
+
                     if (_formData[0]["_txtAmount"] == null || _formData[0]["_txtAmount"] == "" || _formData[0]["_txtAmount"] == "0" || _formData[0]["_txtAmount"] == "0.00") {
                         VIS.ADialog.info("VA012_PleaseEnterAmount", null, "", "");
                         return;
@@ -5075,11 +5769,68 @@
                         //    return;
                         //}
                     }
+                    //In case of difference type is charge it must be a value of charge and tax rate!
+                    if (parseFloat(_formData[0]["_txtDifference"]) != 0 && _formData[0]["_cmbDifferenceType"] == "CH") {
+                        if (_formData[0]["_cmbCharge"] == null || _formData[0]["_cmbCharge"] == "" || _formData[0]["_cmbCharge"] == "0") {
+                            VIS.ADialog.info("VA012_PleaseSelectCharge", null, "", "");
+                            _txtCharge.addClass("va012-mandatory");
+                            return;
+                        }
+                        else if (_formData[0]["_cmbTaxRate"] == null || _formData[0]["_cmbTaxRate"] == "" || _formData[0]["_cmbTaxRate"] == "0") {
+                            VIS.ADialog.info("VA012_PleaseSelectTaxRate", null, "", "");
+                            _cmbTaxRate.addClass("va012-mandatory");
+                            return;
+                        }
+                    }
+                    //User cannot save difference type is Discount, Over under and Write-off in the Case of Payment Transaction
+                    if (parseFloat(_formData[0]["_txtDifference"]) != 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlPayment"]) != 0 && _formData[0]["_cmbDifferenceType"] != "CH") {
+                        VIS.ADialog.info("VA012_PlsSelectDiffTypeCharge", null, "", "");
+                        return;
+                    }
+                    //get the Amount in standard format
+                    //for Invoice schedule when statement amount is more than the schedule amount it should be Diff Amount as charge other wise it should show validation message in case match with unconciled StatementLine!
+                    if (VIS.Utility.Util.getValueOfDecimal(_formData[0]["_txtDifference"]) != 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_scheduleList"].length) > 0 && Math.abs(convertAmtCulture(_txtAmount.getControl().val())) > Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) && _formData[0]["_cmbDifferenceType"] != "CH") {
+                        VIS.ADialog.info("MoreScheduleAmount", null, "", "");
+                        return;
+                    }
 
+                    //When user click save button with out selecting Order/Payment/Schedule then return validation message
+                    if (VIS.Utility.Util.getValueOfString(_formData[0]["_scheduleList"]) == "" && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlPayment"]) == 0
+                        && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlOrder"]) == 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) == 0
+                        && VIS.Utility.Util.getValueOfInt(_formData[0]["_cmbCharge"]) == 0 ) {
+                        VIS.ADialog.info("VA012_PleaseSelectAnyOne", null, "", "");
+                        return;
+                    }
 
+                    //get the Surcharge Amount when select the TaxRate
+                    if (VIS.Utility.Util.getValueOfString(_formData[0]["_cmbDifferenceType"]) == "CH" || VIS.Utility.Util.getValueOfString(_formData[0]["_cmbVoucherMatch"]) == "V") {
+                        var _tax_ID = VIS.Utility.Util.getValueOfInt(_formData[0]["_cmbTaxRate"]);
+                        var chargeAmt = 0;
+                        if (VIS.Utility.Util.getValueOfString(_formData[0]["_cmbDifferenceType"]) == "CH") {
+                            chargeAmt = VIS.Utility.Util.getValueOfDecimal(_formData[0]["_txtDifference"]);
+                        }
+                        else {
+                            chargeAmt = VIS.Utility.Util.getValueOfDecimal(_formData[0]["_txtAmount"]);
+                        }
+                        //chargeAmt is not equals to zero then execute the GetTaxAmount()
+                        if (_tax_ID > 0 && chargeAmt != 0) {
+                            GetTaxAmount(_formData[0]["_cmbTaxRate"], chargeAmt, _stdPrecision, callbackamt);
+                            function callbackamt(data) {
+                                data = JSON.parse(data);
+                                if (data != null) {
+                                    _formData[0]["_surChargeAmt"] = data["SurchargeAmt"];
+                                    _formData[0]["_txtTaxAmount"] = data["TaxAmt"];
+                                    busyIndicator($root, true, "absolute");
+                                    newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        busyIndicator($root, true, "absolute");
+                        newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
 
-                    busyIndicator($root, true, "absolute");
-                    newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
+                    }
 
 
                     //// Inserting New Record
@@ -5226,7 +5977,37 @@
                     if (event.which != 8 && event.which != 0 && (event.which < 48 || event.which > 57)) {
                         return false;
                     }
-                    _txtStatementLine.val("10");
+                });
+
+                //hangled on change of Statement PageNo
+                _txtStatementPage.on("change", function (event) {
+
+                    //When change the _txtStatementPage it will call and set the Page and LineNo accordingly
+                    _origin = "LO";
+                    $.ajax({
+                        url: VIS.Application.contextUrl + "BankStatement/MaxStatement",
+                        type: "GET",
+                        datatype: "json",
+                        data: ({ _bankAccount: _cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _origin: _origin, _pageNo: _txtStatementPage.val() <= 0 ? 0 : _txtStatementPage.val() }),
+                        contentType: "application/json; charset=utf-8",
+                        success: function (data) {
+                            if (data != null && data != "") {
+                                data = $.parseJSON($.parseJSON(data));
+                                if (_txtStatementPage.val() <= 0 && _txtStatementNo.val() == data.statementNo) {
+                                    _txtStatementLine.val(data.lineno);
+                                    _txtStatementPage.val(data.pageno);
+                                    VIS.ADialog.info("VA012_NotAcceptZero", null, "", "");
+                                }
+                                else if (_txtStatementPage.val() > 0 && _txtStatementNo.val() == data.statementNo) {
+                                    _txtStatementLine.val(data.lineno);
+                                }
+                                else if (_txtStatementPage.val() <= 0) {
+                                    _txtStatementPage.val("1");
+                                    VIS.ADialog.info("VA012_NotAcceptZero", null, "", "");
+                                }
+                            }
+                        },
+                    });
                 });
                 _btnStatementNo.on(VIS.Events.onTouchStartOrClick, function () {
                     newRecordForm.scheduleRefresh();
@@ -5239,26 +6020,45 @@
                     loadFunctions.getMaxStatement("BT");
                     $_formNewRecord.attr("data-uid", 0);
                     // _txtStatementNo.val(parseInt(_txtStatementNo.val()) + 1);
-                    _txtStatementPage.val("1");
-                    _txtStatementLine.val("10");
+                    //not required below two lines, we are updating pageno and lineno by using call above getMaxStatement()
+                    //_txtStatementPage.val("1");
+                    //_txtStatementLine.val("10");
                 });
                 //_btnStatementNo.on('focus', function () { _btnStatementNo.trigger('click') });
                 _txtTaxAmount.getControl().on("change", function () {
-                    if (_txtTaxAmount.getValue() == 0 || _txtTaxAmount.getValue() == null) {
+                    //get the Amount in standard format
+                    if (convertAmtCulture(_txtTaxAmount.getControl().val()) == 0 || convertAmtCulture(_txtTaxAmount.getControl().val()) == null) {
                         _txtTaxAmount.setValue(0);
                     }
                     else {
-                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtTaxAmount.getValue().toFixed(_stdPrecision)));
+                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtTaxAmount.getControl().val())));
                     }
                 });
 
-                _txtTrxAmt.getControl().on("blur", function () {
-                    if (_txtTrxAmt.getValue() == 0) {
+                _txtTrxAmt.getControl().on("blur", function (event, _txtAmt, _txtTrxAmount) {
+                    //Incase of Voucher doesn't required to fire this event
+                    if (_cmbVoucherMatch.val() == "V") {
+                        return;
+                    }
+                    //set the _txtAmount and _txtTrxAmt if the paramenters are not zero
+                    if (VIS.Utility.Util.getValueOfDecimal(_txtAmt) != 0) {
+                        _txtAmount.setValue();
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(_txtAmt).toFixed(_stdPrecision)));
+                    }
+                    if (VIS.Utility.Util.getValueOfDecimal(_txtTrxAmount) != 0) {
+                        _txtTrxAmt.setValue();
+                        _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(_txtTrxAmount).toFixed(_stdPrecision)));
+                    }
+                    //get the Amount in standard format
+                    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtTrxAmt.getControl().val())) == 0) {
                         _txtTrxAmt.setValue(0);
                         _txtTrxAmt.getControl().addClass('va012-mandatory');
                     }
+                    else if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtTrxAmt.getControl().val())) < 0) {
+                        _txtTrxAmt.getControl().addClass('va012-mandatory');
+                    }
                     else {
-                        _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(_txtTrxAmt.getValue().toFixed(_stdPrecision)));
+                        _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(convertAmtCulture(_txtTrxAmt.getControl().val())).toFixed(_stdPrecision)));
                         _txtTrxAmt.getControl().removeClass('va012-mandatory');
                     }
                     //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
@@ -5266,71 +6066,140 @@
                         _txtDifference.setValue(0);
                         _divDifferenceType.find("*").prop("disabled", true);
                     }
-                    if (_cmbVoucherMatch.val() == "M") {
+                    if (_cmbVoucherMatch.val() == "M" || _cmbVoucherMatch.val() == "C") {
 
                         //if (parseInt($_formNewRecord.attr("data-uid")) <= 0)
                         if (_txtDifference.getControl().attr("vchangable") == "Y") {
-                            _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal((_txtTrxAmt.getValue() - _txtAmount.getValue()).toFixed(_stdPrecision)));
-                            if (_txtDifference.getValue() != 0) {
-                                _txtDifference.getControl().removeClass('va012-mandatory');//color change
+                            _txtDifference.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(convertAmtCulture(_txtTrxAmt.getControl().val()) - convertAmtCulture(_txtAmount.getControl().val())).toFixed(_stdPrecision)));
+                            if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0) {
+                                if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) < 0) {
+                                    _txtDifference.getControl().addClass('va012-mandatory');//color change
+                                }
+                                else {
+                                    _txtDifference.getControl().removeClass('va012-mandatory');
+                                }
+                                //disable the Options Except the Charge incase of Payment or Contra if txtDifference is non-zero
                                 _divDifferenceType.find("*").prop("disabled", false);
+                                //check StatementLine Id has a value or not incase of match drag the transaction into Unconciled Line
+                                //applied one more condition to set readonly options according to the Statement amount and Transaction amounts in case of drag into unconciled line
+                                if ((_scheduleList.length == 0 || (_scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) < Math.abs(convertAmtCulture(_txtAmount.getControl().val()))))
+                                    && ((VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0 && $_formNewRecord.attr("data-uid") == 0)
+                                        || $_formNewRecord.attr("data-uid") != 0)) {//$_formNewRecord.attr("data-uid") - C_StatementLine_ID
+                                    _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
+                                    _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
+                                    _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
+                                    _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                                    //When User change the amount then it will clear previous value and set as Empty.
+                                    if (_cmbDifferenceType.val() != "CH") {
+                                        _cmbDifferenceType.val("0").prop('selected', true);
+                                    }
+                                }
+                                //considered _cmbDifferenceType value not zero then remove mandatory class
+                                //changed != to <= to check null also
+                                if (_cmbDifferenceType.val() <= 0) {
+                                    _cmbDifferenceType.addClass('va012-mandatory');
+                                }
+                                else {
+                                    _cmbDifferenceType.removeClass('va012-mandatory');
+                                }
+                            }
+                            else {
+                                _divDifferenceType.find("*").prop("disabled", true);
+                                //if difference amt is zero then reset the _cmbDifferenceType
+                                _cmbDifferenceType.val("0").prop('selected', true);
+                                //call on change event after reset the value to arrange the fields accordingly
+                                _cmbDifferenceType.trigger('change');
+                                _cmbDifferenceType.removeClass('va012-mandatory');
                             }
                         }
-
-                        if (_cmbTaxRate.val() > 0 && _txtDifference.getValue() != 0) {
-                            _txtDifference.getControl().removeClass('va012-mandatory');//color change
-                            var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                            _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtDifference.getValue() - (_txtDifference.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));//handle precision
+                        //get the Amount in standard format
+                        //Get tax Amount if user selected TaxRate and have _txtDifference
+                        //used Condition to avoid to excute the GetTaxAmount() when diffAmt is zero and tax_id is zero
+                        if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 && _cmbTaxRate.val() > 0) {
+                            GetTaxAmount(_cmbTaxRate.val(), convertAmtCulture(_txtDifference.getControl().val()), _stdPrecision, callbackamt);
+                            //callback function
+                            function callbackamt(data) {
+                                data = JSON.parse(data);
+                                if (data != null && data != 0) {
+                                    _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(data["TaxAmt"]).toFixed(_stdPrecision)));
+                                }
+                                if (_cmbTaxRate.val() > 0 && VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0) {
+                                    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) < 0) {
+                                        _txtDifference.getControl().addClass('va012-mandatory');//color change
+                                    }
+                                    else {
+                                        _txtDifference.getControl().removeClass('va012-mandatory');
+                                    }
+                                }
+                                // when diff amount have then it must selected diff.Type as Charge in case of Payment / cash journal
+                                if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 &&
+                                    (VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) != 0 || (VIS.Utility.Util.getValueOfInt($_ctrlCashLine.getValue()) != 0))) {
+                                    _cmbDifferenceType.val("CH").prop('selected', true);
+                                    _cmbDifferenceType.trigger('change');
+                                    //if (_scheduleList.length == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) == 0) {
+                                    //    _cmbDifferenceType.find("option[value=0]").prop('disabled', true);/*Selected 0 index*/
+                                    //    _cmbDifferenceType.find("option[value=OU]").prop('disabled', true);/*Overunder Amount*/
+                                    //    _cmbDifferenceType.find("option[value=DA]").prop('disabled', true);/*Discount*/
+                                    //    _cmbDifferenceType.find("option[value=WO]").prop('disabled', true);/*Write-off*/
+                                    //}
+                                }
+                                else if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 &&
+                                    _scheduleList.toString() != "") {
+                                    // when Invoice Schedule is selected, and Difference amount != 0 then dont't do anything 
+                                }
+                                else {
+                                    _cmbDifferenceType.val("0").prop('selected', true);
+                                    _cmbDifferenceType.trigger('change');
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        // when diff amount have then it must selected diff.Type as Charge in case of Payment
+                        if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0 && VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) != 0) {
+                            _cmbDifferenceType.val("CH").prop('selected', true);
+                            _cmbDifferenceType.trigger('change');
                         }
                     }
 
                 });
 
+                // Disable or enabled, Diffrence type based on diffreence amount
+                //changed the event 'change' to 'blur' to avoid the changing value when trigger the function
+                _txtDifference.getControl().on("blur", function () {
+                    //get the Amount in standard format
+                    if (convertAmtCulture(_txtDifference.getControl().val()) == 0 || convertAmtCulture(_txtDifference.getControl().val()) == null) {
+                        _divDifferenceType.find("*").prop("disabled", true);
+                    }
+                    else {
+                        _divDifferenceType.find("*").prop("disabled", false);
+                    }
+                });
 
-                _txtAmount.getControl().on("blur", function () {
-                    if (_txtAmount.getValue() == "" || _txtAmount.getValue() == 0 || _txtAmount.getValue() == null) {
+                _txtAmount.getControl().on("blur", function (event, _txtAmt, _txtTrxAmount) {
+                    if (VIS.Utility.Util.getValueOfDecimal(_txtAmt) != 0) {
+                        _txtAmount.setValue();
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(_txtAmt).toFixed(_stdPrecision)));
+                    }
+
+                    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) == 0) {
                         _txtAmount.setValue(0);
                         _txtAmount.getControl().addClass("va012-mandatory");
                     }
-                    //repeated code not required here
-                    //if (_txtAmount.getValue() > 0)
-                    //    _txtAmount.getControl().removeClass("va012-mandatory");
-                    //else
-                    //    _txtAmount.getControl().addClass("va012-mandatory");
 
-                    //_txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
-
-                    //if (_btnOut.attr("v_active") == "1") {
-                    //    if (_txtAmount.val() > 0) {
-                    //        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
-                    //    }
-                    //}
-                    //else {
-                    //    if (_txtAmount.val() < 0) {
-                    //        _txtAmount.val((-(_txtAmount.val())).toFixed(_stdPrecision));
-                    //    }
-                    //}
-
-
-
-
-                    if (_btnOut.attr("v_active") == "1" && _txtAmount.getValue() > 0) {
-                        _txtAmount.setValue(-VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
+                    var txtAmt = VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val()));
+                    if (_btnOut.attr("v_active") == "1" && txtAmt > 0) {
+                        _txtAmount.setValue();
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(-1 * txtAmt).toFixed(_stdPrecision)));
                     }
 
-                    if (_btnIn.attr("v_active") == "1" && _txtAmount.getValue() < 0) {
-
-                        _txtAmount.setValue(-1 * VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)));
-                        //_btnOut.removeClass("va012-inactive");
-                        //_btnOut.addClass("va012-active");
-                        //_btnOut.attr("v_active", "1");
-                        //_btnIn.removeClass("va012-active");
-                        //_btnIn.addClass("va012-inactive");
-                        //_btnIn.attr("v_active", "0");
+                    if (_btnIn.attr("v_active") == "1" && txtAmt < 0) {
+                        _txtAmount.setValue();
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(-1 * txtAmt).toFixed(_stdPrecision)));
                     }
 
-
-                    if (_txtAmount.getValue() < 0) {
+                    //get the Amount in standard format
+                    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) < 0) {
                         _btnOut.removeClass("va012-inactive");
                         _btnOut.addClass("va012-active");
                         _btnOut.attr("v_active", "1");
@@ -5339,7 +6208,7 @@
                         _btnIn.attr("v_active", "0");
                         _txtAmount.getControl().addClass("va012-mandatory");
                     }
-                    else if (_txtAmount.getValue() > 0) {
+                    else if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) > 0) {
                         _btnIn.removeClass("va012-inactive");
                         _btnIn.addClass("va012-active");
                         _btnIn.attr("v_active", "1");
@@ -5348,12 +6217,23 @@
                         _btnOut.attr("v_active", "0");
                         _txtAmount.getControl().removeClass("va012-mandatory");
                     }
+                    //when TaxRate is have value and amount is greather or less than zero then only execute the GetTaxAmount()
+                    if (VIS.Utility.Util.getValueOfInt(_cmbTaxRate.val()) > 0 && convertAmtCulture(_txtAmount.getControl().val()) != 0 && _cmbVoucherMatch.val() == "V") {
+                        // get tax amt if we have tax_Id and _txtAmount
+                        GetTaxAmount(_cmbTaxRate.val(), convertAmtCulture(_txtAmount.getControl().val()), _stdPrecision, callbackamt);
 
-                    if (_cmbTaxRate.val() > 0) {
-                        var _rate = VIS.DB.executeScalar("SELECT RATE FROM C_TAX WHERE C_TAX_ID=" + _cmbTaxRate.val());
-                        _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal((_txtAmount.getValue() - (_txtAmount.getValue() / ((_rate / 100) + 1))).toFixed(_stdPrecision)));
+                        function callbackamt(data) {
+                            data = JSON.parse(data);
+                            if (data != null && data != 0) {
+                                _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(parseFloat(data["TaxAmt"]).toFixed(_stdPrecision)));
+                                _cmbTaxRate.removeClass("va012-mandatory");
+                            }
+                            _txtTrxAmt.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                        }
                     }
-                    _txtTrxAmt.getControl().trigger('blur');
+                    else {
+                        _txtTrxAmt.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                    }
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
@@ -5374,50 +6254,53 @@
                     $root.find(".va012-div-tooltip").remove();
                 });
                 //on change event of Statement Date to set background color logic
-                _dtStatementDate.on("change", function () {
+                // change eventy from "Change" to "blur" - bcz when we set date manual, at that time system send a request on key down
+                _dtStatementDate.on("blur", function () {
                     if (_dtStatementDate.val() == "") {
                         _dtStatementDate.addClass("va012-mandatory");
                     }
                     else {
                         _dtStatementDate.removeClass("va012-mandatory");
                         var amt = 0;
+                        var transtype = null;
+                        var _recordId = null;
                         if (_cmbVoucherMatch.val() == "M") {
                             if (_txtPaymentSchedule.val() != 0 && ($_ctrlPayment.getValue() == null || $_ctrlPayment.getValue() == 0)) {
                                 if (_scheduleList.length != 0) {
-                                    var transtype = "IS";
-                                    var _ds = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: _scheduleList.join(), bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() });
-                                    for (var i = 0; i < _ds.length; i++) {
-                                        if (_ds.length == 0 || _ds[i].DueAmount == 0) {
-                                            _txtAmount.setValue();
-                                            _txtTrxAmt.setValue();
-                                            _txtDifference.setValue();
-                                            VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
-                                            return;
-                                        }
-                                        else {
-                                            amt += _ds[i].DueAmount;
-                                        }
-                                    }
-                                    if (amt != 0) {
-                                        _txtAmount.setValue(amt);
-                                        _txtTrxAmt.setValue(amt);
-                                    }
-                                    else {
-                                        _txtAmount.setValue();
-                                        _txtTrxAmt.setValue();
-                                        _txtDifference.setValue();
-                                        VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
-                                        return;
-                                    }
+                                    transtype = "IS";
+                                    _recordId = _scheduleList.join();
                                 }
                             }
                             else if ((_txtPaymentSchedule.val() == null || _txtPaymentSchedule.val() == 0) && ($_ctrlPayment.getValue() != null && $_ctrlPayment.getValue() != 0)) {
-                                var transtype = "PY";
-                                var _ds = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: $_ctrlPayment.getValue(), bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() });
+                                transtype = "PY";
+                                _recordId = $_ctrlPayment.getValue();
+                            }
+                            //Amount Conversion based on ConversionRate for PrePay Order and Contra
+                            else if ((VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) != 0) && (VIS.Utility.Util.getValueOfInt($_ctrlBusinessPartner.value) != 0)) {
+                                transtype = "PO";
+                                _recordId = $_ctrlOrder.value;
+                                //when change the statement date if $_ctrlOrder.value is not null then amount should be readonly
+                                _txtAmount.getControl().attr("disabled", true);
+                            }
+                        }
+                        else if (_cmbVoucherMatch.val() == "C") {
+                            if ((VIS.Utility.Util.getValueOfInt($_ctrlCashLine.value) != 0) && (VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) == 0) && (VIS.Utility.Util.getValueOfInt(_txtPaymentSchedule.val()) == 0)) {
+                                transtype = "CO";
+                                _recordId = $_ctrlCashLine.value;
+                            }
+                        }
+                        if (transtype != null && _recordId != null) {
+                            VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: _recordId, bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() }, callbackGetConvtAmt);
+                            function callbackGetConvtAmt(_ds) {
                                 for (var i = 0; i < _ds.length; i++) {
                                     if (_ds.length == 0 || _ds[i].DueAmount == 0) {
                                         _txtAmount.setValue();
                                         _txtTrxAmt.setValue();
+                                        _txtDifference.setValue();
+                                        // Disable or enabled, Diffrence type based on diffreence amount
+                                        _txtDifference.getControl().trigger("blur");//used blur to avoid to change the _txtDifference Value when trigger this function
+                                        //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                                        _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
                                         VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                         return;
                                     }
@@ -5427,13 +6310,30 @@
                                 }
                                 if (amt != 0) {
                                     _txtAmount.setValue(amt);
-                                    _txtTrxAmt.setValue(amt);
-                                    _txtDifference.setValue();
+                                    if (transtype != "PO") {
+                                        _txtTrxAmt.setValue(amt);
+                                        //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                                        _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                                    }
+                                    else {
+                                        //when it is PO then Amount should be +ve Value and btnIn as Active & disable mode
+                                        _txtAmount.getControl().removeClass("va012-mandatory");
+                                        _txtAmount.getControl().attr("disabled", true);
+                                        _btnIn.removeClass("va012-inactive");
+                                        _btnIn.addClass("va012-active");
+                                        _btnIn.attr("v_active", "1");
+                                        _btnOut.removeClass("va012-active");
+                                        _btnOut.addClass("va012-inactive");
+                                        _btnOut.attr("v_active", "0");
+                                    }
                                 }
                                 else {
                                     _txtAmount.setValue();
                                     _txtTrxAmt.setValue();
                                     _txtDifference.setValue();
+                                    // Disable or enabled, Diffrence type based on diffreence amount
+                                    //used blur to avoid to change the _txtDifference Value when trigger this function
+                                    _txtDifference.getControl().trigger("blur");
                                     VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                     return;
                                 }
@@ -5448,8 +6348,17 @@
 
 
                 _btnIn.on(VIS.Events.onTouchStartOrClick, function () {
-                    if (_txtAmount.getValue() < 0) {
-                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)) * -1);
+                    //get the Amount in standard format
+                    //Incase of Prepay Order can't change Amount when not drag with StatementLine
+                    if (convertAmtCulture(_txtTrxAmt.getControl().val()) == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) > 0) {
+                        return;
+                    }
+                    if (_cmbVoucherMatch.val() != "V") {
+                        return;
+                    }
+
+                    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) < 0) {
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) * -1);
                     }
 
                     _btnIn.removeClass("va012-inactive");
@@ -5458,7 +6367,8 @@
                     _btnOut.removeClass("va012-active");
                     _btnOut.addClass("va012-inactive");
                     _btnOut.attr("v_active", "0");
-                    _txtAmount.getControl().blur();
+                    //_txtAmount.getControl().blur();
+                    _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
@@ -5469,16 +6379,27 @@
 
 
                 _btnOut.on(VIS.Events.onTouchStartOrClick, function () {
-                    if (_txtAmount.getValue() > 0) {
-                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_txtAmount.getValue().toFixed(_stdPrecision)) * -1);
+                    //Incase of Prepay Order can't change Amount when not drag with StatementLine
+                    if (convertAmtCulture(_txtTrxAmt.getControl().val()) == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) > 0) {
+                        return;
                     }
+                    if (_cmbVoucherMatch.val() != "V") {
+                        return;
+                    }
+
+                    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) > 0) {
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) * -1);
+                    }
+
                     _btnOut.removeClass("va012-inactive");
                     _btnOut.addClass("va012-active");
                     _btnOut.attr("v_active", "1");
                     _btnIn.removeClass("va012-active");
                     _btnIn.addClass("va012-inactive");
                     _btnIn.attr("v_active", "0");
-                    _txtAmount.getControl().blur();
+                    //_txtAmount.getControl().blur();
+                    //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                    _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
                     //if ($_ctrlInvoice.value) {
                     //    loadFunctions.checkInvoiceCondition($_ctrlInvoice.value, _txtAmount.val());
                     //}
@@ -5486,29 +6407,6 @@
                     //    loadFunctions.checkFormPaymentCondition($_ctrlPayment.value, _txtAmount.val());
                     //}
                 });
-
-
-                //_btnIn.on('focus', function (event) {
-
-                //    if (event.which == 32) {
-                //        _btnIn.trigger('click');
-                //    }
-
-                //});
-                //_btnOut.on('focus', function (event) {
-                //    if (event.which == 32) {
-                //        _btnOut.trigger('click');
-                //    }
-
-                //});
-
-                //_ctrlPayment.find("input[type=text]").on("keyup", function(event){
-                //    _ctrlInvoice.find("input[type=text]").focus();
-                //});
-
-                //_ctrlInvoice.find("input[type=text]").on("keyup", function (event) {
-                //    _ctrlBusinessPartner.find("input[type=text]").focus();
-                //});
             },
             getNewRecordDesign: function () { },
             getNewRecordControls: function () {
@@ -5556,6 +6454,9 @@
                 _btnAmount = $_formNewRecord.find("#VA012_btnAmount_" + $self.windowNo);
                 _btnIn = $_formNewRecord.find("#VA012_btnIn_" + $self.windowNo);
                 _btnOut = $_formNewRecord.find("#VA012_btnOut_" + $self.windowNo);
+                //new field Id's which is ConversionType and Currency
+                _txtCurrency = $_formNewRecord.find("#VA012_txtCurrency_" + $self.windowNo);
+                _txtConversionType = $_formNewRecord.find("#VA012_txtConversionType_" + $self.windowNo);
             },
 
 
@@ -5730,9 +6631,21 @@
                 _ctrlPayment.append($_ctrlPayment.getBtn(1));
                 $_ctrlPayment.fireValueChanged = function (e) {
 
-
+                    //return message if try to select a record while already has the record on the form.
+                    if (VIS.Utility.Util.getValueOfInt($_ctrlPayment.value) != 0 && VIS.Utility.Util.getValueOfInt(_paymentSelectedVal) != 0) {
+                        if (VIS.Utility.Util.getValueOfInt(_paymentSelectedVal) == $_ctrlPayment.value) {
+                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                        }
+                        else {
+                            $_ctrlPayment.setValue(_paymentSelectedVal, false, true);
+                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                        }
+                        return;
+                    }
                     _paymentSelectedVal = 0;
                     _paymentSelectedVal = $_ctrlPayment.value;
+
+                    //_paymentSelectedVal = _paymentList.toString();
                     //if ($_ctrlPayment.value) {
                     //    loadFunctions.setInvoiceAndBPartner(_paymentSelectedVal, "PY");
                     //}
@@ -5740,17 +6653,23 @@
                         newRecordForm.refreshForm();
                         // loadFunctions.getOverUnderPayment(_paymentSelectedVal);
                     }
+
                     //pratap
                     if (!_openingFromDrop && !_openingFromEdit) {
                         if ($_ctrlPayment.value) {
                             // if (!loadFunctions.checkFormPaymentCondition(_paymentSelectedVal, _txtAmount.val())) {
-                            if (!loadFunctions.checkPaymentCondition(_paymentSelectedVal, 0, _txtAmount.getValue())) {
+                            if (!loadFunctions.checkPaymentCondition(_paymentSelectedVal, 0, convertAmtCulture(_txtAmount.getControl().val()))) {
                                 $_ctrlPayment.setValue();
                             }
                             else {
                                 loadFunctions.setInvoiceAndBPartner(_paymentSelectedVal, "PY");
                                 //loadFunctions.getOverUnderPayment(_paymentSelectedVal);
                             }
+                            //}
+                            //else {
+                            //    _dragPayId = false;
+                            //    loadFunctions.setInvoiceAndBPartner(_paymentSelectedVal, "PY");
+                            //}
                         }
                     }
                     _openingFromEdit = false;
@@ -5778,20 +6697,45 @@
                 _ctrlOrder.append($_ctrlOrder.getBtn(1));
 
                 $_ctrlOrder.fireValueChanged = function () {
+                    //return message if try to select a record while already has the record on the form.
+                    if (VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) != 0 && VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0) {
+                        if (VIS.Utility.Util.getValueOfInt(_orderSelectedVal) == $_ctrlOrder.value) {
+                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                        }
+                        else {
+                            $_ctrlOrder.setValue(_orderSelectedVal, false, true);
+                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                        }
+                        return;
+                    }
+
                     _orderSelectedVal = 0;
                     _orderSelectedVal = $_ctrlOrder.value;
+
                     //if ($_ctrlOrder.value) {
                     //    loadFunctions.setInvoiceAndBPartner(_orderSelectedVal, "PO");
                     //}
-                    if ($_ctrlOrder.value) {
+                    //refresh the form if Value is null or zero
+                    if (!$_ctrlOrder.value) {
+                        newRecordForm.refreshForm();
+                    }
 
+                    if ($_ctrlOrder.value) {
                         if (!_openingFromDrop) {
                             // if (!loadFunctions.checkFormPrepayCondition($_ctrlOrder.value, _txtAmount.val())) {
-                            if (!loadFunctions.checkPrepayCondition($_ctrlOrder.value, 0, null, _txtAmount.getValue())) {
+                            if (!loadFunctions.checkPrepayCondition($_ctrlOrder.value, 0, null, convertAmtCulture(_txtAmount.getControl().val()))) {
+                                _orderSelectedVal = 0;//clear the selected value
                                 $_ctrlOrder.setValue();
+                                //If Amount is not found then return Conversion rate not found
+                                //if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) == 0) {
+                                //    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                //    return;
+                                //}
                             }
                             else {
                                 loadFunctions.setInvoiceAndBPartner(_orderSelectedVal, "PO");
+                                //Set _txtAmount field as ReadOnly
+                                _txtAmount.getControl().attr("disabled", true);
                             }
                         }
                     }
@@ -5825,13 +6769,29 @@
                 _ctrlCashLine.append($_ctrlCashLine.getBtn(1));
 
                 $_ctrlCashLine.fireValueChanged = function () {
+                    //return message if try to select a record while already has the record on the form.
+                    if (VIS.Utility.Util.getValueOfInt($_ctrlCashLine.value) != 0 && VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0) {
+                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) == $_ctrlCashLine.value) {
+                            VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
+                        }
+                        else {
+                            $_ctrlCashLine.setValue(_cashLineSelectedVal, false, true);
+                            VIS.ADialog.info("VA012_PlzRemoveOrUndoPrevSelectedRecord", null, "", "");
+                        }
+                        return;
+                    }
                     _cashLineSelectedVal = 0;
                     _cashLineSelectedVal = $_ctrlCashLine.value;
 
                     if ($_ctrlCashLine.value) {
                         if (!_openingFromDrop && !_openingFromEdit) {
-                            if (!loadFunctions.checkContraCondition($_ctrlCashLine.value, 0, _txtAmount.getValue())) {
+                            if (!loadFunctions.checkContraCondition($_ctrlCashLine.value, 0, convertAmtCulture(_txtAmount.getControl().val()))) {
+                                _cashLineSelectedVal = 0;//clear the selected cashLine
                                 $_ctrlCashLine.setValue();
+                                //If Amount not found then return message conversion not found
+                                //if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) == 0) {
+                                //    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                //}
                             }
                         }
                         _openingFromEdit = false;
@@ -5855,18 +6815,21 @@
                 };
             },
             loadInvoice: function () {
-                _lookupInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.Search, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL')");
-                $_ctrlInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.Search, _lookupInvoice);
+                //to handle the Multiple Invoices used MultiKey and isMultiKeyTextBox properties
+                _lookupInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.MultiKey, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL')");
+                $_ctrlInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.MultiKey, _lookupInvoice);
+                $_ctrlInvoice.isMultiKeyTextBox = true;
                 $_ctrlInvoice.getControl().addClass("va012-input-size-2");
                 $_ctrlInvoice.getControl().attr("tabindex", "11");
                 _ctrlInvoice.append($_ctrlInvoice.getControl());
                 _ctrlInvoice.append($_ctrlInvoice.getBtn(0));
                 _ctrlInvoice.append($_ctrlInvoice.getBtn(1));
                 $_ctrlInvoice.fireValueChanged = function () {
-                    _invoiceSelectedVal = 0;
+                    _invoiceSelectedVal = null;
                     _invoiceSelectedVal = $_ctrlInvoice.value;
                     if ($_ctrlInvoice.value) {
-                        if (!loadFunctions.checkInvoiceCondition(_invoiceSelectedVal, _txtAmount.getValue())) {
+                        //get the Amount in standard format
+                        if (!loadFunctions.checkInvoiceCondition(_invoiceSelectedVal, convertAmtCulture(_txtAmount.getControl().val()))) {
                             $_ctrlInvoice.setValue();
                         }
                         else {
@@ -5881,7 +6844,7 @@
 
                 formData["_bankStatementLineID"] = $_formNewRecord.attr("data-uid");
                 formData["_txtStatementNo"] = _txtStatementNo.val();
-                formData["_txtStatementPage"] = _txtStatementPage.val()
+                formData["_txtStatementPage"] = _txtStatementPage.val();
                 formData["_txtStatementLine"] = _txtStatementLine.val();
                 formData["_dtStatementDate"] = _dtStatementDate.val();
                 formData["_cmbPaymentMethod"] = _cmbPaymentMethod.val();
@@ -5894,7 +6857,7 @@
                 //formData["_cmbCharge"] = _cmbCharge.val();
                 formData["_cmbCharge"] = _txtCharge.attr('chargeid');
                 formData["_cmbTaxRate"] = _cmbTaxRate.val();
-                formData["_txtTaxAmount"] = _txtTaxAmount.getValue();
+                formData["_txtTaxAmount"] = convertAmtCulture(_txtTaxAmount.getControl().val());
                 formData["_ctrlPayment"] = _paymentSelectedVal;
                 formData["_ctrlOrder"] = _orderSelectedVal;
                 formData["_ctrlCashLine"] = _cashLineSelectedVal;
@@ -5915,16 +6878,20 @@
 
                 formData["_cmbDifferenceType"] = _cmbDifferenceType.val();
 
-                if (_cmbDifferenceType.val() == "CH") {
-                    formData["_txtAmount"] = _txtTrxAmt.getValue();
-                    formData["_txtTrxAmt"] = _txtAmount.getValue();
+                if (_cmbDifferenceType.val() == "CH" && _cmbVoucherMatch.val() != "C") {
+                    formData["_txtAmount"] = convertAmtCulture(_txtTrxAmt.getControl().val());
+                    formData["_txtTrxAmt"] = convertAmtCulture(_txtAmount.getControl().val());
                 }
                 else {
-                    formData["_txtAmount"] = _txtAmount.getValue();
-                    formData["_txtTrxAmt"] = _txtTrxAmt.getValue();
+                    formData["_txtAmount"] = convertAmtCulture(_txtAmount.getControl().val());
+                    formData["_txtTrxAmt"] = convertAmtCulture(_txtTrxAmt.getControl().val());
                 }
 
-                formData["_txtDifference"] = _txtDifference.getValue();
+                formData["_txtDifference"] = convertAmtCulture(_txtDifference.getControl().val());
+                //C_ConversionType_ID
+                formData["_txtConversionType"] = _txtConversionType.val();
+                //C_Currency_ID
+                formData["_txtCurrency"] = _txtCurrency.val();
 
                 _formData.push(formData);
                 return _formData;
@@ -5944,7 +6911,8 @@
 
                     var _result = $.parseJSON(data);
                     if (_result == "Success") {
-                        _txtStatementLine.val(parseInt(_txtStatementLine.val()) + 10);
+                        //below calling refreshForm() function in that set _txtStatementLine field value
+                        //_txtStatementLine.val(parseInt(_txtStatementLine.val()) + 10);
                         busyIndicator($root, false, "absolute");
                         VIS.ADialog.info("VA012_RecordSaved", null, "", "");
                         //if (parseInt($_formNewRecord.attr("data-uid")) > 0) {
@@ -5970,6 +6938,9 @@
                         newRecordForm.scheduleRefresh();
                         newRecordForm.prepayRefresh();
                         newRecordForm.refreshForm();
+                        //add the Mandatory class to CUrrency and Conversion fields
+                        _txtCurrency.addClass("va012-mandatory");
+                        _txtConversionType.addClass("va012-mandatory");
                     }
                     else {
                         busyIndicator($root, false, "absolute");
@@ -5980,9 +6951,14 @@
             refreshForm: function () {
                 $_formNewRecord.attr("data-uid", 0);
                 // _btnCreatePayment.hide();
-                loadFunctions.getMaxStatement("LO");
+                //when it is statementNo onchange event then it will skipt to call getMaxStatement
+                if (event == undefined || event.currentTarget.id != _btnStatementNo[0].id) {
+                    loadFunctions.getMaxStatement("LO");
+                }
                 //_txtStatementPage.val("1");
                 //_txtStatementLine.val("");
+                //Statement Date set readonly false
+                _dtStatementDate.attr("readonly", false);
                 //get BankStatement Date and set as Statement Date for new Record
                 var stateDate = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetStatementDate", { bankAcct: _cmbBankAccount.val() });
                 if (stateDate != "" && stateDate != null) {
@@ -5994,11 +6970,17 @@
                 _cmbPaymentMethod.prop('selectedIndex', 0);
                 _cmbVoucherMatch.prop('selectedIndex', 0);
                 _cmbVoucherMatch.trigger('change');
+                _txtAmount.getControl().attr("disabled", false);
                 _txtAmount.setValue(0);
                 _txtTrxAmt.setValue(0);
                 _txtDifference.setValue(0);
+                // Disable or enabled, Diffrence type based on diffreence amount
+                //changed to blur to avoid the _txtDifference value being change when trigger this function
+                _txtDifference.getControl().trigger("blur");
                 _txtDifference.getControl().attr("vchangable", "Y");
                 _cmbDifferenceType.prop('selectedIndex', 0);
+                //remove the Mandatory class
+                _cmbDifferenceType.removeClass('va012-mandatory');
                 _txtDescription.val("");
                 _txtVoucherNo.val("");
                 _cmbCharge.prop('selectedIndex', 0);
@@ -6015,7 +6997,9 @@
                 _bPartnerSelectedVal = 0;
                 _paymentSelectedVal = 0;
                 _orderSelectedVal = 0;
-                _invoiceSelectedVal = 0;
+                //clear the CashLine_ID
+                _cashLineSelectedVal = 0;
+                _invoiceSelectedVal = null;
                 //_btnIn.attr("v_active", "1");
                 _btnIn.trigger('click');
                 //_btnOut.attr("v_active", "0");
@@ -6029,6 +7013,17 @@
                 _cmbCashBook.prop('selectedIndex', 0);
                 _cmbTransferType.prop('selectedIndex', 0);
                 _txtCheckNo.val("");
+                //C_Currency_ID
+                //_txtCurrency.prop('selectedIndex', 0);
+                this.loadNewFormCurrency();
+                _txtConversionType.addClass("va012-mandatory");
+                this.loadConversionTypes();
+                _txtCurrency.addClass("va012-mandatory");
+                //C_ConversionType_ID
+                _txtConversionType.prop('selectedIndex', 0);
+                //_txtConversionType disabled false 
+                _txtConversionType.attr("disabled", false);
+                _txtCurrency.attr("disabled", false);
             },
             scheduleRefresh: function () {
                 _scheduleList = [];
@@ -6042,6 +7037,72 @@
                 _prepayList = [];
                 _prepayDataList = [];
                 _txtPrepayOrder.val("");
+            },
+            // refreshForm when change the Match/Voucher Type 
+            // when user change after drag the transaction
+            refreshSelectedValues: function () {
+                $_formNewRecord.attr("data-uid", 0);
+                // _btnCreatePayment.hide();
+                loadFunctions.getMaxStatement("LO");
+                //Statement Date set readonly false
+                _dtStatementDate.attr("readonly", false);
+                //get BankStatement Date and set as Statement Date for new Record
+                var stateDate = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetStatementDate", { bankAcct: _cmbBankAccount.val() });
+                if (stateDate != "" && stateDate != null) {
+                    _dtStatementDate.val(Globalize.format(new Date(stateDate), "yyyy-MM-dd"));
+                }
+                else {
+                    _dtStatementDate.val(_today);
+                }
+                _cmbPaymentMethod.prop('selectedIndex', 0);
+                _txtAmount.getControl().attr("disabled", false);
+                _txtAmount.setValue(0);
+                _txtTrxAmt.setValue(0);
+                _txtDifference.setValue(0);
+                // Disable or enabled, Diffrence type based on diffreence amount
+                //changed to blur to avoid the _txtDifference value being change when trigger this function
+                _txtDifference.getControl().trigger("blur");
+                _txtDifference.getControl().attr("vchangable", "Y");
+                _cmbDifferenceType.prop('selectedIndex', 0);
+                //remove the Mandatory class
+                _cmbDifferenceType.removeClass('va012-mandatory');
+                _txtDescription.val("");
+                _txtVoucherNo.val("");
+                _cmbCharge.prop('selectedIndex', 0);
+                _txtCharge.attr('chargeid', 0);
+                _txtCharge.val("");
+                _cmbTaxRate.prop('selectedIndex', 0);
+                _txtTaxAmount.setValue(0);
+                _chkUseNextTime.attr('checked', false);
+                $_ctrlPayment.setValue();
+                $_ctrlOrder.setValue();
+                $_ctrlCashLine.setValue();
+                $_ctrlBusinessPartner.setValue();
+                $_ctrlInvoice.setValue();
+                _bPartnerSelectedVal = 0;
+                _paymentSelectedVal = 0;
+                _orderSelectedVal = 0;
+                //clear the CashLine_ID
+                _cashLineSelectedVal = 0;
+                _invoiceSelectedVal = null;
+                //clear InvoiceSchedules
+                newRecordForm.scheduleRefresh();
+                //_btnIn.attr("v_active", "1");
+                _btnIn.trigger('click');
+
+                _cmbContraType.prop('selectedIndex', 0);
+                _cmbCashBook.prop('selectedIndex', 0);
+                _cmbTransferType.prop('selectedIndex', 0);
+                _txtCheckNo.val("");
+                this.loadNewFormCurrency();
+                _txtConversionType.addClass("va012-mandatory");
+                this.loadConversionTypes();
+                _txtCurrency.addClass("va012-mandatory");
+                //C_ConversionType_ID
+                _txtConversionType.prop('selectedIndex', 0);
+                //_txtConversionType disabled false 
+                _txtConversionType.attr("disabled", false);
+                _txtCurrency.attr("disabled", false);
             },
             newRecordDispose: function () {
                 $_formNewRecord = null;
@@ -6107,9 +7168,73 @@
                 _invoiceSelectedVal = null;
                 _today = null;
                 now = null;
+                //clear the values
+                _txtCurrency = null;
+                _txtConversionType = null;
             },
+
+            //load Currencies           
+            loadNewFormCurrency: function () {
+                var getCurrency = null;
+                //clear the previous options
+                $(_txtCurrency[0]).empty();
+                //shown the records only IsMycurrency is true.
+                //VIS.MLookupFactory.get(Context, windowNo, AD_Column_ID, AD_Reference_ID,ColumnName, AD_Reference_Value_ID, IsParent, ValidationCode);
+                var _txtCurrencyLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 457, VIS.DisplayType.TableDir, "C_Currency_ID", 0, false, "IsMyCurrency='Y'");
+                //_txtCurrencyLookUp.getData(mandatory, onlyValidated, onlyActive, temporary);
+                var getCurrency = _txtCurrencyLookUp.getData(true, true, false, false);
+
+                _txtCurrency.append('<option value="0" ></option>');
+                if (getCurrency != null && getCurrency != undefined && getCurrency.length > 0) {
+                    for (var i = 0; i < getCurrency.length; i++) {
+                        _txtCurrency.append('<option value=' + getCurrency[i].Key + '>' + getCurrency[i].Name + '</option>');
+                    }
+                    _txtCurrency.val(0);
+                    _txtCurrency.addClass('va012-mandatory');
+                }
+            },
+
+            //load ConversionTypes
+            loadConversionTypes: function () {
+                var getConvType = null;
+                //clear the previous options
+                $(_txtConversionType[0]).empty();
+                //shown the records only IsActive is true.
+                //VIS.MLookupFactory.get(Context, windowNo, AD_Column_ID, AD_Reference_ID,ColumnName, AD_Reference_Value_ID, IsParent, ValidationCode);
+                var _txtConversionTypeLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 10269, VIS.DisplayType.TableDir, "C_ConversionType_ID", 0, false, "IsActive='Y'");
+                //_txtConversionTypeLookUp.getData(mandatory, onlyValidated, onlyActive, temporary);
+                var getConvType = _txtConversionTypeLookUp.getData(true, true, false, false);
+
+                _txtConversionType.append('<option value="0" ></option>');
+                if (getConvType != null && getConvType != undefined && getConvType.length > 0) {
+                    for (var i = 0; i < getConvType.length; i++) {
+                        _txtConversionType.append('<option value=' + getConvType[i].Key + '>' + getConvType[i].Name + '</option>');
+                    }
+                    _txtConversionType.val(0);
+                    _txtConversionType.addClass('va012-mandatory');
+                }
+            }
         };
         //End New Record Form
+
+        // Get the TaxAmt and Surcharge Amt
+        function GetTaxAmount(tax_Id, amount, stdPrecision, callback) {
+            var _taxId = VIS.Utility.Util.getValueOfInt(tax_Id);
+            if (_taxId == 0) {
+                callback(tax_Id);
+                return;
+            }
+            var chargeAmt = VIS.Utility.Util.getValueOfDecimal(amount);
+            var _precision = VIS.Utility.Util.getValueOfInt(stdPrecision);
+            $.ajax({
+                url: VIS.Application.contextUrl + "VA012/BankStatement/CalculateSurcharge",
+                type: 'GET',
+                contentType: "application/json; charset=utf-8",
+                data: ({ _tax_ID: _taxId, _chargeAmt: chargeAmt, _stdPrecision: _precision }),
+                success: function (data) { callback(data); },
+                error: function (data) { VIS.ADialog.info(data, null, "", ""); }
+            });
+        };
 
         function isInList(value, array) {
             return array.indexOf(value) > -1;
@@ -6128,7 +7253,12 @@
         };
         this.setSize = function () {
             //_table.height($(".va012-main-container").height());
-            _table.height($("#VA012_mainContainer_" + $self.windowNo).height());
+            // Set Form Design, on refresh with mutiple tabs
+            var h = $("#VA012_mainContainer_" + $self.windowNo).height();
+            if (h == 0) {
+                h = window.innerHeight - (40 + 43 + 24); // window height - (Header panel - Title Panel - Footer panel)
+            }
+            _table.height(h);
 
         };
         this.disposeComponents = function () {
@@ -6208,9 +7338,10 @@
 
     };
 
-    //bankStatement.prototype.sizeChanged = function (height) {
-    //    this.setSize(height);
-    //};
+    bankStatement.prototype.sizeChanged = function (height) {
+        _table.height(height);
+    };
+
     bankStatement.prototype.dispose = function () {
         this.disposeComponents();
         if (this.frame)

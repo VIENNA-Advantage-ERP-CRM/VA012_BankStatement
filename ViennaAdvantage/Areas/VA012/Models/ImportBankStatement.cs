@@ -12,6 +12,7 @@ using VAdvantage.Model;
 using VAdvantage.DataBase;
 using System.Net;
 using System.Web;
+using VAdvantage.Logging;
 
 namespace VA012.Models
 {
@@ -39,101 +40,112 @@ namespace VA012.Models
             StatementResponse _obj = new StatementResponse();
 
             #region Period StartDate and End Date
-            DateTime? _startdate = null;
-            DateTime? _enddate = null;
-            string _sqlDate = @"SELECT STARTDATE
-                                FROM C_PERIOD
-                                WHERE C_YEAR_ID =
-                                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                                        FROM C_YEAR Y
-                                        INNER JOIN C_PERIOD P
-                                        ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                                        WHERE Y.C_CALENDAR_ID =
-                                          (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                                          )
-                                        AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
-                                        AND P.ISACTIVE = 'Y'
-                                        AND Y.ISACTIVE ='Y'
-                                  )
-                                AND PERIODNO=1";
-            _startdate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
-            _sqlDate = @"SELECT ENDDATE
-                                FROM C_PERIOD
-                                WHERE C_YEAR_ID =
-                                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                                            FROM C_YEAR Y
-                                            INNER JOIN C_PERIOD P
-                                            ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                                            WHERE Y.C_CALENDAR_ID =
-                                              (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                                              )
-                                            AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
-                                            AND P.ISACTIVE = 'Y'
-                                            AND Y.ISACTIVE ='Y'
-                                  )
-                                AND PERIODNO=12";
-            _enddate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
+            //DateTime? _startdate = null;//not required
+            //DateTime? _enddate = null;
+            //string _sqlDate = @"SELECT STARTDATE
+            //                    FROM C_PERIOD
+            //                    WHERE C_YEAR_ID =
+            //                      (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
+            //                            FROM C_YEAR Y
+            //                            INNER JOIN C_PERIOD P
+            //                            ON P.C_YEAR_ID        = Y.C_YEAR_ID
+            //                            WHERE Y.C_CALENDAR_ID =
+            //                              (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
+            //                              )
+            //                            AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
+            //                            AND P.ISACTIVE = 'Y'
+            //                            AND Y.ISACTIVE ='Y'
+            //                      )
+            //                    AND PERIODNO=1";
+            //_startdate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
+            //_sqlDate = @"SELECT ENDDATE
+            //                    FROM C_PERIOD
+            //                    WHERE C_YEAR_ID =
+            //                      (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
+            //                                FROM C_YEAR Y
+            //                                INNER JOIN C_PERIOD P
+            //                                ON P.C_YEAR_ID        = Y.C_YEAR_ID
+            //                                WHERE Y.C_CALENDAR_ID =
+            //                                  (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
+            //                                  )
+            //                                AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
+            //                                AND P.ISACTIVE = 'Y'
+            //                                AND Y.ISACTIVE ='Y'
+            //                      )
+            //                    AND PERIODNO=12";
+            //_enddate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
 
             #endregion
 
 
-            int _existingStatementID = 0;
-            string _statementDocStatus = "";
+            //int _existingStatementID = 0;
+            //string _statementDocStatus = "";
             int pageno = 1;
             int lineno = 10;
 
 
-            DataSet _ds = new DataSet();
+            //DataSet _ds = new DataSet();
             //_ds = DB.ExecuteDataset("SELECT C_BANKSTATEMENT_ID,DOCSTATUS FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _statementno + "'  AND TO_CHAR(STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY') ", null);
-            _ds = DB.ExecuteDataset("SELECT C_BANKSTATEMENT_ID,DOCSTATUS FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _statementno + "' AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true), null);
-            if (_ds != null)
+            //_ds = DB.ExecuteDataset("SELECT C_BANKSTATEMENT_ID,DOCSTATUS FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _statementno + "' AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true), null);
+            //Statement Name is not Unique and Changed query to fetch the C_BANKSTATEMENT_ID which is drafted or Inprogress record for selected Bank
+            int _existingStatementID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DocStatus NOT IN('RE','VO','CO','CL') AND AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND C_BANKACCOUNT_ID=" + _bankaccount, null, null));
+            //if (_ds != null)// not required this code because '_ds' is commented
+            //{
+            //    if (_ds.Tables[0].Rows.Count > 0)
+            //    {
+            //_existingStatementID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BANKSTATEMENT_ID"]);
+            //_statementDocStatus = Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCSTATUS"]);
+            //if (_statementDocStatus == "CO")
+            //{
+
+            //    _obj._error = "VA012_StatementAlreadyExist";
+            //    return _obj;
+            //}
+            #region Get Page And Line
+            //Merge two queries as single query & Get the Max LineNo with respect to PageNo
+            string _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE FROM C_BANKSTATEMENTLINE BSL
+                    WHERE BSL.VA012_PAGE=(SELECT MAX(BL.VA012_PAGE) AS PAGE FROM C_BANKSTATEMENTLINE BL WHERE BL.C_BANKSTATEMENT_ID =" + _existingStatementID + @") 
+                    AND BSL.C_BANKSTATEMENT_ID =" + _existingStatementID;
+            DataSet _data = DB.ExecuteDataset(_sql, null, null);
+            if (_data != null && _data.Tables[0].Rows.Count > 0)
             {
-                if (_ds.Tables[0].Rows.Count > 0)
-                {
-                    _existingStatementID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BANKSTATEMENT_ID"]);
-                    _statementDocStatus = Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCSTATUS"]);
-                    if (_statementDocStatus == "CO")
-                    {
-
-                        _obj._error = "VA012_StatementAlreadyExist";
-                        return _obj;
-                    }
-                    #region Get Page And Line
-                    string _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE
-                    FROM C_BANKSTATEMENTLINE BSL
-                    INNER JOIN C_BANKSTATEMENT BS
-                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + _existingStatementID;
-                    pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
-                    if (pageno <= 0)
-                    {
-                        pageno = 1;
-                    }
-
-                    //            _sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
-                    //                    FROM C_BANKSTATEMENTLINE BSL
-                    //                    INNER JOIN C_BANKSTATEMENT BS
-                    //                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.NAME ='" + _statementno + "' AND BSL.VA012_PAGE='" + pageno + "' AND TO_CHAR(BS.STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY')  ";
-                    _sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
-                    FROM C_BANKSTATEMENTLINE BSL
-                    INNER JOIN C_BANKSTATEMENT BS
-                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + _existingStatementID + " AND BSL.VA012_PAGE='" + pageno + "'";
-
-                    lineno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
-                    if (lineno <= 0)
-                    {
-                        lineno = 10;
-                    }
-                    #endregion
-
-
-                }
-
+                pageno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["PAGE"]);
+                lineno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["LINE"]);
+            }
+            //pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+            if (pageno <= 0)
+            {
+                pageno = 1;
             }
 
+            //            _sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
+            //                    FROM C_BANKSTATEMENTLINE BSL
+            //                    INNER JOIN C_BANKSTATEMENT BS
+            //                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.NAME ='" + _statementno + "' AND BSL.VA012_PAGE='" + pageno + "' AND TO_CHAR(BS.STATEMENTDATE,'YYYY')=TO_CHAR(sysdate,'YYYY')  ";
+            //Get Line Included in above query
+            //_sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
+            //        FROM C_BANKSTATEMENTLINE BSL
+            //        INNER JOIN C_BANKSTATEMENT BS
+            //        ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + _existingStatementID + " AND BSL.VA012_PAGE='" + pageno + "'";
+
+            //lineno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+            if (lineno <= 0)
+            {
+                lineno = 10;
+            }
+            #endregion
 
 
-            _AD_Org_ID = Util.GetValueOfInt(ctx.GetAD_Org_ID());
+            //    }
+
+            //}
+
+
+
+            //_AD_Org_ID = Util.GetValueOfInt(ctx.GetAD_Org_ID());
             _C_BankAccount_ID = _bankaccount;
+            //Get Org_ID from the BankAccount
+            _AD_Org_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BankAccount_ID=" + _C_BankAccount_ID));
             string _accountType = Util.GetValueOfString(DB.ExecuteScalar("Select BankAccountType from C_BankAccount Where C_BankAccount_ID=" + _C_BankAccount_ID));
 
 
@@ -213,8 +225,15 @@ namespace VA012.Models
                                         _BnkStatm.SetBeginningBalance(Convert.ToDecimal(dt.Rows[i][9]));
                                         if (!_BnkStatm.Save())
                                         {
-
-                                            _obj._error = "VA012_BankStatementHeaderNotSaved";
+                                            //Used ValueNamePair to get error
+                                            ValueNamePair pp = VLogger.RetrieveError();
+                                            //some times getting the error pp also
+                                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                            if (string.IsNullOrEmpty(error))
+                                            {
+                                                error = pp != null ? pp.GetName() : "";
+                                            }
+                                            _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_BankStatementHeaderNotSaved";
                                             //_obj._error = "VA012_Header Not Saved Of Bank Statement";
                                             return _obj;
                                         }
@@ -240,7 +259,9 @@ namespace VA012.Models
                                         _BnkStmtLine = new MBankStatementLine(_BnkStatm);
 
                                         _BnkStmtLine.SetAD_Client_ID(ctx.GetAD_Client_ID());
-                                        _BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                        //_BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                        //Set Statement Line Organization from the BankAccount 
+                                        _BnkStmtLine.SetAD_Org_ID(_AD_Org_ID);
                                         _BnkStmtLine.SetVA012_Page(pageno);
                                         _BnkStmtLine.SetLine(lineno);
                                         lineno = lineno + 10;
@@ -292,6 +313,13 @@ namespace VA012.Models
                                                 _BnkStmtLine.SetTrxAmt(_payAmt);
                                             }
                                         }
+
+                                        //Set TrxNo Value if exists in Excel sheet
+                                        //changed ColumnName to ColumnIndex to avoid the Exception while fetching data
+                                        if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i][11])))
+                                        {
+                                            _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i][11]));
+                                        }
                                         //PyDS = DB.ExecuteDataset("SELECT cp.c_payment_id as c_payment_id,  cd.name as doctype,cp.c_invoice_id as c_invoice_id,cp.c_bpartner_id as c_bpartner_id FROM c_payment cp inner join c_doctype cd on cd.c_doctype_id= cp.c_doctype_id WHERE cp.c_bankaccount_id=" + _C_BankAccount_ID + " AND cp.c_currency_id     = " + _C_Currency_ID + " AND cp.checkno           ='" + Convert.ToString(dt.Rows[i][4]) + "' AND cp.payamt =" + _payAmt + "");
                                         //if (PyDS != null)
                                         //{
@@ -334,7 +362,15 @@ namespace VA012.Models
                                         //}
                                         if (!_BnkStmtLine.Save())
                                         {
-                                            _obj._error = "VA012_StatementLineNotSaved";
+                                            //Used ValueNamePair to get error
+                                            ValueNamePair pp = VLogger.RetrieveError();
+                                            //some times getting the error pp also
+                                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                            if (string.IsNullOrEmpty(error))
+                                            {
+                                                error = pp != null ? pp.GetName() : "";
+                                            }
+                                            _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_StatementLineNotSaved";
                                             //_obj._error = "VA012_Statement Line Not Saved";
                                             return _obj;
                                         }
@@ -344,7 +380,9 @@ namespace VA012.Models
                                     {
                                         _BnkStmtLine = new MBankStatementLine(_BnkStatm);
                                         _BnkStmtLine.SetAD_Client_ID(ctx.GetAD_Client_ID());
-                                        _BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                        //_BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                        //Set Statement Line Organization from the BankAccount 
+                                        _BnkStmtLine.SetAD_Org_ID(_AD_Org_ID);
                                         _BnkStmtLine.SetVA012_Page(pageno);
                                         _BnkStmtLine.SetLine(lineno);
                                         lineno = lineno + 10;
@@ -395,7 +433,12 @@ namespace VA012.Models
                                             }
                                         }
 
-
+                                        //Set TrxNo Value if exists in Excel sheet
+                                        //changed ColumnName to ColumnIndex to avoid the Exception while fetching data
+                                        if (!string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i][11])))
+                                        {
+                                            _BnkStmtLine.Set_Value("TrxNo", Util.GetValueOfString(dt.Rows[i][11]));
+                                        }
                                         //PyDS = DB.ExecuteDataset("SELECT cp.c_payment_id as c_payment_id,  cd.name as doctype,cp.c_invoice_id as c_invoice_id,cp.c_bpartner_id as c_bpartner_id FROM c_payment cp inner join c_doctype cd on cd.c_doctype_id= cp.c_doctype_id WHERE cp.c_bankaccount_id=" + _C_BankAccount_ID + " AND cp.c_currency_id     = " + _C_Currency_ID + "  AND cp.payamt =" + _payAmt + "");
                                         //if (PyDS != null)
                                         //{
@@ -438,7 +481,16 @@ namespace VA012.Models
                                         //}
                                         if (!_BnkStmtLine.Save())
                                         {
-
+                                            //Used ValueNamePair to get error
+                                            ValueNamePair pp = VLogger.RetrieveError();
+                                            //some times getting the error pp also
+                                            string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                            if (string.IsNullOrEmpty(error))
+                                            {
+                                                error = pp != null ? pp.GetName() : "";
+                                            }
+                                            _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_StatementLineNotSaved";
+                                            return _obj;
                                         }
                                     }
 
@@ -448,7 +500,15 @@ namespace VA012.Models
                                 _BnkStatm.SetEndingBalance(_BnkStatm.GetBeginningBalance() + _BnkStatm.GetStatementDifference());
                                 if (!_BnkStatm.Save())
                                 {
-                                    _obj._error = "VA012_BeginningBalanceNotUpdated";
+                                    //Used ValueNamePair to get error
+                                    ValueNamePair pp = VLogger.RetrieveError();
+                                    //some times getting the error pp also
+                                    string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                    if (string.IsNullOrEmpty(error))
+                                    {
+                                        error = pp != null ? pp.GetName() : "";
+                                    }
+                                    _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_BeginningBalanceNotUpdated";
                                     // _obj._error = "Beginning Balance Not Updated";
                                     return _obj;
                                 }

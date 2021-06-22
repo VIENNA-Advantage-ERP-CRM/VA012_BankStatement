@@ -22,6 +22,18 @@ namespace VA012.Controllers
             ViewBag.WindowNumber = windowno;
             return PartialView();
         }
+        /// <summary>
+        /// Import Statement and Get C_BankStatement_ID
+        /// </summary>
+        /// <param name="_path">File Path</param>
+        /// <param name="_filename">File Name</param>
+        /// <param name="_bankaccount">C_BankAccount_ID</param>
+        /// <param name="_bankAccountCurrency">C_Currency_ID</param>
+        /// <param name="_statementno">Statement No</param>
+        /// <param name="_statementClassName">Statement Class Name</param>
+        /// <param name="_statementCharges">Statement charges</param>
+        /// <param name="statementDate">Statement Date</param>
+        /// <returns>class Object that returns C_BankStatement_ID or Error Message in the JSON format</returns>
         public JsonResult ImportStatement(string _path, string _filename, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementClassName, string _statementCharges, DateTime? statementDate)
         {
             Ctx ctx = Session["ctx"] as Ctx;
@@ -46,13 +58,26 @@ namespace VA012.Controllers
             }
             else
             {
-                return Json(ExecuteClass(_className, ctx, _filename, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges), JsonRequestBehavior.AllowGet);
+                return Json(ExecuteClass(_className, ctx, _filename, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate), JsonRequestBehavior.AllowGet);
 
             }
 
         }
 
-        private static StatementResponse ExecuteClass(string _className, Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges)
+        /// <summary>
+        /// Import Statement and Get C_BankStatement_ID
+        /// </summary>
+        /// <param name="_className">Statement Class Name</param>
+        /// <param name="ctx">Context</param>
+        /// <param name="FileName">File Name</param>
+        /// <param name="_path">File Path</param>
+        /// <param name="_bankaccount">C_BankAccount_ID</param>
+        /// <param name="_bankAccountCurrency">C_Currency_ID</param>
+        /// <param name="_statementno">Statement Name</param>
+        /// <param name="_statementCharges">Statement Charges</param>
+        /// <param name="statementDate">Statement Date</param>
+        /// <returns>class Object that returns C_BankStatement_ID or Error Message</returns>
+        private static StatementResponse ExecuteClass(string _className, Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate)
         {
             StatementResponse _obj = new StatementResponse();
             MethodInfo methodInfo = null;
@@ -85,7 +110,16 @@ namespace VA012.Controllers
                     {
                         object _classobj = Activator.CreateInstance(type);
                         MethodInfo method = type.GetMethod(methodName);
-                        object[] obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges };
+                        object[] obj;
+                        //_className is Equal to VA012_ENBDChkNo then pass the extra parameter statementDate in obj object array
+                        if (_className.Equals("VA012.Models.VA012_ENBDChkNo"))
+                        {
+                            obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate };
+                        }
+                        else
+                        {
+                            obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges };
+                        }
                         return (StatementResponse)method.Invoke(_classobj, obj);
                     }
                     else
@@ -141,7 +175,15 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult MaxStatement(int _bankAccount, string _origin)
+
+        /// <summary>
+        /// Get Max Statement PageNo, LineNo and StatementName
+        /// </summary>
+        /// <param name="_bankAccount">C_BankAccount_ID</param>
+        /// <param name="_origin">origin differentiate weather it is Existing Statement or New Statement</param>
+        /// <param name="_pageNo">PageNo</param>
+        /// <returns>return JSON string which contains PageNo,LineNo and StatementNo</returns>
+        public JsonResult MaxStatement(int _bankAccount, string _origin, int _pageNo)
         {
             string retJSON = "";
             string _sql = "";
@@ -195,11 +237,13 @@ namespace VA012.Controllers
                 if (_bankAccount > 0)
                 {
                     //changed logic as per requirement that first get the Statement Name and if name is null then fetch name from regular expression
-                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    //when the DocStatus in InProgress also should allow to check the StatementID
+                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                     statementID = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
                     if (statementID > 0)
                     {
-                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS='DR' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                        //when the DocStatus in InProgress also should allow  to check the statementNo
+                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
                     else
@@ -221,24 +265,39 @@ namespace VA012.Controllers
                     //    _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true);
                     //    statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     //}
+                    //Get the Max LineNo based on PageNo
+                    string pageNo;
+                    if (_pageNo > 0)
+                    {
+                        pageNo = _pageNo.ToString();
+                    }
+                    else
+                    {
+                        pageNo = "SELECT MAX(BL.VA012_PAGE) AS PAGE FROM C_BANKSTATEMENTLINE BL WHERE BL.C_BANKSTATEMENT_ID = " + statementID;
+                    }
 
-
-                    _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE
-                    FROM C_BANKSTATEMENTLINE BSL
-                    INNER JOIN C_BANKSTATEMENT BS
-                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + statementID + "  AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
-                    pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+                    _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE FROM C_BANKSTATEMENTLINE BSL
+                    WHERE BSL.VA012_PAGE=(" + pageNo + @") 
+                    AND BSL.C_BANKSTATEMENT_ID =" + statementID + "  AND BSL.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    //pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+                    //No need of PageNo condition to fetch the LineNo so get both PageNo and LineNo in One dB Query
+                    DataSet _data = DB.ExecuteDataset(_sql, null, null);
+                    if (_data != null && _data.Tables[0].Rows.Count > 0)
+                    {
+                        pageno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["PAGE"]);
+                        lineno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["LINE"]);
+                    }
                     if (pageno <= 0)
                     {
                         pageno = 1;
                     }
 
-
-                    _sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
-                    FROM C_BANKSTATEMENTLINE BSL
-                    INNER JOIN C_BANKSTATEMENT BS
-                    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + statementID + " AND BSL.VA012_PAGE='" + pageno + "'  AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
-                    lineno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+                    //No need of PageNo condition to fetch the LineNo
+                    //_sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
+                    //FROM C_BANKSTATEMENTLINE BSL
+                    //INNER JOIN C_BANKSTATEMENT BS
+                    //ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + statementID + " AND BSL.VA012_PAGE='" + pageno + "'  AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    //lineno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
                     if (lineno <= 0)
                     {
                         lineno = 10;
@@ -259,7 +318,14 @@ namespace VA012.Controllers
             retJSON = JsonConvert.SerializeObject(list);
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult SetInvoiceAndBPartner(int _paymentID, string _cmbTransactionType)
+
+        /// <summary>
+        /// Get Invoice and BPartner
+        /// </summary>
+        /// <param name="_paymentID">C_Payment_ID or C_Invoice_ID's or C_Order_ID</param>
+        /// <param name="_cmbTransactionType">Current Transaction Type</param>
+        /// <returns>Object in JSON format</returns>
+        public JsonResult SetInvoiceAndBPartner(string _paymentID, string _cmbTransactionType)
         {
             string retJSON = "";
             string _sendBackData = "";
@@ -271,18 +337,18 @@ namespace VA012.Controllers
             {
                 count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) FROM AD_ModuleInfo WHERE Prefix='VA034_' AND IsActive='Y'"));
                 if (count > 0)
-                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID,VA034_DepositSlipNo FROM C_PAYMENT WHERE C_PAYMENT_ID=" + _paymentID;
+                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID,VA034_DepositSlipNo FROM C_PAYMENT WHERE C_PAYMENT_ID IN(" + _paymentID + ")";
                 else
-                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID FROM C_PAYMENT WHERE C_PAYMENT_ID=" + _paymentID;
+                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID FROM C_PAYMENT WHERE C_PAYMENT_ID IN(" + _paymentID + ")";
             }
             else if (_cmbTransactionType == "IS")
             {
-                _sql = "SELECT INV.C_BPARTNER_ID,  NULL AS C_INVOICE_ID FROM C_INVOICEPAYSCHEDULE PAY INNER JOIN C_INVOICE INV ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID WHERE PAY.C_INVOICEPAYSCHEDULE_ID=" + _paymentID;
+                _sql = "SELECT INV.C_BPARTNER_ID,  NULL AS C_INVOICE_ID FROM C_INVOICEPAYSCHEDULE PAY INNER JOIN C_INVOICE INV ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _paymentID + ")";
 
             }
             else if (_cmbTransactionType == "PO")
             {
-                _sql = "SELECT C_BPARTNER_ID, null AS C_INVOICE_ID FROM C_ORDER WHERE C_ORDER_ID=" + _paymentID;
+                _sql = "SELECT C_BPARTNER_ID, null AS C_INVOICE_ID FROM C_ORDER WHERE C_ORDER_ID IN(" + _paymentID + ")";
 
             }
 
@@ -302,13 +368,19 @@ namespace VA012.Controllers
             retJSON = JsonConvert.SerializeObject(_sendBackData);
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult SetBPartner(int _invoiceID)
+
+        /// <summary>
+        /// Get C_BPARTNER_ID
+        /// </summary>
+        /// <param name="_invoiceID">C_Invoice_ID's</param>
+        /// <returns>C_BPartner_ID</returns>
+        public JsonResult SetBPartner(string _invoiceID)
         {
             string retJSON = "";
             string _sendBackData = "";
             Ctx ctx = Session["ctx"] as Ctx;
             DataSet _ds = new DataSet();
-            string _sql = "SELECT C_BPARTNER_ID FROM C_INVOICE WHERE C_INVOICE_ID =" + _invoiceID;
+            string _sql = "SELECT C_BPARTNER_ID FROM C_INVOICE WHERE C_INVOICE_ID IN (" + _invoiceID + ")";
 
             _ds = DB.ExecuteDataset(_sql, null, null);
             if (_ds != null)
@@ -452,16 +524,15 @@ namespace VA012.Controllers
         /// <param name="_bankStatementLineID">C_BankStatementLine_ID</param>
         /// <param name="trxType">Transaction Type</param>
         /// <param name="payment_ID">Payment ID</param>
-        /// <param name="_statementDt">Statement Date</param>
         /// <returns>List</returns>
-        public JsonResult GetStatementLine(int _bankStatementLineID, string trxType, int payment_ID, DateTime? _statementDt)
+        public JsonResult GetStatementLine(int _bankStatementLineID, string trxType, int payment_ID)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.GetStatementLine(ctx, _bankStatementLineID, trxType, payment_ID, _statementDt));
+                retJSON = JsonConvert.SerializeObject(obj.GetStatementLine(ctx, _bankStatementLineID, trxType, payment_ID));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -513,6 +584,16 @@ namespace VA012.Controllers
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
 
+        /// <summary>
+        /// Match the Statement Lines
+        /// </summary>
+        /// <param name="_matchingBaseItemList">Matching Item List</param>
+        /// <param name="_cmbMatchingCriteria">Matching Criteria</param>
+        /// <param name="_BankAccount">C_BankAccount</param>
+        /// <param name="_StatementNo">StatementNo</param>
+        /// <param name="_BankCharges">Bank Charges</param>
+        /// <param name="_TaxRate">C_TaxRate_ID</param>
+        /// <returns>returns Matched Lines result</returns>
         public JsonResult MatchStatementGridData(string _matchingBaseItemList, string _cmbMatchingCriteria, int _BankAccount, int _StatementNo, int _BankCharges, int _TaxRate)
         {
             string retJSON = "";
@@ -706,7 +787,14 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult CheckInvoiceCondition(int _invoiceID, decimal _amount)
+
+        /// <summary>
+        ///  Check Invoice condition
+        /// </summary>
+        /// <param name="_invoiceID">C_Invoice_ID's</param>
+        /// <param name="_amount">Amount bind on form</param>
+        /// <returns>string Value in JSON format</returns>
+        public JsonResult CheckInvoiceCondition(string _invoiceID, decimal _amount)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
@@ -728,6 +816,15 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// Check Form Prepay Condition
+        /// </summary>
+        /// <param name="_orderID">C_Order_ID</param>
+        /// <param name="_amount">Amount</param>
+        /// <param name="_currencyId">C_Currency_ID</param>
+        /// <param name="_formBPartnerID">C_BPartner_ID</param>
+        /// <returns>List in JSON format</returns>
         public JsonResult CheckFormPrepayCondition(int _orderID, decimal _amount, int _currencyId, int _formBPartnerID)
         {
             string retJSON = "";
@@ -773,7 +870,7 @@ namespace VA012.Controllers
         /// <param name="accountID">C_BankAccount_ID</param>
         /// <param name="statemtDate">Statement Date</param>
         /// <returns>Invoice PaySchedule list</returns>
-        public JsonResult GetInvPaySchedule(int seltdInvoice, int accountID, DateTime? statemtDate)
+        public JsonResult GetInvPaySchedule(string seltdInvoice, int accountID, DateTime? statemtDate)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
@@ -841,6 +938,66 @@ namespace VA012.Controllers
                 StatementOperations obj = new StatementOperations();
                 retJSON = JsonConvert.SerializeObject(obj.GetConvtAmount(ctx, recordID, bnkAct_Id, transcType, stmtDate));
 
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Calculate Surcharge & Tax
+        /// </summary>
+        /// <param name="_tax_ID">C_Tax_ID</param>
+        /// <param name="_chargeAmt">Charge Amount</param>
+        /// <param name="_stdPrecision">Standard Precision</param>
+        /// <returns>Tax Amount and Surcharge Amount</returns>
+        public JsonResult CalculateSurcharge(int _tax_ID, decimal _chargeAmt, int _stdPrecision)
+        {
+
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                VAdvantage.Utility.Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations tax = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(tax.CalculateSurcharge(ctx, _tax_ID, _chargeAmt, _stdPrecision));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Currency and ConversionType
+        /// </summary>
+        /// <param name="_invoiceSchedules">C_InvoicePaySchedule_ID's</param>
+        /// <returns>List</returns>
+        public JsonResult GetCurrencyandConversionType(string _invoiceSchedules) {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetCurrencyandConversionType(ctx, _invoiceSchedules));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Converted Amount when change the Conversion Type
+        /// </summary>
+        /// <param name="currency">C_Currency_ID</param>
+        /// <param name="conversionType">C_ConversionType_ID</param>
+        /// <param name="stmtDate">Statement Date</param>
+        /// <param name="_schedules">C_InvoicePaySchedule_ID</param>
+        /// <param name="_accountId">C_BankAccount_ID</param>
+        /// <param name="orderId">C_Order_ID</param>
+        /// <param name="paymentId">C_Payment_ID</param>
+        /// <param name="cashLineId">C_CashLine_ID</param>
+        /// <returns>Converted Amount</returns>
+        public JsonResult GetConvertedAmount(int currency, int conversionType, DateTime? stmtDate, string _schedules, int _accountId, int orderId, int paymentId, int cashLineId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetConvertedAmount(ctx, currency, conversionType, stmtDate, _schedules, _accountId, orderId, paymentId, cashLineId));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }

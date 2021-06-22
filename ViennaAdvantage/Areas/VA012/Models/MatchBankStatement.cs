@@ -14,6 +14,15 @@ namespace VA012.Models
 {
     public class MatchBankStatement
     {
+        /// <summary>
+        /// Match the  Statements and Update the Bank Statement line
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_matchingBaseItemList">Matching List</param>
+        /// <param name="_cmbMatchingCriteria">Matching Criteria</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_StatementNo">StatementNo</param>
+        /// <returns>returns Matched resposes</returns>
         public List<MatchResponse> MatchStatement(Ctx ctx, string _matchingBaseItemList, string _cmbMatchingCriteria, int _BankAccount, int _StatementNo)
         {
             if (!Directory.Exists(System.Web.HttpContext.Current.Server.MapPath("~/Areas/VA012/MatchLog")))
@@ -30,6 +39,9 @@ namespace VA012.Models
             DataSet _dsPayments = new DataSet();
             DataSet _dsCashLine = new DataSet();
             DataSet _dsStatements = new DataSet();
+
+            int ad_Org_Id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + _BankAccount));
+
             try
             {
                 #region Statement Lines
@@ -62,10 +74,10 @@ namespace VA012.Models
                           + " AND BS.C_BANKSTATEMENT_ID=" + _StatementNo
                           + " AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
 
-
-                if (ctx.GetAD_Org_ID() != 0)
+                //Get Org_ID from BankAccount not from the Context
+                if (ad_Org_Id > 0)
                 {
-                    _sql.Append(@" AND BS.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                    _sql.Append(@" AND BS.AD_ORG_ID=" + ad_Org_Id);
                 }
 
                 _dsStatements = DB.ExecuteDataset(_sql.ToString());
@@ -124,14 +136,14 @@ namespace VA012.Models
                         {
                             _conditionTemp.Clear();
                             // _authCode = AuthenticationCode(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString());
-                            _authCode = AuthenticationCode(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["TRXNO"].ToString().Trim(), Convert.ToDecimal(_dsStatements.Tables[0].Rows[i]["TRXAMT"]));
+                            _authCode = AuthenticationCode(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["TRXNO"].ToString().Trim(), Convert.ToDecimal(_dsStatements.Tables[0].Rows[i]["TRXAMT"]), ad_Org_Id);
                             if (_authCode != "" && _authCode != null)
                             {
                                 //_conditionTemp.Append(_condition).Append(" AND TRIM(PAY.TrxNo) ='" + _authCode + "'");
 
                                 _conditionTemp.Append(_condition).Append(" AND TRIM(UPPER(PAY.TrxNo)) LIKE UPPER('" + _authCode + "')");
                                 _conditionTemp.Append(_condition).Append(" AND LENGTH(TRIM(TRANSLATE(REPLACE(PAY.TRXNO, '" + _authCode + "', ''), 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ' '))) IS NULL");
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);//added Org_Id to check condition based  on BankAccount org_Id
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND UPPER(PAY.TrxNo)='" + _authCode + "'");
@@ -152,13 +164,14 @@ namespace VA012.Models
                             }
                             else
                             {
-                                _businessPartnerID = BusinessPartner(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                                //added Org_Id to get _businessPartnerID based  on BankAccount org_Id
+                                _businessPartnerID = BusinessPartner(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             }
 
                             if (_businessPartnerID > 0)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.C_BPARTNER_ID=" + _businessPartnerID);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);//added Org_Id to check condition based  on BankAccount org_Id
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND PAY.C_BPARTNER_ID=" + _businessPartnerID);
@@ -202,7 +215,8 @@ namespace VA012.Models
                                                         THEN ROUND(PAY.PAYAMT,NVL(BCURR.STDPRECISION,2))*-1
                                                       END
                                                   END)=" + _paymentAmount);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //added Org_Id to Check payment Eixsts or not based  on BankAccount org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(@" AND ( CASE
@@ -241,11 +255,13 @@ namespace VA012.Models
                         if (_BaseItemList.Contains("CN") && _matchingCriteria > _matchingCount)
                         {
                             _conditionTemp.Clear();
-                            _checkNo = CheckNumber(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["CHECKNO"].ToString());
+                            //added Org_Id to get checkNo based on BankAccount org_Id
+                            _checkNo = CheckNumber(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["CHECKNO"].ToString(), ad_Org_Id);
                             if (_checkNo != "" && _checkNo != null)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.CHECKNO='" + _checkNo + "' ");
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //added Org_Id to Check payment Eixsts or not based  on BankAccount org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND UPPER(PAY.CHECKNO)='" + _checkNo + "' ");
@@ -259,11 +275,13 @@ namespace VA012.Models
                         if (_BaseItemList.Contains("CH") && _matchingCriteria > _matchingCount)
                         {
                             _conditionTemp.Clear();
-                            _chargeID = Charge(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                            //added Org_Id to get Charge based  on BankAccount org_Id
+                            _chargeID = Charge(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             if (_chargeID > 0)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.C_CHARGE_ID=" + _chargeID);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //added Org_Id to Check payment Eixsts or not based  on BankAccount org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND PAY.C_CHARGE_ID=" + _chargeID);
@@ -282,12 +300,14 @@ namespace VA012.Models
                             }
                             else
                             {
-                                _invoiceID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                                //added Org_Id to get Invoice_ID based on BankAccount org_Id
+                                _invoiceID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             }
                             if (_invoiceID > 0)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.C_INVOICE_ID=" + _invoiceID);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //added Org_Id to Check payment Eixsts or not based  on BankAccount org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND PAY.C_INVOICE_ID=" + _invoiceID);
@@ -307,12 +327,14 @@ namespace VA012.Models
                             }
                             else
                             {
-                                _orderID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                                //added Org_Id to Get Invoice_ID based on BankAccount org_Id
+                                _orderID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             }
                             if (_orderID > 0)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.C_ORDER_ID=" + _orderID);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //added Org_Id to Check payment Eixsts or not based on BankAccount org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND PAY.C_ORDER_ID=" + _orderID);
@@ -416,7 +438,8 @@ namespace VA012.Models
                                     if (_paymentAmount != 0)
                                     {
                                         _conditionTemp.Append(_condition).Append(@" AND (ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2))*-1) =" + _paymentAmount);
-                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp);
+                                        //added Org_Id to Check CashLIne Eixsts or not based  on BankAccount org_Id
+                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                         if (_dsCashLine != null && _dsCashLine.Tables[0].Rows.Count > 0)
                                         {
                                             _condition.Append(@" AND (ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2))*-1) =" + _paymentAmount);
@@ -429,11 +452,13 @@ namespace VA012.Models
                                 if (_BaseItemList.Contains("CN") && _matchingCriteria > _matchingCount)
                                 {
                                     _conditionTemp.Clear();
-                                    _checkNo = CheckNumber_Contra(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["CHECKNO"].ToString());
+                                    //added Org_Id to Get CheckNo based on BankAccount org_Id
+                                    _checkNo = CheckNumber_Contra(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["CHECKNO"].ToString(), ad_Org_Id);
                                     if (_checkNo != "" && _checkNo != null)
                                     {
                                         _conditionTemp.Append(_condition).Append(" AND CSL.CHECKNO='" + _checkNo + "' ");
-                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp);
+                                        //added Org_Id to Check CashLine Eixsts or not based on BankAccount org_Id
+                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                         if (_dsCashLine != null && _dsCashLine.Tables[0].Rows.Count > 0)
                                         {
                                             _condition.Append(" AND UPPER(CSL.CHECKNO)='" + _checkNo + "' ");
@@ -447,11 +472,13 @@ namespace VA012.Models
                                 if (_BaseItemList.Contains("CH") && _matchingCriteria > _matchingCount)
                                 {
                                     _conditionTemp.Clear();
-                                    _chargeID = Charge_Contra(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                                    //added Org_Id to Get Charge_ID based on BankAccount org_Id
+                                    _chargeID = Charge_Contra(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                                     if (_chargeID > 0)
                                     {
                                         _conditionTemp.Append(_condition).Append(" AND CSL.C_CHARGE_ID=" + _chargeID);
-                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp);
+                                        //added Org_Id to Check CashLine Eixsts or not based on BankAccount org_Id
+                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                         if (_dsCashLine != null && _dsCashLine.Tables[0].Rows.Count > 0)
                                         {
                                             _condition.Append(" AND CSL.C_CHARGE_ID=" + _chargeID);
@@ -579,60 +606,73 @@ namespace VA012.Models
             sw1E.Flush();
             sw1E.Close();
         }
-        private string AuthenticationCode(Ctx ctx, int _BankAccount, string _description)
-        {
-            StringBuilder _sql = new StringBuilder();
-            DataSet _ds = new DataSet();
-            _sql.Clear();
-            _sql.Append(@"SELECT DISTINCT UPPER(PAY.TrxNo) 
-                        AS TrxNo
-                        FROM C_PAYMENT PAY
-                        INNER JOIN C_BANKACCOUNT AC
-                        ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
-                        LEFT JOIN VA009_PAYMENTMETHOD PM
-                        ON PM.VA009_PAYMENTMETHOD_ID =PAY.VA009_PAYMENTMETHOD_ID
-                        INNER JOIN C_DOCTYPE DT
-                        ON DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID
-                        LEFT JOIN C_BPARTNER BP
-                        ON PAY.C_BPARTNER_ID         =BP.C_BPARTNER_ID
-                        WHERE PAY.ISACTIVE           ='Y'
-                        AND PAY.ISRECONCILED         ='N'
-                        AND PAY.DOCSTATUS           IN ('CO','CL')
-                        AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) ");
-            _sql.Append(@" AND PAY.C_BANKACCOUNT_ID=" + _BankAccount
-                         + " AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-            if (ctx.GetAD_Org_ID() != 0)
-            {
-                _sql.Append(@" AND PAY.AD_ORG_ID=" + ctx.GetAD_Org_ID());
-            }
 
-            _ds = DB.ExecuteDataset(_sql.ToString());
-            _sql.Clear();
-            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
-            {
-                string[] _bpSplit = null;
-                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
-                {
-                    if (_description.Contains(_ds.Tables[0].Rows[i]["TrxNo"].ToString()))
-                    {
-                        return Util.GetValueOfString(_ds.Tables[0].Rows[i]["TrxNo"]);
-                    }
-                    _bpSplit = _ds.Tables[0].Rows[i]["TrxNo"].ToString().Split(' ');
-                    if (_bpSplit.Length > 1)
-                    {
-                        for (int k = 0; k < _bpSplit.Length; k++)
-                        {
-                            if (_description.Contains(_bpSplit[k].ToString()))
-                            {
-                                return Util.GetValueOfString(_ds.Tables[0].Rows[i]["TrxNo"]);
-                            }
-                        }
-                    }
-                }
-            }
-            return "";
-        }
-        private string AuthenticationCode(Ctx ctx, int _BankAccount, string _TrxNo, decimal _TrxAmt)
+        #region AuthenticationCode not in Use
+        //private string AuthenticationCode(Ctx ctx, int _BankAccount, string _description)
+        //{
+        //    StringBuilder _sql = new StringBuilder();
+        //    DataSet _ds = new DataSet();
+        //    _sql.Clear();
+        //    _sql.Append(@"SELECT DISTINCT UPPER(PAY.TrxNo) 
+        //                AS TrxNo
+        //                FROM C_PAYMENT PAY
+        //                INNER JOIN C_BANKACCOUNT AC
+        //                ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
+        //                LEFT JOIN VA009_PAYMENTMETHOD PM
+        //                ON PM.VA009_PAYMENTMETHOD_ID =PAY.VA009_PAYMENTMETHOD_ID
+        //                INNER JOIN C_DOCTYPE DT
+        //                ON DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID
+        //                LEFT JOIN C_BPARTNER BP
+        //                ON PAY.C_BPARTNER_ID         =BP.C_BPARTNER_ID
+        //                WHERE PAY.ISACTIVE           ='Y'
+        //                AND PAY.ISRECONCILED         ='N'
+        //                AND PAY.DOCSTATUS           IN ('CO','CL')
+        //                AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) ");
+        //    _sql.Append(@" AND PAY.C_BANKACCOUNT_ID=" + _BankAccount
+        //                 + " AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
+        //    if (ctx.GetAD_Org_ID() != 0)
+        //    {
+        //        _sql.Append(@" AND PAY.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+        //    }
+
+        //    _ds = DB.ExecuteDataset(_sql.ToString());
+        //    _sql.Clear();
+        //    if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+        //    {
+        //        string[] _bpSplit = null;
+        //        for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+        //        {
+        //            if (_description.Contains(_ds.Tables[0].Rows[i]["TrxNo"].ToString()))
+        //            {
+        //                return Util.GetValueOfString(_ds.Tables[0].Rows[i]["TrxNo"]);
+        //            }
+        //            _bpSplit = _ds.Tables[0].Rows[i]["TrxNo"].ToString().Split(' ');
+        //            if (_bpSplit.Length > 1)
+        //            {
+        //                for (int k = 0; k < _bpSplit.Length; k++)
+        //                {
+        //                    if (_description.Contains(_bpSplit[k].ToString()))
+        //                    {
+        //                        return Util.GetValueOfString(_ds.Tables[0].Rows[i]["TrxNo"]);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    return "";
+        //}
+        #endregion
+
+        /// <summary>
+        /// Get TrxNo
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_TrxNo">TrxNo</param>
+        /// <param name="_TrxAmt">Transaction Amount</param>
+        /// <param name="ad_Org_Id">AD_Org_ID</param>
+        /// <returns>returns string vaule TrxNo</returns>
+        private string AuthenticationCode(Ctx ctx, int _BankAccount, string _TrxNo, decimal _TrxAmt, int ad_Org_Id)
         {
             StringBuilder _sql = new StringBuilder();
             DataSet _ds = new DataSet();
@@ -655,9 +695,10 @@ namespace VA012.Models
                         AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) ");
             _sql.Append(@" AND PAY.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-            if (ctx.GetAD_Org_ID() != 0)
+            //Org_ID get from BankAccount
+            if (ad_Org_Id > 0)
             {
-                _sql.Append(@" AND PAY.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_Id);
             }
 
             _ds = DB.ExecuteDataset(_sql.ToString());
@@ -693,7 +734,18 @@ namespace VA012.Models
             }
             return "";
         }
-        private static int BusinessPartner(Ctx ctx, int _BankAccount, string _description, string _referenceNo, string _memo)
+
+        /// <summary>
+        /// Get C_BPartner_ID
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_description">Description</param>
+        /// <param name="_referenceNo">Reference No</param>
+        /// <param name="_memo">Memo</param>
+        /// <param name="ad_Org_ID">AD_Org_ID</param>
+        /// <returns>returns C_BPartner_ID</returns>
+        private static int BusinessPartner(Ctx ctx, int _BankAccount, string _description, string _referenceNo, string _memo, int ad_Org_ID)
         {
             StringBuilder _sql = new StringBuilder();
             DataSet _ds = new DataSet();
@@ -715,9 +767,10 @@ namespace VA012.Models
                         AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) ");
             _sql.Append(@" AND PAY.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-            if (ctx.GetAD_Org_ID() != 0)
+            //Get Org_Id from BankAccount not from the Context
+            if (ad_Org_ID > 0)
             {
-                _sql.Append(@" AND PAY.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_ID);
             }
 
             _ds = DB.ExecuteDataset(_sql.ToString());
@@ -764,7 +817,16 @@ namespace VA012.Models
             return 0;
 
         }
-        private static string CheckNumber(Ctx ctx, int _BankAccount, string _checkNo)
+
+        /// <summary>
+        /// Get CheckNo from Payment
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_checkNo">CheckNo</param>
+        /// <param name="ad_Org_Id">AD_Org_ID</param>
+        /// <returns>returns CheckNo if Exists in Payment else empty string</returns>
+        private static string CheckNumber(Ctx ctx, int _BankAccount, string _checkNo, int ad_Org_Id)
         {
             StringBuilder _sql = new StringBuilder();
             DataSet _ds = new DataSet();
@@ -786,10 +848,10 @@ namespace VA012.Models
                             AND PAY.CHECKNO      IS NOT NULL");
             _sql.Append(@" AND PAY.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-
-            if (ctx.GetAD_Org_ID() != 0)
+            //Get Org_ID from BankAccount
+            if (ad_Org_Id > 0)
             {
-                _sql.Append(@" AND PAY.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_Id);
             }
             _ds = DB.ExecuteDataset(_sql.ToString());
             _sql.Clear();
@@ -805,7 +867,18 @@ namespace VA012.Models
             }
             return "";
         }
-        private static int Charge(Ctx ctx, int _BankAccount, string _description, string _referenceNo, string _memo)
+
+        /// <summary>
+        /// Get C_Charge_ID from Payment
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_description">Description</param>
+        /// <param name="_referenceNo">Reference No</param>
+        /// <param name="ad_Org_Id">AD_Org_ID</param>
+        /// <param name="_memo">memo</param>
+        /// <returns>returns Change_ID if Exists in Payment else return Zero</returns>
+        private static int Charge(Ctx ctx, int _BankAccount, string _description, string _referenceNo, string _memo, int ad_Org_Id)
         {
             StringBuilder _sql = new StringBuilder();
             DataSet _ds = new DataSet();
@@ -830,9 +903,10 @@ namespace VA012.Models
                         AND PAY.C_CHARGE_ID         IS NOT NULL");
             _sql.Append(@" AND PAY.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-            if (ctx.GetAD_Org_ID() != 0)
+            //Get the Org_ID from BankAccount
+            if (ad_Org_Id > 0)
             {
-                _sql.Append(@" AND PAY.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_Id);
             }
 
             _ds = DB.ExecuteDataset(_sql.ToString());
@@ -858,7 +932,18 @@ namespace VA012.Models
             return 0;
 
         }
-        private static int Invoice(Ctx ctx, int _BankAccount, string _description, string _referenceNo, string _memo)
+
+        /// <summary>
+        /// Get C_Invoice_ID from payment window
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_BankAccount">C_BankAccout_ID</param>
+        /// <param name="_description">Description</param>
+        /// <param name="_referenceNo">ReferenceNo</param>
+        /// <param name="_memo">Memo</param>
+        /// <param name="ad_Org_Id">AD_Org_ID</param>
+        /// <returns>returns C_Invoice_ID if Exists in Payment else reutrn zero</returns>
+        private static int Invoice(Ctx ctx, int _BankAccount, string _description, string _referenceNo, string _memo, int ad_Org_Id)
         {
             StringBuilder _sql = new StringBuilder();
             DataSet _ds = new DataSet();
@@ -883,10 +968,10 @@ namespace VA012.Models
                         AND PAY.C_INVOICE_ID         IS NOT NULL");
             _sql.Append(@" AND PAY.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-
-            if (ctx.GetAD_Org_ID() != 0)
+            //Get the Org_ID from BankAccount
+            if (ad_Org_Id > 0)
             {
-                _sql.Append(@" AND PAY.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_Id);
             }
             _ds = DB.ExecuteDataset(_sql.ToString());
             _sql.Clear();
@@ -961,7 +1046,16 @@ namespace VA012.Models
             }
             return 0;
         }
-        private static DataSet CheckPaymentExist(Ctx ctx, int _BankAccount, StringBuilder _condition)
+
+        /// <summary>
+        /// Get List of Payments for Perticular BankAccount
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_condition">Where clause Condition</param>
+        /// <param name="ad_Org_Id">AD_Org_ID</param>
+        /// <returns>returns Payment List throught DataSet</returns>
+        private static DataSet CheckPaymentExist(Ctx ctx, int _BankAccount, StringBuilder _condition, int ad_Org_Id)
         {
             #region Payments
             DataSet _ds = new DataSet();
@@ -1004,7 +1098,7 @@ namespace VA012.Models
                               PAY.C_INVOICE_ID,
                               INV.DOCUMENTNO AS INVOICENO,
                               PAY.C_ORDER_ID,
-                              ORD.DOCUMENTNO AS ORDERNO
+                              ORD.DOCUMENTNO AS ORDERNO, PAY.C_ConversionType_ID
                             FROM C_PAYMENT PAY
                             INNER JOIN C_BANKACCOUNT AC
                             ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
@@ -1039,13 +1133,15 @@ namespace VA012.Models
                             WHERE PAY.ISACTIVE           ='Y'
                             AND PAY.ISRECONCILED         ='N'
                             AND PAY.DOCSTATUS           IN ('CO','CL')
-                            AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) ");
+                            AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) 
+                            AND Pay.C_Payment_ID NOT IN (SELECT BSL.C_Payment_ID FROM C_BankStatementLine BSL WHERE BSL.C_Payment_ID IS NOT NULL)");
 
             _sql.Append(@" AND PAY.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-            if (ctx.GetAD_Org_ID() != 0)
+            //Used BankAccount Org_ID not Context Org_ID
+            if (ad_Org_Id > 0)
             {
-                _sql.Append(@" AND PAY.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_Id);
             }
             _sql.Append(_condition);
             _ds = DB.ExecuteDataset(_sql.ToString());
@@ -1053,7 +1149,16 @@ namespace VA012.Models
             return _ds;
             #endregion Payments
         }
-        private static string CheckNumber_Contra(Ctx ctx, int _BankAccount, string _checkNo)
+
+        /// <summary>
+        /// Get Check No from CashLine
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_checkNo">CheckNo</param>
+        /// <param name="ad_Org_Id">AD_Org_ID</param>
+        /// <returns>returns CheckNo if present in CashLine else empty string</returns>
+        private static string CheckNumber_Contra(Ctx ctx, int _BankAccount, string _checkNo, int ad_Org_Id)
         {
             StringBuilder _sql = new StringBuilder();
             DataSet _ds = new DataSet();
@@ -1072,10 +1177,10 @@ namespace VA012.Models
                         AND CSL.CHECKNO      IS NOT NULL");
             _sql.Append(@" AND CSL.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-
-            if (ctx.GetAD_Org_ID() != 0)
+            //Get Org_ID from BankAccount not from Context
+            if (ad_Org_Id > 0)
             {
-                _sql.Append(@" AND CS.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                _sql.Append(@" AND CS.AD_ORG_ID=" + ad_Org_Id);
             }
             _ds = DB.ExecuteDataset(_sql.ToString());
             _sql.Clear();
@@ -1091,7 +1196,18 @@ namespace VA012.Models
             }
             return "";
         }
-        private static int Charge_Contra(Ctx ctx, int _BankAccount, string _description, string _referenceNo, string _memo)
+
+        /// <summary>
+        /// get Charge_ID from CashLine
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_description">Description</param>
+        /// <param name="_referenceNo">ReferenceNo</param>
+        /// <param name="_memo">Memo</param>
+        /// <param name="ad_Org_Id">AD_Org_Id</param>
+        /// <returns>returns C_Charge_ID if exists in CashLine else return zero</returns>
+        private static int Charge_Contra(Ctx ctx, int _BankAccount, string _description, string _referenceNo, string _memo, int ad_Org_Id)
         {
             StringBuilder _sql = new StringBuilder();
             DataSet _ds = new DataSet();
@@ -1111,10 +1227,10 @@ namespace VA012.Models
                         AND CS.DOCSTATUS           IN ('CO','CL')");
             _sql.Append(@" AND CSL.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-
-            if (ctx.GetAD_Org_ID() != 0)
+            //Get Org_ID from the BankAccount
+            if (ad_Org_Id > 0)
             {
-                _sql.Append(@" AND CS.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                _sql.Append(@" AND CS.AD_ORG_ID=" + ad_Org_Id);
             }
 
             _ds = DB.ExecuteDataset(_sql.ToString());
@@ -1140,7 +1256,16 @@ namespace VA012.Models
             return 0;
 
         }
-        private static DataSet CheckCashLineExist(Ctx ctx, int _BankAccount, StringBuilder _condition)
+
+        /// <summary>
+        /// Get CashLines 
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_condition">Where clause Condition</param>
+        /// <param name="ad_Org_Id">AD_Org_ID</param>
+        /// <returns>return DataSet to Get CashLines</returns>
+        private static DataSet CheckCashLineExist(Ctx ctx, int _BankAccount, StringBuilder _condition, int ad_Org_Id)
         {
             #region Cash Lines
             DataSet _ds = new DataSet();
@@ -1151,7 +1276,7 @@ namespace VA012.Models
                               (ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2))*-1) AS PAYMENTAMOUNT,
                               CSL.CHECKNO,
                               CSL.C_CHARGE_ID,
-                              chrg.NAME AS CHARGE
+                              chrg.NAME AS CHARGE, CSL.C_ConversionType_ID
                         FROM C_CASH CS
                         INNER JOIN C_CASHLINE CSL
                         ON CS.C_CASH_ID=CSL.C_CASH_ID
@@ -1165,13 +1290,14 @@ namespace VA012.Models
                         AND CSL.CashType           ='C'
                         AND chrg.dtd001_chargetype ='CON' 
                         AND CSL.VA012_ISRECONCILED  ='N'
-                        AND CS.DOCSTATUS           IN ('CO','CL')");
+                        AND CS.DOCSTATUS           IN ('CO','CL')
+                        AND CSL.C_CASHLINE_ID NOT IN (SELECT BSL.C_CASHLINE_ID FROM C_BankStatementLine BSL WHERE BSL.C_CASHLINE_ID IS NOT NULL)");
             _sql.Append(@" AND CSL.C_BANKACCOUNT_ID=" + _BankAccount
                          + " AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
-
-            if (ctx.GetAD_Org_ID() != 0)
+            //Get Org_ID form the BankAccount
+            if (ad_Org_Id > 0)
             {
-                _sql.Append(@" AND CS.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                _sql.Append(@" AND CS.AD_ORG_ID=" + ad_Org_Id);
             }
 
             _sql.Append(_condition);
@@ -1183,6 +1309,17 @@ namespace VA012.Models
 
 
         #region[Match Statement Grid]
+        /// <summary>
+        /// Set or Update the Bank Statement Line to Match the statement Line for Bank Statement 
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_matchingBaseItemList">Matching List</param>
+        /// <param name="_cmbMatchingCriteria">Matching Crieteria</param>
+        /// <param name="_BankAccount">C_BankAccount_ID</param>
+        /// <param name="_StatementNo">Statement No</param>
+        /// <param name="_SetBankCharges">Bnak Charges</param>
+        /// <param name="_SetTaxRate">C_TaxRate_ID</param>
+        /// <returns>returns Match Statement Response in List type</returns>
         public List<MatchStatementGridResponse> MatchStatementGridData(Ctx ctx, string _matchingBaseItemList, string _cmbMatchingCriteria, int _BankAccount, int _StatementNo, int _SetBankCharges, int _SetTaxRate)
         {
             if (!Directory.Exists(System.Web.HttpContext.Current.Server.MapPath("~/Areas/VA012/MatchLog")))
@@ -1203,6 +1340,9 @@ namespace VA012.Models
             DataSet _dsStatements = new DataSet();
             //Declared Varriable globally because it is using in the loop.
             MBankStatementLine _bankStatementLine = null;
+            //Get the Organization ID from Bank Account 
+            int ad_Org_Id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + _BankAccount));
+
             try
             {
                 #region Statement Lines
@@ -1269,10 +1409,10 @@ namespace VA012.Models
                           + " AND BS.C_BANKSTATEMENT_ID=" + _StatementNo
                           + " AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID());
 
-
-                if (ctx.GetAD_Org_ID() != 0)
+                //Get org_Id form BankAccount not from Context
+                if (ad_Org_Id > 0)
                 {
-                    _sql.Append(@" AND BS.AD_ORG_ID=" + ctx.GetAD_Org_ID());
+                    _sql.Append(@" AND BS.AD_ORG_ID=" + ad_Org_Id);
                 }
 
                 _dsStatements = DB.ExecuteDataset(_sql.ToString());
@@ -1331,14 +1471,16 @@ namespace VA012.Models
                         {
                             _conditionTemp.Clear();
                             // _authCode = AuthenticationCode(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString());
-                            _authCode = AuthenticationCode(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["TRXNO"].ToString().Trim(), Convert.ToDecimal(_dsStatements.Tables[0].Rows[i]["TRXAMT"]));
+                            //passed ad_Org_Id paramenter to the AuthenticationCode() to get authCode based on BankAccount Org_Id
+                            _authCode = AuthenticationCode(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["TRXNO"].ToString().Trim(), Convert.ToDecimal(_dsStatements.Tables[0].Rows[i]["TRXAMT"]), ad_Org_Id);
                             if (_authCode != "" && _authCode != null)
                             {
                                 //_conditionTemp.Append(_condition).Append(" AND TRIM(PAY.TrxNo) ='" + _authCode + "'");
 
                                 _conditionTemp.Append(_condition).Append(" AND TRIM(UPPER(PAY.TrxNo)) LIKE UPPER('" + _authCode + "')");
                                 _conditionTemp.Append(_condition).Append(" AND LENGTH(TRIM(TRANSLATE(REPLACE(PAY.TRXNO, '" + _authCode + "', ''), 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ' '))) IS NULL");
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND UPPER(PAY.TrxNo)='" + _authCode + "'");
@@ -1359,13 +1501,15 @@ namespace VA012.Models
                             }
                             else
                             {
-                                _businessPartnerID = BusinessPartner(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                                //passed ad_Org_Id paramenter to the BusinessPartner() to get _businessPartnerID based on BankAccount Org_Id
+                                _businessPartnerID = BusinessPartner(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             }
 
                             if (_businessPartnerID > 0)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.C_BPARTNER_ID=" + _businessPartnerID);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND PAY.C_BPARTNER_ID=" + _businessPartnerID);
@@ -1409,7 +1553,8 @@ namespace VA012.Models
                                                         THEN ROUND(PAY.PAYAMT,NVL(BCURR.STDPRECISION,2))*-1
                                                       END
                                                   END)=" + _paymentAmount);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(@" AND ( CASE
@@ -1448,11 +1593,13 @@ namespace VA012.Models
                         if (_BaseItemList.Contains("CN") && _matchingCriteria > _matchingCount)
                         {
                             _conditionTemp.Clear();
-                            _checkNo = CheckNumber(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["CHECKNO"].ToString());
+                            //passed ad_Org_Id paramenter to the CheckNumber() to get _checkNo based on BankAccount Org_Id
+                            _checkNo = CheckNumber(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["CHECKNO"].ToString(), ad_Org_Id);
                             if (_checkNo != "" && _checkNo != null)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.CHECKNO='" + _checkNo + "' ");
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND UPPER(PAY.CHECKNO)='" + _checkNo + "' ");
@@ -1466,11 +1613,13 @@ namespace VA012.Models
                         if (_BaseItemList.Contains("CH") && _matchingCriteria > _matchingCount)
                         {
                             _conditionTemp.Clear();
-                            _chargeID = Charge(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                            //passed ad_Org_Id paramenter to the Charge() to get _chargeID based on BankAccount Org_Id
+                            _chargeID = Charge(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             if (_chargeID > 0)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.C_CHARGE_ID=" + _chargeID);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND PAY.C_CHARGE_ID=" + _chargeID);
@@ -1480,7 +1629,7 @@ namespace VA012.Models
                             }
                         }
                         #endregion Charge
-                        #region Invoice
+                        #region Invoice 
                         if (_BaseItemList.Contains("IN") && _matchingCriteria > _matchingCount)
                         {
                             if (Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_INVOICE_ID"]) > 0)
@@ -1489,12 +1638,14 @@ namespace VA012.Models
                             }
                             else
                             {
-                                _invoiceID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                                //passed ad_Org_Id paramenter to the Invoice() to get _invoiceID based on BankAccount Org_Id
+                                _invoiceID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             }
                             if (_invoiceID > 0)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.C_INVOICE_ID=" + _invoiceID);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND PAY.C_INVOICE_ID=" + _invoiceID);
@@ -1505,7 +1656,7 @@ namespace VA012.Models
 
                         }
                         #endregion Invoice
-                        #region Order
+                        #region Order  
                         if (_BaseItemList.Contains("OR") && _matchingCriteria > _matchingCount)
                         {
                             if (Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_ORDER_ID"]) > 0)
@@ -1514,12 +1665,14 @@ namespace VA012.Models
                             }
                             else
                             {
-                                _orderID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                                //passed ad_Org_Id paramenter to the Invoice() to get _orderID based on BankAccount Org_Id
+                                _orderID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             }
                             if (_orderID > 0)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.C_ORDER_ID=" + _orderID);
-                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp);
+                                //passed ad_Org_Id paramenter to the CheckPaymentExist() to get _dsPayments based on BankAccount Org_Id
+                                _dsPayments = CheckPaymentExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                 if (_dsPayments != null && _dsPayments.Tables[0].Rows.Count > 0)
                                 {
                                     _condition.Append(" AND PAY.C_ORDER_ID=" + _orderID);
@@ -1531,13 +1684,16 @@ namespace VA012.Models
                         #endregion Order
 
 
-                        #endregion Get all Base values form Statement
+                        #endregion Get all Base values from Statement
 
                         if (_dsPayments != null && _dsPayments.Tables.Count > 0 && _dsPayments.Tables[0].Rows.Count > 0 && _matchingCriteria == _matchingCount)
                         {
                             _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
                             _bankStatementLine.SetC_Payment_ID(Util.GetValueOfInt(_dsPayments.Tables[0].Rows[0]["C_PAYMENT_ID"]));
                             _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
+
+                            //Set ConversionType_Id
+                            _bankStatementLine.Set_Value("C_ConversionType_ID", Util.GetValueOfInt(_dsPayments.Tables[0].Rows[0]["C_ConversionType_ID"]));
 
                             if (_businessPartnerID > 0)
                             {
@@ -1710,7 +1866,8 @@ namespace VA012.Models
                                     if (_paymentAmount != 0)
                                     {
                                         _conditionTemp.Append(_condition).Append(@" AND (ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2))*-1) =" + _paymentAmount);
-                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp);
+                                        //added parameter Org_ID to Get _dsCashLine list based on BankAcccount Org_ID 
+                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                         if (_dsCashLine != null && _dsCashLine.Tables[0].Rows.Count > 0)
                                         {
                                             _condition.Append(@" AND (ROUND(CSL.AMOUNT,NVL(BCURR.StdPrecision,2))*-1) =" + _paymentAmount);
@@ -1723,11 +1880,13 @@ namespace VA012.Models
                                 if (_BaseItemList.Contains("CN") && _matchingCriteria > _matchingCount)
                                 {
                                     _conditionTemp.Clear();
-                                    _checkNo = CheckNumber_Contra(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["CHECKNO"].ToString());
+                                    //passed ad_Org_Id paramenter to the CheckNumber_Contra() to get _checkNo based on BankAccount Org_Id
+                                    _checkNo = CheckNumber_Contra(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["CHECKNO"].ToString(), ad_Org_Id);
                                     if (_checkNo != "" && _checkNo != null)
                                     {
                                         _conditionTemp.Append(_condition).Append(" AND CSL.CHECKNO='" + _checkNo + "' ");
-                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp);
+                                        //passed ad_Org_Id paramenter to the CheckCashLineExist() to get _dsCashLine based on BankAccount Org_Id
+                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                         if (_dsCashLine != null && _dsCashLine.Tables[0].Rows.Count > 0)
                                         {
                                             _condition.Append(" AND UPPER(CSL.CHECKNO)='" + _checkNo + "' ");
@@ -1741,11 +1900,13 @@ namespace VA012.Models
                                 if (_BaseItemList.Contains("CH") && _matchingCriteria > _matchingCount)
                                 {
                                     _conditionTemp.Clear();
-                                    _chargeID = Charge_Contra(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString());
+                                    //passed ad_Org_Id paramenter to the Charge_Contra() to get _chargeID based on BankAccount Org_Id
+                                    _chargeID = Charge_Contra(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                                     if (_chargeID > 0)
                                     {
                                         _conditionTemp.Append(_condition).Append(" AND CSL.C_CHARGE_ID=" + _chargeID);
-                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp);
+                                        //passed ad_Org_Id paramenter to the CheckCashLineExist() to get _dsCashLine based on BankAccount Org_Id
+                                        _dsCashLine = CheckCashLineExist(ctx, _BankAccount, _conditionTemp, ad_Org_Id);
                                         if (_dsCashLine != null && _dsCashLine.Tables[0].Rows.Count > 0)
                                         {
                                             _condition.Append(" AND CSL.C_CHARGE_ID=" + _chargeID);
@@ -1762,7 +1923,8 @@ namespace VA012.Models
                                     _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
                                     _bankStatementLine.SetC_CashLine_ID(Util.GetValueOfInt(_dsCashLine.Tables[0].Rows[0]["C_CASHLINE_ID"]));
                                     _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
-
+                                    //Set ConversionType_Id
+                                    _bankStatementLine.Set_Value("C_ConversionType_ID", Util.GetValueOfInt(_dsCashLine.Tables[0].Rows[0]["C_ConversionType_ID"]));
 
                                     if (_checkNo != "")
                                     {
