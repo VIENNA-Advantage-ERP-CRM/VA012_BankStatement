@@ -227,6 +227,9 @@ namespace VA012.Models
                                             _BnkStatm.SetAD_Client_ID(ctx.GetAD_Client_ID());
                                             _BnkStatm.SetAD_Org_ID(_AD_Org_ID);
                                             _BnkStatm.SetC_BankAccount_ID(_C_BankAccount_ID);
+                                            //Get Current Balance from the Bank Account and set it as Beginning Balance
+                                            decimal _currentBlc = Util.GetValueOfDecimal(DB.ExecuteScalar("SELECT CurrentBalance FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + _C_BankAccount_ID, null, null));
+                                            _BnkStatm.SetBeginningBalance(_currentBlc);
                                             _BnkStatm.SetName(_statementno);
                                             //_BnkStatm.SetStatementDate(DateTime.Now);
                                             //update from the Statement Date which is selected on the form

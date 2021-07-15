@@ -223,6 +223,13 @@ namespace VA012.Models
                                         _BnkStatm.SetName(_statementno);
                                         _BnkStatm.SetStatementDate(statementDate);
                                         _BnkStatm.SetBeginningBalance(Convert.ToDecimal(dt.Rows[i][9]));
+                                        //if Beginning balance is zero then get the Current balance from the Bank account
+                                        if (_BnkStatm.GetBeginningBalance() == 0)
+                                        {
+                                            //Get Current Balance from the Bank Account and set it as Beginning Balance
+                                            decimal _currentBlc = Util.GetValueOfDecimal(DB.ExecuteScalar("SELECT CurrentBalance FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + _C_BankAccount_ID, null, null));
+                                            _BnkStatm.SetBeginningBalance(_currentBlc);
+                                        }
                                         if (!_BnkStatm.Save())
                                         {
                                             //Used ValueNamePair to get error
