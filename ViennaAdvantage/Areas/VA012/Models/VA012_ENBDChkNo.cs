@@ -261,6 +261,9 @@ namespace VA012.Models
                                         if ((Util.GetValueOfString(dt.Rows[i][0]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][1]) != string.Empty))
                                         {
                                             bool isDiffCulture = false;
+                                            //get the Debit Amount 
+                                            decimal _debitAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
+
                                             if (dt.Rows[i][0].ToString().Contains('.'))
                                             {
                                                 isDiffCulture = true;
@@ -306,16 +309,20 @@ namespace VA012.Models
                                                 //If chanrge id is available then set charge amount and statement amount on bank statement line suggested by Ashish.
                                                 if (_C_Currency_ID > 0)
                                                     _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
-                                                if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                //Changed if condition to execute when 0.00 as amount at that time not working commented condition
+                                                //if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                if (_debitAmt != 0)
                                                 {
-                                                    _payAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
+                                                    _payAmt = _debitAmt;
                                                 }
                                                 else
                                                 {
                                                     _payAmt = GetAmount(dt.Rows[i][4].ToString(), isDiffCulture);
                                                 }
 
-                                                if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                //Changed if condition to execute when 0.00 as amount at that time not working commented condition
+                                                //if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                if (_debitAmt != 0)
                                                 {
                                                     if (_payAmt != 0)
                                                     {
@@ -342,16 +349,20 @@ namespace VA012.Models
 
                                                 if (_C_Currency_ID > 0)
                                                     _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
-                                                if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                //Changed if condition to execute when 0.00 as amount at that time not working commented condition
+                                                //if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                if (_debitAmt != 0)
                                                 {
-                                                    _payAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
+                                                    _payAmt = _debitAmt;
                                                 }
                                                 else
                                                 {
                                                     _payAmt = GetAmount(dt.Rows[i][4].ToString(), isDiffCulture);
                                                 }
 
-                                                if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                //Changed if condition to execute when 0.00 as amount at that time not working commented condition
+                                                //if ((Util.GetValueOfString(dt.Rows[i][3]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][3]) != "0"))
+                                                if (_debitAmt != 0)
                                                 {
                                                     if (_payAmt != 0)
                                                     {
