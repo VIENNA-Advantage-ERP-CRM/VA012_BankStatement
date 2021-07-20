@@ -261,8 +261,6 @@ namespace VA012.Models
                                         if ((Util.GetValueOfString(dt.Rows[i][0]) != string.Empty) && (Util.GetValueOfString(dt.Rows[i][1]) != string.Empty))
                                         {
                                             bool isDiffCulture = false;
-                                            //get the Debit Amount 
-                                            decimal _debitAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
 
                                             if (dt.Rows[i][0].ToString().Contains('.'))
                                             {
@@ -272,7 +270,12 @@ namespace VA012.Models
                                                     _date = _dateList[1].ToString() + "/" + _dateList[0].ToString() + "/" + _dateList[2].ToString();// MM/DD/YYYY
                                             }
                                             else
+                                            {
                                                 _date = dt.Rows[i][0].ToString();
+                                            }
+                                            //get the Debit Amount 
+                                            decimal _debitAmt = GetAmount(dt.Rows[i][3].ToString(), isDiffCulture);
+
                                             _BnkStmtLine = new MBankStatementLine(_BnkStatm);
                                             _BnkStmtLine.SetAD_Client_ID(ctx.GetAD_Client_ID());
                                             //_BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
