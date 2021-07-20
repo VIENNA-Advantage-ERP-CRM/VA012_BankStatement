@@ -3987,7 +3987,8 @@ namespace VA012.Models
                 docBaseType = "ARR";
             }
             //Used Order By clause and DESC command to get the C_DocType_ID for non zero AD_Org_ID
-            return Util.GetValueOfInt(DB.ExecuteScalar("Select  MIN(dt.c_doctype_id)  From C_doctype DT inner join c_docbasetype DBT On dt.docbasetype=dbt.docbasetype where dbt.docbasetype='" + docBaseType + "' AND dt.IsActive = 'Y' AND (DT.ad_org_id = " + org_Id + " or  DT.ad_org_id = 0) AND DT.AD_Client_ID = " + ctx.GetAD_Client_ID() + " ORDER BY DT.AD_Org_ID DESC"));
+            //not required MIN() aggregate func handled for to run in POSTGRE SQL also
+            return Util.GetValueOfInt(DB.ExecuteScalar("SELECT  dt.c_doctype_id FROM C_doctype DT INNER JOIN c_docbasetype DBT ON dt.docbasetype=dbt.docbasetype WHERE dbt.docbasetype='" + docBaseType + "' AND dt.IsActive = 'Y' AND (DT.ad_org_id = " + org_Id + " or  DT.ad_org_id = 0) AND DT.AD_Client_ID = " + ctx.GetAD_Client_ID() + " ORDER BY DT.AD_Org_ID DESC"));
         }
         public int GetCurrencyType()
         {
