@@ -3906,10 +3906,11 @@
 
                     // when voucher match is contra and voucher type not eselected then bind as " Cash To Bank"
                     if (_cmbVoucherMatch.val() != null && _cmbVoucherMatch.val() != ""
-                        && _cmbContraType.val() != "" && _cmbContraType.val() != "") {
+                        && _cmbContraType.val() != null && _cmbContraType.val() != "") {//replaced "" with null to check condition
                         _cmbContraType.val("CB").prop('selected', true);
+                        _cmbContraType.trigger('change');
                     }
-                    _cmbContraType.trigger('change');
+                    //_cmbContraType.trigger('change');
 
                     _cmbCashBook.val(_result._cmbCashBook).prop('selected', true);
                     _txtCheckNo.val(_result._txtCheckNo);
@@ -3938,7 +3939,7 @@
                         //replace 'change' to 'blur' to avoid the _txtDifference value change when trigger the function
                         _txtDifference.getControl().trigger("blur");
                         //get the Amount in standard format
-                        if (convertAmtCulture(_txtDifference.getControl().val()) <= 0) {
+                        if (_result._txtDifference < 0) {//if the value is zero not need to field as mandatory
                             _txtDifference.getControl().addClass('va012-mandatory');
                         }
                         else {
@@ -3982,7 +3983,21 @@
                     _cmbCharge.val(_result._cmbCharge).prop('selected', true);
                     _txtCharge.val(_result._txtCharge);
                     _txtCharge.attr('chargeid', _result._cmbCharge);
+                    //when _txtCharge should not have chargeid then add mandatory class
+                    if (VIS.Utility.Util.getValueOfInt(_result._cmbCharge) == 0 && _result._cmbDifferenceType != "" && _result._cmbDifferenceType != null) {
+                        _txtCharge.addClass("va012-mandatory");
+                    }
+                    else {
+                        _txtCharge.removeClass("va012-mandatory");
+                    }
                     _cmbTaxRate.val(_result._cmbTaxRate).prop('selected', true);
+                    //when _cmbTaxRate is Zero or null then add mandatory class
+                    if (VIS.Utility.Util.getValueOfInt(_result._cmbTaxRate) == 0 && _result._cmbDifferenceType != "" && _result._cmbDifferenceType != null) {
+                        _cmbTaxRate.addClass("va012-mandatory");
+                    }
+                    else {
+                        _cmbTaxRate.removeClass("va012-mandatory");
+                    }
                     _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_result._txtTaxAmount.toFixed(_stdPrecision)));
                     _chkUseNextTime.prop('checked', _result._chkUseNextTime);
 
@@ -5065,8 +5080,12 @@
 
                     if (_cmbVoucherMatch.val() == "M") {
                         //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
-                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0 || VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0) {
+                        //added event condition to avoid the values to refresh
+                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0 || VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0
+                            && (event != null && event.currentTarget.className != _btnMore[0].className)) {
                             newRecordForm.refreshSelectedValues();
+                            //set or load Currency 
+                            setCurrencyVal();
                         }
 
                         _divCtrlCashLine.find("*").prop("disabled", true);
@@ -5093,17 +5112,20 @@
                             _divVoucherNo.hide();
                         }
                         //
-
-
-                        _divCharge.find("*").prop("disabled", true);
-                        _divTaxRate.find("*").prop("disabled", true);
-                        _divTaxAmount.find("*").prop("disabled", true);
-
                         //hide incase of Payment as Voucher/Match and other than charge as diffType
-                        if (_cmbDifferenceType.val() != "CH") {
+                        //modified condition according to the Charge
+                        if (_cmbDifferenceType.val() == "CH") {
+                            _divCharge.find("*").prop("disabled", false);
+                            _divTaxRate.find("*").prop("disabled", false);
+                            _divTaxAmount.find("*").prop("disabled", false);
+                        }
+                        else {
                             _divCharge.hide();
                             _divTaxRate.hide();
                             _divTaxAmount.hide();
+                            _divCharge.find("*").prop("disabled", true);
+                            _divTaxRate.find("*").prop("disabled", true);
+                            _divTaxAmount.find("*").prop("disabled", true);
                         }
 
                         divRow4Col1TrxAmt.show();
@@ -5136,7 +5158,7 @@
                             _txtTaxAmount.setValue(0);
                         }
                         //set or load Currency
-                        setCurrencyVal();
+                        //setCurrencyVal();
                         //// _divMatch.find("*").prop("disabled", false);
 
                         /////
@@ -5157,8 +5179,12 @@
                     }
                     else if (_cmbVoucherMatch.val() == "V") {
                         //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
-                        if (_cashLineSelectedVal != 0 || _paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0) {
+                        //added event condition to avoid the values to refresh
+                        if (_cashLineSelectedVal != 0 || _paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0
+                            && (event != null && event.currentTarget.className != _btnMore[0].className)) {
                             newRecordForm.refreshSelectedValues();
+                            //set or load Currency 
+                            setCurrencyVal();
                         }
 
                         _divCtrlCashLine.find("*").prop("disabled", true);
@@ -5207,7 +5233,7 @@
                         _divPrepayOrder.hide();
                         _divPaymentSchedule.hide();
                         //set or load Currency
-                        setCurrencyVal();
+                        //setCurrencyVal();
 
                         //_divVoucher.find("*").prop("disabled", false);
                         ////_divVoucher.removeClass("va012-disabled");
@@ -5225,8 +5251,12 @@
                     }
                     else if (_cmbVoucherMatch.val() == "C") {
                         //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
-                        if (_paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0) {
+                        //added event condition to avoid the values to refresh
+                        if (_paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0
+                            && (event != null && event.currentTarget.className != _btnMore[0].className)) {
                             newRecordForm.refreshSelectedValues();
+                            //set or load Currency 
+                            setCurrencyVal();
                         }
 
                         _divContraType.show();
@@ -5274,7 +5304,7 @@
                         _cmbTaxRate.removeClass("va012-mandatory");
                         _txtCharge.removeClass("va012-mandatory");
                         //set or load Currency 
-                        setCurrencyVal();
+                        //setCurrencyVal();//not required here
                     }
                     //remove the mandatory class
                     //_cmbTaxRate.removeClass("va012-mandatory");
@@ -5326,7 +5356,8 @@
                     }
                     //Set Mandatory Class
                     //_cmbDifferenceType.val() will check condition null or "" or 0 and get right result
-                    if (_cmbDifferenceType.val() <= 0) {
+                    //added condtion into existing must have Difference Amt
+                    if (_cmbDifferenceType.val() <= 0 && convertAmtCulture(_txtDifference.getControl().val()) == 0) {
                         _cmbDifferenceType.addClass("va012-mandatory");
                     }
                     else {
@@ -5521,8 +5552,9 @@
                 });
 
                 _btnMore.on(VIS.Events.onTouchStartOrClick, function () {
-
-                    if (_btnMore.attr("visiblestatus") == "0") {
+                    //replaced with button name to avoid exection error
+                    //if (_btnMore.attr("visiblestatus") == "0") {
+                    if (_btnMore.text() == VIS.Msg.getMsg("VA012_More")) {
                         _btnMore.attr("visiblestatus", "1");
                         _btnMore.text(VIS.Msg.getMsg("VA012_Hide"));
 

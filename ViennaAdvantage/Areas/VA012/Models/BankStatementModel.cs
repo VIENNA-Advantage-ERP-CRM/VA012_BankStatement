@@ -1115,7 +1115,8 @@ namespace VA012.Models
                     }
                 }
                 //Charge Amount will Update on Line when VoucherMatch Type is not Voucher
-                if (_formData[0]._cmbCharge > 0 && _formData[0]._cmbVoucherMatch != "V")
+                //when BP is not selected on Bank statement form then save the charge fields on Bank Statement Line
+                if (_formData[0]._cmbCharge > 0 && (_formData[0]._cmbVoucherMatch != "V"|| _formData[0]._ctrlBusinessPartner == 0))
                 {
                     _bankStatementLine.SetChargeAmt(_bankStatementLine.GetStmtAmt() - _bankStatementLine.GetTrxAmt());
                     _bankStatementLine.SetC_Charge_ID(_formData[0]._cmbCharge);
@@ -1908,11 +1909,13 @@ namespace VA012.Models
                 {
                     statementDetail._cmbDifferenceType = "CH";
                 }
-
-                //if (_bankStatementLine.GetC_Payment_ID() > 0)
-                //{
-                //    statementDetail._txtDifference = _bankStatementLine.GetChargeAmt();
-                //}
+                //if Payment_ID found on BankStatement Line
+                if (_bankStatementLine.GetC_Payment_ID() > 0)
+                {
+                    //get Currency_ID and C_ConversionType_ID
+                    statementDetail._txtCurrency = _bankStatementLine.GetC_Currency_ID();
+                    statementDetail._txtConversionType = Util.GetValueOfInt(_bankStatementLine.Get_Value("C_ConversionType_ID"));
+                }
                 //statementDetail._cmbDifferenceType = _bankStatementLine.GetVA012_DifferenceType();
             }
             else if (_bankStatementLine.GetC_Payment_ID() > 0 || (payment_ID != 0 && _trxType.Equals("PY")))
