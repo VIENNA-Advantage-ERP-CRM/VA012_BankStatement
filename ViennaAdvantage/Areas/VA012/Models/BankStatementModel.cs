@@ -1115,7 +1115,8 @@ namespace VA012.Models
                     }
                 }
                 //Charge Amount will Update on Line when VoucherMatch Type is not Voucher
-                if (_formData[0]._cmbCharge > 0 && _formData[0]._cmbVoucherMatch != "V")
+                //when BP is not selected on Bank statement form then save the charge fields on Bank Statement Line
+                if (_formData[0]._cmbCharge > 0 && (_formData[0]._cmbVoucherMatch != "V"|| _formData[0]._ctrlBusinessPartner == 0))
                 {
                     _bankStatementLine.SetChargeAmt(_bankStatementLine.GetStmtAmt() - _bankStatementLine.GetTrxAmt());
                     _bankStatementLine.SetC_Charge_ID(_formData[0]._cmbCharge);
