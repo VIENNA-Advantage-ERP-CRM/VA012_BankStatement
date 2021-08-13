@@ -157,6 +157,8 @@
         var _txtCurrency = null;
         //C_ConversionType_ID
         var _txtConversionType = null;
+        //used to check reconciled or not
+        var _reconciledLine = false;
 
         // End newRecord Form Variables
         //store payment list in array
@@ -3923,6 +3925,11 @@
                     else {
                         _txtAmount.getControl().removeClass('va012-mandatory');
                     }
+                    //set _txtAmount readOnly if the record is already reconciled with Payment or Cash Line
+                    if (_result._reconciled) {
+                        _txtAmount.getControl().attr("disabled", true);
+                        _reconciledLine = _result._reconciled;
+                    }
                     //get the Amount in standard format
                     if (convertAmtCulture(_txtTrxAmt.getControl().val()) <= 0) {
                         _txtTrxAmt.getControl().addClass('va012-mandatory');
@@ -5357,7 +5364,7 @@
                     //Set Mandatory Class
                     //_cmbDifferenceType.val() will check condition null or "" or 0 and get right result
                     //added condtion into existing must have Difference Amt
-                    if (_cmbDifferenceType.val() <= 0 && convertAmtCulture(_txtDifference.getControl().val()) == 0) {
+                    if (_cmbDifferenceType.val() <= 0 && convertAmtCulture(_txtDifference.getControl().val()) != 0) {
                         _cmbDifferenceType.addClass("va012-mandatory");
                     }
                     else {
@@ -5643,6 +5650,13 @@
                 _btnSave.on(VIS.Events.onTouchStartOrClick, function () {
 
                     var _formData = newRecordForm.getFormData();
+                    //when user try to save the reconciled record it will show the pop message
+                    //Line is already reconciled
+                    if (_reconciledLine) {
+                        VIS.ADialog.info("VA012_BSLAlreadyReconciled", null, "", "");
+                        return;
+                    }
+
                     if (_formData[0]["_cmbBankAccount"] == null || _formData[0]["_cmbBankAccount"] == "" || _formData[0]["_cmbBankAccount"] == "0") {
                         VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                         return;
@@ -6459,7 +6473,7 @@
                 //_txtTrxAmt = $_formNewRecord.find("#VA012_txtTrxAmt_" + $self.windowNo);
                 _txtTrxAmt.getControl().addClass('va012-mandatory');
                 //_txtDifference = $_formNewRecord.find("#VA012_txtDifference_" + $self.windowNo);
-                _txtDifference.getControl().addClass('va012-mandatory');
+                //_txtDifference.getControl().addClass('va012-mandatory');//not required
                 _cmbDifferenceType = $_formNewRecord.find("#VA012_cmbDifferenceType_" + $self.windowNo);
                 _txtVoucherNo = $_formNewRecord.find("#VA012_txtVoucherNo_" + $self.windowNo);
                 _txtDescription = $_formNewRecord.find("#VA012_txtDescription_" + $self.windowNo);
@@ -7056,6 +7070,8 @@
                 //_txtConversionType disabled false 
                 _txtConversionType.attr("disabled", false);
                 _txtCurrency.attr("disabled", false);
+                //set false when form get refreshed
+                _reconciledLine = false;
             },
             scheduleRefresh: function () {
                 _scheduleList = [];
@@ -7135,6 +7151,8 @@
                 //_txtConversionType disabled false 
                 _txtConversionType.attr("disabled", false);
                 _txtCurrency.attr("disabled", false);
+                //set false when form get refreshed
+                _reconciledLine = false;
             },
             newRecordDispose: function () {
                 $_formNewRecord = null;
@@ -7203,6 +7221,8 @@
                 //clear the values
                 _txtCurrency = null;
                 _txtConversionType = null;
+                //set as null to dispose
+                _reconciledLine = null;
             },
 
             //load Currencies           

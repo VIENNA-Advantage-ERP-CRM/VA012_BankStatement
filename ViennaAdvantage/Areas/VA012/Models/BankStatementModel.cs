@@ -1900,6 +1900,20 @@ namespace VA012.Models
             //statement Date should be Line StatementDate
             statementDetail._dtStatementDate = _bankStatementLine.GetStatementLineDate();
 
+            //get Currency_ID and C_ConversionType_ID
+            statementDetail._txtCurrency = _bankStatementLine.GetC_Currency_ID();
+            statementDetail._txtConversionType = Util.GetValueOfInt(_bankStatementLine.Get_Value("C_ConversionType_ID"));
+
+            //set it is reconciled bank statement Line if line is bind with payment or cashLine
+            if (_bankStatementLine.GetC_Payment_ID() > 0 || _bankStatementLine.GetC_CashLine_ID() > 0)
+            {
+                statementDetail._reconciled = true;
+            }
+            else
+            {
+                statementDetail._reconciled = false;
+            }
+
             if (_bankStatementLine.GetC_Charge_ID() > 0)
             {
                 chrg = new MCharge(ctx, _bankStatementLine.GetC_Charge_ID(), null);
@@ -1909,13 +1923,13 @@ namespace VA012.Models
                 {
                     statementDetail._cmbDifferenceType = "CH";
                 }
-                //if Payment_ID found on BankStatement Line
-                if (_bankStatementLine.GetC_Payment_ID() > 0)
-                {
+                ////if Payment_ID found on BankStatement Line
+                //if (_bankStatementLine.GetC_Payment_ID() > 0)
+                //{
                     //get Currency_ID and C_ConversionType_ID
-                    statementDetail._txtCurrency = _bankStatementLine.GetC_Currency_ID();
-                    statementDetail._txtConversionType = Util.GetValueOfInt(_bankStatementLine.Get_Value("C_ConversionType_ID"));
-                }
+                    //statementDetail._txtCurrency = _bankStatementLine.GetC_Currency_ID();
+                    //statementDetail._txtConversionType = Util.GetValueOfInt(_bankStatementLine.Get_Value("C_ConversionType_ID"));
+                //}
                 //statementDetail._cmbDifferenceType = _bankStatementLine.GetVA012_DifferenceType();
             }
             else if (_bankStatementLine.GetC_Payment_ID() > 0 || (payment_ID != 0 && _trxType.Equals("PY")))
@@ -6311,6 +6325,7 @@ namespace VA012.Models
         public decimal _surChargeAmt { get; set; }
         public int _txtCurrency { get; set; }
         public int _txtConversionType { get; set; }
+        public bool _reconciled { get; internal set; }
         // public List<GetScheduleProp> _getSchedules { get; set; }
     }
     public class PaymentProp
