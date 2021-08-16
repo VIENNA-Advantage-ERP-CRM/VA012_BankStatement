@@ -1903,6 +1903,8 @@ namespace VA012.Models
             //get Currency_ID and C_ConversionType_ID
             statementDetail._txtCurrency = _bankStatementLine.GetC_Currency_ID();
             statementDetail._txtConversionType = Util.GetValueOfInt(_bankStatementLine.Get_Value("C_ConversionType_ID"));
+            //for reconciled record get the CashLine if found on Line
+            statementDetail._ctrlCashLine = Util.GetValueOfInt(_bankStatementLine.Get_Value("C_CashLine_ID"));
 
             //set it is reconciled bank statement Line if line is bind with payment or cashLine
             if (_bankStatementLine.GetC_Payment_ID() > 0 || _bankStatementLine.GetC_CashLine_ID() > 0)
