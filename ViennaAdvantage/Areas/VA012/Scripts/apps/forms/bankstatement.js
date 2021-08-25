@@ -157,6 +157,8 @@
         var _txtCurrency = null;
         //C_ConversionType_ID
         var _txtConversionType = null;
+        //used to check reconciled or not
+        var _reconciledLine = false;
 
         // End newRecord Form Variables
         //store payment list in array
@@ -453,16 +455,16 @@
                                 //        VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsProcessed"), null, "", "");
                                 //    }
                                 //}
-                                if (data[0]._statementProcessed != null) {
-                                    VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsProcessed"), null, "", "");
-                                }
                                 if (data[0]._error != null) {
                                     VIS.ADialog.info(data[0]._error, null, "", "");
                                 }
-                                if (data[0]._statementNotProcessed != null) {
+                                else if (data[0]._statementProcessed != null) {
+                                    VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsProcessed"), null, "", "");
+                                }
+                                else if (data[0]._statementNotProcessed != null) {
                                     VIS.ADialog.info(data[0]._statementNotProcessed + " " + VIS.Msg.getMsg("VA012_StatementsNotProcessed"), null, "", "");
                                 }
-                                if (data[0]._statementUnmatchedLines != null) {
+                                else if (data[0]._statementUnmatchedLines != null) {
                                     VIS.ADialog.info(data[0]._statementUnmatchedLines + " " + VIS.Msg.getMsg("VA012_ExistsUnmatched"), null, "", "");
                                 }
                                 newRecordForm.scheduleRefresh();
@@ -1737,25 +1739,26 @@
                 }, 2);
             },
             loadSearchPaymentMethod: function () {
+                //get data from Controller
+                //var _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PAYMENTMETHOD WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE!='B' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID();
 
-                var _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PAYMENTMETHOD WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE!='B' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID();
+                //if (VIS.Env.getCtx().getAD_Org_ID() != 0) {
+                //    _sql += " AND AD_ORG_ID IN( " + VIS.Env.getCtx().getAD_Org_ID() + ",0)";
+                //}
 
-                if (VIS.Env.getCtx().getAD_Org_ID() != 0) {
-                    _sql += " AND AD_ORG_ID IN( " + VIS.Env.getCtx().getAD_Org_ID() + ",0)";
-                }
-
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadSearchPaymentMethod);
+                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadSearchPaymentMethod);
+                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetPaymentMethods", null, callbackloadSearchPaymentMethod);
                 function callbackloadSearchPaymentMethod(_ds) {
                     _cmbSearchPaymentMethod.html("");
                     _cmbSearchPaymentMethod.append("<option value=0 >" + VIS.Msg.getMsg("VA012_SelectPaymentMethod") + "</option>");
                     if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbSearchPaymentMethod.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.va009_paymentmethod_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.va009_name) + "</option>");
+                        for (var i = 0; i < _ds.length; i++) {
+                            _cmbSearchPaymentMethod.append("<option value=" + _ds[i].chargeID + ">" + VIS.Utility.encodeText(_ds[i].name) + "</option>");
                         }
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                    //_ds.dispose();
+                    //_ds = null;
+                    //_sql = null;
                     _cmbSearchPaymentMethod.prop('selectedIndex', 0);
                     _cmbBankAccount.trigger('change');
                 }
@@ -3132,7 +3135,7 @@
                 function loadBankAccountClasses() {
 
                     // var _sql = "SELECT VA012_BANKSTATEMENTCLASSNAME as NAME, VA012_BANKSTATEMENTCLASS_ID FROM VA012_BANKSTATEMENTCLASS WHERE C_BANKACCOUNT_ID = " + _cmbBankAccount.val();
-                    var _sql = " SELECT BSC.VA012_BANKSTATEMENTCLASSNAME AS NAME, CONCAT(CONCAT(SC.NAME,'_'),VA012_BANKSTATEMENTCLASS_ID) AS VA012_BANKSTATEMENTCLASS_ID FROM VA012_BANKSTATEMENTCLASS BSC INNER JOIN VA012_STATEMENTCLASS SC ON BSC.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID WHERE C_BANKACCOUNT_ID = " + _cmbBankAccount.val();
+                    var _sql = " SELECT BSC.VA012_BANKSTATEMENTCLASSNAME AS NAME, CONCAT(CONCAT(SC.NAME,'_'),VA012_BANKSTATEMENTCLASS_ID) AS VA012_BANKSTATEMENTCLASS_ID FROM VA012_BankStatementClass BSC INNER JOIN VA012_STATEMENTCLASS SC ON (BSC.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID) WHERE C_BANKACCOUNT_ID = " + _cmbBankAccount.val();
                     var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountClasses);
                     function callbackloadBankAccountClasses(_ds) {
                         STAT_cmbBankAccountClassName.html("");
@@ -3906,10 +3909,11 @@
 
                     // when voucher match is contra and voucher type not eselected then bind as " Cash To Bank"
                     if (_cmbVoucherMatch.val() != null && _cmbVoucherMatch.val() != ""
-                        && _cmbContraType.val() != "" && _cmbContraType.val() != "") {
+                        && _cmbContraType.val() != null && _cmbContraType.val() != "") {//replaced "" with null to check condition
                         _cmbContraType.val("CB").prop('selected', true);
+                        _cmbContraType.trigger('change');
                     }
-                    _cmbContraType.trigger('change');
+                    //_cmbContraType.trigger('change');
 
                     _cmbCashBook.val(_result._cmbCashBook).prop('selected', true);
                     _txtCheckNo.val(_result._txtCheckNo);
@@ -3921,6 +3925,11 @@
                     }
                     else {
                         _txtAmount.getControl().removeClass('va012-mandatory');
+                    }
+                    //set _txtAmount readOnly if the record is already reconciled with Payment or Cash Line
+                    if (_result._reconciled) {
+                        _txtAmount.getControl().attr("disabled", true);
+                        _reconciledLine = _result._reconciled;
                     }
                     //get the Amount in standard format
                     if (convertAmtCulture(_txtTrxAmt.getControl().val()) <= 0) {
@@ -3938,7 +3947,7 @@
                         //replace 'change' to 'blur' to avoid the _txtDifference value change when trigger the function
                         _txtDifference.getControl().trigger("blur");
                         //get the Amount in standard format
-                        if (convertAmtCulture(_txtDifference.getControl().val()) <= 0) {
+                        if (_result._txtDifference < 0) {//if the value is zero not need to field as mandatory
                             _txtDifference.getControl().addClass('va012-mandatory');
                         }
                         else {
@@ -3982,7 +3991,21 @@
                     _cmbCharge.val(_result._cmbCharge).prop('selected', true);
                     _txtCharge.val(_result._txtCharge);
                     _txtCharge.attr('chargeid', _result._cmbCharge);
+                    //when _txtCharge should not have chargeid then add mandatory class
+                    if (VIS.Utility.Util.getValueOfInt(_result._cmbCharge) == 0 && _result._cmbDifferenceType != "" && _result._cmbDifferenceType != null) {
+                        _txtCharge.addClass("va012-mandatory");
+                    }
+                    else {
+                        _txtCharge.removeClass("va012-mandatory");
+                    }
                     _cmbTaxRate.val(_result._cmbTaxRate).prop('selected', true);
+                    //when _cmbTaxRate is Zero or null then add mandatory class
+                    if (VIS.Utility.Util.getValueOfInt(_result._cmbTaxRate) == 0 && _result._cmbDifferenceType != "" && _result._cmbDifferenceType != null) {
+                        _cmbTaxRate.addClass("va012-mandatory");
+                    }
+                    else {
+                        _cmbTaxRate.removeClass("va012-mandatory");
+                    }
                     _txtTaxAmount.setValue(VIS.Utility.Util.getValueOfDecimal(_result._txtTaxAmount.toFixed(_stdPrecision)));
                     _chkUseNextTime.prop('checked', _result._chkUseNextTime);
 
@@ -4207,7 +4230,7 @@
 
                     // Change here for only picking statementes which are not completed, closed or Voided
                     // Lokesh Chauhan
-                    var _sql = "Select Cb.C_Bankstatement_Id, CB.NAME,Cb.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BANKSTATEMENT CB INNER JOIN C_BANKSTATEMENTLINE CBL ON cbl.C_BANKSTATEMENT_ID = Cb.C_BANKSTATEMENT_ID Where Cb.Isactive = 'Y' And Cb.Ad_Client_Id = " + VIS.Env.getCtx().getAD_Client_ID() + " And Cb.C_Bankaccount_Id = " + _cmbBankAccount.val() + " And Cb.Docstatus NOT IN  ('CO','CL','VO') GROUP BY CB.C_BANKSTATEMENT_ID,Cb.Docstatus, CB.NAME"
+                    var _sql = "Select Cb.C_Bankstatement_Id, CB.NAME,Cb.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BankStatement CB INNER JOIN C_BankStatementLine CBL ON (cbl.C_BANKSTATEMENT_ID = Cb.C_BANKSTATEMENT_ID) Where Cb.Isactive = 'Y' And Cb.Ad_Client_Id = " + VIS.Env.getCtx().getAD_Client_ID() + " And Cb.C_Bankaccount_Id = " + _cmbBankAccount.val() + " And Cb.Docstatus NOT IN  ('CO','CL','VO') GROUP BY CB.C_BANKSTATEMENT_ID,Cb.Docstatus, CB.NAME"
 
                     var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankStatementNo);
                     function callbackloadBankStatementNo(_ds) {
@@ -4226,20 +4249,21 @@
 
                 function loadTaxRate() {
                     //Select Taxes which is not Surcharge and having no Parent Tax
-                    var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
-                    _sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
-                    var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadloadTaxRate);
+                    //var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
+                    //_sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
+                    //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadloadTaxRate);
+                    VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadTaxRate", null, callbackloadloadTaxRate);
                     function callbackloadloadTaxRate(_ds) {
                         _cmbTaxRate.html("");
                         _cmbTaxRate.append("<option value=0 >-</option>");
                         if (_ds != null) {
-                            for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                                _cmbTaxRate.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_tax_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            for (var i = 0; i < _ds.length; i++) {
+                                _cmbTaxRate.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].C_Tax_ID) + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                             }
                         }
-                        _ds.dispose();
-                        _ds = null;
-                        _sql = null;
+                        //_ds.dispose();
+                        //_ds = null;
+                        //_sql = null;
                     }
                 };
                 //  var $POP_lookCharge = null;
@@ -5065,8 +5089,12 @@
 
                     if (_cmbVoucherMatch.val() == "M") {
                         //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
-                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0 || VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0) {
+                        //added event condition to avoid the values to refresh
+                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0 || VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0
+                            && (event != null && event.currentTarget.className != _btnMore[0].className)) {
                             newRecordForm.refreshSelectedValues();
+                            //set or load Currency 
+                            setCurrencyVal();
                         }
 
                         _divCtrlCashLine.find("*").prop("disabled", true);
@@ -5093,17 +5121,20 @@
                             _divVoucherNo.hide();
                         }
                         //
-
-
-                        _divCharge.find("*").prop("disabled", true);
-                        _divTaxRate.find("*").prop("disabled", true);
-                        _divTaxAmount.find("*").prop("disabled", true);
-
                         //hide incase of Payment as Voucher/Match and other than charge as diffType
-                        if (_cmbDifferenceType.val() != "CH") {
+                        //modified condition according to the Charge
+                        if (_cmbDifferenceType.val() == "CH") {
+                            _divCharge.find("*").prop("disabled", false);
+                            _divTaxRate.find("*").prop("disabled", false);
+                            _divTaxAmount.find("*").prop("disabled", false);
+                        }
+                        else {
                             _divCharge.hide();
                             _divTaxRate.hide();
                             _divTaxAmount.hide();
+                            _divCharge.find("*").prop("disabled", true);
+                            _divTaxRate.find("*").prop("disabled", true);
+                            _divTaxAmount.find("*").prop("disabled", true);
                         }
 
                         divRow4Col1TrxAmt.show();
@@ -5136,7 +5167,7 @@
                             _txtTaxAmount.setValue(0);
                         }
                         //set or load Currency
-                        setCurrencyVal();
+                        //setCurrencyVal();
                         //// _divMatch.find("*").prop("disabled", false);
 
                         /////
@@ -5157,8 +5188,12 @@
                     }
                     else if (_cmbVoucherMatch.val() == "V") {
                         //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
-                        if (_cashLineSelectedVal != 0 || _paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0) {
+                        //added event condition to avoid the values to refresh
+                        if (_cashLineSelectedVal != 0 || _paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0
+                            && (event != null && event.currentTarget.className != _btnMore[0].className)) {
                             newRecordForm.refreshSelectedValues();
+                            //set or load Currency 
+                            setCurrencyVal();
                         }
 
                         _divCtrlCashLine.find("*").prop("disabled", true);
@@ -5207,7 +5242,7 @@
                         _divPrepayOrder.hide();
                         _divPaymentSchedule.hide();
                         //set or load Currency
-                        setCurrencyVal();
+                        //setCurrencyVal();
 
                         //_divVoucher.find("*").prop("disabled", false);
                         ////_divVoucher.removeClass("va012-disabled");
@@ -5225,8 +5260,12 @@
                     }
                     else if (_cmbVoucherMatch.val() == "C") {
                         //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
-                        if (_paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0) {
+                        //added event condition to avoid the values to refresh
+                        if (_paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0
+                            && (event != null && event.currentTarget.className != _btnMore[0].className)) {
                             newRecordForm.refreshSelectedValues();
+                            //set or load Currency 
+                            setCurrencyVal();
                         }
 
                         _divContraType.show();
@@ -5274,7 +5313,7 @@
                         _cmbTaxRate.removeClass("va012-mandatory");
                         _txtCharge.removeClass("va012-mandatory");
                         //set or load Currency 
-                        setCurrencyVal();
+                        //setCurrencyVal();//not required here
                     }
                     //remove the mandatory class
                     //_cmbTaxRate.removeClass("va012-mandatory");
@@ -5326,7 +5365,8 @@
                     }
                     //Set Mandatory Class
                     //_cmbDifferenceType.val() will check condition null or "" or 0 and get right result
-                    if (_cmbDifferenceType.val() <= 0) {
+                    //added condtion into existing must have Difference Amt
+                    if (_cmbDifferenceType.val() <= 0 && convertAmtCulture(_txtDifference.getControl().val()) != 0) {
                         _cmbDifferenceType.addClass("va012-mandatory");
                     }
                     else {
@@ -5521,8 +5561,9 @@
                 });
 
                 _btnMore.on(VIS.Events.onTouchStartOrClick, function () {
-
-                    if (_btnMore.attr("visiblestatus") == "0") {
+                    //replaced with button name to avoid exection error
+                    //if (_btnMore.attr("visiblestatus") == "0") {
+                    if (_btnMore.text() == VIS.Msg.getMsg("VA012_More")) {
                         _btnMore.attr("visiblestatus", "1");
                         _btnMore.text(VIS.Msg.getMsg("VA012_Hide"));
 
@@ -5611,6 +5652,13 @@
                 _btnSave.on(VIS.Events.onTouchStartOrClick, function () {
 
                     var _formData = newRecordForm.getFormData();
+                    //when user try to save the reconciled record it will show the pop message
+                    //Line is already reconciled
+                    if (_reconciledLine) {
+                        VIS.ADialog.info("VA012_BSLAlreadyReconciled", null, "", "");
+                        return;
+                    }
+
                     if (_formData[0]["_cmbBankAccount"] == null || _formData[0]["_cmbBankAccount"] == "" || _formData[0]["_cmbBankAccount"] == "0") {
                         VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                         return;
@@ -6427,7 +6475,7 @@
                 //_txtTrxAmt = $_formNewRecord.find("#VA012_txtTrxAmt_" + $self.windowNo);
                 _txtTrxAmt.getControl().addClass('va012-mandatory');
                 //_txtDifference = $_formNewRecord.find("#VA012_txtDifference_" + $self.windowNo);
-                _txtDifference.getControl().addClass('va012-mandatory');
+                //_txtDifference.getControl().addClass('va012-mandatory');//not required
                 _cmbDifferenceType = $_formNewRecord.find("#VA012_cmbDifferenceType_" + $self.windowNo);
                 _txtVoucherNo = $_formNewRecord.find("#VA012_txtVoucherNo_" + $self.windowNo);
                 _txtDescription = $_formNewRecord.find("#VA012_txtDescription_" + $self.windowNo);
@@ -6575,7 +6623,7 @@
 
             loadCharge: function () {
                 //Not in Use
-                var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
+                var _sql = "SELECT NAME,C_CHARGE_ID FROM C_Charge WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
                 var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadCharge);
                 function callbackloadCharge(_ds) {
                     _cmbCharge.html("");
@@ -6596,22 +6644,23 @@
                 //var _sql = "SELECT NAME,C_TAX_ID FROM C_TAX WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
                 //var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y' AND EXPORT_ID IS NOT NULL";
                 //Select Taxes which is not Surcharge and having no Parent Tax
-                var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
-                //debugger;
-                _sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadTaxRate);
+                //var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
+                ////debugger;
+                //_sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
+                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadTaxRate);
+                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadTaxRate", null, callbackloadTaxRate);
                 function callbackloadTaxRate(_ds) {
                     _cmbTaxRate.html("");
                     _cmbTaxRate.append("<option value=0 ></option>");
                     if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbTaxRate.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_tax_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                        for (var i = 0; i < _ds.length; i++) {
+                            _cmbTaxRate.append("<option value=" + _ds[i].C_Tax_ID + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                         }
 
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                    //_ds.dispose();
+                    //_ds = null;
+                    //_sql = null;
                     _cmbTaxRate.prop('selectedIndex', 0);
                 }
             },
@@ -6679,10 +6728,10 @@
             },
             loadOrder: function () {
                 var _orderWhere = "C_ORDER_ID IN (SELECT ORD.C_ORDER_ID "
-                    + " FROM C_ORDER ORD "
-                    + " LEFT JOIN C_DOCTYPE DT "
-                    + " ON ORD.C_DOCTYPETARGET_ID=DT.C_DOCTYPE_ID "
-                    + " INNER JOIN VA009_PAYMENTMETHOD PM "
+                    + " FROM C_Order ORD "
+                    + " LEFT JOIN C_DocType DT "
+                    + " ON (ORD.C_DOCTYPETARGET_ID=DT.C_DOCTYPE_ID) "
+                    + " INNER JOIN VA009_PaymentMethod PM "
                     + " ON (PM.VA009_PAYMENTMETHOD_ID =ORD.VA009_PAYMENTMETHOD_ID ) "
                     + " WHERE DT.DOCSUBTYPESO         ='PR' "
                     + "  AND ORD.DOCSTATUS             ='WP' "
@@ -6745,11 +6794,11 @@
             loadCashLine: function () {
                 //debugger;
                 var _cashLineWhere = " C_CASHLINE_ID IN (SELECT CSL.C_CASHLINE_ID "
-                    + " FROM C_CASH CS "
-                    + " INNER JOIN C_CASHLINE CSL "
-                    + " ON CS.C_CASH_ID=CSL.C_CASH_ID "
-                    + " INNER JOIN c_charge chrg "
-                    + " ON chrg.c_charge_id        =csl.c_charge_id "
+                    + " FROM C_Cash CS "
+                    + " INNER JOIN C_CashLine CSL "
+                    + " ON (CS.C_CASH_ID=CSL.C_CASH_ID) "
+                    + " INNER JOIN C_Charge chrg "
+                    + " ON (chrg.c_charge_id =csl.c_charge_id) "
                     + " WHERE CS.ISACTIVE          ='Y' "
                     + " AND CSL.CashType           ='C' "
                     + " AND chrg.dtd001_chargetype ='CON' "
@@ -7024,6 +7073,8 @@
                 //_txtConversionType disabled false 
                 _txtConversionType.attr("disabled", false);
                 _txtCurrency.attr("disabled", false);
+                //set false when form get refreshed
+                _reconciledLine = false;
             },
             scheduleRefresh: function () {
                 _scheduleList = [];
@@ -7103,6 +7154,8 @@
                 //_txtConversionType disabled false 
                 _txtConversionType.attr("disabled", false);
                 _txtCurrency.attr("disabled", false);
+                //set false when form get refreshed
+                _reconciledLine = false;
             },
             newRecordDispose: function () {
                 $_formNewRecord = null;
@@ -7171,6 +7224,8 @@
                 //clear the values
                 _txtCurrency = null;
                 _txtConversionType = null;
+                //set as null to dispose
+                _reconciledLine = null;
             },
 
             //load Currencies           
