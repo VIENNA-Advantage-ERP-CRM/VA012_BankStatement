@@ -3135,8 +3135,8 @@ namespace VA012.Models
             int _bankOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _cmbBankAccount));
 
             _sql = "SELECT COUNT(*) AS Records "
-               + " FROM C_BankStatement BS "
-               + " INNER JOIN C_BankStatementLine BSL "
+               + " FROM C_BankStatementLine BSL "
+               + " INNER JOIN C_BankStatement BS "
                + " ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID) "
                + " LEFT JOIN C_Invoice INV "
                + " ON (BSL.C_INVOICE_ID = INV.C_INVOICE_ID) "
@@ -3700,8 +3700,8 @@ namespace VA012.Models
                             END AS PaymentType,
                             BS.DocStatus AS DocStatus ,
                               ' '  as TrxNo , '' as VA009_Name, CS.DateAcct
-                        FROM C_Cash CS
-                        INNER JOIN C_CashLine PAY
+                        FROM C_CashLine PAY 
+                        INNER JOIN C_Cash CS
                         ON (CS.C_CASH_ID=PAY.C_CASH_ID)
                         INNER JOIN C_Charge chrg
                         ON (chrg.c_charge_id=PAY.c_charge_id)
@@ -4816,7 +4816,7 @@ namespace VA012.Models
             {
                 //based on txtAmout get the PaymentMethod with respective column
                 string payMethod_ID = _formData[0]._txtAmount >= 0 ? "VA009_PAYMENTMETHOD_ID" : "VA009_PO_PaymentMethod_ID";
-                _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT " + payMethod_ID + " FROM CBPartner WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT " + payMethod_ID + " FROM C_BPartner WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
                 //if PaymentMethod_ID is zero it will return a message not do the Payment
                 if (_paymentMethodID == 0)
                 {
