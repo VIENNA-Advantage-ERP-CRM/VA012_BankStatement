@@ -455,16 +455,16 @@
                                 //        VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsProcessed"), null, "", "");
                                 //    }
                                 //}
-                                if (data[0]._statementProcessed != null) {
-                                    VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsProcessed"), null, "", "");
-                                }
                                 if (data[0]._error != null) {
                                     VIS.ADialog.info(data[0]._error, null, "", "");
                                 }
-                                if (data[0]._statementNotProcessed != null) {
+                                else if (data[0]._statementProcessed != null) {
+                                    VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsProcessed"), null, "", "");
+                                }
+                                else if (data[0]._statementNotProcessed != null) {
                                     VIS.ADialog.info(data[0]._statementNotProcessed + " " + VIS.Msg.getMsg("VA012_StatementsNotProcessed"), null, "", "");
                                 }
-                                if (data[0]._statementUnmatchedLines != null) {
+                                else if (data[0]._statementUnmatchedLines != null) {
                                     VIS.ADialog.info(data[0]._statementUnmatchedLines + " " + VIS.Msg.getMsg("VA012_ExistsUnmatched"), null, "", "");
                                 }
                                 newRecordForm.scheduleRefresh();
@@ -1739,25 +1739,26 @@
                 }, 2);
             },
             loadSearchPaymentMethod: function () {
+                //get data from Controller
+                //var _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PAYMENTMETHOD WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE!='B' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID();
 
-                var _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PAYMENTMETHOD WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE!='B' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID();
+                //if (VIS.Env.getCtx().getAD_Org_ID() != 0) {
+                //    _sql += " AND AD_ORG_ID IN( " + VIS.Env.getCtx().getAD_Org_ID() + ",0)";
+                //}
 
-                if (VIS.Env.getCtx().getAD_Org_ID() != 0) {
-                    _sql += " AND AD_ORG_ID IN( " + VIS.Env.getCtx().getAD_Org_ID() + ",0)";
-                }
-
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadSearchPaymentMethod);
+                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadSearchPaymentMethod);
+                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetPaymentMethods", null, callbackloadSearchPaymentMethod);
                 function callbackloadSearchPaymentMethod(_ds) {
                     _cmbSearchPaymentMethod.html("");
                     _cmbSearchPaymentMethod.append("<option value=0 >" + VIS.Msg.getMsg("VA012_SelectPaymentMethod") + "</option>");
                     if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbSearchPaymentMethod.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.va009_paymentmethod_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.va009_name) + "</option>");
+                        for (var i = 0; i < _ds.length; i++) {
+                            _cmbSearchPaymentMethod.append("<option value=" + _ds[i].chargeID + ">" + VIS.Utility.encodeText(_ds[i].name) + "</option>");
                         }
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                    //_ds.dispose();
+                    //_ds = null;
+                    //_sql = null;
                     _cmbSearchPaymentMethod.prop('selectedIndex', 0);
                     _cmbBankAccount.trigger('change');
                 }
@@ -3134,7 +3135,7 @@
                 function loadBankAccountClasses() {
 
                     // var _sql = "SELECT VA012_BANKSTATEMENTCLASSNAME as NAME, VA012_BANKSTATEMENTCLASS_ID FROM VA012_BANKSTATEMENTCLASS WHERE C_BANKACCOUNT_ID = " + _cmbBankAccount.val();
-                    var _sql = " SELECT BSC.VA012_BANKSTATEMENTCLASSNAME AS NAME, CONCAT(CONCAT(SC.NAME,'_'),VA012_BANKSTATEMENTCLASS_ID) AS VA012_BANKSTATEMENTCLASS_ID FROM VA012_BANKSTATEMENTCLASS BSC INNER JOIN VA012_STATEMENTCLASS SC ON BSC.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID WHERE C_BANKACCOUNT_ID = " + _cmbBankAccount.val();
+                    var _sql = " SELECT BSC.VA012_BANKSTATEMENTCLASSNAME AS NAME, CONCAT(CONCAT(SC.NAME,'_'),VA012_BANKSTATEMENTCLASS_ID) AS VA012_BANKSTATEMENTCLASS_ID FROM VA012_BankStatementClass BSC INNER JOIN VA012_STATEMENTCLASS SC ON (BSC.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID) WHERE C_BANKACCOUNT_ID = " + _cmbBankAccount.val();
                     var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountClasses);
                     function callbackloadBankAccountClasses(_ds) {
                         STAT_cmbBankAccountClassName.html("");
@@ -4229,7 +4230,7 @@
 
                     // Change here for only picking statementes which are not completed, closed or Voided
                     // Lokesh Chauhan
-                    var _sql = "Select Cb.C_Bankstatement_Id, CB.NAME,Cb.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BANKSTATEMENT CB INNER JOIN C_BANKSTATEMENTLINE CBL ON cbl.C_BANKSTATEMENT_ID = Cb.C_BANKSTATEMENT_ID Where Cb.Isactive = 'Y' And Cb.Ad_Client_Id = " + VIS.Env.getCtx().getAD_Client_ID() + " And Cb.C_Bankaccount_Id = " + _cmbBankAccount.val() + " And Cb.Docstatus NOT IN  ('CO','CL','VO') GROUP BY CB.C_BANKSTATEMENT_ID,Cb.Docstatus, CB.NAME"
+                    var _sql = "Select Cb.C_Bankstatement_Id, CB.NAME,Cb.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BankStatement CB INNER JOIN C_BankStatementLine CBL ON (cbl.C_BANKSTATEMENT_ID = Cb.C_BANKSTATEMENT_ID) Where Cb.Isactive = 'Y' And Cb.Ad_Client_Id = " + VIS.Env.getCtx().getAD_Client_ID() + " And Cb.C_Bankaccount_Id = " + _cmbBankAccount.val() + " And Cb.Docstatus NOT IN  ('CO','CL','VO') GROUP BY CB.C_BANKSTATEMENT_ID,Cb.Docstatus, CB.NAME"
 
                     var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankStatementNo);
                     function callbackloadBankStatementNo(_ds) {
@@ -4248,20 +4249,21 @@
 
                 function loadTaxRate() {
                     //Select Taxes which is not Surcharge and having no Parent Tax
-                    var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
-                    _sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
-                    var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadloadTaxRate);
+                    //var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
+                    //_sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
+                    //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadloadTaxRate);
+                    VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadTaxRate", null, callbackloadloadTaxRate);
                     function callbackloadloadTaxRate(_ds) {
                         _cmbTaxRate.html("");
                         _cmbTaxRate.append("<option value=0 >-</option>");
                         if (_ds != null) {
-                            for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                                _cmbTaxRate.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_tax_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            for (var i = 0; i < _ds.length; i++) {
+                                _cmbTaxRate.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].C_Tax_ID) + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                             }
                         }
-                        _ds.dispose();
-                        _ds = null;
-                        _sql = null;
+                        //_ds.dispose();
+                        //_ds = null;
+                        //_sql = null;
                     }
                 };
                 //  var $POP_lookCharge = null;
@@ -6621,7 +6623,7 @@
 
             loadCharge: function () {
                 //Not in Use
-                var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
+                var _sql = "SELECT NAME,C_CHARGE_ID FROM C_Charge WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
                 var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadCharge);
                 function callbackloadCharge(_ds) {
                     _cmbCharge.html("");
@@ -6642,22 +6644,23 @@
                 //var _sql = "SELECT NAME,C_TAX_ID FROM C_TAX WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
                 //var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y' AND EXPORT_ID IS NOT NULL";
                 //Select Taxes which is not Surcharge and having no Parent Tax
-                var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
-                //debugger;
-                _sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadTaxRate);
+                //var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
+                ////debugger;
+                //_sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
+                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadTaxRate);
+                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadTaxRate", null, callbackloadTaxRate);
                 function callbackloadTaxRate(_ds) {
                     _cmbTaxRate.html("");
                     _cmbTaxRate.append("<option value=0 ></option>");
                     if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbTaxRate.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_tax_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                        for (var i = 0; i < _ds.length; i++) {
+                            _cmbTaxRate.append("<option value=" + _ds[i].C_Tax_ID + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                         }
 
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                    //_ds.dispose();
+                    //_ds = null;
+                    //_sql = null;
                     _cmbTaxRate.prop('selectedIndex', 0);
                 }
             },
@@ -6725,10 +6728,10 @@
             },
             loadOrder: function () {
                 var _orderWhere = "C_ORDER_ID IN (SELECT ORD.C_ORDER_ID "
-                    + " FROM C_ORDER ORD "
-                    + " LEFT JOIN C_DOCTYPE DT "
-                    + " ON ORD.C_DOCTYPETARGET_ID=DT.C_DOCTYPE_ID "
-                    + " INNER JOIN VA009_PAYMENTMETHOD PM "
+                    + " FROM C_Order ORD "
+                    + " LEFT JOIN C_DocType DT "
+                    + " ON (ORD.C_DOCTYPETARGET_ID=DT.C_DOCTYPE_ID) "
+                    + " INNER JOIN VA009_PaymentMethod PM "
                     + " ON (PM.VA009_PAYMENTMETHOD_ID =ORD.VA009_PAYMENTMETHOD_ID ) "
                     + " WHERE DT.DOCSUBTYPESO         ='PR' "
                     + "  AND ORD.DOCSTATUS             ='WP' "
@@ -6791,11 +6794,11 @@
             loadCashLine: function () {
                 //debugger;
                 var _cashLineWhere = " C_CASHLINE_ID IN (SELECT CSL.C_CASHLINE_ID "
-                    + " FROM C_CASH CS "
-                    + " INNER JOIN C_CASHLINE CSL "
-                    + " ON CS.C_CASH_ID=CSL.C_CASH_ID "
-                    + " INNER JOIN c_charge chrg "
-                    + " ON chrg.c_charge_id        =csl.c_charge_id "
+                    + " FROM C_Cash CS "
+                    + " INNER JOIN C_CashLine CSL "
+                    + " ON (CS.C_CASH_ID=CSL.C_CASH_ID) "
+                    + " INNER JOIN C_Charge chrg "
+                    + " ON (chrg.c_charge_id =csl.c_charge_id) "
                     + " WHERE CS.ISACTIVE          ='Y' "
                     + " AND CSL.CashType           ='C' "
                     + " AND chrg.dtd001_chargetype ='CON' "

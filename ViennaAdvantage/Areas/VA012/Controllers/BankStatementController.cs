@@ -41,11 +41,11 @@ namespace VA012.Controllers
             string _sql = "";
 
             _statementClassName = _statementClassName.Substring(_statementClassName.LastIndexOf('_') + 1);
-
+            //changes done for log entry
             _sql = @"SELECT SC.NAME,VA012_BANKSTATEMENTCLASS_ID
-                        FROM VA012_BANKSTATEMENTCLASS BSC
-                        INNER JOIN VA012_STATEMENTCLASS SC
-                        ON BSC.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID
+                        FROM VA012_C_BankStatementClass BSC
+                        INNER JOIN VA012_StatementClass SC
+                        ON (BSC.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID)
                         WHERE BSC.ISACTIVE='Y' AND BSC.VA012_BANKSTATEMENTCLASS_ID=" + _statementClassName;
             _className = Util.GetValueOfString(DB.ExecuteScalar(_sql));
 
@@ -238,18 +238,18 @@ namespace VA012.Controllers
                 {
                     //changed logic as per requirement that first get the Statement Name and if name is null then fetch name from regular expression
                     //when the DocStatus in InProgress also should allow to check the StatementID
-                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BankStatement WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                     statementID = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
                     if (statementID > 0)
                     {
                         //when the DocStatus in InProgress also should allow  to check the statementNo
-                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BankStatement WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
                     else
                     {
                         //based on BankAcct fetch the Statement Name
-                        _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                        _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BankStatement WHERE ISACTIVE='Y' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
 
@@ -273,10 +273,10 @@ namespace VA012.Controllers
                     }
                     else
                     {
-                        pageNo = "SELECT MAX(BL.VA012_PAGE) AS PAGE FROM C_BANKSTATEMENTLINE BL WHERE BL.C_BANKSTATEMENT_ID = " + statementID;
+                        pageNo = "SELECT MAX(BL.VA012_PAGE) AS PAGE FROM C_BankStatementLine BL WHERE BL.C_BANKSTATEMENT_ID = " + statementID;
                     }
 
-                    _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE FROM C_BANKSTATEMENTLINE BSL
+                    _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE FROM C_BankStatementLine BSL
                     WHERE BSL.VA012_PAGE=(" + pageNo + @") 
                     AND BSL.C_BANKSTATEMENT_ID =" + statementID + "  AND BSL.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                     //pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
@@ -307,7 +307,7 @@ namespace VA012.Controllers
             else
             {
                 //not required start and end date's
-                _sql = "SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1 AS STATEMENTNO FROM C_BANKSTATEMENT WHERE ISACTIVE='Y'   AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                _sql = "SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1 AS STATEMENTNO FROM C_BankStatement WHERE ISACTIVE='Y'   AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
                 statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                 pageno = 1;
                 lineno = 10;
@@ -337,18 +337,18 @@ namespace VA012.Controllers
             {
                 count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) FROM AD_ModuleInfo WHERE Prefix='VA034_' AND IsActive='Y'"));
                 if (count > 0)
-                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID,VA034_DepositSlipNo FROM C_PAYMENT WHERE C_PAYMENT_ID IN(" + _paymentID + ")";
+                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID,VA034_DepositSlipNo FROM C_Payment WHERE C_PAYMENT_ID IN(" + _paymentID + ")";
                 else
-                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID FROM C_PAYMENT WHERE C_PAYMENT_ID IN(" + _paymentID + ")";
+                    _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID FROM C_Payment WHERE C_PAYMENT_ID IN(" + _paymentID + ")";
             }
             else if (_cmbTransactionType == "IS")
             {
-                _sql = "SELECT INV.C_BPARTNER_ID,  NULL AS C_INVOICE_ID FROM C_INVOICEPAYSCHEDULE PAY INNER JOIN C_INVOICE INV ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _paymentID + ")";
+                _sql = "SELECT INV.C_BPARTNER_ID,  NULL AS C_INVOICE_ID FROM C_InvoicePaySchedule PAY INNER JOIN C_Invoice INV ON (PAY.C_INVOICE_ID=INV.C_INVOICE_ID) WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _paymentID + ")";
 
             }
             else if (_cmbTransactionType == "PO")
             {
-                _sql = "SELECT C_BPARTNER_ID, null AS C_INVOICE_ID FROM C_ORDER WHERE C_ORDER_ID IN(" + _paymentID + ")";
+                _sql = "SELECT C_BPARTNER_ID, null AS C_INVOICE_ID FROM C_Order WHERE C_ORDER_ID IN(" + _paymentID + ")";
 
             }
 
@@ -380,7 +380,7 @@ namespace VA012.Controllers
             string _sendBackData = "";
             Ctx ctx = Session["ctx"] as Ctx;
             DataSet _ds = new DataSet();
-            string _sql = "SELECT C_BPARTNER_ID FROM C_INVOICE WHERE C_INVOICE_ID IN (" + _invoiceID + ")";
+            string _sql = "SELECT C_BPARTNER_ID FROM C_Invoice WHERE C_INVOICE_ID IN (" + _invoiceID + ")";
 
             _ds = DB.ExecuteDataset(_sql, null, null);
             if (_ds != null)
@@ -499,11 +499,11 @@ namespace VA012.Controllers
             Ctx ctx = Session["ctx"] as Ctx;
             DataSet _ds = new DataSet();
             string _sql = " SELECT BCURR.ISO_CODE AS BASECURRENCY,BCURR.C_CURRENCY_ID"
-               + " FROM AD_CLIENTINFO CINFO "
-               + " INNER JOIN C_ACCTSCHEMA AC "
-               + " ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID "
-               + " LEFT JOIN C_CURRENCY BCURR "
-               + " ON AC.C_CURRENCY_ID      =BCURR.C_CURRENCY_ID "
+               + " FROM AD_ClientInfo CINFO "
+               + " INNER JOIN C_AcctSchema AC "
+               + " ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID) "
+               + " LEFT JOIN C_Currency BCURR "
+               + " ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID) "
                + " WHERE CINFO.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
 
             _ds = DB.ExecuteDataset(_sql, null, null);
@@ -998,6 +998,38 @@ namespace VA012.Controllers
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations _model = new StatementOperations();
                 retJSON = JsonConvert.SerializeObject(_model.GetConvertedAmount(ctx, currency, conversionType, stmtDate, _schedules, _accountId, orderId, paymentId, cashLineId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get the Payment Methods
+        /// </summary>
+        /// <returns>List Of payment methods</returns>
+        public JsonResult GetPaymentMethods()
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetPaymentMethods(ctx));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get the Tax Rates
+        /// </summary>
+        /// <returns>List Of Tax Rates</returns>
+        public JsonResult LoadTaxRate()
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.LoadTaxRate(ctx));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
