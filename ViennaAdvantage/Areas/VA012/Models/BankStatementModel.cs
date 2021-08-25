@@ -599,9 +599,9 @@ namespace VA012.Models
                             NVL(BSL.C_CHARGE_ID,0)  AS C_CHARGE_ID,
                             NVL(BSL.C_CASHLINE_ID,0) AS C_CASHLINE_ID,
                             BSL.VA012_ISMATCHINGCONFIRMED
-                        FROM C_BANKSTATEMENT BS
-                        INNER JOIN C_BANKSTATEMENTLINE BSL
-                        ON BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID
+                        FROM C_BankStatement BS
+                        INNER JOIN C_BankStatementLine BSL
+                        ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID)
                         WHERE BS.ISACTIVE       ='Y' 
                         AND BSL.C_BANKSTATEMENTLINE_ID=" + _formData[0]._bankStatementLineID + 
                         " AND BS.AD_Client_ID = " + ctx.GetAD_Client_ID();
@@ -613,7 +613,7 @@ namespace VA012.Models
                 //get the record based on BankAccount and DocStatus not with the Name of the Bank Statement
                 _qryStmt = @"SELECT C_BANKSTATEMENT_ID,C_BANKACCOUNT_ID,DOCSTATUS,0 AS C_PAYMENT_ID,
                             0 AS C_CHARGE_ID, 0 AS C_CASHLINE_ID, 'N' AS VA012_ISMATCHINGCONFIRMED 
-                            FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DocStatus NOT IN('RE','VO','CO','CL') AND AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND C_BANKACCOUNT_ID=" + _formData[0]._cmbBankAccount;/*NAME='" + _formData[0]._txtStatementNo + "'";  AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true)*/
+                            FROM C_BankStatement WHERE ISACTIVE='Y' AND DocStatus NOT IN('RE','VO','CO','CL') AND AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND C_BANKACCOUNT_ID=" + _formData[0]._cmbBankAccount;/*NAME='" + _formData[0]._txtStatementNo + "'";  AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true)*/
             }
             //used transaction trx
             _ds = DB.ExecuteDataset(_qryStmt, null, trx);
@@ -820,11 +820,11 @@ namespace VA012.Models
 
                 if (_CountVA034 > 0)
                 {
-                    trxNumOnPmt = Util.GetValueOfString(DB.ExecuteScalar("SELECT CP.TRXNO, CP.VA034_DEPOSITSLIPNO FROM C_PAYMENT CP LEFT JOIN VA009_PAYMENTMETHOD PM ON PM.VA009_PAYMENTMETHOD_ID = CP.VA009_PAYMENTMETHOD_ID WHERE (PM.VA009_PAYMENTBASETYPE = 'K' OR PM.VA009_PAYMENTBASETYPE = 'C') AND CP.C_PAYMENT_ID= " + _formData[0]._ctrlPayment));
+                    trxNumOnPmt = Util.GetValueOfString(DB.ExecuteScalar("SELECT CP.TRXNO, CP.VA034_DEPOSITSLIPNO FROM C_Payment CP LEFT JOIN VA009_PaymentMethod PM ON (PM.VA009_PAYMENTMETHOD_ID = CP.VA009_PAYMENTMETHOD_ID) WHERE (PM.VA009_PAYMENTBASETYPE = 'K' OR PM.VA009_PAYMENTBASETYPE = 'C') AND CP.C_PAYMENT_ID= " + _formData[0]._ctrlPayment));
                 }
                 else
                 {
-                    trxNumOnPmt = Util.GetValueOfString(DB.ExecuteScalar("SELECT CP.TRXNO FROM C_PAYMENT CP LEFT JOIN VA009_PAYMENTMETHOD PM ON PM.VA009_PAYMENTMETHOD_ID = CP.VA009_PAYMENTMETHOD_ID WHERE (PM.VA009_PAYMENTBASETYPE = 'K' OR PM.VA009_PAYMENTBASETYPE = 'C') AND CP.C_PAYMENT_ID= " + _formData[0]._ctrlPayment));
+                    trxNumOnPmt = Util.GetValueOfString(DB.ExecuteScalar("SELECT CP.TRXNO FROM C_PAYMENT CP LEFT JOIN VA009_PaymentMethod PM ON (PM.VA009_PAYMENTMETHOD_ID = CP.VA009_PAYMENTMETHOD_ID) WHERE (PM.VA009_PAYMENTBASETYPE = 'K' OR PM.VA009_PAYMENTBASETYPE = 'C') AND CP.C_PAYMENT_ID= " + _formData[0]._ctrlPayment));
                 }
 
                 if (string.IsNullOrEmpty(trxNumOnPmt))
@@ -1286,7 +1286,7 @@ namespace VA012.Models
                         paymentID = 0;
 
                     string _sql = @"INSERT
-                                INTO VA012_TEMPSTATEMENT
+                                INTO VA012_TempStatement
                                   (
                                     DESCRIPTION ,
                                     C_INVOICE_ID ,
@@ -1418,6 +1418,86 @@ namespace VA012.Models
         }
 
         /// <summary>
+        /// Complete the BankStatement Record when cal this function to complete the record
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="Record_ID">C_BankStatement_ID</param>
+        /// <param name="Process_ID">AD_Process_ID</param>
+        /// <param name="DocAction">Documnet Action</param>
+        /// <returns>return message</returns>
+        public string CompleteBankStatement(Ctx ctx, int Record_ID, int Process_ID, string DocAction)
+        {
+            string result = "";
+            MRole role = MRole.Get(ctx, ctx.GetAD_Role_ID());
+            if (Util.GetValueOfBool(role.GetProcessAccess(Process_ID)))
+            {
+                DB.ExecuteQuery("UPDATE C_BankStatement SET DocAction = '" + DocAction + "' WHERE C_BankStatement_ID = " + Record_ID);
+
+                MProcess proc = new MProcess(ctx, Process_ID, null);
+                MPInstance pin = new MPInstance(proc, Record_ID);
+                if (!pin.Save())
+                {
+                    ValueNamePair vnp = VLogger.RetrieveError();
+                    string errorMsg = "";
+                    if (vnp != null)
+                    {
+                        errorMsg = vnp.GetName();
+                        if (errorMsg == "")
+                            errorMsg = vnp.GetValue();
+                    }
+                    if (errorMsg == "")
+                        result = "DocNotCompleted";
+
+                    return result;
+                }
+
+                MPInstancePara para = new MPInstancePara(pin, 20);
+                para.setParameter("DocAction", DocAction);
+                if (!para.Save())
+                {
+                    //String msg = "No DocAction Parameter added"; // not translated
+                }
+                VAdvantage.ProcessEngine.ProcessInfo pi = new VAdvantage.ProcessEngine.ProcessInfo("WF", Process_ID);
+                pi.SetAD_User_ID(ctx.GetAD_User_ID());
+                pi.SetAD_Client_ID(ctx.GetAD_Client_ID());
+                pi.SetAD_PInstance_ID(pin.GetAD_PInstance_ID());
+                pi.SetRecord_ID(Record_ID);
+                pi.SetTable_ID(392); //AD_Table_ID=392 for C_BankStatement
+
+                ProcessCtl worker = new ProcessCtl(ctx, null, pi, null);
+                worker.Run();
+
+                if (pi.IsError())
+                {
+                    ValueNamePair vnp = VLogger.RetrieveError();
+                    string errorMsg = "";
+                    if (vnp != null)
+                    {
+                        errorMsg = vnp.GetName();
+                        if (errorMsg == "")
+                            errorMsg = vnp.GetValue();
+                    }
+
+                    if (errorMsg == "")
+                        errorMsg = pi.GetSummary();
+
+                    if (errorMsg == "")
+                        errorMsg = "DocNotCompleted";
+                    result = errorMsg;
+                    return result;
+                }
+                else
+                    result = "";
+            }
+            else
+            {
+                result = "NoAccess";
+                return result;
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Get List 
         /// </summary>
         /// <param name="ctx">Context</param>
@@ -1438,7 +1518,7 @@ namespace VA012.Models
             string _query = null;
             Dictionary<String, Object> _list = new Dictionary<String, Object>();
             //corrected Query to fetch the Organization ID
-            int _org_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + _accountId, null, null));
+            int _org_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _accountId, null, null));
 
             //string _query = "SELECT pay.C_InvoicePaySchedule_ID, pay.DueAmt, inv.C_Currency_ID  FROM C_Invoice inv INNER JOIN C_InvoicePaySchedule pay ON inv.C_Invoice_ID=pay.C_Invoice_ID WHERE" +
             //    " pay.IsActive = 'Y' AND C_InvoicePaySchedule_ID IN (" + schedules + ")";
@@ -1461,13 +1541,13 @@ namespace VA012.Models
                                     END
                                     END AS DueAmt,
                                     PAY.C_INVOICE_ID,PAY.C_INVOICEPAYSCHEDULE_ID, INV.DocumentNo
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV
-                            ON PAY.C_INVOICE_ID = INV.C_INVOICE_ID
-                            INNER JOIN C_Doctype dt
-                            ON dt.C_Doctype_id = INV.c_doctype_id
-                            LEFT JOIN C_CURRENCY BCURR
-                            ON " + currency + @" = BCURR.C_CURRENCY_ID
+                            FROM C_InvoicePaySchedule PAY
+                            INNER JOIN C_Invoice INV
+                            ON (PAY.C_INVOICE_ID = INV.C_INVOICE_ID)
+                            INNER JOIN C_DocType dt
+                            ON (dt.C_Doctype_id = INV.c_doctype_id)
+                            LEFT JOIN C_Currency BCURR
+                            ON (" + currency + @" = BCURR.C_CURRENCY_ID)
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + schedules + ")";
             }
             else if (orderId != 0)
@@ -1478,9 +1558,9 @@ namespace VA012.Models
                         WHEN(ORD.C_CURRENCY_ID!=" + currency + @")
                         THEN CURRENCYCONVERT(ORD.GrandTotal, ORD.C_CURRENCY_ID," + currency + ", " + GlobalVariable.TO_DATE(stmtDate, true) + "," + conversionType + "," + ctx.GetAD_Client_ID() + ", " + _org_ID + @") 
                         ELSE ORD.GrandTotal END DueAmt, ORD.DocumentNo
-                        FROM C_ORDER ORD
-                        INNER JOIN C_OrderLine ol ON ORD.C_ORDER_ID=ol.C_ORDER_ID
-                        INNER JOIN C_DOCTYPE DT ON ORD.C_DocTypeTarget_ID=dt.C_DocType_ID WHERE ORD.IsActive='Y' AND ORD.C_ORDER_ID=" + orderId;
+                        FROM C_Order ORD
+                        INNER JOIN C_OrderLine ol ON (ORD.C_ORDER_ID=ol.C_ORDER_ID)
+                        INNER JOIN C_DocType DT ON (ORD.C_DocTypeTarget_ID=dt.C_DocType_ID) WHERE ORD.IsActive='Y' AND ORD.C_ORDER_ID=" + orderId;
             }
             //added for to Get the Converted PaymentAmount
             else if (paymentId != 0)
@@ -1503,17 +1583,17 @@ namespace VA012.Models
                             THEN PAY.PAYAMT*-1
                             END
                         END AS DueAmt, PAY.DocumentNo 
-                    FROM C_PAYMENT PAY
-                    INNER JOIN C_DOCTYPE DT
-                    ON DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID
-                    INNER JOIN C_BANKACCOUNT AC
-                    ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
+                    FROM C_Payment PAY
+                    INNER JOIN C_DocType DT
+                    ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID)
+                    INNER JOIN C_BankAccount AC
+                    ON (AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID)
 
-                    LEFT JOIN C_BANKSTATEMENTLINE BSL 
-                    ON PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID 
+                    LEFT JOIN C_BankStatementLine BSL 
+                    ON (PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID) 
 
-                    LEFT JOIN C_CURRENCY BCURR
-                    ON " + currency + @" =BCURR.C_CURRENCY_ID
+                    LEFT JOIN C_Currency BCURR
+                    ON (" + currency + @" =BCURR.C_CURRENCY_ID)
                    WHERE PAY.C_PAYMENT_ID=" + paymentId;
             }
             //added for to Get the Converted Cash Jounrnal Line Amount
@@ -1525,10 +1605,10 @@ namespace VA012.Models
                                                  ", " + conversionType + @", cs.AD_Client_ID, cs.AD_Org_ID) 
                                             ELSE ROUND(csl.amount,NVL(BCURR.StdPrecision,2))
                                  END AS DueAmt, csl.Line AS DocumentNo
-                           FROM C_Cashline csl
-                           inner join C_Cash cs on cs.C_Cash_id=csl.C_Cash_id
-                           LEFT JOIN C_CURRENCY BCURR
-                           ON " + currency + @" =BCURR.C_CURRENCY_ID
+                           FROM C_CashLine csl
+                           INNER JOIN C_Cash cs on (cs.C_Cash_id=csl.C_Cash_id)
+                           LEFT JOIN C_Currency BCURR
+                           ON (" + currency + @" =BCURR.C_CURRENCY_ID)
                            WHERE csl.C_cashline_ID=" + cashLineId;
 
             }
@@ -1579,7 +1659,7 @@ namespace VA012.Models
             Dictionary<String, Object> _list = new Dictionary<String, Object>();
 
             DataSet _ds = DB.ExecuteDataset(@"SELECT inv.C_ConversionType_ID,inv.C_Currency_ID FROM C_Invoice inv 
-                                    INNER JOIN C_InvoicePaySchedule sch ON inv.C_Invoice_ID=sch.C_Invoice_ID WHERE C_InvoicePaySchedule_ID IN (" + schedules + ") Order by inv.DateAcct DESC", null, null);
+                                    INNER JOIN C_InvoicePaySchedule sch ON (inv.C_Invoice_ID=sch.C_Invoice_ID) WHERE C_InvoicePaySchedule_ID IN (" + schedules + ") Order by inv.DateAcct DESC", null, null);
 
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
@@ -1647,7 +1727,7 @@ namespace VA012.Models
             int bnkCurrency_ID = 0;
             int bnkOrg_ID = 0;
             //get Account Currency ID
-            _ds = DB.ExecuteDataset("SELECT C_CURRENCY_ID, AD_Org_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + bnkAct_Id);
+            _ds = DB.ExecuteDataset("SELECT C_CURRENCY_ID, AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + bnkAct_Id);
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
                 bnkCurrency_ID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_Currency_ID"]);
@@ -1658,9 +1738,9 @@ namespace VA012.Models
 
             if (transcType.Equals("IS"))
             {
-                _sql = @"SELECT INV.C_Currency_ID,INV.C_ConversionType_ID,PAY.DueAmt,DT.DocBaseType FROM C_INVOICEPAYSCHEDULE PAY
-                        INNER JOIN C_Invoice INV ON PAY.C_Invoice_ID=INV.C_Invoice_ID 
-		                INNER JOIN C_DOCTYPE DT ON DT.C_DOCTYPE_ID=INV.C_DOCTYPE_ID
+                _sql = @"SELECT INV.C_Currency_ID,INV.C_ConversionType_ID,PAY.DueAmt,DT.DocBaseType FROM C_InvoicePaySchedule PAY
+                        INNER JOIN C_Invoice INV ON (PAY.C_Invoice_ID=INV.C_Invoice_ID) 
+		                INNER JOIN C_DocType DT ON (DT.C_DOCTYPE_ID=INV.C_DOCTYPE_ID)
 			            WHERE PAY.IsActive='Y' AND  PAY.C_INVOICEPAYSCHEDULE_ID IN (" + recordIds + ")";
 
                 _ds = DB.ExecuteDataset(_sql, null, null);
@@ -1686,7 +1766,7 @@ namespace VA012.Models
             else if (transcType.Equals("PY"))
             {
                 _sql = @"SELECT PAY.C_Currency_ID,PAY.C_ConversionType_ID,PAY.PaymentAmount,DT.DocBaseType FROM C_Payment PAY 
-		                INNER JOIN C_DOCTYPE DT ON DT.C_DOCTYPE_ID=PAY.C_DOCTYPE_ID
+		                INNER JOIN C_DocType DT ON (DT.C_DOCTYPE_ID=PAY.C_DOCTYPE_ID)
 			            WHERE PAY.IsActive='Y' AND PAY.C_Payment_ID IN (" + recordIds + ")";
 
                 _ds = DB.ExecuteDataset(_sql, null, null);
@@ -1716,8 +1796,8 @@ namespace VA012.Models
                             THEN CURRENCYCONVERT(csl.Amount * -1, csl.C_Currency_ID, bcurr.C_Currency_ID, " + GlobalVariable.TO_DATE(stmtDate, true) + @", csl.C_ConversionType_ID, cs.AD_Client_ID, " + bnkOrg_ID + @") 
                             ELSE ROUND(csl.Amount * -1 ,NVL(bcurr.StdPrecision,2))
                             END AS Amount FROM C_CashLine csl
-                            INNER JOIN C_Cash cs ON csl.C_Cash_ID = cs.C_Cash_ID 
-                            LEFT JOIN C_Currency bcurr ON " + bnkCurrency_ID + @" = bcurr.C_Currency_ID WHERE csl.C_CashLine_ID IN  (" + recordIds + ")";
+                            INNER JOIN C_Cash cs ON (csl.C_Cash_ID = cs.C_Cash_ID) 
+                            LEFT JOIN C_Currency bcurr ON (" + bnkCurrency_ID + @" = bcurr.C_Currency_ID) WHERE csl.C_CashLine_ID IN  (" + recordIds + ")";
 
                 _ds = DB.ExecuteDataset(_sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
@@ -1738,9 +1818,9 @@ namespace VA012.Models
                         WHEN(ORD.C_CURRENCY_ID!=" + bnkCurrency_ID + @")
                         THEN CURRENCYCONVERT(ORD.GrandTotal, ORD.C_CURRENCY_ID," + bnkCurrency_ID+", " + GlobalVariable.TO_DATE(stmtDate, true) + @", ORD.C_ConversionType_ID," + ctx.GetAD_Client_ID() + ", " + bnkOrg_ID + @") 
                         ELSE ORD.GrandTotal END GrandTotal
-                        FROM C_ORDER ORD
-                        INNER JOIN C_OrderLine ol ON ORD.C_ORDER_ID=ol.C_ORDER_ID
-                        INNER JOIN C_DOCTYPE DT ON ORD.C_DocTypeTarget_ID=dt.C_DocType_ID WHERE ORD.IsActive='Y' AND ORD.C_ORDER_ID IN (" + recordIds + ")";
+                        FROM C_Order ORD
+                        INNER JOIN C_OrderLine ol ON (ORD.C_ORDER_ID=ol.C_ORDER_ID)
+                        INNER JOIN C_DocType DT ON (ORD.C_DocTypeTarget_ID=dt.C_DocType_ID) WHERE ORD.IsActive='Y' AND ORD.C_ORDER_ID IN (" + recordIds + ")";
 
                 _ds = DB.ExecuteDataset(_sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
@@ -1783,6 +1863,7 @@ namespace VA012.Models
         /// <returns></returns>
         public List<ConcileStatement> LoadConciledOrUnConciledStatements(Ctx ctx, int cmbBankAccount, string txtSearch, int currencyID, bool _searchRequest)
         {
+            //TableNames are Case Sensitive when Applied a MRole
             string _sqlCon = @"SELECT NVL(ROUND(SUM( 
              CASE 
              WHEN (BSL.C_PAYMENT_ID IS NOT NULL OR BSL.C_CHARGE_ID IS NOT NULL OR BSL.C_CASHLINE_ID IS NOT NULL) 
@@ -1813,33 +1894,33 @@ namespace VA012.Models
              ELSE BSL.StmtAmt 
              END) 
              END),NVL(CURR.StdPrecision,2)),0) AS UNRECONCILED,BCURR.ISO_CODE AS BASECURRENCY 
-              FROM C_BANKSTATEMENT BS
-               INNER JOIN C_BANKSTATEMENTLINE BSL
-              ON BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID
-              LEFT JOIN C_BPARTNER BP
-              ON BSL.C_BPARTNER_ID     =BP.C_BPARTNER_ID
-              LEFT JOIN C_CURRENCY CURR 
-              ON BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID 
+              FROM C_BankStatementLine BSL 
+               INNER JOIN C_BankStatement BS 
+              ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID)
+              LEFT JOIN C_BPartner BP
+              ON (BSL.C_BPARTNER_ID=BP.C_BPARTNER_ID)
+              LEFT JOIN C_Currency CURR 
+              ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID) 
              
-             INNER JOIN AD_CLIENTINFO CINFO  
-             ON CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID 
-             INNER JOIN C_ACCTSCHEMA AC 
-             ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID
-             LEFT JOIN C_CURRENCY BCURR
-             ON " + currencyID + @" =BCURR.C_CURRENCY_ID
-             LEFT JOIN C_CONVERSION_RATE CCR 
-             ON (CCR.C_CURRENCY_ID   =BSL.C_CURRENCY_ID 
-             AND CCR.ISACTIVE        ='Y' 
-             AND CCR.C_CURRENCY_TO_ID=" + currencyID + @"AND CCR.AD_CLIENT_ID    =BSL.AD_CLIENT_ID
-             AND CCR.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)
-             AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
+             INNER JOIN AD_ClientInfo CINFO  
+             ON (CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID) 
+             INNER JOIN C_AcctSchema AC 
+             ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID)
+             LEFT JOIN C_Currency BCURR
+             ON (" + currencyID + @" =BCURR.C_CURRENCY_ID)
+             LEFT JOIN C_Conversion_Rate CCR 
+             ON ((CCR.C_CURRENCY_ID   =BSL.C_CURRENCY_ID) 
+             AND CCR.ISACTIVE ='Y' 
+             AND (CCR.C_CURRENCY_TO_ID=" + currencyID + @") AND (CCR.AD_CLIENT_ID =BSL.AD_CLIENT_ID)
+             AND (CCR.AD_ORG_ID IN (BSL.AD_ORG_ID,0))
+             AND (SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO))
              
-             LEFT JOIN C_CONVERSION_RATE CCR1
-             ON (CCR1.C_CURRENCY_ID   =" + currencyID + @" AND CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID
-             AND CCR1.ISACTIVE        ='Y'
-             AND CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID 
-             AND CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0) 
-             AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) 
+             LEFT JOIN C_Conversion_Rate CCR1
+             ON ((CCR1.C_CURRENCY_ID   =" + currencyID + @") AND (CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID)
+             AND (CCR1.ISACTIVE        ='Y')
+             AND (CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID )
+             AND (CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0))
+             AND (SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)) 
              WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + cmbBankAccount + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
 
             if (cmbBankAccount > 0)
@@ -1858,7 +1939,8 @@ namespace VA012.Models
                     + " OR UPPER(BSL.TrxAmt) LIKE UPPER('%" + txtSearch + "%'))";
             }
             _sqlCon += " GROUP BY BCURR.ISO_CODE ,NVL(CURR.StdPrecision,2)";
-
+            //Applied a MRole Check
+            _sqlCon.Replace(_sqlCon.ToString(), MRole.GetDefault(ctx).AddAccessSQL(_sqlCon.ToString(), "BSL", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO));
             DataSet _ds = DB.ExecuteDataset(_sqlCon, null, null);
             List<ConcileStatement> _statements = new List<ConcileStatement>();
             //ConcileStatement conOrunconcile = new ConcileStatement();
@@ -2025,9 +2107,9 @@ namespace VA012.Models
                                   END
                                 END AS DueAmt, inv.C_Currency_ID, inv.C_ConversionType_ID
                                 FROM C_InvoicePaySchedule pay
-                                INNER JOIN C_Invoice inv ON pay.C_Invoice_ID = inv.C_Invoice_ID
-                                INNER JOIN C_DocType dt ON dt.C_DocType_ID = inv.C_DocType_ID
-                                LEFT JOIN C_CURRENCY BCURR ON " + _bankStatementLine.GetC_Currency_ID() + @" =BCURR.C_CURRENCY_ID WHERE pay.IsActive='Y' AND pay.C_InvoicePaySchedule_ID =" + payment_ID, null, null);
+                                INNER JOIN C_Invoice inv ON (pay.C_Invoice_ID = inv.C_Invoice_ID)
+                                INNER JOIN C_DocType dt ON (dt.C_DocType_ID = inv.C_DocType_ID)
+                                LEFT JOIN C_CURRENCY BCURR ON (" + _bankStatementLine.GetC_Currency_ID() + @" =BCURR.C_CURRENCY_ID) WHERE pay.IsActive='Y' AND pay.C_InvoicePaySchedule_ID =" + payment_ID, null, null);
 
                 if (data != null && data.Tables[0].Rows.Count > 0)
                 {
@@ -2046,7 +2128,7 @@ namespace VA012.Models
                           THEN CURRENCYCONVERT(ord.GrandTotal, ord.C_Currency_ID, bcurr.C_Currency_ID, " + GlobalVariable.TO_DATE(statementDetail._dtStatementDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, " + _bankStatementLine.GetAD_Org_ID() + @")
                         ELSE ROUND(ord.GrandTotal, NVL(bcurr.StdPrecision,2))
                         END AS GrandTotal, ord.C_Currency_ID, ord.C_ConversionType_ID 
-                        FROM C_Order ord LEFT JOIN C_Currency bcurr ON " + _bankStatementLine.GetC_Currency_ID() + @" = bcurr.C_Currency_ID WHERE ord.IsActive='Y' AND ord.C_Order_ID =" + payment_ID, null, null);
+                        FROM C_Order ord LEFT JOIN C_Currency bcurr ON (" + _bankStatementLine.GetC_Currency_ID() + @" = bcurr.C_Currency_ID) WHERE ord.IsActive='Y' AND ord.C_Order_ID =" + payment_ID, null, null);
 
                 if (data != null && data.Tables[0].Rows.Count > 0)
                 {
@@ -2067,7 +2149,7 @@ namespace VA012.Models
                             ELSE ROUND(csl.Amount * -1 ,NVL(bcurr.StdPrecision,2))
                             END AS Amount, csl.C_Currency_ID, csl.C_ConversionType_ID FROM C_CashLine csl
                             INNER JOIN C_Cash cs ON csl.C_Cash_ID = cs.C_Cash_ID 
-                            LEFT JOIN C_Currency bcurr ON " + _bankStatementLine.GetC_Currency_ID() + @" = bcurr.C_Currency_ID WHERE csl.IsActive='Y' AND csl.C_CashLine_ID =" + payment_ID, null, null);
+                            LEFT JOIN C_Currency bcurr ON (" + _bankStatementLine.GetC_Currency_ID() + @" = bcurr.C_Currency_ID) WHERE csl.IsActive='Y' AND csl.C_CashLine_ID =" + payment_ID, null, null);
 
                 if (data != null && data.Tables[0].Rows.Count > 0)
                 {
@@ -2162,14 +2244,14 @@ namespace VA012.Models
             bool _status = false;
             PaymentResponse _obj = new PaymentResponse();
 
-            _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) AS COUNT FROM C_BANKSTATEMENTLINE BSL INNER JOIN C_BANKSTATEMENT BS ON BS.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID  WHERE BS.DOCSTATUS!='VO' AND BSL.C_PAYMENT_ID=" + _dragPaymentID));
+            _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) AS COUNT FROM C_BankStatementLine BSL INNER JOIN C_BankStatement BS ON (BS.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID)  WHERE BS.DOCSTATUS!='VO' AND BSL.C_PAYMENT_ID=" + _dragPaymentID));
             if (_count > 0)
             {
                 _obj._status = "VA012_PaymentAlreadyMatchedOthrStatement";
                 return _obj;
 
             }
-            _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_PAYMENT_ID FROM C_BANKSTATEMENTLINE WHERE C_BANKSTATEMENTLINE_ID=" + _dragStatementID));
+            _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_PAYMENT_ID FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_ID=" + _dragStatementID));
             if (_count > 0)
             {
                 _obj._status = "VA012_StatementAlreadyMatchedOthrPayment";
@@ -2177,7 +2259,7 @@ namespace VA012.Models
             }
 
             _qry = @" SELECT C_BPARTNER_ID, STMTAMT, TRXAMT, TRXNO AS DESCRIPTION, StatementLineDate  
-                    FROM C_BANKSTATEMENTLINE
+                    FROM C_BankStatementLine
                     WHERE C_BANKSTATEMENTLINE_id      =" + _dragStatementID;
             _ds = DB.ExecuteDataset(_qry);
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
@@ -2213,13 +2295,13 @@ namespace VA012.Models
                         ELSE ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))
                       END AS TRXAMOUNT,
                         PAY.TrxNo, PAY.DateAcct
-                    FROM C_PAYMENT PAY
-                    INNER JOIN C_DOCTYPE DT
-                    ON DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID
-                    INNER JOIN C_BANKACCOUNT AC
-                    ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
-                    LEFT JOIN C_CURRENCY BCURR
-                    ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID
+                    FROM C_Payment PAY
+                    INNER JOIN C_DocType DT
+                    ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID)
+                    INNER JOIN C_BankAccount AC
+                    ON (AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID)
+                    LEFT JOIN C_Currency BCURR
+                    ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID)
                     WHERE C_PAYMENT_ID=" + _dragPaymentID;
 
             _ds1 = DB.ExecuteDataset(_qry);
@@ -2482,6 +2564,14 @@ namespace VA012.Models
             trx = null;
             return _lstObj;
         }
+
+        /// <summary>
+        /// Process the BankStatemnt
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_statementLinesList">List of StatementLines in string format</param>
+        /// <param name="_accountID">C_BankAccount_ID</param>
+        /// <returns></returns>
         public List<ProcessResponse> ProcessStatement(Ctx ctx, string _statementLinesList, int _accountID)
         {
             DataSet _ds = new DataSet();
@@ -2498,18 +2588,18 @@ namespace VA012.Models
             //                        FROM C_BANKSTATEMENTLINE BSLOUT WHERE C_BANKSTATEMENTLINE_ID IN(" + _statementLinesList + ")";
             string _sql = @"SELECT DISTINCT BSLOUT.C_BANKSTATEMENT_ID,
                               (SELECT COUNT(BSL.VA012_ISMATCHINGCONFIRMED)
-                              FROM C_BANKSTATEMENTLINE BSL
-                              WHERE BSL.C_BANKSTATEMENT_ID     =BSLOUT.C_BANKSTATEMENT_ID
+                              FROM C_BankStatementLine BSL
+                              WHERE BSL.C_BANKSTATEMENT_ID =BSLOUT.C_BANKSTATEMENT_ID
                               AND BSL.VA012_ISMATCHINGCONFIRMED='N'
                               ) AS UNCONFIRMED,
                               (SELECT COUNT(BSL.VA012_ISMATCHINGCONFIRMED)
-                              FROM C_BANKSTATEMENTLINE BSL
-                              WHERE BSL.C_BANKSTATEMENT_ID     =BSLOUT.C_BANKSTATEMENT_ID
+                              FROM C_BankStatementLine BSL
+                              WHERE BSL.C_BANKSTATEMENT_ID =BSLOUT.C_BANKSTATEMENT_ID
                               AND BSL.VA012_ISMATCHINGCONFIRMED='Y'
                               ) AS CONFIRMED
-                            FROM C_BANKSTATEMENT BSOUT
-                            INNER JOIN C_BANKSTATEMENTLINE BSLOUT
-                            ON BSLOUT.C_BANKSTATEMENT_ID=BSOUT.C_BANKSTATEMENT_ID
+                            FROM C_BankStatement BSOUT
+                            INNER JOIN C_BankStatementLine BSLOUT
+                            ON (BSLOUT.C_BANKSTATEMENT_ID=BSOUT.C_BANKSTATEMENT_ID)
                             WHERE BSOUT.ISACTIVE        ='Y'
                             AND BSOUT.DOCSTATUS NOT    IN ('CO','CL','VO')
                             AND BSOUT.C_BANKACCOUNT_ID =" + _accountID;
@@ -2538,12 +2628,15 @@ namespace VA012.Models
                             }
                             else if (Util.GetValueOfInt(_ds.Tables[0].Rows[i]["CONFIRMED"]) > 0)
                             {
-                                if (_bankStatement.CompleteIt() == "CO")
+                                //If Bank Statement Completed then return Empty else value
+                                string _msg = CompleteBankStatement(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BANKSTATEMENT_ID"]), 147, MBankStatement.DOCACTION_Complete);
+                                //if (_bankStatement.CompleteIt() == "CO")
+                                if (string.IsNullOrEmpty(_msg))
                                 {
-                                    _bankStatement.SetProcessed(true);
-                                    _bankStatement.SetDocAction(MBankStatement.DOCACTION_Close);
-                                    _bankStatement.SetDocStatus("CO");
-                                    _bankStatement.Save();
+                                    //_bankStatement.SetProcessed(true);
+                                    //_bankStatement.SetDocAction(MBankStatement.DOCACTION_Close);
+                                    //_bankStatement.SetDocStatus("CO");
+                                    //_bankStatement.Save();
 
                                     if (_obj._statementProcessed == null)
                                     {
@@ -2558,6 +2651,8 @@ namespace VA012.Models
                                 else
                                 {
                                     status = 0;
+                                    //error message get from the CompletBankStatement()
+                                    _obj._error = _msg;
                                     if (_obj._statementNotProcessed == null)
                                     {
                                         _obj._statementNotProcessed = _bankStatement.GetName();
@@ -2684,9 +2779,9 @@ namespace VA012.Models
                             FROM
                               (SELECT BS.C_BANKSTATEMENT_ID ,
                                 COUNT(BSL.C_BANKSTATEMENTLINE_ID) AS LINECOUNT
-                              FROM C_BANKSTATEMENT BS
-                              LEFT JOIN C_BANKSTATEMENTLINE BSL
-                              ON BS.C_BANKSTATEMENT_ID     = BSL.C_BANKSTATEMENT_ID
+                              FROM C_BankStatement BS
+                              LEFT JOIN C_BankStatementLine BSL
+                              ON (BS.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID)
                               WHERE BS.C_BANKSTATEMENT_ID IN (" + _statementHeader +
                             @")
                               GROUP BY BS.C_BANKSTATEMENT_ID
@@ -3037,30 +3132,30 @@ namespace VA012.Models
         {
             string _sql = "";
             //fetch the record count according to the BankAccount_Organization
-            int _bankOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + _cmbBankAccount));
+            int _bankOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _cmbBankAccount));
 
             _sql = "SELECT COUNT(*) AS Records "
-               + " FROM C_BANKSTATEMENT BS "
-               + " INNER JOIN C_BANKSTATEMENTLINE BSL "
-               + " ON BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID "
-               + " LEFT JOIN C_INVOICE INV "
-               + " ON BSL.C_INVOICE_ID = INV.C_INVOICE_ID "
-               + "  LEFT JOIN C_BPARTNER BP "
-               + "  ON BSL.C_BPARTNER_ID =BP.C_BPARTNER_ID "
-               + " LEFT JOIN C_CHARGE CHRG "
-               + " ON BSL.C_CHARGE_ID=CHRG.C_CHARGE_ID "
+               + " FROM C_BankStatement BS "
+               + " INNER JOIN C_BankStatementLine BSL "
+               + " ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID) "
+               + " LEFT JOIN C_Invoice INV "
+               + " ON (BSL.C_INVOICE_ID = INV.C_INVOICE_ID) "
+               + "  LEFT JOIN C_BPartner BP "
+               + "  ON (BSL.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
+               + " LEFT JOIN C_Charge CHRG "
+               + " ON (BSL.C_CHARGE_ID=CHRG.C_CHARGE_ID) "
               //+ " LEFT JOIN AD_IMAGE IMG "
               //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
-              + "  LEFT JOIN C_BP_GROUP BPG "
-              + " ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID "
-              + "  LEFT JOIN C_CURRENCY CURR "
-              + "  ON BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID "
-                + " INNER JOIN AD_CLIENTINFO CINFO  "
-                + " ON CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID  "
-                + " INNER JOIN C_ACCTSCHEMA AC  "
-                + " ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID  "
-                + " LEFT JOIN C_CURRENCY BCURR  "
-                + " ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID  "
+              + "  LEFT JOIN C_BP_Group BPG "
+              + " ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID) "
+              + "  LEFT JOIN C_Currency CURR "
+              + "  ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID) "
+                + " INNER JOIN AD_ClientInfo CINFO  "
+                + " ON (CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID)  "
+                + " INNER JOIN C_AcctSchema AC  "
+                + " ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID)  "
+                + " LEFT JOIN C_Currency BCURR  "
+                + " ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID)  "
 
             //+ " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
             + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS NOT IN ('VO','RE','CO','CL') AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
@@ -3083,6 +3178,8 @@ namespace VA012.Models
             #region Check Total Pages Count
             int _totalPageCount = 0;
             int _totalRecordCount = 0;
+            //Applied MRole Check
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "BSL", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
             _totalRecordCount = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
             _totalPageCount = Util.GetValueOfInt(Math.Ceiling((decimal)_totalRecordCount / _PAGESIZE));
             #endregion Check Total Pages Count
@@ -3106,34 +3203,34 @@ namespace VA012.Models
             int _totalRecordCount = 0;
             string _sql = "";
             //fetch the record count according to the BankAccount_Organization
-            int _bankOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + _accountID));
-
+            int _bankOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _accountID));
+            //TableNames are Case Sensitive when Applied a MRole
             if (_transactionType == "PY")
             {
                 _sql = " SELECT COUNT(*) AS Records"
-                   + " FROM C_PAYMENT PAY "
-                   + " LEFT JOIN C_BPARTNER BP "
-                   + " ON PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID "
+                   + " FROM C_Payment PAY "
+                   + " LEFT JOIN C_BPartner BP "
+                   + " ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
 
-                   + " LEFT JOIN C_BANKSTATEMENTLINE BSL "
-                   + " ON PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID "
+                   + " LEFT JOIN C_BankStatementLine BSL "
+                   + " ON (PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID) "
 
                    //+ " LEFT JOIN AD_IMAGE IMG "
                    //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
-                   + " LEFT JOIN C_BP_GROUP BPG "
-                   + " ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID "
-                   + " LEFT JOIN C_CURRENCY CURR "
-                   + " ON PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID "
-                     + " INNER JOIN C_BANKACCOUNT AC  "
-                      + " ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID  "
+                   + " LEFT JOIN C_BP_Group BPG "
+                   + " ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID) "
+                   + " LEFT JOIN C_Currency CURR "
+                   + " ON (PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID) "
+                     + " INNER JOIN C_BankAccount AC  "
+                      + " ON (AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID)  "
 
-                   + " LEFT JOIN VA009_PAYMENTMETHOD PM  "
+                   + " LEFT JOIN VA009_PaymentMethod PM  "
                    + " ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID ) "
 
-                   + " INNER JOIN C_DOCTYPE DT "
-                   + " ON DT.C_DOCTYPE_ID            =PAY.C_DOCTYPE_ID "
+                   + " INNER JOIN C_DocType DT "
+                   + " ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID) "
 
-                   + " WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID()
+                   + " WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL)"/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID()*/
                + " AND PAY.ISRECONCILED ='N' ";
 
 
@@ -3153,24 +3250,24 @@ namespace VA012.Models
             {
                 _sql = @" SELECT 
                               COUNT(*) AS Records
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV
-                            ON pay.C_INVOICE_id=inv.C_INVOICE_id
-                            LEFT JOIN C_BPARTNER BP
-                            ON inv.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                            --LEFT JOIN AD_IMAGE IMG
-                            --ON BP.PIC=IMG.AD_IMAGE_ID
-                            LEFT JOIN C_BP_GROUP BPG
-                            ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
-                            LEFT JOIN C_CURRENCY CURR
-                            ON inv.C_CURRENCY_ID =CURR.C_CURRENCY_ID
+                            FROM C_InvoicePaySchedule PAY
+                            INNER JOIN C_Invoice INV
+                            ON (pay.C_INVOICE_id=inv.C_INVOICE_id)
+                            LEFT JOIN C_BPartner BP
+                            ON (inv.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                            --LEFT JOIN AD_Image IMG
+                            --ON (BP.PIC=IMG.AD_IMAGE_ID)
+                            LEFT JOIN C_BP_Group BPG
+                            ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
+                            LEFT JOIN C_Currency CURR
+                            ON (inv.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
 
-                            INNER JOIN VA009_PAYMENTMETHOD PM  
+                            INNER JOIN VA009_PaymentMethod PM  
                             ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
-                            INNER JOIN C_DOCTYPE DT
-                            ON DT.C_DOCTYPE_ID            =INV.C_DOCTYPE_ID
+                            INNER JOIN C_DocType DT
+                            ON (DT.C_DOCTYPE_ID=INV.C_DOCTYPE_ID)
                             WHERE  pay.VA009_IsPaid='N'
-                            AND PAY.ISACTIVE      ='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B' AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                            AND PAY.ISACTIVE      ='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B'";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();*/
                 //filter the records based on Bank Organization not the context Org
                 if (_bankOrg_ID != 0)
                 {
@@ -3200,53 +3297,54 @@ namespace VA012.Models
             else if (_transactionType == "PO")
             {
                 _sql = @" SELECT COUNT(*) AS Records
-                        FROM C_ORDER ORD
-                        LEFT JOIN C_DOCTYPE DT
-                        ON ORD.C_DocTypeTarget_ID=dt.C_DocType_ID
-                        LEFT JOIN C_BPARTNER BP
-                        ON ord.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                        --LEFT JOIN AD_IMAGE IMG
-                        --ON BP.PIC=IMG.AD_IMAGE_ID
-                        LEFT JOIN C_BP_GROUP BPG
-                        ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
-                        LEFT JOIN C_CURRENCY CURR
-                        ON ord.C_CURRENCY_ID =CURR.C_CURRENCY_ID
+                        FROM C_Order PAY
+                        LEFT JOIN C_DocType DT
+                        ON (PAY.C_DocTypeTarget_ID=dt.C_DocType_ID)
+                        LEFT JOIN C_BPartner BP
+                        ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                        --LEFT JOIN AD_Image IMG
+                        --ON (BP.PIC=IMG.AD_IMAGE_ID)
+                        LEFT JOIN C_BP_Group BPG
+                        ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
+                        LEFT JOIN C_Currency CURR
+                        ON (PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
                        
 
-                        INNER JOIN VA009_PAYMENTMETHOD PM  
-                        ON (PM.VA009_PAYMENTMETHOD_ID   =ORD.VA009_PAYMENTMETHOD_ID )
+                        INNER JOIN VA009_PaymentMethod PM  
+                        ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
 
 
                         WHERE dt.DocSubTypeSO='PR'
-                        AND ORD.DOCSTATUS    ='WP'
-                            AND ORD.ISACTIVE      ='Y' AND PM.VA009_PAYMENTBASETYPE!='B' AND ORD.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
-                //filter the records based on Bank Organization not the context Org
+                        AND PAY.DOCSTATUS    ='WP'
+                            AND PAY.ISACTIVE      ='Y' AND PM.VA009_PAYMENTBASETYPE!='B'";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();*/
+                //filter the recPAYs based on Bank Organization not the context Org
                 if (_bankOrg_ID != 0)
                 {
-                    _sql += " AND ORD.AD_ORG_ID=" + _bankOrg_ID;
+                    _sql += " AND PAY.AD_ORG_ID=" + _bankOrg_ID;
                 }
                 if (_paymentMethodID > 0)
                 {
-                    _sql += " AND ORD.VA009_PAYMENTMETHOD_ID= " + _paymentMethodID;
+                    _sql += " AND PAY.VA009_PAYMENTMETHOD_ID= " + _paymentMethodID;
                 }
 
             }
             else if (_transactionType == "CO")
             {
                 _sql = @" SELECT COUNT(*) AS Records
-                        FROM C_CASH CS
-                        INNER JOIN C_CASHLINE CSL
-                        ON CS.C_CASH_ID=CSL.C_CASH_ID
-                        LEFT JOIN C_BPARTNER BP
-                        ON CSL.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                        --LEFT JOIN AD_IMAGE IMG
-                        --ON BP.PIC=IMG.AD_IMAGE_ID
-                        LEFT JOIN C_BP_GROUP BPG
-                        ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
-                        LEFT JOIN C_CURRENCY CURR
-                        ON CSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID
-                     WHERE CS.ISACTIVE   ='Y' AND CS.DOCSTATUS IN ('CO','CL') AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                    AND CSL.VA012_ISRECONCILED ='N' AND CSL.C_BANKACCOUNT_ID= " + _accountID;
+                        FROM C_Cash CS
+                        INNER JOIN C_CashLine PAY
+                        ON (CS.C_CASH_ID=PAY.C_CASH_ID)
+                        LEFT JOIN C_BPartner BP
+                        ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                        --LEFT JOIN AD_Image IMG
+                        --ON (BP.PIC=IMG.AD_IMAGE_ID)
+                        LEFT JOIN C_BP_Group BPG
+                        ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
+                        LEFT JOIN C_Currency CURR
+                        ON (PAY.C_CURRENCY_ID=CURR.C_CURRENCY_ID)
+                     WHERE CS.ISACTIVE   ='Y' AND CS.DOCSTATUS IN ('CO','CL')"
+                   //AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
+                   + " AND PAY.VA012_ISRECONCILED ='N' AND PAY.C_BANKACCOUNT_ID= " + _accountID;
                 //filter the records based on Bank Organization not the context Org
                 if (_bankOrg_ID != 0)
                 {
@@ -3254,6 +3352,8 @@ namespace VA012.Models
                 }
                 _sql += " ORDER BY CS.NAME";
             }
+            //Applied Check MRole
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "PAY", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
             _totalRecordCount = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
             _totalPageCount = Util.GetValueOfInt(Math.Ceiling((decimal)_totalRecordCount / _PAGESIZE));
             return _totalPageCount;
@@ -3276,7 +3376,7 @@ namespace VA012.Models
             //int _accountCurrencyID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + _accountID));
             int bankCurr_ID = 0;
             int bankOrg_ID = 0;
-            DataSet ds = DB.ExecuteDataset("SELECT C_CURRENCY_ID,AD_Org_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + _accountID);
+            DataSet ds = DB.ExecuteDataset("SELECT C_CURRENCY_ID,AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _accountID);
             if (ds != null && ds.Tables[0].Rows.Count > 0)
             {
                 bankCurr_ID = Util.GetValueOfInt(ds.Tables[0].Rows[0]["C_Currency_ID"]);
@@ -3287,7 +3387,8 @@ namespace VA012.Models
 
             //
             string _sql = "";
-            int _CountVA034 = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(AD_MODULEINFO_ID) FROM AD_MODULEINFO WHERE PREFIX='VA034_' AND IsActive='Y'"));
+            int _CountVA034 = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(AD_MODULEINFO_ID) FROM AD_ModuleInfo WHERE PREFIX='VA034_' AND IsActive='Y'"));
+            //TableNames are Case Sensitive when Applied a MRole
             if (_transactionType == "PY")
             {
 
@@ -3339,34 +3440,34 @@ namespace VA012.Models
                     + "  CASE WHEN dt.docbasetype IN ('APP')   THEN 'Payment'   WHEN dt.docbasetype IN ('ARR')   THEN 'Receipt'   END AS PaymentType ,"
                     + " BS.DocStatus AS DocStatus ,"
                    + " PAY.TrxNo , PM.VA009_Name, pay.DateAcct "
-                    + " FROM C_PAYMENT PAY "
-                   + " LEFT JOIN C_BPARTNER BP "
-                   + " ON PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID "
+                    + " FROM C_Payment PAY "
+                   + " LEFT JOIN C_BPartner BP "
+                   + " ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
 
-                   + " LEFT JOIN C_BANKSTATEMENTLINE BSL "
-                   + " ON (PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID AND 'VO' <> (SELECT NVL(DocStatus, 'XX') FROM C_BANKSTATEMENT BST WHERE BST.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID)) "
+                   + " LEFT JOIN C_BankStatementLine BSL "
+                   + " ON ((PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID) AND 'VO' <> (SELECT NVL(DocStatus, 'XX') FROM C_BankStatement BST WHERE BST.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID)) "
 
-                   + " LEFT JOIN C_BANKSTATEMENT BS "
+                   + " LEFT JOIN C_BankStatement BS "
                    + " ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID) "
 
 
-                   + " LEFT JOIN C_BP_GROUP BPG "
-                   + " ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID "
-                   + " LEFT JOIN C_CURRENCY CURR "
-                   + " ON PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID "
+                   + " LEFT JOIN C_BP_Group BPG "
+                   + " ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID) "
+                   + " LEFT JOIN C_Currency CURR "
+                   + " ON (PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID) "
 
-                     + " INNER JOIN C_BANKACCOUNT AC  "
-                      + " ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID  "
-                   + " LEFT JOIN C_CURRENCY BCURR  "
-                   + " ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID  "
+                     + " INNER JOIN C_BankAccount AC  "
+                      + " ON (AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID)  "
+                   + " LEFT JOIN C_Currency BCURR  "
+                   + " ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID)  "
 
-                   + " LEFT JOIN VA009_PAYMENTMETHOD PM  "
+                   + " LEFT JOIN VA009_PaymentMethod PM  "
                    + " ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID ) "
 
-                   + " INNER JOIN C_DOCTYPE DT "
-                   + " ON DT.C_DOCTYPE_ID            =PAY.C_DOCTYPE_ID "
+                   + " INNER JOIN C_DocType DT "
+                   + " ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID) "
 
-                   + " WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE IS NULL) AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID()
+                   + " WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE IS NULL)"/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID()*/
                + " AND PAY.ISRECONCILED ='N' ";
 
 
@@ -3442,32 +3543,32 @@ namespace VA012.Models
                              END AS PaymentType,
                              'CO' AS DocStatus ,
                             ' ' as TrxNo , PM.VA009_Name, INV.DateAcct, PAY.DueDate
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV
-                            ON pay.C_INVOICE_id=inv.C_INVOICE_id
-                            LEFT JOIN C_BPARTNER BP
-                            ON inv.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                           /* --LEFT JOIN AD_IMAGE IMG
-                            -- ON BP.PIC=IMG.AD_IMAGE_ID*/
-                            LEFT JOIN C_BP_GROUP BPG
-                            ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
-                            LEFT JOIN C_CURRENCY CURR
-                            ON inv.C_CURRENCY_ID =CURR.C_CURRENCY_ID
-                            /*--INNER JOIN AD_CLIENTINFO CINFO
-                            --ON CINFO.AD_CLIENT_ID =PAY.AD_CLIENT_ID
-                            --INNER JOIN C_ACCTSCHEMA AC
-                            --ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID
-                            --LEFT JOIN C_CURRENCY BCURR
-                            --ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID*/
-                            LEFT JOIN C_CURRENCY BCURR
-                            ON " + bankCurr_ID + @" =BCURR.C_CURRENCY_ID
+                            FROM C_InvoicePaySchedule PAY
+                            INNER JOIN C_Invoice INV
+                            ON (pay.C_INVOICE_id=inv.C_INVOICE_id)
+                            LEFT JOIN C_BPartner BP
+                            ON (inv.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                           /* --LEFT JOIN AD_Image IMG
+                            -- ON (BP.PIC=IMG.AD_IMAGE_ID)*/
+                            LEFT JOIN C_BP_Group BPG
+                            ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
+                            LEFT JOIN C_Currency CURR
+                            ON (inv.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
+                            /*--INNER JOIN AD_ClientInfo CINFO
+                            --ON (CINFO.AD_CLIENT_ID =PAY.AD_CLIENT_ID)
+                            --INNER JOIN C_AcctSchema AC
+                            --ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID)
+                            --LEFT JOIN C_Currency BCURR
+                            --ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID) */
+                            LEFT JOIN C_Currency BCURR
+                            ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
 
-                            INNER JOIN VA009_PAYMENTMETHOD PM  
+                            INNER JOIN VA009_PaymentMethod PM  
                             ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
-                            INNER JOIN C_DOCTYPE DT
-                            ON DT.C_DOCTYPE_ID            =INV.C_DOCTYPE_ID
+                            INNER JOIN C_DocType DT
+                            ON (DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID)
                             WHERE  pay.VA009_IsPaid='N'
-                            AND PAY.ISACTIVE      ='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B' AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                            AND PAY.ISACTIVE      ='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B'";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();*/
 
 
 
@@ -3505,93 +3606,93 @@ namespace VA012.Models
             }
             else if (_transactionType == "PO")
             {
-                _sql = @" SELECT ord.C_order_id AS C_PAYMENT_ID,
+                _sql = @" SELECT PAY.C_order_id AS C_PAYMENT_ID,
                           CURR.ISO_CODE       AS CURRENCY,
-                          ord.DOCUMENTNO      AS PAYMENTNO,
-                          ord.C_BPARTNER_ID ,
+                          PAY.DOCUMENTNO      AS PAYMENTNO,
+                          PAY.C_BPARTNER_ID ,
                           BP.NAME        AS BUSINESSPARTNER,
-                          ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
+                          ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
                           --BPG.NAME       AS BPGROUP,
                           --IMG.AD_IMAGE_ID ,
                           BCURR.ISO_CODE AS BASECURRENCY,
                           CASE
-                            WHEN(ord.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                             THEN CURRENCYCONVERT(ord.GrandTotal, ord.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, ord.DateAcct, ord.C_ConversionType_ID, ord.AD_Client_ID, ord.AD_Org_ID) 
-                            ELSE ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2))
+                            WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                             THEN CURRENCYCONVERT(PAY.GrandTotal, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, PAY.DateAcct, PAY.C_ConversionType_ID, PAY.AD_Client_ID, PAY.AD_Org_ID) 
+                            ELSE ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2))
                           END AS CONVERTEDAMOUNT,
                           CASE
-                            WHEN(ord.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                            WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
                             THEN 'Y'
                             ELSE 'N'
                           END AS ISCONVERTED,
                         0 as C_BANKSTATEMENTLINE_ID,'Receipt' AS PaymentType,
                         'CO' AS DocStatus ,
-                        ' ' as TrxNo , PM.VA009_Name, ORD.DateAcct
-                        FROM C_ORDER ORD
-                        LEFT JOIN C_DOCTYPE DT
-                        ON ORD.C_DocTypeTarget_ID=dt.C_DocType_ID
-                        LEFT JOIN C_BPARTNER BP
-                        ON ord.C_BPARTNER_ID =BP.C_BPARTNER_ID
-                        --LEFT JOIN AD_IMAGE IMG
-                        --ON BP.PIC=IMG.AD_IMAGE_ID
-                        LEFT JOIN C_BP_GROUP BPG
-                        ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
-                        LEFT JOIN C_CURRENCY CURR
-                        ON ord.C_CURRENCY_ID =CURR.C_CURRENCY_ID
-                        LEFT JOIN C_CURRENCY BCURR
-                        ON " + bankCurr_ID + @" =BCURR.C_CURRENCY_ID
+                        ' ' as TrxNo , PM.VA009_Name, PAY.DateAcct
+                        FROM C_Order PAY
+                        LEFT JOIN C_DocType DT
+                        ON (PAY.C_DocTypeTarget_ID=dt.C_DocType_ID)
+                        LEFT JOIN C_BPartner BP
+                        ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                        --LEFT JOIN AD_Image IMG
+                        --ON (BP.PIC=IMG.AD_IMAGE_ID)
+                        LEFT JOIN C_BP_Group BPG
+                        ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
+                        LEFT JOIN C_Currency CURR
+                        ON (PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
+                        LEFT JOIN C_Currency BCURR
+                        ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
                      
-                        INNER JOIN VA009_PAYMENTMETHOD PM  
-                        ON (PM.VA009_PAYMENTMETHOD_ID   =ORD.VA009_PAYMENTMETHOD_ID )
+                        INNER JOIN VA009_PaymentMethod PM  
+                        ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
 
 
                         WHERE dt.DocSubTypeSO='PR'
-                        AND ORD.DOCSTATUS    ='WP'
-                            AND ORD.ISACTIVE      ='Y' AND PM.VA009_PAYMENTBASETYPE!='B' AND ORD.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                        AND PAY.DOCSTATUS    ='WP'
+                            AND PAY.ISACTIVE      ='Y' AND PM.VA009_PAYMENTBASETYPE!='B'";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();*/
                 if (bankOrg_ID != 0)
                 {
-                    _sql += " AND ORD.AD_ORG_ID=" + bankOrg_ID;
+                    _sql += " AND PAY.AD_ORG_ID=" + bankOrg_ID;
                 }
 
                 if (_paymentMethodID > 0)
                 {
-                    _sql += " AND ORD.VA009_PAYMENTMETHOD_ID= " + _paymentMethodID;
+                    _sql += " AND PAY.VA009_PAYMENTMETHOD_ID= " + _paymentMethodID;
                 }
                 //append statement date if it is not null
                 if (statementDate != null)
                 {
-                    _sql += " AND ORD.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
+                    _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
-                _sql += " ORDER BY ord.DOCUMENTNO";
+                _sql += " ORDER BY PAY.DOCUMENTNO";
 
             }
             else if (_transactionType == "CO")
             {
-                _sql = @" SELECT CSL.C_CASHLINE_ID AS C_PAYMENT_ID,
+                _sql = @" SELECT PAY.C_CASHLINE_ID AS C_PAYMENT_ID,
                             CURR.ISO_CODE          AS CURRENCY,
                             CS.DOCUMENTNO          AS PAYMENTNO,
-                            csl.C_BPARTNER_ID ,
+                            PAY.C_BPARTNER_ID ,
                               CASE
-                            WHEN csl.C_BPARTNER_ID IS NOT NULL
+                            WHEN PAY.C_BPARTNER_ID IS NOT NULL
                             THEN BP.NAME
                             ELSE cs.NAME
                           END                                         AS BUSINESSPARTNER,
-                            ROUND(CSL.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
+                            ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
                             --BPG.NAME                                    AS BPGROUP,
                             --IMG.AD_IMAGE_ID ,
                             BCURR.ISO_CODE AS BASECURRENCY,
                             CASE
-                            WHEN(CSL.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
-                            THEN CURRENCYCONVERT(CSL.AMOUNT * -1, CSL.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, CS.DateAcct, CSL.C_ConversionType_ID, CS.AD_Client_ID, CS.AD_Org_ID) 
-                            ELSE ROUND(CSL.AMOUNT * -1 ,NVL(BCURR.StdPrecision,2))
+                            WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                            THEN CURRENCYCONVERT(PAY.AMOUNT * -1, PAY.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, CS.DateAcct, PAY.C_ConversionType_ID, CS.AD_Client_ID, CS.AD_Org_ID) 
+                            ELSE ROUND(PAY.AMOUNT * -1 ,NVL(BCURR.StdPrecision,2))
                             END AS CONVERTEDAMOUNT,
                             CASE
-                            WHEN(csl.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
+                            WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
                             THEN 'Y'
                             ELSE 'N'
                             END AS ISCONVERTED,
                             BSL.C_BANKSTATEMENTLINE_ID,
-                            CASE csl.VSS_PAYMENTTYPE
+                            CASE PAY.VSS_PAYMENTTYPE
                             WHEN 'P'
                             THEN 'Receipt'
                             WHEN 'R'
@@ -3599,34 +3700,34 @@ namespace VA012.Models
                             END AS PaymentType,
                             BS.DocStatus AS DocStatus ,
                               ' '  as TrxNo , '' as VA009_Name, CS.DateAcct
-                        FROM C_CASH CS
-                        INNER JOIN C_CASHLINE CSL
-                        ON CS.C_CASH_ID=CSL.C_CASH_ID
-                        INNER JOIN c_charge chrg
-                        ON chrg.c_charge_id=csl.c_charge_id
-                        LEFT JOIN C_BPARTNER BP
-                        ON CSL.C_BPARTNER_ID =BP.C_BPARTNER_ID
+                        FROM C_Cash CS
+                        INNER JOIN C_CashLine PAY
+                        ON (CS.C_CASH_ID=PAY.C_CASH_ID)
+                        INNER JOIN C_Charge chrg
+                        ON (chrg.c_charge_id=PAY.c_charge_id)
+                        LEFT JOIN C_BPartner BP
+                        ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
 
-                         LEFT JOIN C_BANKSTATEMENTLINE BSL 
-                         ON (CSL.C_CASHLINE_ID =BSL.C_CASHLINE_ID AND 'VO' <> (SELECT NVL(DocStatus, 'XX') FROM C_BANKSTATEMENT BST WHERE BST.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID))
+                         LEFT JOIN C_BankStatementLine BSL 
+                         ON ((PAY.C_CASHLINE_ID =BSL.C_CASHLINE_ID) AND 'VO' <> (SELECT NVL(DocStatus, 'XX') FROM C_BankStatement BST WHERE BST.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID))
 
-                         LEFT JOIN C_BANKSTATEMENT BS 
+                         LEFT JOIN C_BankStatement BS 
                          ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID)
 
-                        --LEFT JOIN AD_IMAGE IMG
-                        --ON BP.PIC=IMG.AD_IMAGE_ID
-                        LEFT JOIN C_BP_GROUP BPG
-                        ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID
-                        LEFT JOIN C_CURRENCY CURR
-                        ON CSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID
-                        LEFT JOIN C_CURRENCY BCURR
-                        ON " + bankCurr_ID + @" =BCURR.C_CURRENCY_ID
+                        --LEFT JOIN AD_Image IMG
+                        --ON (BP.PIC=IMG.AD_IMAGE_ID)
+                        LEFT JOIN C_BP_Group BPG
+                        ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
+                        LEFT JOIN C_Currency CURR
+                        ON (PAY.C_CURRENCY_ID=CURR.C_CURRENCY_ID)
+                        LEFT JOIN C_Currency BCURR
+                        ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
                        
                      WHERE CS.ISACTIVE   ='Y' 
-                        AND CSL.CashType           ='C'
+                        AND PAY.CashType           ='C'
                         AND chrg.dtd001_chargetype ='CON'                        
-                        AND CS.DOCSTATUS IN ('CO','CL') AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                    AND CSL.VA012_ISRECONCILED ='N' AND CSL.C_BANKACCOUNT_ID= " + _accountID;
+                        AND CS.DOCSTATUS IN ('CO','CL')"/* AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"*/
+                    + " AND PAY.VA012_ISRECONCILED ='N' AND PAY.C_BANKACCOUNT_ID= " + _accountID;
 
                 if (bankOrg_ID != 0)
                 {
@@ -3645,6 +3746,8 @@ namespace VA012.Models
             DataSet _ds = new DataSet();
             try
             {
+                //Applied Check MRole
+                _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "PAY", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
                 _ds = VIS.DBase.DB.ExecuteDatasetPaging(_sql, _paymentPageNo, _PAGESIZE);
                 if (_ds != null)
                 {
@@ -3794,48 +3897,48 @@ namespace VA012.Models
                 + " ELSE 'N' "
                 + " END AS ISCONVERTED, "
                 + "  INV.DOCUMENTNO AS INVOICENO,BS.C_BANKSTATEMENT_ID,BS.DOCSTATUS,BSL.C_CASHLINE_ID, BSL.TRXNO, BSL.StatementLineDate "
-               + " FROM C_BANKSTATEMENT BS "
-               + " INNER JOIN C_BANKSTATEMENTLINE BSL "
-               + " ON BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID "
-               + " LEFT JOIN C_INVOICE INV "
-               + " ON BSL.C_INVOICE_ID = INV.C_INVOICE_ID "
-               + "  LEFT JOIN C_BPARTNER BP "
-               + "  ON BSL.C_BPARTNER_ID =BP.C_BPARTNER_ID "
-               + " LEFT JOIN C_CHARGE CHRG "
-               + " ON BSL.C_CHARGE_ID=CHRG.C_CHARGE_ID "
+               + " FROM C_BankStatementLine BSL "
+               + " INNER JOIN C_BankStatement BS "
+               + " ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID) "
+               + " LEFT JOIN C_Invoice INV "
+               + " ON (BSL.C_INVOICE_ID = INV.C_INVOICE_ID) "
+               + "  LEFT JOIN C_BPartner BP "
+               + "  ON (BSL.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
+               + " LEFT JOIN C_Charge CHRG "
+               + " ON (BSL.C_CHARGE_ID=CHRG.C_CHARGE_ID) "
 
-                + " LEFT JOIN C_PAYMENT PAY "
-               + " ON BSL.C_PAYMENT_ID=PAY.C_PAYMENT_ID "
+                + " LEFT JOIN C_Payment PAY "
+               + " ON (BSL.C_PAYMENT_ID=PAY.C_PAYMENT_ID) "
 
               //+ " LEFT JOIN AD_IMAGE IMG "
               //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
-              + "  LEFT JOIN C_BP_GROUP BPG "
-              + " ON BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID "
-              + "  LEFT JOIN C_CURRENCY CURR "
-              + "  ON BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID "
-                + " INNER JOIN AD_CLIENTINFO CINFO  "
-                + " ON CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID  "
-                + " INNER JOIN C_ACCTSCHEMA AC  "
-                + " ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID  "
-                + " LEFT JOIN C_CURRENCY BCURR  "
-                + " ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID  "
-                //+ " LEFT JOIN C_CONVERSION_RATE CCR  "
-                //+ " ON (CCR.C_CURRENCY_ID   =BSL.C_CURRENCY_ID  "
-                //+ " AND CCR.ISACTIVE        ='Y'  "
-                //+ " AND CCR.C_CURRENCY_TO_ID=AC.C_CURRENCY_ID  "
-                // + "  AND CCR.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
-                // + "  AND CCR.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)  "
-                //+ " AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)  "
+              + "  LEFT JOIN C_BP_Group BPG "
+              + " ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID) "
+              + "  LEFT JOIN C_Currency CURR "
+              + "  ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID) "
+                + " INNER JOIN AD_ClientInfo CINFO  "
+                + " ON (CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID)  "
+                + " INNER JOIN C_AcctSchema AC  "
+                + " ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID)  "
+                + " LEFT JOIN C_Currency BCURR  "
+                + " ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID)  "
+              //+ " LEFT JOIN C_CONVERSION_RATE CCR  "
+              //+ " ON (CCR.C_CURRENCY_ID   =BSL.C_CURRENCY_ID  "
+              //+ " AND CCR.ISACTIVE        ='Y'  "
+              //+ " AND CCR.C_CURRENCY_TO_ID=AC.C_CURRENCY_ID  "
+              // + "  AND CCR.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
+              // + "  AND CCR.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)  "
+              //+ " AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)  "
 
-                //+ " LEFT JOIN C_CONVERSION_RATE CCR1 "
-                //+ " ON (CCR1.C_CURRENCY_ID   =AC.C_CURRENCY_ID "
-                //+ " AND CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID "
-                //+ " AND CCR1.ISACTIVE        ='Y' "
-                //  + "  AND CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
-                // + "  AND CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)  "
-                //+ " AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) "
-                //Consider RE, CL(Reverse & Completed) into DocStatus
-              + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS NOT IN ('RE','VO','CO','CL') AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+              //+ " LEFT JOIN C_CONVERSION_RATE CCR1 "
+              //+ " ON (CCR1.C_CURRENCY_ID   =AC.C_CURRENCY_ID "
+              //+ " AND CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID "
+              //+ " AND CCR1.ISACTIVE        ='Y' "
+              //  + "  AND CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
+              // + "  AND CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0)  "
+              //+ " AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) "
+              //Consider RE, CL(Reverse & Completed) into DocStatus
+              + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS NOT IN ('RE','VO','CO','CL')";/* AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();*/
             // + "  WHERE BS.C_BANKSTATEMENT_ID IN (" + _statementID + ")";
 
             int org_Id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND C_BankAccount_ID=" + _cmbBankAccount, null, null));
@@ -3862,7 +3965,8 @@ namespace VA012.Models
             try
             {
 
-
+                //Applied Check MRole
+                _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "BSL", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
                 _ds = VIS.DBase.DB.ExecuteDatasetPaging(_sql, _statementPageNo, _PAGESIZE);
 
                 //_ds = DB.ExecuteDataset(_sql);
@@ -3945,6 +4049,13 @@ namespace VA012.Models
         //    //VAdvantage.Process.BankStatementPayment _obj = new VAdvantage.Process.BankStatementPayment();
         //    ////return _obj.CreatePayment(new MBankStatementLine(ctx, _bankStatementLineID, null));
         //}
+
+        /// <summary>
+        /// Get the Charge
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="searchText">Seartch text</param>
+        /// <returns>List of Charge</returns>
         public List<ChargeProp> GetCharge(Ctx ctx, string searchText)
         {
             List<ChargeProp> _lstcharge = new List<ChargeProp>();
@@ -3984,7 +4095,7 @@ namespace VA012.Models
                 _docBaseType = "APP";
             }
             //Used Order By clause and DESC command to get the C_DocType_ID for non zero AD_Org_ID
-            return Util.GetValueOfInt(DB.ExecuteScalar("Select  dt.c_doctype_id  From C_doctype DT inner join c_docbasetype DBT On dt.docbasetype=dbt.docbasetype where dbt.docbasetype='" + _docBaseType + "' AND dt.IsActive = 'Y' AND (DT.ad_org_id = " + org_Id + " or  DT.ad_org_id = 0) AND DT.AD_Client_ID = " + ctx.GetAD_Client_ID() + " ORDER BY DT.AD_Org_ID DESC"));
+            return Util.GetValueOfInt(DB.ExecuteScalar("SELECT  dt.c_doctype_id  FROM C_DocType dt INNER JOIN C_DocBaseType dbt ON (dt.docbasetype=dbt.docbasetype) WHERE dbt.docbasetype='" + _docBaseType + "' AND dt.IsActive = 'Y' AND (dt.ad_org_id = " + org_Id + " or  dt.ad_org_id = 0) AND dt.AD_Client_ID = " + ctx.GetAD_Client_ID() + " ORDER BY dt.AD_Org_ID DESC"));
         }
 
         /// <summary>
@@ -4007,11 +4118,11 @@ namespace VA012.Models
             }
             //Used Order By clause and DESC command to get the C_DocType_ID for non zero AD_Org_ID
             //not required MIN() aggregate func handled for to run in POSTGRE SQL also
-            return Util.GetValueOfInt(DB.ExecuteScalar("SELECT  dt.c_doctype_id FROM C_doctype DT INNER JOIN c_docbasetype DBT ON dt.docbasetype=dbt.docbasetype WHERE dbt.docbasetype='" + docBaseType + "' AND dt.IsActive = 'Y' AND (DT.ad_org_id = " + org_Id + " or  DT.ad_org_id = 0) AND DT.AD_Client_ID = " + ctx.GetAD_Client_ID() + " ORDER BY DT.AD_Org_ID DESC"));
+            return Util.GetValueOfInt(DB.ExecuteScalar("SELECT  dt.c_doctype_id FROM C_DocType dt INNER JOIN C_DocBaseType dbt ON (dt.docbasetype=dbt.docbasetype) WHERE dbt.docbasetype='" + docBaseType + "' AND dt.IsActive = 'Y' AND (dt.ad_org_id = " + org_Id + " or  DT.ad_org_id = 0) AND dt.AD_Client_ID = " + ctx.GetAD_Client_ID() + " ORDER BY dt.AD_Org_ID DESC"));
         }
         public int GetCurrencyType()
         {
-            return Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CONVERSIONTYPE_ID FROM C_CONVERSIONTYPE WHERE VALUE='S'"));
+            return Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CONVERSIONTYPE_ID FROM C_ConversionType WHERE VALUE='S'"));
         }
 
         /// <summary>
@@ -4036,9 +4147,9 @@ namespace VA012.Models
 
                 _sql = @"SELECT COUNT(*)
                             FROM
-                              (SELECT PAY.C_INVOICEPAYSCHEDULE_ID FROM C_PAYMENT PAY WHERE PAY.DOCSTATUS NOT IN ('VO','RE')
+                              (SELECT PAY.C_INVOICEPAYSCHEDULE_ID FROM C_Payment PAY WHERE PAY.DOCSTATUS NOT IN ('VO','RE')
                               UNION
-                              SELECT PA.C_INVOICEPAYSCHEDULE_ID FROM C_PAYMENTALLOCATE PA INNER JOIN C_PAYMENT PAY ON PAY.C_PAYMENT_ID      =PA.C_PAYMENT_ID WHERE PAY.DOCSTATUS NOT IN ('VO','RE')
+                              SELECT PA.C_INVOICEPAYSCHEDULE_ID FROM C_PaymentAllocate PA INNER JOIN C_Payment PAY ON (PAY.C_PAYMENT_ID =PA.C_PAYMENT_ID) WHERE PAY.DOCSTATUS NOT IN ('VO','RE')
                               )t
                             WHERE C_INVOICEPAYSCHEDULE_ID IN(" + _formData[0]._scheduleList + ")";
 
@@ -4064,13 +4175,13 @@ namespace VA012.Models
 
                                     PAY.C_INVOICE_ID,PAY.VA009_PAYMENTMETHOD_ID,PAY.C_INVOICEPAYSCHEDULE_ID,
                                PAY.AD_ORG_ID,PAY.AD_CLIENT_ID, dt.DOCBASETYPE, INV.C_BPartner_Location_ID
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV
-                            ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID
-                            INNER JOIN C_Doctype dt
-                            ON dt.C_Doctype_id = INV.c_doctype_id
-                            LEFT JOIN C_CURRENCY BCURR
-                            ON " + _formData[0]._txtCurrency + @" =BCURR.C_CURRENCY_ID 
+                            FROM C_InvoicePaySchedule PAY
+                            INNER JOIN C_Invoice INV
+                            ON (PAY.C_INVOICE_ID=INV.C_INVOICE_ID)
+                            INNER JOIN C_DocType dt
+                            ON (dt.C_Doctype_id = INV.c_doctype_id)
+                            LEFT JOIN C_Currency BCURR
+                            ON (" + _formData[0]._txtCurrency + @" =BCURR.C_CURRENCY_ID) 
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _formData[0]._scheduleList + ")";
                 // Trx trx = Trx.Get("VA012_PaymentCreate" + System.DateTime.Now.Ticks);
                 _ds = DB.ExecuteDataset(_sql.ToString(), null, _trx);
@@ -4598,11 +4709,11 @@ namespace VA012.Models
             {
                 if (Util.GetValueOfInt(_formData[0]._ctrlOrder) > 0)
                 {
-                    _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_ORDER WHERE C_ORDER_ID=" + _formData[0]._ctrlOrder));
+                    _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_Order WHERE C_ORDER_ID=" + _formData[0]._ctrlOrder));
                 }
                 if (_paymentMethodID <= 0)
                 {
-                    _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                    _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPartner WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
                 }
 
                 //get Bpartner Location
@@ -4705,7 +4816,7 @@ namespace VA012.Models
             {
                 //based on txtAmout get the PaymentMethod with respective column
                 string payMethod_ID = _formData[0]._txtAmount >= 0 ? "VA009_PAYMENTMETHOD_ID" : "VA009_PO_PaymentMethod_ID";
-                _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT " + payMethod_ID + " FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT " + payMethod_ID + " FROM CBPartner WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
                 //if PaymentMethod_ID is zero it will return a message not do the Payment
                 if (_paymentMethodID == 0)
                 {
@@ -4939,11 +5050,11 @@ namespace VA012.Models
             int _currency_Id = 0;
             int _conversionType_Id = 0;
 
-            int _accountCurrencyID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + accountID));
+            int _accountCurrencyID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + accountID));
 
             if (_dragDestinationID == 0)
             {
-                int _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) AS COUNT FROM C_BANKSTATEMENTLINE BSL INNER JOIN C_BANKSTATEMENT BS ON BS.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID  WHERE BS.DOCSTATUS!='VO' AND BSL.C_PAYMENT_ID IN(" + _dragSourceID + ")"));
+                int _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) AS COUNT FROM C_BankStatementLine BSL INNER JOIN C_BankStatement BS ON (BS.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID)  WHERE BS.DOCSTATUS!='VO' AND BSL.C_PAYMENT_ID IN(" + _dragSourceID + ")"));
                 if (_count > 0)
                 {
                     _obj._status = "VA012_PaymentAlreadyMatchedOthrStatement";
@@ -4969,17 +5080,17 @@ namespace VA012.Models
                             THEN PAY.PAYAMT*-1
                             END
                         END AS AMOUNT, PAY.C_Currency_ID, PAY.C_ConversionType_ID
-                    FROM C_PAYMENT PAY
-                    INNER JOIN C_DOCTYPE DT
-                    ON DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID
-                    INNER JOIN C_BANKACCOUNT AC
-                    ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
+                    FROM C_Payment PAY
+                    INNER JOIN C_DocType DT
+                    ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID)
+                    INNER JOIN C_BankAccount AC
+                    ON (AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID)
 
-                    LEFT JOIN C_BANKSTATEMENTLINE BSL 
-                    ON PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID 
+                    LEFT JOIN C_BankStatementLine BSL 
+                    ON (PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID)
 
-                    LEFT JOIN C_CURRENCY BCURR
-                    ON " + _accountCurrencyID + @" =BCURR.C_CURRENCY_ID
+                    LEFT JOIN C_Currency BCURR
+                    ON (" + _accountCurrencyID + @" =BCURR.C_CURRENCY_ID)
                    WHERE PAY.C_PAYMENT_ID=" + _dragSourceID;
                 DataSet _ds = DB.ExecuteDataset(_sql);
                 //get Currency and ConversionRateType also with PaymentAmount
@@ -5041,7 +5152,7 @@ namespace VA012.Models
                 //Compare the StatementLine Date with DueDate of the Schedule and StatementLineDate Can't less than the DueDate
                 if (int.TryParse(_listToCheck, out int _scheduleId))
                 {
-                    DateTime? _stmtDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT StatementLineDate FROM C_BANKSTATEMENTLINE WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
+                    DateTime? _stmtDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT StatementLineDate FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
                     DateTime? _dueDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT DueDate FROM C_InvoicePaySchedule WHERE C_InvoicePaySchedule_ID =" + _scheduleId));
                     if (_stmtDate < _dueDate)
                     {
@@ -5050,8 +5161,8 @@ namespace VA012.Models
                 }
                 try
                 {
-                    _amt = Util.GetValueOfDecimal(DB.ExecuteScalar("SELECT StmtAmt FROM C_BANKSTATEMENTLINE WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
-                    _bpID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BPARTNER_ID FROM C_BANKSTATEMENTLINE WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
+                    _amt = Util.GetValueOfDecimal(DB.ExecuteScalar("SELECT StmtAmt FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
+                    _bpID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BPARTNER_ID FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
                     if (_bpID == 0)
                     {
                         _bpID = _formBPartnerID;
@@ -5082,7 +5193,7 @@ namespace VA012.Models
             {
                 try
                 {
-                    _amount = Util.GetValueOfDecimal(DB.ExecuteScalar("SELECT StmtAmt FROM C_BANKSTATEMENTLINE WHERE C_BANKSTATEMENTLINE_id =" + _destinationID));
+                    _amount = Util.GetValueOfDecimal(DB.ExecuteScalar("SELECT StmtAmt FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_id =" + _destinationID));
                 }
                 catch (Exception e)
                 {
@@ -5103,32 +5214,32 @@ namespace VA012.Models
                                 ELSE
                                      ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))
                               END) AS AMOUNT
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV
-                            ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID
-                            LEFT JOIN C_CURRENCY BCURR
-                            ON " + _currencyId + @" =BCURR.C_CURRENCY_ID
+                            FROM C_InvoicePaySchedule PAY
+                            INNER JOIN C_Invoice INV
+                            ON (PAY.C_INVOICE_ID=INV.C_INVOICE_ID)
+                            LEFT JOIN C_Currency BCURR
+                            ON (" + _currencyId + @" =BCURR.C_CURRENCY_ID)
 
-                            LEFT JOIN C_CONVERSION_RATE CCR
-                            ON (CCR.C_CURRENCY_ID =inv.C_CURRENCY_ID
-                            AND CCR.C_CURRENCY_TO_ID=" + _currencyId + @"
-                            AND CCR.ISACTIVE      ='Y'
-                            AND CCR.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                            AND CCR.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
-                            AND CCR.C_ConversionType_ID = inv.C_ConversionType_ID
-                            AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
+                            LEFT JOIN C_Conversion_Rate CCR
+                            ON ((CCR.C_CURRENCY_ID =inv.C_CURRENCY_ID)
+                            AND (CCR.C_CURRENCY_TO_ID=" + _currencyId + @")
+                            AND (CCR.ISACTIVE      ='Y')
+                            AND (CCR.AD_CLIENT_ID    =inv.AD_CLIENT_ID)
+                            AND (CCR.AD_ORG_ID IN (inv.AD_ORG_ID,0))
+                            AND (CCR.C_ConversionType_ID = inv.C_ConversionType_ID)
+                            AND (SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO))
 
-                            LEFT JOIN C_CONVERSION_RATE CCR1
-                            ON (CCR1.C_CURRENCY_ID   =" + _currencyId + @"
-                            AND CCR1.C_CURRENCY_TO_ID=inv.C_CURRENCY_ID
-                            AND CCR1.ISACTIVE        ='Y'
-                            AND CCR1.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                            AND CCR1.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
-                            AND CCR1.C_ConversionType_ID = inv.C_ConversionType_ID
-                            AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) 
+                            LEFT JOIN C_Conversion_Rate CCR1
+                            ON ((CCR1.C_CURRENCY_ID   =" + _currencyId + @")
+                            AND (CCR1.C_CURRENCY_TO_ID=inv.C_CURRENCY_ID)
+                            AND (CCR1.ISACTIVE        ='Y')
+                            AND (CCR1.AD_CLIENT_ID    =inv.AD_CLIENT_ID)
+                            AND (CCR1.AD_ORG_ID      IN (inv.AD_ORG_ID,0))
+                            AND (CCR1.C_ConversionType_ID = inv.C_ConversionType_ID)
+                            AND (SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)) 
 
-                            INNER JOIN C_DOCTYPE DT
-                            ON DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID 
+                            INNER JOIN C_DocType DT
+                            ON (DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID) 
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _listToCheck + ")";
                 _existingAmount = Util.GetValueOfDecimal(Util.GetValueOfDecimal(DB.ExecuteScalar(_sql)));
 
@@ -5224,32 +5335,32 @@ namespace VA012.Models
                                 ELSE
                                      ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))
                               END AS AMOUNT,DT.DOCBASETYPE, INV.C_Currency_ID
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV
-                            ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID
-                            LEFT JOIN C_CURRENCY BCURR
-                            ON " + _currencyId + @" =BCURR.C_CURRENCY_ID
+                            FROM C_InvoicePaySchedule PAY
+                            INNER JOIN C_Invoice INV
+                            ON (PAY.C_INVOICE_ID=INV.C_INVOICE_ID)
+                            LEFT JOIN C_Currency BCURR
+                            ON (" + _currencyId + @" =BCURR.C_CURRENCY_ID)
 
-                            LEFT JOIN C_CONVERSION_RATE CCR
-                            ON (CCR.C_CURRENCY_ID =inv.C_CURRENCY_ID
-                            AND CCR.C_CURRENCY_TO_ID=" + _currencyId + @"
-                            AND CCR.ISACTIVE      ='Y'
-                            AND CCR.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                            AND CCR.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
-                            AND CCR.C_ConversionType_ID = inv.C_ConversionType_ID
-                            AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
+                            LEFT JOIN C_Conversion_Rate CCR
+                            ON ((CCR.C_CURRENCY_ID =inv.C_CURRENCY_ID)
+                            AND (CCR.C_CURRENCY_TO_ID=" + _currencyId + @")
+                            AND (CCR.ISACTIVE      ='Y')
+                            AND (CCR.AD_CLIENT_ID    =inv.AD_CLIENT_ID)
+                            AND (CCR.AD_ORG_ID      IN (inv.AD_ORG_ID,0))
+                            AND (CCR.C_ConversionType_ID = inv.C_ConversionType_ID)
+                            AND (SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO))
 
-                            LEFT JOIN C_CONVERSION_RATE CCR1
-                            ON (CCR1.C_CURRENCY_ID   =" + _currencyId + @"
-                            AND CCR1.C_CURRENCY_TO_ID=inv.C_CURRENCY_ID
-                            AND CCR1.ISACTIVE        ='Y'
-                            AND CCR1.AD_CLIENT_ID    =inv.AD_CLIENT_ID
-                            AND CCR1.AD_ORG_ID      IN (inv.AD_ORG_ID,0)
-                            AND CCR1.C_ConversionType_ID = inv.C_ConversionType_ID
-                            AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) 
+                            LEFT JOIN C_Conversion_Rate CCR1
+                            ON ((CCR1.C_CURRENCY_ID   =" + _currencyId + @")
+                            AND (CCR1.C_CURRENCY_TO_ID=inv.C_CURRENCY_ID)
+                            AND (CCR1.ISACTIVE        ='Y')
+                            AND (CCR1.AD_CLIENT_ID    =inv.AD_CLIENT_ID)
+                            AND (CCR1.AD_ORG_ID      IN (inv.AD_ORG_ID,0))
+                            AND (CCR1.C_ConversionType_ID = inv.C_ConversionType_ID)
+                            AND (SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) )
 
-                            INNER JOIN C_DOCTYPE DT
-                            ON DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID 
+                            INNER JOIN C_DocType DT
+                            ON (DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID) 
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID=" + _dragSourceID;
             _ds = DB.ExecuteDataset(_sql);
 
@@ -5285,11 +5396,11 @@ namespace VA012.Models
                 {
                     //replaced UNIQUE to DISTINCT to Excute query in Postgre as well
                     _sql = @"SELECT DISTINCT DT.DOCBASETYPE
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV
-                            ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID
-                            INNER JOIN C_DOCTYPE DT
-                            ON DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID 
+                            FROM C_InvoicePaySchedule PAY
+                            INNER JOIN C_Invoice INV
+                            ON (PAY.C_INVOICE_ID=INV.C_INVOICE_ID)
+                            INNER JOIN C_DocType DT
+                            ON (DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID )
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _listToCheck + ")";
                     _dsExisting = DB.ExecuteDataset(_sql);
 
@@ -5347,9 +5458,9 @@ namespace VA012.Models
                     //used new query to get the C_Currency_ID
                     //replaced UNIQUE to DISTINCT to Excute query in Postgre as well
                     _sql = @"SELECT DISTINCT INV.C_Currency_ID
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV
-                            ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID
+                            FROM C_InvoicePaySchedule PAY
+                            INNER JOIN C_Invoice INV
+                            ON (PAY.C_INVOICE_ID=INV.C_INVOICE_ID)
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _listToCheck + ")";
                     _dsExisting = DB.ExecuteDataset(_sql);
 
@@ -5483,7 +5594,7 @@ namespace VA012.Models
                 DataSet _ds = new DataSet();
                 DataSet _ds1 = new DataSet();
                 _qry = @" SELECT C_BPARTNER_ID, StmtAmt as TRXAMT, StatementLineDate 
-                    FROM C_BANKSTATEMENTLINE
+                    FROM C_BankStatementLine
                     WHERE C_BANKSTATEMENTLINE_id      =" + _dragDestinationID;
                 _ds = DB.ExecuteDataset(_qry);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
@@ -5502,9 +5613,9 @@ namespace VA012.Models
                                                 + GlobalVariable.TO_DATE(_stateLineDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, ord.AD_Org_ID) 
                                             ELSE ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2))
                                           END AS AMOUNT, ORD.DateAcct, ord.GrandTotal
-                                        FROM C_ORDER ORD
-                                        LEFT JOIN C_CURRENCY BCURR
-                                        ON " + _currencyId + @" =BCURR.C_CURRENCY_ID                
+                                        FROM C_Order ORD
+                                        LEFT JOIN C_Currency BCURR
+                                        ON (" + _currencyId + @" =BCURR.C_CURRENCY_ID)                
                                         WHERE ORD.C_ORDER_ID=" + _dragSourceID;
                 _ds1 = DB.ExecuteDataset(_qry);
                 if (_ds1 != null && _ds1.Tables[0].Rows.Count > 0)
@@ -5579,7 +5690,7 @@ namespace VA012.Models
             int _conversionType_Id = 0;
             if (_dragDestinationID == 0)
             {
-                int _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) AS COUNT FROM C_BANKSTATEMENTLINE BSL INNER JOIN C_BANKSTATEMENT BS ON BS.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID  WHERE BS.DOCSTATUS!='VO' AND BSL.C_CASHLINE_ID=" + _dragSourceID));
+                int _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) AS COUNT FROM C_BankStatementLine BSL INNER JOIN C_BankStatement BS ON (BS.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID)  WHERE BS.DOCSTATUS!='VO' AND BSL.C_CASHLINE_ID=" + _dragSourceID));
                 if (_count > 0)
                 {
                     _obj._status = "VA012_CashLineAlreadyMatchedOthrStmt";
@@ -5593,10 +5704,10 @@ namespace VA012.Models
                                             @", csl.C_ConversionType_ID, cs.AD_Client_ID, cs.AD_Org_ID) 
                                             ELSE ROUND(csl.amount,NVL(BCURR.StdPrecision,2))
                                           END AS AMOUNT, csl.C_Currency_ID, csl.C_ConversionType_ID, csl.amount AS actualAmt
-                                        FROM C_Cashline csl
-                                        inner join C_Cash cs on cs.C_Cash_id=csl.C_Cash_id
-                                        LEFT JOIN C_CURRENCY BCURR
-                                        ON " + _currencyId + @" =BCURR.C_CURRENCY_ID
+                                        FROM C_CashLine csl
+                                        INNER JOIN C_Cash cs ON (cs.C_Cash_id=csl.C_Cash_id)
+                                        LEFT JOIN C_Currency BCURR
+                                        ON (" + _currencyId + @" =BCURR.C_CURRENCY_ID)
                                         WHERE csl.C_cashline_ID=" + _dragSourceID;
                 DataSet _ds = DB.ExecuteDataset(_sql, null, null);
                 //_payAmt = Decimal.Negate(Util.GetValueOfDecimal(DB.ExecuteScalar(_sql)));
@@ -5678,7 +5789,7 @@ namespace VA012.Models
             ContraResponse _obj = new ContraResponse();
 
 
-            _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CASHLINE_ID FROM C_BANKSTATEMENTLINE WHERE C_BANKSTATEMENTLINE_ID=" + _dragStatementID));
+            _count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CASHLINE_ID FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_ID=" + _dragStatementID));
             if (_count > 0)
             {
                 _obj._status = "VA012_StatementAlreadyMatchedOthrCshln";
@@ -5686,7 +5797,7 @@ namespace VA012.Models
             }
 
             _qry = @" SELECT C_BPARTNER_ID, StmtAmt as TRXAMT, StatementLineDate 
-                    FROM C_BANKSTATEMENTLINE
+                    FROM C_BankStatementLine
                     WHERE C_BANKSTATEMENTLINE_id      =" + _dragStatementID;
             _ds = DB.ExecuteDataset(_qry);
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
@@ -5704,10 +5815,10 @@ namespace VA012.Models
                                             @", csl.C_ConversionType_ID, cs.AD_Client_ID, cs.AD_Org_ID) 
                                             ELSE ROUND(csl.amount,NVL(BCURR.StdPrecision,2))
                                           END AS AMOUNT, csl.C_Currency_ID, csl.C_ConversionType_ID, cs.DateAcct, csl.amount as actualAmt
-                                        FROM C_Cashline csl
-                                        inner join C_Cash cs on cs.C_Cash_id=csl.C_Cash_id
-                                        LEFT JOIN C_CURRENCY BCURR
-                                        ON " + _currencyId + @" =BCURR.C_CURRENCY_ID
+                                        FROM C_CashLine csl
+                                        INNER JOIN C_Cash cs ON (cs.C_Cash_id=csl.C_Cash_id)
+                                        LEFT JOIN C_Currency BCURR
+                                        ON (" + _currencyId + @" =BCURR.C_CURRENCY_ID)
                                     WHERE csl.C_cashline_ID=" + _dragPaymentID;
 
             _ds1 = DB.ExecuteDataset(_qry);
@@ -5789,9 +5900,9 @@ namespace VA012.Models
             if (!string.IsNullOrEmpty(_invoiceID))
             {
                 _sql = @"SELECT DT.DOCBASETYPE
-                        FROM C_INVOICE INV
-                        INNER JOIN C_DOCTYPE DT
-                        ON DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID
+                        FROM C_Invoice INV
+                        INNER JOIN C_DocType DT
+                        ON (DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID)
                         WHERE INV.C_INVOICE_ID IN(" + _invoiceID + ")";
                 //_docBaseType = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                 DataSet _ds = DB.ExecuteDataset(_sql, null, null);
@@ -5898,29 +6009,29 @@ namespace VA012.Models
                                 THEN PAY.PAYAMT*-1
                               END
                           END AS AMOUNT
-                        FROM C_PAYMENT PAY
-                        INNER JOIN C_DOCTYPE DT
-                        ON DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID
-                        INNER JOIN C_BANKACCOUNT AC
-                        ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
-                        LEFT JOIN C_CURRENCY BCURR
-                        ON AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID
-                        LEFT JOIN C_CONVERSION_RATE CCR
-                        ON (CCR.C_CURRENCY_ID   =PAY.C_CURRENCY_ID
-                        AND CCR.ISACTIVE        ='Y'
-                        AND CCR.C_CURRENCY_TO_ID=AC.C_CURRENCY_ID
-                            AND CCR.AD_CLIENT_ID    =pay.AD_CLIENT_ID
-                            AND CCR.AD_ORG_ID      IN (pay.AD_ORG_ID,0)
-                         AND CCR.C_ConversionType_ID      IN (pay.C_ConversionType_ID,0)
-                        AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)
-                    LEFT JOIN C_CONVERSION_RATE CCR1
-                    ON (CCR1.C_CURRENCY_ID   =AC.C_CURRENCY_ID
-                    AND CCR1.C_CURRENCY_TO_ID=PAY.C_CURRENCY_ID
-                    AND CCR1.ISACTIVE        ='Y'
-                           AND CCR1.AD_CLIENT_ID    =pay.AD_CLIENT_ID
-                            AND CCR1.AD_ORG_ID      IN (pay.AD_ORG_ID,0)
-                    AND CCR1.C_ConversionType_ID      IN (pay.C_ConversionType_ID,0)
-                    AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)
+                        FROM C_Payment PAY
+                        INNER JOIN C_DocType DT
+                        ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID)
+                        INNER JOIN C_BankAccount AC
+                        ON (AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID)
+                        LEFT JOIN C_Currency BCURR
+                        ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID)
+                        LEFT JOIN C_Conversion_Rate CCR
+                        ON ((CCR.C_CURRENCY_ID   =PAY.C_CURRENCY_ID)
+                        AND (CCR.ISACTIVE        ='Y')
+                        AND (CCR.C_CURRENCY_TO_ID=AC.C_CURRENCY_ID)
+                            AND (CCR.AD_CLIENT_ID    =pay.AD_CLIENT_ID)
+                            AND (CCR.AD_ORG_ID      IN (pay.AD_ORG_ID,0))
+                         AND (CCR.C_ConversionType_ID      IN (pay.C_ConversionType_ID,0))
+                        AND (SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO))
+                    LEFT JOIN C_Conversion_Rate CCR1
+                    ON ((CCR1.C_CURRENCY_ID   =AC.C_CURRENCY_ID)
+                    AND (CCR1.C_CURRENCY_TO_ID=PAY.C_CURRENCY_ID)
+                    AND (CCR1.ISACTIVE        ='Y')
+                           AND (CCR1.AD_CLIENT_ID    =pay.AD_CLIENT_ID)
+                            AND (CCR1.AD_ORG_ID      IN (pay.AD_ORG_ID,0))
+                    AND (CCR1.C_ConversionType_ID      IN (pay.C_ConversionType_ID,0))
+                    AND (SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO))
 
                         WHERE PAY.C_PAYMENT_ID=" + _paymentID;
                 _ds = DB.ExecuteDataset(_sql);
@@ -6002,9 +6113,9 @@ namespace VA012.Models
                                         + GlobalVariable.TO_DATE(statementDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, ord.AD_Org_ID) 
                             ELSE ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2))
                           END AS AMOUNT,ORD.C_BPARTNER_ID, ORD.C_Currency_ID, ORD.C_ConversionType_ID, ord.GrandTotal
-                        FROM C_ORDER ORD
-                        LEFT JOIN C_CURRENCY BCURR
-                        ON " + _currencyId + @" =BCURR.C_CURRENCY_ID
+                        FROM C_Order ORD
+                        LEFT JOIN C_Currency BCURR
+                        ON (" + _currencyId + @" =BCURR.C_CURRENCY_ID)
                         WHERE ORD.C_ORDER_ID=" + _orderID;
                     //_payAmt = Util.GetValueOfDecimal(DB.ExecuteScalar(_sql));
                     _ds = DB.ExecuteDataset(_sql);
@@ -6075,7 +6186,7 @@ namespace VA012.Models
             else
             {
                 sql.Append("SELECT trl.name, rl.value  FROM AD_Ref_List rl ")
-               .Append("  INNER JOIN AD_Ref_List_Trl trl ON rl.AD_Ref_List_ID = trl.AD_Ref_List_ID ");
+               .Append("  INNER JOIN AD_Ref_List_Trl trl ON (rl.AD_Ref_List_ID = trl.AD_Ref_List_ID) ");
             }
             //Excluded the Invoice and Order Values
             sql.Append(@" WHERE rl.isactive = 'Y' AND rl.ad_reference_id IN (SELECT AD_Reference_ID FROM AD_Reference
@@ -6107,7 +6218,11 @@ namespace VA012.Models
             List<MatchBase> bankList = new List<MatchBase>();
             MatchBase list = null;
             //added Client_ID to get Bank's with respect to Client
-            DataSet ds = DB.ExecuteDataset("SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y' AND AD_Client_ID=" + ctx.GetAD_Client_ID(), null, null);
+            //DataSet ds = DB.ExecuteDataset("SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y' AND AD_Client_ID=" + ctx.GetAD_Client_ID(), null, null);
+            string _sql= "SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y'";
+            //Added MRole Check
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Bank", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+            DataSet ds = DB.ExecuteDataset(_sql, null, null);
             if (ds != null && ds.Tables[0].Rows.Count > 0)
             {
                 for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
@@ -6134,7 +6249,7 @@ namespace VA012.Models
             List<InvoicePaySchedule> payList = new List<InvoicePaySchedule>();
             InvoicePaySchedule list = null;
             //get Account Currency ID
-            int _accountCurrencyID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + accountID));
+            int _accountCurrencyID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + accountID));
             string _sql = @"SELECT PAY.C_INVOICEPAYSCHEDULE_ID,
                                 CASE
                                     WHEN (DT.DOCBASETYPE IN ('ARI','APC'))
@@ -6159,12 +6274,12 @@ namespace VA012.Models
                                     THEN ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))*-1
                                   END
                               END AS CONVERTEDAMOUNT,PAY.DueDate, PAY.DueAmt
-                            FROM C_INVOICEPAYSCHEDULE PAY
-                            INNER JOIN C_INVOICE INV ON pay.C_INVOICE_id=inv.C_INVOICE_id
-                            LEFT JOIN C_CURRENCY CURR ON INV.C_CURRENCY_ID =CURR.C_CURRENCY_ID
-                            LEFT JOIN C_CURRENCY BCURR ON " + _accountCurrencyID + @" =BCURR.C_CURRENCY_ID 
-                            INNER JOIN VA009_PAYMENTMETHOD PM ON (PM.VA009_PAYMENTMETHOD_ID=PAY.VA009_PAYMENTMETHOD_ID )
-                            INNER JOIN C_DOCTYPE DT ON DT.C_DOCTYPE_ID=INV.C_DOCTYPE_ID
+                            FROM C_InvoicePaySchedule PAY
+                            INNER JOIN C_Invoice INV ON (pay.C_INVOICE_id=inv.C_INVOICE_id)
+                            LEFT JOIN C_Currency CURR ON (INV.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
+                            LEFT JOIN C_Currency BCURR ON (" + _accountCurrencyID + @" =BCURR.C_CURRENCY_ID )
+                            INNER JOIN VA009_PaymentMethod PM ON (PM.VA009_PAYMENTMETHOD_ID=PAY.VA009_PAYMENTMETHOD_ID )
+                            INNER JOIN C_DocType DT ON (DT.C_DOCTYPE_ID=INV.C_DOCTYPE_ID)
                             WHERE  pay.VA009_IsPaid='N' AND PAY.ISACTIVE='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B' AND PAY.C_INVOICE_ID IN(" + seltdInvoice + ")";
 
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
@@ -6184,6 +6299,66 @@ namespace VA012.Models
             }
             return payList;
         }
+
+        /// <summary>
+        /// Get the list of PaymentMethods
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>List of payment methods</returns>
+        public List<ChargeProp> GetPaymentMethods(Ctx ctx)
+        {
+            List< ChargeProp> _list = new List<ChargeProp>();
+            ChargeProp obj = null;
+            //here Cash is not into consideration
+            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE!='B' AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ")";
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "VA009_PaymentMethod", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                {
+                    obj = new ChargeProp();
+                    obj.chargeID = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["VA009_PAYMENTMETHOD_ID"]);
+                    obj.name = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA009_NAME"]);
+                    _list.Add(obj);
+                }
+            }
+            return _list;
+        }
+
+        /// <summary>
+        /// Get the list of Tax Rates
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>List Of Tax Rates</returns>
+        public List<TaxRate> LoadTaxRate(Ctx ctx)
+        {
+            List<TaxRate> _list = new List<TaxRate>();
+            TaxRate obj = null;
+
+            string _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0 AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ")";
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Tax", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                {
+                    obj = new TaxRate();
+                    obj.C_Tax_ID = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Tax_ID"]);
+                    obj.Name = Util.GetValueOfString(_ds.Tables[0].Rows[i]["Name"]);
+                    _list.Add(obj);
+                }
+            }
+            return _list;
+        }
+    }
+
+    public class TaxRate
+    {
+        public int C_Tax_ID { get; set; }
+        public string Name { get; set; }
     }
 
     public class ConcileStatement
