@@ -43,7 +43,7 @@ namespace VA012.Controllers
             _statementClassName = _statementClassName.Substring(_statementClassName.LastIndexOf('_') + 1);
             //changes done for log entry
             _sql = @"SELECT SC.NAME,VA012_BANKSTATEMENTCLASS_ID
-                        FROM VA012_C_BankStatementClass BSC
+                        FROM VA012_BankStatementClass BSC
                         INNER JOIN VA012_StatementClass SC
                         ON (BSC.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID)
                         WHERE BSC.ISACTIVE='Y' AND BSC.VA012_BANKSTATEMENTCLASS_ID=" + _statementClassName;
