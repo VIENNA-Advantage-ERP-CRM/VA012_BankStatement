@@ -455,17 +455,18 @@
                                 //        VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsProcessed"), null, "", "");
                                 //    }
                                 //}
+                                //Messages handled
                                 if (data[0]._error != null) {
-                                    VIS.ADialog.info(data[0]._error, null, "", "");
+                                    VIS.ADialog.info("", null, data[0]._error, "");
                                 }
                                 else if (data[0]._statementProcessed != null) {
-                                    VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsProcessed"), null, "", "");
+                                    VIS.ADialog.info("", null, data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsProcessed"), "");
                                 }
                                 else if (data[0]._statementNotProcessed != null) {
-                                    VIS.ADialog.info(data[0]._statementNotProcessed + " " + VIS.Msg.getMsg("VA012_StatementsNotProcessed"), null, "", "");
+                                    VIS.ADialog.info("", null, data[0]._statementNotProcessed + " " + VIS.Msg.getMsg("VA012_StatementsNotProcessed"), "");
                                 }
                                 else if (data[0]._statementUnmatchedLines != null) {
-                                    VIS.ADialog.info(data[0]._statementUnmatchedLines + " " + VIS.Msg.getMsg("VA012_ExistsUnmatched"), null, "", "");
+                                    VIS.ADialog.info("", null, data[0]._statementUnmatchedLines + " " + VIS.Msg.getMsg("VA012_ExistsUnmatched"), "");
                                 }
                                 newRecordForm.scheduleRefresh();
                                 newRecordForm.prepayRefresh();
@@ -4751,7 +4752,8 @@
 
                 function loadPSInvoice() {
                     //to handle multiple Invoices used MultiKey and isMultiKeyTextBox properties
-                    _lookupPSInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.MultiKey, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL') AND C_BPartner_ID=" + _psBpSelectedVal);
+                    //fixed ambiguous  Error
+                    _lookupPSInvoice = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3484, VIS.DisplayType.MultiKey, "C_Invoice_ID", 0, false, "DocStatus IN ('CO','CL') AND C_Invoice.C_BPartner_ID=" + _psBpSelectedVal);
                     $_ctrlPSInvoice = new VIS.Controls.VTextBoxButton("C_Invoice_ID", false, false, true, VIS.DisplayType.MultiKey, _lookupPSInvoice);
                     $_ctrlPSInvoice.isMultiKeyTextBox = true;
                     $_ctrlPSInvoice.getControl().addClass("va012-input-size-2");
