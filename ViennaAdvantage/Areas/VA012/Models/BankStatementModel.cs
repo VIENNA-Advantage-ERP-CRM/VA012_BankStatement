@@ -599,8 +599,8 @@ namespace VA012.Models
                             NVL(BSL.C_CHARGE_ID,0)  AS C_CHARGE_ID,
                             NVL(BSL.C_CASHLINE_ID,0) AS C_CASHLINE_ID,
                             BSL.VA012_ISMATCHINGCONFIRMED
-                        FROM C_BankStatement BS
-                        INNER JOIN C_BankStatementLine BSL
+                        FROM C_BankStatementLine BSL 
+                        INNER JOIN C_BankStatement BS 
                         ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID)
                         WHERE BS.ISACTIVE       ='Y' 
                         AND BSL.C_BANKSTATEMENTLINE_ID=" + _formData[0]._bankStatementLineID + 
@@ -2691,6 +2691,14 @@ namespace VA012.Models
             }
             return _lstObj;
         }
+
+        /// <summary>
+        /// Delete the Selected Lines on Bnak Statement
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_statementLinesList">List of Statement Lines</param>
+        /// <param name="_statementLineID">C_BankStatement_ID</param>
+        /// <returns>status of the Delete Operation</returns>
         public List<ProcessResponse> DeleteStatement(Ctx ctx, string _statementLinesList, int _statementLineID)
         {
             int status = 1;
@@ -3299,7 +3307,7 @@ namespace VA012.Models
                 _sql = @" SELECT COUNT(*) AS Records
                         FROM C_Order PAY
                         LEFT JOIN C_DocType DT
-                        ON (PAY.C_DocTypeTarget_ID=dt.C_DocType_ID)
+                        ON (DT.C_DocType_ID=PAY.C_DocTypeTarget_ID)
                         LEFT JOIN C_BPartner BP
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
                         --LEFT JOIN AD_Image IMG
@@ -3331,8 +3339,8 @@ namespace VA012.Models
             else if (_transactionType == "CO")
             {
                 _sql = @" SELECT COUNT(*) AS Records
-                        FROM C_Cash CS
-                        INNER JOIN C_CashLine PAY
+                        FROM C_CashLine PAY 
+                        INNER JOIN C_Cash CS 
                         ON (CS.C_CASH_ID=PAY.C_CASH_ID)
                         LEFT JOIN C_BPartner BP
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
@@ -3490,8 +3498,9 @@ namespace VA012.Models
                 {
                     _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
-
-                _sql += " ORDER BY PAY.DOCUMENTNO";
+                //Order by DateAcct requirement given by ranvir
+                //_sql += " ORDER BY PAY.DOCUMENTNO";
+                _sql += " ORDER BY PAY.DateAcct";
 
 
 
@@ -3545,9 +3554,9 @@ namespace VA012.Models
                             ' ' as TrxNo , PM.VA009_Name, INV.DateAcct, PAY.DueDate
                             FROM C_InvoicePaySchedule PAY
                             INNER JOIN C_Invoice INV
-                            ON (pay.C_INVOICE_id=inv.C_INVOICE_id)
+                            ON (PAY.C_INVOICE_id=INV.C_INVOICE_id)
                             LEFT JOIN C_BPartner BP
-                            ON (inv.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                            ON (INV.C_BPARTNER_ID =BP.C_BPARTNER_ID)
                            /* --LEFT JOIN AD_Image IMG
                             -- ON (BP.PIC=IMG.AD_IMAGE_ID)*/
                             LEFT JOIN C_BP_Group BPG
@@ -3601,7 +3610,9 @@ namespace VA012.Models
                 //                              )
                 //                            )";
                 //                ////
-                _sql += " ORDER BY inv.DOCUMENTNO ";
+                //Order by DateAcct requirement given by Ranvir
+                //_sql += " ORDER BY inv.DOCUMENTNO ";
+                _sql += " ORDER BY INV.DateAcct ";
 
             }
             else if (_transactionType == "PO")
@@ -3630,7 +3641,7 @@ namespace VA012.Models
                         ' ' as TrxNo , PM.VA009_Name, PAY.DateAcct
                         FROM C_Order PAY
                         LEFT JOIN C_DocType DT
-                        ON (PAY.C_DocTypeTarget_ID=dt.C_DocType_ID)
+                        ON (PAY.C_DocTypeTarget_ID=DT.C_DocType_ID)
                         LEFT JOIN C_BPartner BP
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
                         --LEFT JOIN AD_Image IMG
@@ -3663,7 +3674,9 @@ namespace VA012.Models
                 {
                     _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
-                _sql += " ORDER BY PAY.DOCUMENTNO";
+                //Change required by Ranvir Order by Date Account
+                //_sql += " ORDER BY PAY.DOCUMENTNO";
+                _sql += " ORDER BY PAY.DateAcct";
 
             }
             else if (_transactionType == "CO")
@@ -3738,7 +3751,9 @@ namespace VA012.Models
                 {
                     _sql += " AND CS.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
-                _sql += " ORDER BY CS.DOCUMENTNO";
+                //change required by Ranvir
+                //_sql += " ORDER BY CS.DOCUMENTNO";
+                _sql += " ORDER BY CS.DateAcct";
             }
 
             List<PaymentProp> _payments = new List<PaymentProp>();
