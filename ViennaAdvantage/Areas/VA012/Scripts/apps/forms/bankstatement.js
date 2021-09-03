@@ -2473,8 +2473,20 @@
                                 //_txtTrxAmt.trigger('change');
                             }
                             else {
+                                //handled the case when drag the unreconciled Line into new form after that 
+                                //try to drag or select the Payment in Payment field on new form 
+                                if (_dragDestinationID == 0 && _amount != 0) {
+                                    if ($_formNewRecord[0].attributes["data-uid"].value > 0) {
+                                        _dragDestinationID = $_formNewRecord[0].attributes["data-uid"].value;
+                                    }
+                                    if ($_ctrlPayment != null && $_ctrlPayment.value > 0 && _dragDestinationID > 0) {
+                                        childDialogs.statementListRecordEdit(_dragDestinationID, $_ctrlPayment.value);
+                                        _status = true;
+                                        return _status;
+                                    }
+                                }
                                 //Incase of drag Payment on new form which is not found ConversionRate then it will return meg
-                                if (_dragDestinationID == 0) {
+                                else if (_dragDestinationID == 0) {
                                     newRecordForm.refreshForm();
                                     VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                     _status = false;
@@ -2719,6 +2731,18 @@
                                 _txtConversionType.removeClass("va012-mandatory");
                                 //requirement changed - ConversionType should be readOnly
                                 _txtConversionType.attr("disabled", true);
+                                //handled the case when drag the unreconciled Line into new form after that 
+                                //try to drag or select the CashLine in CashLine field on new form 
+                                if (_dragDestinationID == 0 && _amount != 0) {
+                                    if ($_formNewRecord[0].attributes["data-uid"].value > 0) {
+                                        _dragDestinationID = $_formNewRecord[0].attributes["data-uid"].value;
+                                    }
+                                    if (_dragSourceID > 0 && _dragDestinationID > 0) {
+                                        childDialogs.statementOpenEdit(_dragDestinationID, _dragSourceID);
+                                        _status = true;
+                                        return _status;
+                                    }
+                                }
                             }
                             else {
                                 if (VIS.Utility.Util.getValueOfInt(_dragDestinationID) > 0) {
@@ -6700,10 +6724,11 @@
                     //if ($_ctrlPayment.value) {
                     //    loadFunctions.setInvoiceAndBPartner(_paymentSelectedVal, "PY");
                     //}
-                    if (!$_ctrlPayment.value) {
-                        newRecordForm.refreshForm();
-                        // loadFunctions.getOverUnderPayment(_paymentSelectedVal);
-                    }
+                    //not required here
+                    //if (!$_ctrlPayment.value) {
+                    //    newRecordForm.refreshForm();
+                    //    // loadFunctions.getOverUnderPayment(_paymentSelectedVal);
+                    //}
 
                     //pratap
                     if (!_openingFromDrop && !_openingFromEdit) {
@@ -6724,7 +6749,19 @@
                         }
                     }
                     _openingFromEdit = false;
-
+                    //handle the Case when clear the Payment value from the field on new form
+                    if (!$_ctrlPayment.value) {
+                        if (_paymentSelectedVal == null && $_ctrlPayment.value == null) {
+                            var _stmtLn_ID = $_formNewRecord[0].attributes["data-uid"].value;
+                            //whenever clear the Cash Journal Line then clear the form if BankStatement Line Value is zero on new form
+                            if ($_formNewRecord[0].attributes["data-uid"].value == 0 && _paymentSelectedVal == null && $_ctrlPayment.value) {
+                                newRecordForm.refreshForm();
+                            }
+                            if (_stmtLn_ID > 0 && _paymentSelectedVal == null && $_ctrlPayment.value == null) {
+                                childDialogs.statementListRecordEdit(_stmtLn_ID, 0);
+                            }
+                        }
+                    }
                 };
                 _openingFromEdit = false;
             },
@@ -6848,6 +6885,17 @@
                         _openingFromEdit = false;
                     }
                     _openingFromEdit = false;
+                    //handle when clear the value from the Cash Journal Line field
+                    if (_cashLineSelectedVal == null && $_ctrlCashLine.value == null) {
+                        var _stmt_ID = $_formNewRecord[0].attributes["data-uid"].value;
+                        //whenever clear the Cash Journal Line then clear the form if BankStatement Line Value is zero on new form
+                        if ($_formNewRecord[0].attributes["data-uid"].value == 0 && _cashLineSelectedVal == null && $_ctrlCashLine.value) {
+                            newRecordForm.refreshForm();
+                        }
+                        if (_stmt_ID > 0 && _cashLineSelectedVal == null && $_ctrlCashLine.value == null) {
+                            childDialogs.statementListRecordEdit(_stmt_ID, 0);
+                        }
+                    }
                 };
             },
 
