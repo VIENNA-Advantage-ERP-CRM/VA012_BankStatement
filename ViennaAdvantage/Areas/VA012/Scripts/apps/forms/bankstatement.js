@@ -6754,7 +6754,7 @@
                         if (_paymentSelectedVal == null && $_ctrlPayment.value == null) {
                             var _stmtLn_ID = $_formNewRecord[0].attributes["data-uid"].value;
                             //whenever clear the Cash Journal Line then clear the form if BankStatement Line Value is zero on new form
-                            if ($_formNewRecord[0].attributes["data-uid"].value == 0 && _paymentSelectedVal == null && $_ctrlPayment.value) {
+                            if ($_formNewRecord[0].attributes["data-uid"].value == 0 && _paymentSelectedVal == null && !$_ctrlPayment.value) {
                                 newRecordForm.refreshForm();
                             }
                             if (_stmtLn_ID > 0 && _paymentSelectedVal == null && $_ctrlPayment.value == null) {
@@ -6889,7 +6889,7 @@
                     if (_cashLineSelectedVal == null && $_ctrlCashLine.value == null) {
                         var _stmt_ID = $_formNewRecord[0].attributes["data-uid"].value;
                         //whenever clear the Cash Journal Line then clear the form if BankStatement Line Value is zero on new form
-                        if ($_formNewRecord[0].attributes["data-uid"].value == 0 && _cashLineSelectedVal == null && $_ctrlCashLine.value) {
+                        if ($_formNewRecord[0].attributes["data-uid"].value == 0 && _cashLineSelectedVal == null && !$_ctrlCashLine.value) {
                             newRecordForm.refreshForm();
                         }
                         if (_stmt_ID > 0 && _cashLineSelectedVal == null && $_ctrlCashLine.value == null) {
