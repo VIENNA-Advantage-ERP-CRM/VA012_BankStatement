@@ -1981,12 +1981,13 @@
                                             _dtStatementDate.attr("readonly", true);
                                             _openingFromDrop = true;
                                             $_ctrlOrder.setValue(_dragOrderID, false, true);
+                                            _openingFromDrop = false;
                                             loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "PO");
                                             //when difference Amt is not zero then enable all options on differeneceType dropdown
                                             //if (convertAmtCulture(_txtDifference.getControl().val()) != 0) {
                                             //    _divDifferenceType.find("*").prop("disabled", false);
                                             //}//not required
-                                            _openingFromDrop = false;
+                                            //_openingFromDrop = false;
                                         }, 500); // for Accurate Result
                                         //childDialogs.statementOpenEdit($(this).data("uid"));
                                     }
@@ -2119,6 +2120,8 @@
                                             VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                             return;
                                         }
+                                        //get the Line ID
+                                        var _stmtLine_Id = $(this).attr("data-uid");
                                         _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                         _scheduleDataList.push($(ui.draggable).attr('paymentdata'));
                                         /*change by pratap*/
@@ -2154,7 +2157,14 @@
                                                 _txtAmount.getControl().removeClass("va012-mandatory");
                                             }
                                         }
-                                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                                        //Set the Amount field when the Line is not matched with Invoice Schedule Transaction
+                                        if (_stmtLine_Id == 0) {
+                                            _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                                        }
+                                        else {
+                                            //set Statement Date as Readonly
+                                            _dtStatementDate.attr("readonly", true);
+                                        }
                                         //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
                                         //_txtTrxAmt.trigger('change');
                                         /*change by pratap*/
@@ -2481,6 +2491,8 @@
                                     }
                                     if ($_ctrlPayment != null && $_ctrlPayment.value > 0 && _dragDestinationID > 0) {
                                         childDialogs.statementListRecordEdit(_dragDestinationID, $_ctrlPayment.value);
+                                        //set Statement Date as Readonly
+                                        _dtStatementDate.attr("readonly", true);
                                         _status = true;
                                         return _status;
                                     }
@@ -2645,6 +2657,20 @@
                                 _txtConversionType.trigger('change');
                             }
                             else {
+                                //handled the case when drag the unreconciled Line into new form after that 
+                                //try to drag or select the Prepay Order in Order field on new form 
+                                if (_dragDestinationID == 0 && _amount != 0) {
+                                    if ($_formNewRecord[0].attributes["data-uid"].value > 0) {
+                                        _dragDestinationID = $_formNewRecord[0].attributes["data-uid"].value;
+                                    }
+                                    if (_dragSourceID > 0 && _dragDestinationID > 0) {
+                                        childDialogs.statementListRecordEdit(_dragDestinationID, _dragSourceID);
+                                        //set Statement Date as Readonly
+                                        _dtStatementDate.attr("readonly", true);
+                                        _status = true;
+                                        return _status;
+                                    }
+                                }
                                 //when drap the Order on to Line then It should be true
                                 if (stmtLine_Id > 0) {
                                     _status = true;
@@ -2739,6 +2765,8 @@
                                     }
                                     if (_dragSourceID > 0 && _dragDestinationID > 0) {
                                         childDialogs.statementOpenEdit(_dragDestinationID, _dragSourceID);
+                                        //set Statement Date as Readonly
+                                        _dtStatementDate.attr("readonly", true);
                                         _status = true;
                                         return _status;
                                     }
@@ -4077,7 +4105,10 @@
 
 
                     if (_result._ctrlOrder > 0) {
+                        //restricted the Execution of CheckPrepayOrder function when change event is fired
+                        _openingFromDrop = true;
                         $_ctrlOrder.setValue(_result._ctrlOrder, false, true);
+                        _openingFromDrop = false;
                     }
                     else {
                         if (!_openingFromDrop) {
@@ -4670,8 +4701,11 @@
                             paySumAmt += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                         }
                     }
-                    //assign the total AMount to the fields
-                    _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(paySumAmt.toFixed(_stdPrecision)));
+                    //assign the total Amount to the fields
+                    //Amount field should not update when Schedule is matched with Line 
+                    if ($_formNewRecord[0].attributes["data-uid"].value == 0) {
+                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(paySumAmt.toFixed(_stdPrecision)));
+                    }
                     _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(paySumAmt.toFixed(_stdPrecision)));
                     //get the Amount in standard format
                     if (convertAmtCulture(_txtAmount.getControl().val()) < 0) {
@@ -4727,7 +4761,10 @@
                                 _btnOut.addClass("va012-inactive");
                                 _btnOut.attr("v_active", "0");
                             }
-                            _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                            //Amount field should not update when Schedule is matched with Line 
+                            if ($_formNewRecord[0].attributes["data-uid"].value == 0) {
+                                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                            }
                             //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
                             //_txtTrxAmt.trigger('change');
                             //not required 
@@ -4744,13 +4781,22 @@
                         _scheduleList.splice(_scheduleList.indexOf(target.data("uid")), 1);
                         _scheduleDataList.splice(_scheduleDataList.indexOf(target.data("udata")), 1);
 
+                        //Set the Unreconciled Line on New Form if no schedule is match with Line
+                        //New form will update by the Line values when remove all the selected Schedules on new form
+                        if (_scheduleList.length == 0 && $_formNewRecord[0].attributes["data-uid"].value > 0) {
+                            childDialogs.statementListRecordEdit($_formNewRecord[0].attributes["data-uid"].value, 0);
+                        }
+
                         target.parent().parent().remove();
                         _txtPaymentSchedule.val(_scheduleDataList.toString());
                         var amount = 0;
                         for (var i = 0; i < _scheduleAmount.length; i++) {
                             amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                         }
-                        _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                        //Amount field should not update when Schedule is matched with Line 
+                        if ($_formNewRecord[0].attributes["data-uid"].value == 0) {
+                            _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                        }
                         _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                         //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
                         _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
@@ -5116,8 +5162,8 @@
                     if (_cmbVoucherMatch.val() == "M") {
                         //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
                         //added event condition to avoid the values to refresh
-                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0 || VIS.Utility.Util.getValueOfInt(_orderSelectedVal) != 0
-                            && (event != null && event.currentTarget.className != _btnMore[0].className)) {
+                        //removed the Order Value condition to avoid the null value on Order field
+                        if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0 && (event != null && event.currentTarget.className != _btnMore[0].className)) {
                             newRecordForm.refreshSelectedValues();
                             //set or load Currency 
                             setCurrencyVal();
@@ -6334,82 +6380,89 @@
                         _dtStatementDate.addClass("va012-mandatory");
                     }
                     else {
-                        _dtStatementDate.removeClass("va012-mandatory");
-                        var amt = 0;
-                        var transtype = null;
-                        var _recordId = null;
-                        if (_cmbVoucherMatch.val() == "M") {
-                            if (_txtPaymentSchedule.val() != 0 && ($_ctrlPayment.getValue() == null || $_ctrlPayment.getValue() == 0)) {
-                                if (_scheduleList.length != 0) {
-                                    transtype = "IS";
-                                    _recordId = _scheduleList.join();
+                        //avoid the exception when user click on statement date field and removed the curson again
+                        //due to blur event will fire at that case.
+                        if ($_formNewRecord[0].attributes["data-uid"].value > 0 && ($_ctrlPayment.getValue() > 0 || $_ctrlCashLine.getValue() > 0 || $_ctrlInvoice.getValue() > 0 || $_ctrlOrder.getValue() > 0 || _scheduleList.length > 0)) {
+
+                        }
+                        else {
+                            _dtStatementDate.removeClass("va012-mandatory");
+                            var amt = 0;
+                            var transtype = null;
+                            var _recordId = null;
+                            if (_cmbVoucherMatch.val() == "M") {
+                                if (_txtPaymentSchedule.val() != 0 && ($_ctrlPayment.getValue() == null || $_ctrlPayment.getValue() == 0)) {
+                                    if (_scheduleList.length != 0) {
+                                        transtype = "IS";
+                                        _recordId = _scheduleList.join();
+                                    }
+                                }
+                                else if ((_txtPaymentSchedule.val() == null || _txtPaymentSchedule.val() == 0) && ($_ctrlPayment.getValue() != null && $_ctrlPayment.getValue() != 0)) {
+                                    transtype = "PY";
+                                    _recordId = $_ctrlPayment.getValue();
+                                }
+                                //Amount Conversion based on ConversionRate for PrePay Order and Contra
+                                else if ((VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) != 0) && (VIS.Utility.Util.getValueOfInt($_ctrlBusinessPartner.value) != 0)) {
+                                    transtype = "PO";
+                                    _recordId = $_ctrlOrder.value;
+                                    //when change the statement date if $_ctrlOrder.value is not null then amount should be readonly
+                                    _txtAmount.getControl().attr("disabled", true);
                                 }
                             }
-                            else if ((_txtPaymentSchedule.val() == null || _txtPaymentSchedule.val() == 0) && ($_ctrlPayment.getValue() != null && $_ctrlPayment.getValue() != 0)) {
-                                transtype = "PY";
-                                _recordId = $_ctrlPayment.getValue();
+                            else if (_cmbVoucherMatch.val() == "C") {
+                                if ((VIS.Utility.Util.getValueOfInt($_ctrlCashLine.value) != 0) && (VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) == 0) && (VIS.Utility.Util.getValueOfInt(_txtPaymentSchedule.val()) == 0)) {
+                                    transtype = "CO";
+                                    _recordId = $_ctrlCashLine.value;
+                                }
                             }
-                            //Amount Conversion based on ConversionRate for PrePay Order and Contra
-                            else if ((VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) != 0) && (VIS.Utility.Util.getValueOfInt($_ctrlBusinessPartner.value) != 0)) {
-                                transtype = "PO";
-                                _recordId = $_ctrlOrder.value;
-                                //when change the statement date if $_ctrlOrder.value is not null then amount should be readonly
-                                _txtAmount.getControl().attr("disabled", true);
-                            }
-                        }
-                        else if (_cmbVoucherMatch.val() == "C") {
-                            if ((VIS.Utility.Util.getValueOfInt($_ctrlCashLine.value) != 0) && (VIS.Utility.Util.getValueOfInt($_ctrlPayment.getValue()) == 0) && (VIS.Utility.Util.getValueOfInt(_txtPaymentSchedule.val()) == 0)) {
-                                transtype = "CO";
-                                _recordId = $_ctrlCashLine.value;
-                            }
-                        }
-                        if (transtype != null && _recordId != null) {
-                            VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: _recordId, bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() }, callbackGetConvtAmt);
-                            function callbackGetConvtAmt(_ds) {
-                                for (var i = 0; i < _ds.length; i++) {
-                                    if (_ds.length == 0 || _ds[i].DueAmount == 0) {
+                            if (transtype != null && _recordId != null) {
+                                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: _recordId, bnkAct_Id: _cmbBankAccount.val(), transcType: transtype, stmtDate: _dtStatementDate.val() }, callbackGetConvtAmt);
+                                function callbackGetConvtAmt(_ds) {
+                                    for (var i = 0; i < _ds.length; i++) {
+                                        if (_ds.length == 0 || _ds[i].DueAmount == 0) {
+                                            _txtAmount.setValue();
+                                            _txtTrxAmt.setValue();
+                                            _txtDifference.setValue();
+                                            // Disable or enabled, Diffrence type based on diffreence amount
+                                            _txtDifference.getControl().trigger("blur");//used blur to avoid to change the _txtDifference Value when trigger this function
+                                            //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                                            _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                                            VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                            return;
+                                        }
+                                        else {
+                                            amt += _ds[i].DueAmount;
+                                        }
+                                    }
+                                    if (amt != 0) {
+                                        _txtAmount.setValue(amt);
+                                        if (transtype != "PO") {
+                                            _txtTrxAmt.setValue(amt);
+                                            //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
+                                            _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                                        }
+                                        else {
+                                            //when it is PO then Amount should be +ve Value and btnIn as Active & disable mode
+                                            _txtAmount.getControl().removeClass("va012-mandatory");
+                                            _txtAmount.getControl().attr("disabled", true);
+                                            _btnIn.removeClass("va012-inactive");
+                                            _btnIn.addClass("va012-active");
+                                            _btnIn.attr("v_active", "1");
+                                            _btnOut.removeClass("va012-active");
+                                            _btnOut.addClass("va012-inactive");
+                                            _btnOut.attr("v_active", "0");
+                                        }
+                                    }
+                                    else {
                                         _txtAmount.setValue();
                                         _txtTrxAmt.setValue();
                                         _txtDifference.setValue();
                                         // Disable or enabled, Diffrence type based on diffreence amount
-                                        _txtDifference.getControl().trigger("blur");//used blur to avoid to change the _txtDifference Value when trigger this function
-                                        //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
-                                        _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
+                                        //used blur to avoid to change the _txtDifference Value when trigger this function
+                                        _txtDifference.getControl().trigger("blur");
                                         VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                         return;
                                     }
-                                    else {
-                                        amt += _ds[i].DueAmount;
-                                    }
-                                }
-                                if (amt != 0) {
-                                    _txtAmount.setValue(amt);
-                                    if (transtype != "PO") {
-                                        _txtTrxAmt.setValue(amt);
-                                        //get the Amount in standard format and passed Current Values as Array to avoid sign issue when change the event
-                                        _txtAmount.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
-                                    }
-                                    else {
-                                        //when it is PO then Amount should be +ve Value and btnIn as Active & disable mode
-                                        _txtAmount.getControl().removeClass("va012-mandatory");
-                                        _txtAmount.getControl().attr("disabled", true);
-                                        _btnIn.removeClass("va012-inactive");
-                                        _btnIn.addClass("va012-active");
-                                        _btnIn.attr("v_active", "1");
-                                        _btnOut.removeClass("va012-active");
-                                        _btnOut.addClass("va012-inactive");
-                                        _btnOut.attr("v_active", "0");
-                                    }
-                                }
-                                else {
-                                    _txtAmount.setValue();
-                                    _txtTrxAmt.setValue();
-                                    _txtDifference.setValue();
-                                    // Disable or enabled, Diffrence type based on diffreence amount
-                                    //used blur to avoid to change the _txtDifference Value when trigger this function
-                                    _txtDifference.getControl().trigger("blur");
-                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
-                                    return;
                                 }
                             }
                         }
@@ -6804,9 +6857,9 @@
                     //    loadFunctions.setInvoiceAndBPartner(_orderSelectedVal, "PO");
                     //}
                     //refresh the form if Value is null or zero
-                    if (!$_ctrlOrder.value) {
-                        newRecordForm.refreshForm();
-                    }
+                    //if (!$_ctrlOrder.value) {
+                    //    newRecordForm.refreshForm();
+                    //}
 
                     if ($_ctrlOrder.value) {
                         if (!_openingFromDrop) {
@@ -6823,8 +6876,22 @@
                             else {
                                 loadFunctions.setInvoiceAndBPartner(_orderSelectedVal, "PO");
                                 //Set _txtAmount field as ReadOnly
-                                _txtAmount.getControl().attr("disabled", true);
+                                //when unreconciled line matched with the Prepay Order then Amount field should be editable
+                                if (($_formNewRecord[0].attributes["data-uid"].value > 0 && !_orderSelectedVal) || ($_formNewRecord[0].attributes["data-uid"].value == 0 && _orderSelectedVal)) {
+                                    _txtAmount.getControl().attr("disabled", true);
+                                }
                             }
+                        }
+                    }
+                    //handle when clear the value from the PrePay Order field
+                    if (!_orderSelectedVal && !$_ctrlOrder.value) {
+                        var _stmt_Id = $_formNewRecord[0].attributes["data-uid"].value;
+                        //whenever clear the Prepay Order then clear the form if BankStatement Line Value is zero on new form
+                        if ($_formNewRecord[0].attributes["data-uid"].value == 0 && _orderSelectedVal == null && !$_ctrlOrder.value) {
+                            newRecordForm.refreshForm();
+                        }
+                        if (_stmt_Id > 0 && _orderSelectedVal == null && !$_ctrlOrder.value) {
+                            childDialogs.statementListRecordEdit(_stmt_Id, 0);
                         }
                     }
                 };
@@ -7043,7 +7110,13 @@
                     }
                     else {
                         busyIndicator($root, false, "absolute");
-                        VIS.ADialog.info(_result, null, "", "");
+                        //differenciated the Key and Message
+                        if (_result.contains(" ")) {
+                            VIS.ADialog.info("", null, _result, "");
+                        }
+                        else {
+                            VIS.ADialog.info(_result, null, "", "");
+                        }
                     }
                 }
             },
