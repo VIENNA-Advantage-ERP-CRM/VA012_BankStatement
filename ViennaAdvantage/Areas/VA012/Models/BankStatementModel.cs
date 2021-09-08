@@ -4156,7 +4156,7 @@ namespace VA012.Models
         {
             string sql;
             //get Bank Account document record on respective condition
-            sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID FROM 
+            sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext FROM 
                             C_BankAccountDoc C_BankAccountDoc INNER JOIN C_BankAccount C_BankAccount ON (C_BankAccount.C_BankAccount_ID = C_BankAccountDoc.C_BankAccount_ID)
                         Where C_BankAccountDoc.IsActive='Y' 
                         AND C_BankAccountDoc.PaymentRule='S' 
@@ -4164,11 +4164,13 @@ namespace VA012.Models
                         AND EndChkNumber != (CurrentNext-1)
                         AND C_BankAccountDoc.VA009_PaymentMethod_ID = " + _paymentMethod + @"
                         AND C_BankAccountDoc.C_BankAccount_ID=" + _bankAcct;
-            int bankAcctDoc_ID = Util.GetValueOfInt(DB.ExecuteScalar(sql, null, trx));
-            if (bankAcctDoc_ID > 0)
+            //int bankAcctDoc_ID = Util.GetValueOfInt(DB.ExecuteScalar(sql, null, trx));
+            //Used DataSet in place of Execute Scalar to get all values from one query
+            DataSet _ds = DB.ExecuteDataset(sql, null, trx);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0 && Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BankAccountDoc_ID"]) > 0)
             {
-                int _currentNext = Util.GetValueOfInt(DB.ExecuteScalar("SELECT CurrentNext FROM C_BankAccountDoc WHERE IsActive='Y' AND C_BankAccountDoc_ID=" + bankAcctDoc_ID, null, trx));
-                if (_currentNext <= 0)
+                //int _currentNext = Util.GetValueOfInt(DB.ExecuteScalar("SELECT CurrentNext FROM C_BankAccountDoc WHERE IsActive='Y' AND C_BankAccountDoc_ID=" + bankAcctDoc_ID, null, trx));
+                if (Util.GetValueOfInt(_ds.Tables[0].Rows[0]["CurrentNext"]) <= 0)
                 {
                     return "VA009_NoCurNxtForAcctNo";
                 }
