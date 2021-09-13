@@ -1033,5 +1033,40 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// Get Payment Base Type
+        /// </summary>
+        /// <returns>return PaymentBaseType</returns>
+        public JsonResult GetPaymentBaseType(string _whereClause)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetPaymentBaseType(ctx, _whereClause));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get AutoCheckNo and Payment Method
+        /// </summary>
+        /// <param name="bnkAct_Id">C_BankAccount_ID</param>
+        /// <param name="_PayMethod">VA009_PaymentMethod_ID</param>
+        /// <param name="_InvSchdleList">C_InvoicePaySchedule_ID's</param>
+        /// <returns>return object that contains AutoCheckNo, PaymentMethod and status</returns>
+        public JsonResult GetAutoCheckNo(int bnkAct_Id, int _PayMethod,int[] _InvSchdleList) 
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetAutoCheckNo(ctx, bnkAct_Id, _PayMethod, _InvSchdleList));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
     }
 }

@@ -264,9 +264,10 @@ body {
 
 
 input.va012-input-size {
-    width: calc(100% - 37px);
-    width: -webkit-calc(100% - 37px);
-    width: -moz-calc(100% - 37px);
+    width: calc(100% - 32px);
+    width: -webkit-calc(100% - 32px);
+    width: -moz-calc(100% - 32px);
+    float: left;
 }
 
 input.va012-input-size-amt {
@@ -293,7 +294,7 @@ input.va012-input-size-2 {
     background: rgba(var(--v-c-secondary), 1);
     border: 1px solid rgba(var(--v-c-on-secondary), .25);
     color: rgba(var(--v-c-on-secondary), 1);
-    width: 31px;
+    width: 32px;
     height: 31px;
     display: inline-flex;
     align-items: center;
@@ -346,6 +347,15 @@ input.va012-input-size-2 {
 .va012-padd-0 {
     padding-left: 2px !important;
     padding-right: 2px !important;
+}
+
+.va012-padd-1 {
+    padding-right: 2px !important;
+    padding-left: 2px !important;
+}
+
+.va012-div-prepay {
+    width: 104%;
 }
 
 .va012-newform .va012-fl-padd > .va012-padd-0:first-child {
