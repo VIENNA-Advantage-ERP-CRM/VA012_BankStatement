@@ -116,6 +116,9 @@
         var _divCtrlBusinessPartner = null;
         var _divPrepayOrder = null;
         var _divPaymentSchedule = null;
+        // Div CheckNo and CheckDate
+        var _divCheckNum = null;
+        var _divCheckDate = null;
         var _txtSearch = null;
         var _btnSearch = null;
         var _btnMore = null;
@@ -157,6 +160,10 @@
         var _txtCurrency = null;
         //C_ConversionType_ID
         var _txtConversionType = null;
+        //VA009_PaymentMethod_ID
+        var _txtPaymentMethod = null;
+        var _txtCheckNum = null;
+        var _txtCheckDate = null;
         //used to check reconciled or not
         var _reconciledLine = false;
 
@@ -182,6 +189,8 @@
         var _chargeSrch;
         var $CmbTaxRate;
         //  var cartGrid = null;
+        //get the VA009_PaymentMethod_ID AD_Column_ID
+        var ad_Column = null;
 
         this.Initialize = function () {
 
@@ -232,8 +241,8 @@
 
                 loadFunctions.dragPayments();
                 loadFunctions.dropPayments();
-
-
+                //get AD_Column_ID for VA009_PaymentMethod_ID
+                ad_Column = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAD_Column_IDForPayMethod", null);//get AD_Column_ID
             }
         };
         function InitializeEvents() {
@@ -963,7 +972,7 @@
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div id="VA012_divPrepayOrder_' + $self.windowNo + '" class="va012-form-data" >'
                     + '                              <label>' + VIS.Msg.getMsg("VA012_PrepayOrders") + '</label>'
-                    + '                              <div id="VA012_ctrlOrder_' + $self.windowNo + '" ></div>'
+                    + '                              <div id="VA012_ctrlOrder_' + $self.windowNo + '" class="va012-div-prepay"></div>'
                     //+ '                              <input disabled id="VA012_txtPrepayOrder_' + $self.windowNo + '" type="text" class="va012-input-size">'
                     //+ '                              <a tabindex="1" id="VA012_btnPrepay_' + $self.windowNo + '" class="va012-edit-icon"></a>'
                     + '                              </div>'
@@ -1030,7 +1039,37 @@
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->');
-                divRow10.append(divRow10Col1).append(divRow10Col2);
+                // Added new fields Payment Method and CheckNo and CheckDate 
+                divRow10Col3 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                                  <div id="VA012_divPaymentMethod_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_PaymentMethod") + '</label>'
+                    + '                                      <select tabindex="16" id="VA012_txtPaymentMethod_' + $self.windowNo + '">'
+                    + '                                      </select>'
+                    + '                                  </div>'
+                    + '                                  <!-- end of form-group -->'
+                    + '                              </div>'
+                    + '                              <!-- end of col -->');
+                divRow10.append(divRow10Col1).append(divRow10Col2).append(divRow10Col3);
+                
+                divRow11 = $('<div class="row va012-fl-padd" style="width:102%">');
+                divRow11Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                                  <div id="VA012_divCheckNum_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CheckNo") + '</label>'
+                    + '                                      <input tabindex="17" id="VA012_txtCheckNum_' + $self.windowNo + '" type="text">'
+                    + '                                  </div>'
+                    + '                                  <!-- end of form-group -->'
+                    + '                              </div>'
+                    + '                              <!-- end of col -->');
+                divRow11Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-1">'
+                    + '                                  <div id="VA012_divCheckDate_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CheckDate") + '</label>'
+                    + '                                      <input tabindex="18" id="VA012_txtCheckDate_' + $self.windowNo + '" type="date" max="9999-12-31">'
+                    + '                                  </div>'
+                    + '                                  <!-- end of form-group -->'
+                    + '                              </div>'
+                    + '                              <!-- end of col -->');
+                divRow11.append(divRow11Col1).append(divRow11Col2);
+                //divRow10.append(divRow10Col1).append(divRow10Col2);
                 //+ '                  </div>');
                 //+ '                  <!-- end of form-wrap -->'
                 payHeaderWrap = $('<div id="VA012_paymentHeaderWrap_' + $self.windowNo + '" class="va012-payment-header-wrap">'
@@ -1127,8 +1166,8 @@
                 row2Col2divAmt.append(row2Col2Lble).append(row2Col2btnIn).append(row2Col2btnOut).append(_txtAmount.getControl()).append(row2Col2btnIcon);
                 row2Col2.append(row2Col2divAmt);
                 divRow2.append(row2Col1).append(row2Col2).append(row2Col3);
-                //appended the added fields of C_Currency_ID and C_ConversionType_ID
-                divformWrap.append(divRow1).append(divRow2).append(divRow10).append(divRow3).append(divRow4).append(divRow5).append(divRow6).append(divRow7).append(divRow8).append(divRow9);
+                //appended the added fields of C_Currency_ID and C_ConversionType_ID, added CheckNo,CheckDate and Payment Methods fields in divRow11 Element
+                divformWrap.append(divRow1).append(divRow2).append(divRow10).append(divRow11).append(divRow3).append(divRow4).append(divRow5).append(divRow6).append(divRow7).append(divRow8).append(divRow9);
                 divMidWrap.append(divtopWrap).append(divformWrap).append(payHeaderWrap);
                 contentDiv.append(divMidWrap).append(rightWrap);
                 tableTd1.append(contentDiv);
@@ -1362,10 +1401,10 @@
                 _divPrepayOrder = $root.find("#VA012_divPrepayOrder_" + $self.windowNo);
                 _divPaymentSchedule = $root.find("#VA012_divPaymentSchedule_" + $self.windowNo);
                 ///
-
-
-
-
+                //added variables for div Elements of Payment, CheckNo and CheckDate
+                _divPaymentMethod = $root.find("#VA012_divPaymentMethod_" + $self.windowNo);
+                _divCheckNum = $root.find("#VA012_divCheckNum_" + $self.windowNo);
+                _divCheckDate = $root.find("#VA012_divCheckDate_" + $self.windowNo);
             },
             getBaseCurrency: function () {
 
@@ -2169,6 +2208,15 @@
                                         //_txtTrxAmt.trigger('change');
                                         /*change by pratap*/
                                         loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
+                                        //get and set the PaymentMethod Value to the field
+                                        if (_ds[0]._paymentMethod_Id) {
+                                            _txtPaymentMethod.val(_ds[0]._paymentMethod_Id).prop("selected", true);
+                                        }
+                                        else {
+                                            _txtPaymentMethod.val(0).prop("selected", true);
+                                        }
+                                        //call change event of Payment Method
+                                        _txtPaymentMethod.trigger("change");
                                     }
                                     else {
                                         VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
@@ -2480,6 +2528,27 @@
                                     //_txtConversionType.trigger('change');
                                 }
                                 _txtConversionType.trigger('change');
+                                //Set the Values of paymentMethod, CheckNo and CheckDate
+                                if (result._paymentMethod_Id) {
+                                    _txtPaymentMethod.val(result._paymentMethod_Id).prop('selected', true);
+                                    _txtPaymentMethod.attr("disabled", true);
+                                    _txtPaymentMethod.removeClass("va012-mandatory");
+                                }
+                                else {
+                                    _txtPaymentMethod.addClass("va012-mandatory");
+                                }
+                                if (result._checkNo) {
+                                    _divCheckNum.show();
+                                    _txtCheckNum.val(result._checkNo);
+                                    _txtCheckNum.attr("disabled", true);
+                                    _txtCheckNum.removeClass("va012-mandatory");
+                                }
+                                if (result._checkDate) {
+                                    _divCheckDate.show();
+                                    _txtCheckDate.val(Globalize.format(new Date(result._checkDate), "yyyy-MM-dd"));
+                                    _txtCheckDate.attr("disabled", true);
+                                    _txtCheckDate.removeClass("va012-mandatory");
+                                }
                                 //_txtTrxAmt.trigger('change');
                             }
                             else {
@@ -2655,6 +2724,16 @@
                                     _txtConversionType.val(result._conversionType_Id).prop('selected', true);
                                 }
                                 _txtConversionType.trigger('change');
+                                //Set Payment Method on field
+                                if (result._paymentMethod_Id) {
+                                    _txtPaymentMethod.val(result._paymentMethod_Id).prop("selected", true);
+                                    _txtPaymentMethod.attr("disabled", false);
+                                }
+                                else {
+                                    _txtPaymentMethod.val(0).prop("selected", true);
+                                    _txtPaymentMethod.attr("disabled", false);
+                                }
+                                _txtPaymentMethod.trigger('change');
                             }
                             else {
                                 //handled the case when drag the unreconciled Line into new form after that 
@@ -4181,6 +4260,26 @@
 
                     _txtCharge.trigger("focus");
                     //_openingFromDrop = false;
+
+                    //set PaymentMethod, CheckNo and CheckDate
+                    if (_result._txtPaymentMethod) {
+                        _txtPaymentMethod.val(_result._txtPaymentMethod).prop("selected", true);
+                        if (!_result._ctrlPayment) {
+                            _txtPaymentMethod.attr("disabled", false);
+                        }
+                        else {
+                            _txtPaymentMethod.attr("disabled", true);
+                        }
+                    }
+                    else {
+                        _txtPaymentMethod.val(0).prop("selected", true);
+                        _txtPaymentMethod.attr("disabled", false);
+                    }
+                    _txtCheckNum.val(_result._txtCheckNum);
+                    if (_result._txtCheckDate) {
+                        _txtCheckDate.val(Globalize.format(new Date(_result._txtCheckDate), "yyyy-MM-dd"));
+                    }
+                    _txtPaymentMethod.trigger('change');
                 }
             },
             //End Load Statement Dialog
@@ -4721,6 +4820,21 @@
                     else {
                         setCurrencyandConversionType(null);
                     }
+                    //set the Payment Method and Check No
+                    if (_scheduleList.length > 0) {
+                        var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: 0, _InvSchdleList: _scheduleList });
+                        if (_getPayMethodList) {
+                            _txtPaymentMethod.val(_getPayMethodList._paymentMethod_Id).prop("selected", true);
+                            if (_getPayMethodList._checkNo) {
+                                _txtCheckNum.val(_getPayMethodList._checkNo);
+                            }
+                            else {
+                                _txtCheckNum.val("");
+                            }
+                            //call change event of Payment Method
+                            _txtPaymentMethod.trigger("change");
+                        }
+                    }
                 }
                 $_divPaymentSchedules.on(VIS.Events.onTouchStartOrClick, removeItem);
 
@@ -4811,6 +4925,25 @@
                         else {
                             setCurrencyandConversionType(null);
                         }
+                        
+                        //set the Payment Method and Check No
+                        if (_scheduleList.length > 0) {
+                            var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: 0, _InvSchdleList: _scheduleList });
+                            if (_getPayMethodList) {
+                                _txtPaymentMethod.val(_getPayMethodList[0]._paymentMethod_Id).prop("selected", true);
+                                if (_getPayMethodList[0]._checkNo) {
+                                    _txtCheckNum.val(_getPayMethodList[0]._checkNo);
+                                }
+                                else {
+                                    _txtCheckNum.val("");
+                                }
+                            }
+                        }
+                        else {
+                            _txtPaymentMethod.val(0).prop("selected", true);
+                        }
+                        //call change event of Payment Method
+                        _txtPaymentMethod.trigger("change");
                     }
                 }
                 function _getScheduleControls() {
@@ -5010,6 +5143,8 @@
                 //new fields as per Solution Design
                 newRecordForm.loadNewFormCurrency();
                 newRecordForm.loadConversionTypes();
+                //load Payment Methods
+                newRecordForm.loadPaymentMethods();
                 newRecordForm.loadCharge();
                 newRecordForm.loadTaxRate();
                 newRecordForm.loadPayment();
@@ -5181,6 +5316,8 @@
                         _divTransferType.hide();
                         _divCheckNo.hide();
 
+                        //show Payment Method
+                        _divPaymentMethod.show();
 
                         ////By Sukhwinder on 25-08-2016
                         var countVA034 = VIS.Utility.Util.getValueOfInt(VIS.DB.executeScalar("SELECT Count(AD_ModuleInfo_ID) FROM AD_ModuleInfo WHERE PREFIX='VA034_' AND IsActive = 'Y'"));
@@ -5291,6 +5428,9 @@
                         _divTaxRate.find("*").prop("disabled", false);
                         //_divTaxAmount.find("*").prop("disabled", false);
 
+                        //show Payment Method
+                        _divPaymentMethod.show();
+
                         //when _txtCharge should not have chargeid then add mandatory class
                         if (VIS.Utility.Util.getValueOfInt(_txtCharge.attr('chargeid')) == 0) {
                             _txtCharge.addClass("va012-mandatory");
@@ -5353,6 +5493,8 @@
                         divRow4Col1TrxAmt.show();
                         _divDifference.show();
                         _divDifferenceType.show();
+                        //hide Payment Method
+                        _divPaymentMethod.hide();
                         //get the Amount in standard format
                         if (convertAmtCulture(_txtDifference.getControl().val()) == 0) {
 
@@ -5526,6 +5668,99 @@
                     }
                     else {
                         _txtCurrency.addClass("va012-mandatory");
+                    }
+                });
+
+                //on change event for PaymentMethod
+                _txtPaymentMethod.on('change', function () {
+                    if (VIS.Utility.Util.getValueOfInt(_txtPaymentMethod.val()) > 0) {
+                        var _whrClause = "IsActive='Y' AND VA009_PaymentMethod_ID=" + _txtPaymentMethod.val();
+                        var getBaseType = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetPaymentBaseType", { _whereClause: _whrClause });
+                        if (getBaseType == "S") {
+                            _divCheckNum.show();
+                            if (_scheduleList.length > 0) {
+                                //set the Payment Method and Check No
+                                var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: _txtPaymentMethod.val(), _InvSchdleList: _scheduleList });
+                                if (_getPayMethodList) {
+                                    if (_getPayMethodList._checkNo) {
+                                        _txtCheckNum.val(_getPayMethodList._checkNo);
+                                        _txtCheckNum.attr("disabled", true);
+                                        _txtCheckNum.removeClass("va012-mandatory");
+                                    }
+                                    else {
+                                        _txtCheckNum.val("");
+                                        _txtCheckNum.attr("disabled", false);
+                                        _txtCheckNum.addClass("va012-mandatory");
+                                    }
+                                    if (_getPayMethodList._status) {
+                                        _txtCheckNum.val("");
+                                        VIS.ADialog.info("", null, _getPayMethodList._status, "");
+                                    }
+                                }
+                            }
+                            if (!_txtCheckNum.val()) {
+                                _txtCheckNum.attr("disabled", false);
+                                _txtCheckNum.addClass("va012-mandatory");
+                            }
+                            else {
+                                _txtCheckNum.attr("disabled", true);
+                                _txtCheckNum.removeClass("va012-mandatory");
+                            }
+                            _divCheckDate.show();
+                            if (!_txtCheckDate.val()) {
+                                _txtCheckDate.attr("disabled", false);
+                                _txtCheckDate.addClass("va012-mandatory");
+                            }
+                            else {
+                                _txtCheckDate.attr("disabled", true);
+                                _txtCheckDate.removeClass("va012-mandatory");
+                            }
+                        }
+                        else {
+                            _divCheckNum.hide();
+                            _txtCheckNum.val("");
+                            _txtCheckNum.removeClass("va012-mandatory");
+                            _divCheckDate.hide();
+                            _txtCheckDate.val("");
+                            _txtCheckDate.removeClass("va012-mandatory");
+                        }
+                        _txtPaymentMethod.removeClass("va012-mandatory");
+                    }
+                    else {
+                        _txtPaymentMethod.attr("disabled", false);
+                        _txtPaymentMethod.addClass("va012-mandatory");
+                        _txtCheckNum.val("");
+                        _divCheckNum.hide();
+                        _txtCheckNum.removeClass("va012-mandatory");
+                        _txtCheckDate.val("");
+                        _divCheckDate.hide();
+                        _txtCheckDate.removeClass("va012-mandatory");
+                    }
+                });
+
+                //on change event for Check Number
+                _txtCheckNum.on('change', function () {
+                    if (_txtCheckNum.val()) {
+                        _txtCheckNum.removeClass("va012-mandatory");
+                    }
+                    else {
+                        _txtCheckNum.addClass("va012-mandatory");
+                    }
+                });
+
+                //on change event for Check Date
+                _txtCheckDate.on('change', function () {
+                    if (_txtCheckDate.val()) {
+                        if (!$_ctrlPayment.value) {
+                            if (_txtCheckDate.val() > _dtStatementDate.val()) {
+                                _txtCheckDate.val("");
+                                VIS.ADialog.info("VA012_ChkDateCantbeGratrStmtDate", null, "", "");
+                            }
+                        }
+                        _txtCheckDate.removeClass("va012-mandatory");
+                    }
+                    else {
+                        _txtCheckDate.addClass("va012-mandatory");
                     }
                 });
 
@@ -5758,6 +5993,21 @@
 
                     if (_formData[0]["_txtAmount"] == null || _formData[0]["_txtAmount"] == "" || _formData[0]["_txtAmount"] == "0" || _formData[0]["_txtAmount"] == "0.00") {
                         VIS.ADialog.info("VA012_PleaseEnterAmount", null, "", "");
+                        return;
+                    }
+                    //PaymentMethod is mandatory if transaction is not contra
+                    if (!_formData[0]["_txtPaymentMethod"] && !_formData[0]["_ctrlCashLine"]) {
+                        VIS.ADialog.info("VA012_PleaseSelectPayMethod", null, "", "");
+                        return;
+                    }
+                    //CheckNo is mandatory if PaymentMethod is Check
+                    if (!_formData[0]["_ctrlPayment"] && _txtCheckNum.hasClass("va012-mandatory") && _formData[0]["_txtCheckNum"] != null && _formData[0]["_txtCheckNum"] != "") {
+                        VIS.ADialog.info("VA012_PleaseEnterCheckNo", null, "", "");
+                        return;
+                    }
+                    //CheckNo is mandatory if PaymentMethod is Check
+                    if (!_formData[0]["_ctrlPayment"] && _txtCheckDate.hasClass("va012-mandatory") && !_formData[0]["_txtCheckDate"]) {
+                        VIS.ADialog.info("VA012_PleaseSelectCheckDate", null, "", "");
                         return;
                     }
 
@@ -6584,6 +6834,10 @@
                 //new field Id's which is ConversionType and Currency
                 _txtCurrency = $_formNewRecord.find("#VA012_txtCurrency_" + $self.windowNo);
                 _txtConversionType = $_formNewRecord.find("#VA012_txtConversionType_" + $self.windowNo);
+                //get the ID Controls for Paymentmethod, CheckNo and checkDate
+                _txtPaymentMethod = $_formNewRecord.find("#VA012_txtPaymentMethod_" + $self.windowNo);
+                _txtCheckNum = $_formNewRecord.find("#VA012_txtCheckNum_" + $self.windowNo);
+                _txtCheckDate = $_formNewRecord.find("#VA012_txtCheckDate_" + $self.windowNo);
             },
 
 
@@ -7059,6 +7313,11 @@
                 //C_Currency_ID
                 formData["_txtCurrency"] = _txtCurrency.val();
 
+                //VA009_PaymentMethod_ID, CheckNo and CheckDate to Create the Payment
+                formData["_txtPaymentMethod"] = _txtPaymentMethod.val();
+                formData["_txtCheckNum"] = _txtCheckNum.val();
+                formData["_txtCheckDate"] = _txtCheckDate.val();
+
                 _formData.push(formData);
                 return _formData;
             },
@@ -7190,6 +7449,11 @@
                 this.loadNewFormCurrency();
                 _txtConversionType.addClass("va012-mandatory");
                 this.loadConversionTypes();
+                //add mandatory class to Payment Method field
+                _txtPaymentMethod.attr("disabled", false);
+                _txtPaymentMethod.addClass("va012-mandatory");
+                //Load Payment Methods
+                this.loadPaymentMethods();
                 _txtCurrency.addClass("va012-mandatory");
                 //C_ConversionType_ID
                 _txtConversionType.prop('selectedIndex', 0);
@@ -7198,6 +7462,13 @@
                 _txtCurrency.attr("disabled", false);
                 //set false when form get refreshed
                 _reconciledLine = false;
+                //refresh and hidden the fields of CheckNo and CheckDate
+                _txtCheckNum.val("");
+                _divCheckNum.hide();
+                _txtCheckNum.removeClass("va012-mandatory");
+                _txtCheckDate.val("");
+                _divCheckDate.hide();
+                _txtCheckDate.removeClass("va012-mandatory");
             },
             scheduleRefresh: function () {
                 _scheduleList = [];
@@ -7271,6 +7542,11 @@
                 this.loadNewFormCurrency();
                 _txtConversionType.addClass("va012-mandatory");
                 this.loadConversionTypes();
+                //Load Payment Methods
+                this.loadPaymentMethods();
+                _txtPaymentMethod.attr("disabled", false);
+                //add mandatory class to Payment Method field
+                _txtPaymentMethod.addClass("va012-mandatory");
                 _txtCurrency.addClass("va012-mandatory");
                 //C_ConversionType_ID
                 _txtConversionType.prop('selectedIndex', 0);
@@ -7279,6 +7555,13 @@
                 _txtCurrency.attr("disabled", false);
                 //set false when form get refreshed
                 _reconciledLine = false;
+                //refresh the CheckNo and CheckDate
+                _txtCheckNum.val("");
+                _divCheckNum.hide();
+                _txtCheckNum.removeClass("va012-mandatory");
+                _txtCheckDate.val("");
+                _divCheckDate.hide();
+                _txtCheckDate.removeClass("va012-mandatory");
             },
             newRecordDispose: function () {
                 $_formNewRecord = null;
@@ -7349,6 +7632,10 @@
                 _txtConversionType = null;
                 //set as null to dispose
                 _reconciledLine = null;
+                //clear the Values of PaymentMethod, CheckNo and CheckDate
+                _txtPaymentMethod = null;
+                _txtCheckDate = null;
+                _txtCheckNum = null;
             },
 
             //load Currencies           
@@ -7390,6 +7677,34 @@
                     }
                     _txtConversionType.val(0);
                     _txtConversionType.addClass('va012-mandatory');
+                }
+            },
+
+            //load PaymentMethods
+            loadPaymentMethods: function () {
+                var getPaymentMethod = null;
+                //clear the previous options
+                $(_txtPaymentMethod[0]).empty();
+                //shown the records only IsActive is true.
+                if (ad_Column) {//check AD_Column_ID has value or not
+                    //VIS.MLookupFactory.get(Context, windowNo, AD_Column_ID, AD_Reference_ID,ColumnName, AD_Reference_Value_ID, IsParent, ValidationCode);
+                    var _txtPaymentMethodLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, ad_Column, VIS.DisplayType.TableDir, "VA009_PaymentMethod_ID", 0, false, "VA009_PaymentMethod.IsActive='Y' AND VA009_PaymentMethod.VA009_PAYMENTBASETYPE!='B'");
+                    //_txtConversionTypeLookUp.getData(mandatory, onlyValidated, onlyActive, temporary);
+                    var getPaymentMethod = _txtPaymentMethodLookUp.getData(true, true, false, false);
+
+                    _txtPaymentMethod.append('<option value="0" ></option>');
+                    if (getPaymentMethod != null && getPaymentMethod != undefined && getPaymentMethod.length > 0) {
+                        for (var i = 0; i < getPaymentMethod.length; i++) {
+                            _txtPaymentMethod.append('<option value=' + getPaymentMethod[i].Key + '>' + getPaymentMethod[i].Name + '</option>');
+                        }
+                        _txtPaymentMethod.val(0);
+                        _txtPaymentMethod.addClass('va012-mandatory');
+                        //refresh and hidden the fields of CheckNo and CheckDate
+                        _divCheckNum.hide();
+                        _txtCheckNum.removeClass("va012-mandatory");
+                        _divCheckDate.hide();
+                        _txtCheckDate.removeClass("va012-mandatory");
+                    }
                 }
             }
         };
@@ -7495,6 +7810,8 @@
             _prepayList = [];
             _prepayDataList = [];
             newRecordForm.newRecordDispose();
+            //clear value
+            ad_Column = null;
         };
         function busyIndicator(_obj, _isShow, _position) {
             $BusyIndicator = $("<div class='vis-apanel-busy va012-busy-bank-statement'>");

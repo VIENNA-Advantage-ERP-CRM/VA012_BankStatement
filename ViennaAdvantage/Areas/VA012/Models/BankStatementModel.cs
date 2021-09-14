@@ -1338,6 +1338,101 @@ namespace VA012.Models
         }
 
         /// <summary>
+        /// Get AD_Column_ID for VA009_PaymentMethod
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>AD_Column_ID</returns>
+        public int GetAD_Column_IDForPayMethod(Ctx ctx)
+        {
+            return Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Column_ID FROM AD_Column WHERE ColumnName='VA009_PaymentMethod_ID' AND AD_Table_ID=(SELECT AD_Table_ID FROM AD_Table WHERE IsActive='Y' AND TableName='VA009_PaymentMethod') AND IsActive='Y'", null, null));
+        }
+
+        /// <summary>
+        /// Get AutoCheckNo and Payment Method
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="bnkAct_Id">C_BankAccount_ID</param>
+        /// <param name="payMethod">VA009_PaymentMethod_ID</param>
+        /// <param name="invSchdleList">C_InvoicePaySchedule_ID's</param>
+        /// <returns>return object that contains AutoCheckNo, PaymentMethod and status</returns>
+        public PaymentResponse GetAutoCheckNo(Ctx ctx, int bnkAct_Id, int payMethod, int[] invSchdleList)
+        {
+            string sql;
+            string _PaymentBaseType = null;
+            string _DocBaseType = null;
+            DataSet _ds = null;
+            PaymentResponse _obj = new PaymentResponse();
+            //get PaymentMethod,BaseType and DocBaseType if PaymentMethod is zero otherwise get CheckNo along with paymentMethod
+            sql = @"SELECT dt.DocBaseType,pm.VA009_PaymentBaseType, pay.VA009_PaymentMethod_ID FROM C_Invoice inv
+                    INNER JOIN C_InvoicePaySchedule pay ON inv.C_Invoice_ID=pay.C_Invoice_ID
+                    INNER JOIN VA009_PaymentMethod pm ON inv.VA009_PaymentMethod_ID=pm.VA009_PaymentMethod_ID
+                    INNER JOIN C_DocType dt ON inv.C_DocType_ID=dt.C_DocType_ID
+                    WHERE pay.C_InvoicePaySchedule_ID IN (" + string.Join(",", invSchdleList) + @")";
+            if (payMethod > 0) {
+                sql += " AND pm.VA009_PaymentMethod_ID = " + payMethod;
+            }
+            sql += " ORDER BY C_InvoicePaySchedule_ID DESC";
+
+            _ds = DB.ExecuteDataset(sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                payMethod = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
+                _PaymentBaseType = Util.GetValueOfString(_ds.Tables[0].Rows[0]["VA009_PaymentBaseType"]);
+                _DocBaseType = Util.GetValueOfString(_ds.Tables[0].Rows[0]["DocBaseType"]);
+            }
+            else if (payMethod > 0)
+            {
+                _PaymentBaseType = Util.GetValueOfString(DB.ExecuteScalar("SELECT VA009_PaymentBaseType FROM VA009_PaymentMethod WHERE IsActive='Y' AND VA009_PaymentMethod_ID=" + payMethod, null, null));
+            }
+            //get Auto CheckNo if Invoice DocBaseType is AP Inovice or AP Credit Memo(API, APC) and PaymentBaseType is Check
+            if (((MDocBaseType.DOCBASETYPE_APINVOICE.Equals(_DocBaseType) || MDocBaseType.DOCBASETYPE_APCREDITMEMO.Equals(_DocBaseType))
+                && "S".Equals(_PaymentBaseType)) || ("S".Equals(_PaymentBaseType) && payMethod > 0))
+            {
+                //get Bank Account document record on respective condition
+                sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext FROM 
+                            C_BankAccountDoc C_BankAccountDoc INNER JOIN C_BankAccount C_BankAccount ON (C_BankAccount.C_BankAccount_ID = C_BankAccountDoc.C_BankAccount_ID)
+                        Where C_BankAccountDoc.IsActive='Y' 
+                        AND C_BankAccountDoc.PaymentRule='S' 
+                        AND C_BankAccount.ChkNoAutoControl = 'Y' 
+                        AND EndChkNumber != (CurrentNext-1)
+                        AND C_BankAccountDoc.VA009_PaymentMethod_ID = " + payMethod + @"
+                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id;
+                //Used DataSet in place of Execute Scalar to get all values from one query
+                _ds = DB.ExecuteDataset(sql, null, null);
+                if (_ds != null && _ds.Tables[0].Rows.Count > 0 && Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BankAccountDoc_ID"]) > 0)
+                {
+                    if (Util.GetValueOfInt(_ds.Tables[0].Rows[0]["CurrentNext"]) <= 0)
+                    {
+                        _obj._status = Msg.GetMsg(ctx, "VA009_NoCurNxtForAcctNo");
+                        return _obj;
+                    }
+                    else
+                    {
+                        _obj._checkNo = Util.GetValueOfString(_ds.Tables[0].Rows[0]["CurrentNext"]);
+                    }
+                }
+                else
+                {
+                    //Auto check control not defined for selected Payment Method on Bank Account Document
+                    _obj._status = Msg.GetMsg(ctx, "VA009_PayMthodOrBkAcctDocNotFund");
+                }
+            }
+            _obj._paymentMethod_Id = payMethod;
+            return _obj;
+        }
+
+        /// <summary>
+        /// Get the Payment Base Type
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="whereClause">Where Condition</param>
+        /// <returns>returns Payment Base Type in string Type</returns>
+        public string GetPaymentBaseType(Ctx ctx, string whereClause)
+        {
+            return Util.GetValueOfString(DB.ExecuteScalar("SELECT VA009_PaymentBaseType FROM VA009_PaymentMethod WHERE IsActive='Y' AND " + whereClause, null, null));
+        }
+
+        /// <summary>
         /// Complete the Payment Record when cal this function to complete the record
         /// </summary>
         /// <param name="ctx">Context</param>
@@ -1738,15 +1833,16 @@ namespace VA012.Models
 
             if (transcType.Equals("IS"))
             {
-                _sql = @"SELECT INV.C_Currency_ID,INV.C_ConversionType_ID,PAY.DueAmt,DT.DocBaseType FROM C_InvoicePaySchedule PAY
+                //added VA009_PaymentMethod_ID and used Order BY to get PaymentMethod from latest record of Schedule
+                _sql = @"SELECT INV.C_Currency_ID,INV.C_ConversionType_ID,PAY.DueAmt,DT.DocBaseType, PAY.VA009_PaymentMethod_ID FROM C_InvoicePaySchedule PAY
                         INNER JOIN C_Invoice INV ON (PAY.C_Invoice_ID=INV.C_Invoice_ID) 
 		                INNER JOIN C_DocType DT ON (DT.C_DOCTYPE_ID=INV.C_DOCTYPE_ID)
-			            WHERE PAY.IsActive='Y' AND  PAY.C_INVOICEPAYSCHEDULE_ID IN (" + recordIds + ")";
+			            WHERE PAY.IsActive='Y' AND  PAY.C_INVOICEPAYSCHEDULE_ID IN (" + recordIds + ") ORDER BY PAY.C_INVOICEPAYSCHEDULE_ID DESC";
 
                 _ds = DB.ExecuteDataset(_sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
                 {
-
+                    
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                     {
                         list = new InvoicePaySchedule();
@@ -1759,6 +1855,8 @@ namespace VA012.Models
                         {
                             list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID);
                         }
+                        //Get the Payment Method
+                        list._paymentMethod_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
                         payList.Add(list);
                     }
                 }
@@ -2047,6 +2145,10 @@ namespace VA012.Models
                 //get Currency_ID and C_ConversionType_ID
                 statementDetail._txtCurrency = _pay.GetC_Currency_ID();
                 statementDetail._txtConversionType = _pay.GetC_ConversionType_ID();
+                //Get Payment Method, Check Number and Check Date
+                statementDetail._txtPaymentMethod = _pay.GetVA009_PaymentMethod_ID();
+                statementDetail._txtCheckNum = _pay.GetCheckNo();
+                statementDetail._txtCheckDate = _pay.GetCheckDate();
                 //if (_bankStatementLine.GetStmtAmt() > 0)
                 //{
                 //    statementDetail._txtTrxAmt = Math.Abs(_trxamt);
@@ -2105,7 +2207,7 @@ namespace VA012.Models
                                     WHEN (dt.DOCBASETYPE IN ('API','ARC'))
                                      THEN ROUND(pay.DUEAMT,NVL(BCURR.StdPrecision,2))*-1
                                   END
-                                END AS DueAmt, inv.C_Currency_ID, inv.C_ConversionType_ID
+                                END AS DueAmt, inv.C_Currency_ID, inv.C_ConversionType_ID, inv.VA009_PaymentMethod_ID, dt.DocBaseType
                                 FROM C_InvoicePaySchedule pay
                                 INNER JOIN C_Invoice inv ON (pay.C_Invoice_ID = inv.C_Invoice_ID)
                                 INNER JOIN C_DocType dt ON (dt.C_DocType_ID = inv.C_DocType_ID)
@@ -2117,6 +2219,20 @@ namespace VA012.Models
                     //get Currency_ID and C_ConversionType_ID
                     statementDetail._txtCurrency = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]);
                     statementDetail._txtConversionType = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_ConversionType_ID"]);
+                    //Get the PaymentMethod_ID
+                    statementDetail._txtPaymentMethod = Util.GetValueOfInt(data.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
+                    //Get Auto Check No
+                    if (MDocBaseType.DOCBASETYPE_APINVOICE.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])) ||
+                        MDocBaseType.DOCBASETYPE_APCREDITMEMO.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])))
+                    {
+                        int _bankAcct_Id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BankAccount_ID FROM C_BankStatement WHERE IsActive='Y' AND C_BankStatement_ID=" + _bankStatementLine.GetC_BankStatement_ID(), null, null));
+                        statementDetail._errorMsg = UpdateCheckNoOnPayment(ctx, _bankAcct_Id, statementDetail._txtPaymentMethod, null);
+                        if (string.IsNullOrEmpty(statementDetail._errorMsg)) 
+                        {
+                            statementDetail._txtCheckNum = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT CurrentNext FROM C_BankAccountDoc WHERE IsActive='Y' AND  
+                            C_BankAccount_ID=" + _bankAcct_Id + " AND VA009_PaymentMethod_ID=" + statementDetail._txtPaymentMethod, null, null));
+                        }
+                    }
                 }
             }
             //Get TrxAmount when Drag Prepay Order on to the Line
@@ -2127,7 +2243,7 @@ namespace VA012.Models
                         WHEN(ord.C_Currency_ID != bcurr.C_Currency_ID)
                           THEN CURRENCYCONVERT(ord.GrandTotal, ord.C_Currency_ID, bcurr.C_Currency_ID, " + GlobalVariable.TO_DATE(statementDetail._dtStatementDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, " + _bankStatementLine.GetAD_Org_ID() + @")
                         ELSE ROUND(ord.GrandTotal, NVL(bcurr.StdPrecision,2))
-                        END AS GrandTotal, ord.C_Currency_ID, ord.C_ConversionType_ID, ord.C_Order_ID 
+                        END AS GrandTotal, ord.C_Currency_ID, ord.C_ConversionType_ID, ord.C_Order_ID, ord.VA009_PaymentMethod_ID 
                         FROM C_Order ord LEFT JOIN C_Currency bcurr ON (" + _bankStatementLine.GetC_Currency_ID() + @" = bcurr.C_Currency_ID) WHERE ord.IsActive='Y' AND ord.C_Order_ID =" + payment_ID, null, null);
 
                 if (data != null && data.Tables[0].Rows.Count > 0)
@@ -2138,6 +2254,8 @@ namespace VA012.Models
                     statementDetail._txtConversionType = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_ConversionType_ID"]);
                     //get the C_Order_ID
                     statementDetail._ctrlOrder = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Order_ID"]);
+                    //Get the Payment Method
+                    statementDetail._txtPaymentMethod = Util.GetValueOfInt(data.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
                 }
             }
 
@@ -4302,11 +4420,9 @@ namespace VA012.Models
                         }
                         /*end change by pratap*/
 
-                        //uncomment this
-                        _pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
-
-
-
+                        //set Payment Method by the form field Value
+                        _pay.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);
+                        //_pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
 
                         #region OverUnder
 
@@ -4359,7 +4475,7 @@ namespace VA012.Models
                         _pay.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_INVOICEPAYSCHEDULE_ID"]));
 
                         //Set auto CheckNo
-                        string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT VA009_PAYMENTBASETYPE from VA009_PAYMENTMETHOD where VA009_PAYMENTMETHOD_ID=" + Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"])));
+                        string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT VA009_PAYMENTBASETYPE from VA009_PAYMENTMETHOD where VA009_PAYMENTMETHOD_ID=" + _formData[0]._txtPaymentMethod));
                         if ("S".Equals(_payBaseType))    // Check
                         {
                             _pay.SetTenderType(X_C_Payment.TENDERTYPE_Check);
@@ -4374,6 +4490,9 @@ namespace VA012.Models
                                 //Want space between the Message and AccountNo
                                 return checkMsg + " : " + _acctNo;
                             }
+                            //If Payment Method BaseType is Check then set the CheckNo and CheckDate
+                            _pay.SetCheckNo(_formData[0]._txtCheckNum);
+                            _pay.SetCheckDate(_formData[0]._txtCheckDate);
                         }
                         else if ("K".Equals(_payBaseType))          // Credit Card
                         {
@@ -4465,8 +4584,9 @@ namespace VA012.Models
                         _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._txtCurrency)); //Set the Currency which selected on new form
                         _pay.SetC_ConversionType_ID(_formData[0]._txtConversionType); //Set the Currency ConversionType which selected on new form
                         //_pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
-                        //get C_PaymentMethod_ID from Invoice
-                        _pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
+                        //get C_PaymentMethod_ID from Invoice or Selected by the user on form
+                        _pay.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);
+                        //_pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
 
                         //Set auto CheckNo
                         string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"select VA009_PAYMENTBASETYPE from VA009_PAYMENTMETHOD where VA009_PAYMENTMETHOD_ID=" + Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"])));
@@ -4485,6 +4605,9 @@ namespace VA012.Models
                                 //Want space between the Message and AccountNo
                                 return checkMsg + " : " + _acctNo;
                             }
+                            //If Payment Method BaseType is Check then set the CheckNo and CheckDate
+                            _pay.SetCheckNo(_formData[0]._txtCheckNum);
+                            _pay.SetCheckDate(_formData[0]._txtCheckDate);
                         }
                         else if ("K".Equals(_payBaseType))          // Credit Card
                         {
@@ -4825,18 +4948,19 @@ namespace VA012.Models
         /// <returns>DocumentNo or Error message (string type)</returns>
         public string CreatePaymentFromOrder(Ctx ctx, List<StatementProp> _formData, Trx _trx)
         {
-            int _paymentMethodID = 0;
+            //int _paymentMethodID = 0;
             decimal _txtAmount = 0;
             try
             {
-                if (Util.GetValueOfInt(_formData[0]._ctrlOrder) > 0)
-                {
-                    _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_Order WHERE C_ORDER_ID=" + _formData[0]._ctrlOrder));
-                }
-                if (_paymentMethodID <= 0)
-                {
-                    _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPartner WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
-                }
+                //Getting the PaymentMethod_ID from Bank Statement form so not required commented code to get PaymentMethod
+                //if (Util.GetValueOfInt(_formData[0]._ctrlOrder) > 0)
+                //{
+                //    _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_Order WHERE C_ORDER_ID=" + _formData[0]._ctrlOrder));
+                //}
+                //if (_paymentMethodID <= 0)
+                //{
+                //    _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPartner WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                //}
 
                 //get Bpartner Location
                 int _bPartnerLocation_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BPartner_Location_ID FROM C_BPartner_Location WHERE IsActive='Y' AND C_BPartner_ID=" + _formData[0]._ctrlBusinessPartner));
@@ -4867,7 +4991,16 @@ namespace VA012.Models
                 _pay.SetC_Currency_ID(_formData[0]._txtCurrency);// set Currency selected on form.
                 _pay.SetC_ConversionType_ID(_formData[0]._txtConversionType);//set conversionType selected on form.
                 _pay.SetPayAmt(Math.Abs(_txtAmount));//Set Amount which is converted based on Currency and ConversionRate
-                _pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
+                //Set Payment Method by getting from the form
+                _pay.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);
+                //_pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
+                //check the condition CheckNo and Date has values or not
+                if (!string.IsNullOrEmpty(_formData[0]._txtCheckNum) && _formData[0]._txtCheckDate.HasValue)
+                {
+                    //If Payment Method BaseType is Check then set the CheckNo and CheckDate
+                    _pay.SetCheckNo(_formData[0]._txtCheckNum);
+                    _pay.SetCheckDate(_formData[0]._txtCheckDate);
+                }
                 _pay.SetC_Order_ID(_formData[0]._ctrlOrder);
 
                 if (!_pay.Save())
@@ -4937,13 +5070,14 @@ namespace VA012.Models
             try
             {
                 //based on txtAmout get the PaymentMethod with respective column
-                string payMethod_ID = _formData[0]._txtAmount >= 0 ? "VA009_PAYMENTMETHOD_ID" : "VA009_PO_PaymentMethod_ID";
-                _paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT " + payMethod_ID + " FROM C_BPartner WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
-                //if PaymentMethod_ID is zero it will return a message not do the Payment
-                if (_paymentMethodID == 0)
-                {
-                    return "VA012_NotfoundPayMethodOnBPartner";
-                }
+                //get the PaymentMethod_ID from the bank statement form not from the BP
+                //string payMethod_ID = _formData[0]._txtAmount >= 0 ? "VA009_PAYMENTMETHOD_ID" : "VA009_PO_PaymentMethod_ID";
+                //_paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT " + payMethod_ID + " FROM C_BPartner WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
+                ////if PaymentMethod_ID is zero it will return a message not do the Payment
+                //if (_paymentMethodID == 0)
+                //{
+                //    return "VA012_NotfoundPayMethodOnBPartner";
+                //}
                 //get Bpartner Location
                 int _bPartnerLocation_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BPartner_Location_ID FROM C_BPartner_Location WHERE IsActive='Y' AND C_BPartner_ID=" + _formData[0]._ctrlBusinessPartner));
 
@@ -4967,7 +5101,17 @@ namespace VA012.Models
                 _pay.SetC_ConversionType_ID(_formData[0]._txtConversionType); //Set the Currency ConversionType selected on new form
                 _pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
                 //uncomment this
-                _pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
+                //Set the PaymentMethod_ID 
+                _pay.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);
+                //_pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
+
+                //check the condition CheckNo and Date has values or not
+                if (!string.IsNullOrEmpty(_formData[0]._txtCheckNum) && _formData[0]._txtCheckDate.HasValue)
+                {
+                    //If Payment Method BaseType is Check then set the CheckNo and CheckDate
+                    _pay.SetCheckNo(_formData[0]._txtCheckNum);
+                    _pay.SetCheckDate(_formData[0]._txtCheckDate);
+                }
 
                 //remove this
                 //_pay.SetVA009_PaymentMethod_ID(1000006);
@@ -5171,6 +5315,10 @@ namespace VA012.Models
             //defined new Variables
             int _currency_Id = 0;
             int _conversionType_Id = 0;
+            //for PaymentMethod_ID, CheckNo and CheckDate
+            int _paymentMethod_Id = 0;
+            string _checkNo = null;
+            DateTime? _checkDate = null;
 
             int _accountCurrencyID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + accountID));
 
@@ -5201,7 +5349,7 @@ namespace VA012.Models
                             WHEN (DT.DOCBASETYPE='APP')
                             THEN PAY.PAYAMT*-1
                             END
-                        END AS AMOUNT, PAY.C_Currency_ID, PAY.C_ConversionType_ID
+                        END AS AMOUNT, PAY.C_Currency_ID, PAY.C_ConversionType_ID, PAY.VA009_PaymentMethod_ID, PAY.CheckNo, PAY.CheckDate
                     FROM C_Payment PAY
                     INNER JOIN C_DocType DT
                     ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID)
@@ -5221,6 +5369,10 @@ namespace VA012.Models
                     _currency_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_Currency_ID"]);
                     _conversionType_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_ConversionType_ID"]);
                     _payAmt = Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["AMOUNT"]);
+                    //get the PaymentMethod_ID, CheckNo and CheckDate
+                    _paymentMethod_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
+                    _checkNo = Util.GetValueOfString(_ds.Tables[0].Rows[0]["CheckNo"]);
+                    _checkDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[0]["CheckDate"]);
 
                 }
                 //string.IsNullOrEmpty() method
@@ -5255,6 +5407,10 @@ namespace VA012.Models
             //Set the property Values of Currency and ConversionType
             _obj._conversionType_Id = _conversionType_Id;
             _obj._currency_Id = _currency_Id;
+            //Set PaymentMethod, CheckNo and CheckDate
+            _obj._paymentMethod_Id = _paymentMethod_Id;
+            _obj._checkNo = _checkNo;
+            _obj._checkDate = _checkDate;
             _obj._status = "Success";
             return _obj;
         }
@@ -6234,7 +6390,7 @@ namespace VA012.Models
                             THEN CURRENCYCONVERT(ord.GrandTotal, ord.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, "
                                         + GlobalVariable.TO_DATE(statementDate, true) + @", ord.C_ConversionType_ID, ord.AD_Client_ID, ord.AD_Org_ID) 
                             ELSE ROUND(ord.GrandTotal,NVL(BCURR.StdPrecision,2))
-                          END AS AMOUNT,ORD.C_BPARTNER_ID, ORD.C_Currency_ID, ORD.C_ConversionType_ID, ord.GrandTotal
+                          END AS AMOUNT,ORD.C_BPARTNER_ID, ORD.C_Currency_ID, ORD.C_ConversionType_ID, ord.GrandTotal, ord.VA009_PaymentMethod_ID
                         FROM C_Order ORD
                         LEFT JOIN C_Currency BCURR
                         ON (" + _currencyId + @" =BCURR.C_CURRENCY_ID)
@@ -6249,6 +6405,8 @@ namespace VA012.Models
                         _payAmt = Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["AMOUNT"]);
                         //Actual amount
                         _unConvtpayAmt = Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["GrandTotal"]);
+                        //Get Payment Method
+                        _obj._paymentMethod_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
 
                         //_orderAmt is zero and _unConvtOrderAmt is have non zero amount then it means no ConversionRate found return the message
                         if (_payAmt == 0 && _unConvtpayAmt != 0)
@@ -6497,6 +6655,7 @@ namespace VA012.Models
         public int c_invoicepayschedule_id { get; internal set; }
         public decimal DueAmount { get; internal set; }
         public decimal Amount { get; internal set; }
+        public int _paymentMethod_Id { get; internal set; }
     }
 
     public class MatchBase
@@ -6510,6 +6669,7 @@ namespace VA012.Models
         public string _status { get; set; }
         public int _conversionType_Id { get; set; }
         public int _currency_Id { get; set; }
+        public int _paymentMethod_Id { get; set; }
     }
     public class ContraResponse
     {
@@ -6525,6 +6685,9 @@ namespace VA012.Models
         public string _status { get; set; }
         public int _currency_Id { get; set; }
         public int _conversionType_Id { get; set; }
+        public int _paymentMethod_Id { get; set; }
+        public DateTime? _checkDate { get; set; }
+        public string _checkNo { get; set; }
     }
 
     public class ProcessResponse
@@ -6625,6 +6788,10 @@ namespace VA012.Models
         public int _txtCurrency { get; set; }
         public int _txtConversionType { get; set; }
         public bool _reconciled { get; internal set; }
+        public int _txtPaymentMethod { get; set; }
+        public DateTime? _txtCheckDate { get; set; }
+        public string _errorMsg { get; set; }
+        public string _txtCheckNum { get; set; }
         // public List<GetScheduleProp> _getSchedules { get; set; }
     }
     public class PaymentProp
