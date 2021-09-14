@@ -1068,5 +1068,21 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// Get AD_Column_ID for VA009_PaymentMethod
+        /// </summary>
+        /// <returns>AD_Column_ID</returns>
+        public JsonResult GetAD_Column_IDForPayMethod()
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetAD_Column_IDForPayMethod(ctx));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
     }
 }

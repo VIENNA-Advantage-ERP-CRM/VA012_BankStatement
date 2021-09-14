@@ -1338,6 +1338,16 @@ namespace VA012.Models
         }
 
         /// <summary>
+        /// Get AD_Column_ID for VA009_PaymentMethod
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>AD_Column_ID</returns>
+        public int GetAD_Column_IDForPayMethod(Ctx ctx)
+        {
+            return Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Column_ID FROM AD_Column WHERE ColumnName='VA009_PaymentMethod_ID' AND AD_Table_ID=(SELECT AD_Table_ID FROM AD_Table WHERE IsActive='Y' AND TableName='VA009_PaymentMethod') AND IsActive='Y'", null, null));
+        }
+
+        /// <summary>
         /// Get AutoCheckNo and Payment Method
         /// </summary>
         /// <param name="ctx">Context</param>
