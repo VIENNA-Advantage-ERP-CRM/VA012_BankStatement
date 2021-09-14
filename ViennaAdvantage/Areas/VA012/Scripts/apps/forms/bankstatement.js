@@ -189,6 +189,8 @@
         var _chargeSrch;
         var $CmbTaxRate;
         //  var cartGrid = null;
+        //get the VA009_PaymentMethod_ID AD_Column_ID
+        var ad_Column = null;
 
         this.Initialize = function () {
 
@@ -239,8 +241,8 @@
 
                 loadFunctions.dragPayments();
                 loadFunctions.dropPayments();
-
-
+                //get AD_Column_ID for VA009_PaymentMethod_ID
+                ad_Column = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAD_Column_IDForPayMethod", null);//get AD_Column_ID
             }
         };
         function InitializeEvents() {
@@ -7684,27 +7686,24 @@
                 //clear the previous options
                 $(_txtPaymentMethod[0]).empty();
                 //shown the records only IsActive is true.
-                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAD_Column_IDForPayMethod", null, callbackloadPaymentMethod);//get AD_Column_ID
-                function callbackloadPaymentMethod(ad_Column) {
-                    if (ad_Column) {//check AD_Column_ID has value or not
-                        //VIS.MLookupFactory.get(Context, windowNo, AD_Column_ID, AD_Reference_ID,ColumnName, AD_Reference_Value_ID, IsParent, ValidationCode);
-                        var _txtPaymentMethodLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, ad_Column, VIS.DisplayType.TableDir, "VA009_PaymentMethod_ID", 0, false, "VA009_PaymentMethod.IsActive='Y' AND VA009_PaymentMethod.VA009_PAYMENTBASETYPE!='B'");
-                        //_txtConversionTypeLookUp.getData(mandatory, onlyValidated, onlyActive, temporary);
-                        var getPaymentMethod = _txtPaymentMethodLookUp.getData(true, true, false, false);
+                if (ad_Column) {//check AD_Column_ID has value or not
+                    //VIS.MLookupFactory.get(Context, windowNo, AD_Column_ID, AD_Reference_ID,ColumnName, AD_Reference_Value_ID, IsParent, ValidationCode);
+                    var _txtPaymentMethodLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, ad_Column, VIS.DisplayType.TableDir, "VA009_PaymentMethod_ID", 0, false, "VA009_PaymentMethod.IsActive='Y' AND VA009_PaymentMethod.VA009_PAYMENTBASETYPE!='B'");
+                    //_txtConversionTypeLookUp.getData(mandatory, onlyValidated, onlyActive, temporary);
+                    var getPaymentMethod = _txtPaymentMethodLookUp.getData(true, true, false, false);
 
-                        _txtPaymentMethod.append('<option value="0" ></option>');
-                        if (getPaymentMethod != null && getPaymentMethod != undefined && getPaymentMethod.length > 0) {
-                            for (var i = 0; i < getPaymentMethod.length; i++) {
-                                _txtPaymentMethod.append('<option value=' + getPaymentMethod[i].Key + '>' + getPaymentMethod[i].Name + '</option>');
-                            }
-                            _txtPaymentMethod.val(0);
-                            _txtPaymentMethod.addClass('va012-mandatory');
-                            //refresh and hidden the fields of CheckNo and CheckDate
-                            _divCheckNum.hide();
-                            _txtCheckNum.removeClass("va012-mandatory");
-                            _divCheckDate.hide();
-                            _txtCheckDate.removeClass("va012-mandatory");
+                    _txtPaymentMethod.append('<option value="0" ></option>');
+                    if (getPaymentMethod != null && getPaymentMethod != undefined && getPaymentMethod.length > 0) {
+                        for (var i = 0; i < getPaymentMethod.length; i++) {
+                            _txtPaymentMethod.append('<option value=' + getPaymentMethod[i].Key + '>' + getPaymentMethod[i].Name + '</option>');
                         }
+                        _txtPaymentMethod.val(0);
+                        _txtPaymentMethod.addClass('va012-mandatory');
+                        //refresh and hidden the fields of CheckNo and CheckDate
+                        _divCheckNum.hide();
+                        _txtCheckNum.removeClass("va012-mandatory");
+                        _divCheckDate.hide();
+                        _txtCheckDate.removeClass("va012-mandatory");
                     }
                 }
             }
@@ -7811,6 +7810,8 @@
             _prepayList = [];
             _prepayDataList = [];
             newRecordForm.newRecordDispose();
+            //clear value
+            ad_Column = null;
         };
         function busyIndicator(_obj, _isShow, _position) {
             $BusyIndicator = $("<div class='vis-apanel-busy va012-busy-bank-statement'>");
