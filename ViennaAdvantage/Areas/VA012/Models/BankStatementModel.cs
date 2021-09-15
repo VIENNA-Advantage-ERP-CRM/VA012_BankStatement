@@ -1162,7 +1162,42 @@ namespace VA012.Models
                 {
                     _bankStatementLine.SetC_CashBook_ID(0);
                 }
-                _bankStatementLine.SetEftCheckNo(_formData[0]._txtCheckNo);
+
+                //Set PaymentMethod, CheckNo and checkDate and Tender Type
+                if (_formData[0]._txtPaymentMethod > 0)
+                {
+                    _bankStatementLine.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);
+                    string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT VA009_PAYMENTBASETYPE FROM VA009_PAYMENTMETHOD WHERE IsActive='Y' AND VA009_PAYMENTMETHOD_ID=" + _formData[0]._txtPaymentMethod));
+                    if ("S".Equals(_payBaseType))    // Check
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_Check);
+                    }
+                    else if ("K".Equals(_payBaseType))          // Credit Card
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_CreditCard);
+                    }
+                    else if ("D".Equals(_payBaseType))   // Direct Debit
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_DirectDebit);
+                    }
+                    else if ("T".Equals(_payBaseType))    // Direct Deposit
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_DirectDeposit);
+                    }
+                    else
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_DirectDeposit);
+                    }
+                }
+                if (!string.IsNullOrEmpty(_formData[0]._txtCheckNum))
+                {
+                    _bankStatementLine.SetEftCheckNo(_formData[0]._txtCheckNum);
+                }
+                if (_formData[0]._txtCheckDate.HasValue)
+                {
+                    _bankStatementLine.SetEftValutaDate(_formData[0]._txtCheckDate);
+                }
+
                 if (_formData[0]._ctrlBusinessPartner > 0)
                 {
                     _bankStatementLine.SetC_BPartner_ID(_formData[0]._ctrlBusinessPartner);
@@ -2222,15 +2257,17 @@ namespace VA012.Models
                     //Get the PaymentMethod_ID
                     statementDetail._txtPaymentMethod = Util.GetValueOfInt(data.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
                     //Get Auto Check No
-                    if (MDocBaseType.DOCBASETYPE_APINVOICE.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])) ||
-                        MDocBaseType.DOCBASETYPE_APCREDITMEMO.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])))
-                    {
-                        int _bankAcct_Id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BankAccount_ID FROM C_BankStatement WHERE IsActive='Y' AND C_BankStatement_ID=" + _bankStatementLine.GetC_BankStatement_ID(), null, null));
-                        statementDetail._errorMsg = UpdateCheckNoOnPayment(ctx, _bankAcct_Id, statementDetail._txtPaymentMethod, null);
-                        if (string.IsNullOrEmpty(statementDetail._errorMsg)) 
+                    if (string.IsNullOrEmpty(_bankStatementLine.GetEftCheckNo())) {
+                        if (MDocBaseType.DOCBASETYPE_APINVOICE.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])) ||
+                            MDocBaseType.DOCBASETYPE_APCREDITMEMO.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])))
                         {
-                            statementDetail._txtCheckNum = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT CurrentNext FROM C_BankAccountDoc WHERE IsActive='Y' AND  
+                            int _bankAcct_Id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BankAccount_ID FROM C_BankStatement WHERE IsActive='Y' AND C_BankStatement_ID=" + _bankStatementLine.GetC_BankStatement_ID(), null, null));
+                            statementDetail._errorMsg = UpdateCheckNoOnPayment(ctx, _bankAcct_Id, statementDetail._txtPaymentMethod, null);
+                            if (string.IsNullOrEmpty(statementDetail._errorMsg))
+                            {
+                                statementDetail._txtCheckNum = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT CurrentNext FROM C_BankAccountDoc WHERE IsActive='Y' AND  
                             C_BankAccount_ID=" + _bankAcct_Id + " AND VA009_PaymentMethod_ID=" + statementDetail._txtPaymentMethod, null, null));
+                            }
                         }
                     }
                 }
@@ -2285,7 +2322,7 @@ namespace VA012.Models
             statementDetail._cmbCurrency = _bankStatementLine.GetC_Currency_ID();
             statementDetail._txtDescription = _bankStatementLine.GetDescription();
             statementDetail._txtVoucherNo = _bankStatementLine.GetVA012_VoucherNo();
-            statementDetail._txtCheckNo = _bankStatementLine.GetEftCheckNo();
+            statementDetail._txtCheckNum = _bankStatementLine.GetEftCheckNo();
             statementDetail._cmbCharge = _bankStatementLine.GetC_Charge_ID();
 
             if (_bankStatementLine.GetC_Charge_ID() > 0)

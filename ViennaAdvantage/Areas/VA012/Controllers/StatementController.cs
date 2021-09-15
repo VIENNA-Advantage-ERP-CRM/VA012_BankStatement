@@ -27,5 +27,22 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// Get the PaymentBase Type
+        /// </summary>
+        /// <param name="fields">fields</param>
+        /// <returns>PaymentBase Type in JSON format</returns>
+        public JsonResult GetPaymentRule(String fields)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementModel statement = new StatementModel();
+                retJSON = JsonConvert.SerializeObject(statement.GetPaymentRule(ctx, fields));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
     }
 }

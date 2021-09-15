@@ -100,6 +100,41 @@
         return "";
     };
 
+    //Set Tender Type Based on PaymentMethod BaseType using PaymentMethod_ID
+    VA012_Contra.prototype.SetTenderType = function (ctx, windowNo, mTab, mField, value, oldValue) {
+
+        if (this.isCalloutActive() || value == null || value.toString() == "")  // assuming it is resetting value
+        {
+            return "";
+        }
+        this.setCalloutActive(true);
+        var payBaseType = VIS.dataContext.getJSONRecord("VA012/Statement//GetPaymentRule", Util.getValueOfInt(value));
+
+        if (payBaseType != null && payBaseType != "") {
+            if (payBaseType == "D") {
+                mTab.setValue("TenderType", "D");
+            }
+            else if (payBaseType == "K") {
+                mTab.setValue("TenderType", "C");
+            }
+            else if (payBaseType == "S") {
+                mTab.setValue("TenderType", "K");
+            }
+            else if (payBaseType == "T") {
+                mTab.setValue("TenderType", "A");
+            }
+            else if (payBaseType == "L") {
+                mTab.setValue("TenderType", "L");
+            }
+            else {
+                mTab.setValue("TenderType", "A");
+            }
+        }
+        this.setCalloutActive(false);
+        ctx = windowNo = mTab = mField = value = oldValue = null;
+        return "";
+    };
+
     VA012.Model = VA012.Model || {};
     VA012.Model.VA012_Contra = VA012_Contra;
 })(VA012, jQuery);

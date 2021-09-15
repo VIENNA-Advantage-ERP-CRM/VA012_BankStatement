@@ -362,17 +362,20 @@ namespace VA012.Models
                             {
                                 _bankStatementLine.SetEftCheckNo(_checkNo);
                             }
+                            //set PaymentMethod, CheckDate and Tender Type
+                            if (Util.GetValueOfInt(_dsPayments.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]) > 0)
+                            {
+                                _bankStatementLine.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_dsPayments.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]));
+                                _bankStatementLine.Set_Value("TenderType", Util.GetValueOfString(_dsPayments.Tables[0].Rows[0]["TenderType"]));
+                            }
+                            if (Util.GetValueOfDateTime(_dsPayments.Tables[0].Rows[0]["CheckDate"]).HasValue) {
+                                _bankStatementLine.SetEftValutaDate(Util.GetValueOfDateTime(_dsPayments.Tables[0].Rows[0]["CheckDate"]));
+                            }
                             if (_chargeID > 0)
                             {
                                 _bankStatementLine.SetC_Charge_ID(_chargeID);
                                 _bankStatementLine.SetChargeAmt(_bankStatementLine.GetStmtAmt());
                                 _bankStatementLine.SetTrxAmt(0);
-
-
-
-
-
-
 
                             }
                             if (_invoiceID > 0)
@@ -1098,7 +1101,7 @@ namespace VA012.Models
                               PAY.C_INVOICE_ID,
                               INV.DOCUMENTNO AS INVOICENO,
                               PAY.C_ORDER_ID,
-                              ORD.DOCUMENTNO AS ORDERNO, PAY.C_ConversionType_ID
+                              ORD.DOCUMENTNO AS ORDERNO, PAY.C_ConversionType_ID, PAY.CheckDate, PAY.VA009_PaymentMethod_ID, TenderType
                             FROM C_PAYMENT PAY
                             INNER JOIN C_BANKACCOUNT AC
                             ON AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID
