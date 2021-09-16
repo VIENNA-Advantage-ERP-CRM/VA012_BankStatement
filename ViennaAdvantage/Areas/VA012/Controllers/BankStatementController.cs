@@ -687,14 +687,20 @@ namespace VA012.Controllers
         //    }
         //    return Json(retJSON, JsonRequestBehavior.AllowGet);
         //}
-        public JsonResult GetCharge(string searchText)
+        /// <summary>
+        /// Get the Charge Data
+        /// </summary>
+        /// <param name="searchText">Search text</param>
+        /// <param name="voucherType">Voucher Type</param>
+        /// <returns>Charge Data</returns>
+        public JsonResult GetCharge(string searchText, string voucherType)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.GetCharge(ctx, searchText));
+                retJSON = JsonConvert.SerializeObject(obj.GetCharge(ctx, searchText, voucherType));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -1081,6 +1087,23 @@ namespace VA012.Controllers
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations _model = new StatementOperations();
                 retJSON = JsonConvert.SerializeObject(_model.GetAD_Column_IDForPayMethod(ctx));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Charge Data
+        /// </summary>
+        /// <param name="voucherType">Voucher Type</param>
+        /// <returns>charge Data</returns>
+        public JsonResult GetChargeData(string voucherType)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetChargeData(ctx, voucherType));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }

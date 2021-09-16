@@ -1373,6 +1373,38 @@ namespace VA012.Models
         }
 
         /// <summary>
+        /// Get the Charge Data
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="voucherType">Voucher Type</param>
+        /// <returns>List of Charge Data</returns>
+        public List<ChargeProp> GetChargeData(Ctx ctx, string voucherType)
+        {
+            List<ChargeProp> _list = new List<ChargeProp>();
+            ChargeProp obj = null;
+
+            string _sql = "SELECT Name, C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID()+")";
+            if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
+            {
+                _sql += " AND DTD001_ChargeType!='CON' ";
+            }
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Charge", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                {
+                    obj = new ChargeProp();
+                    obj.chargeID = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Charge_ID"]);
+                    obj.name = Util.GetValueOfString(_ds.Tables[0].Rows[i]["Name"]);
+                    _list.Add(obj);
+                }
+            }
+            return _list;
+        }
+
+        /// <summary>
         /// Get AD_Column_ID for VA009_PaymentMethod
         /// </summary>
         /// <param name="ctx">Context</param>
@@ -4231,12 +4263,18 @@ namespace VA012.Models
         /// </summary>
         /// <param name="ctx">Context</param>
         /// <param name="searchText">Seartch text</param>
+        /// <param name="voucherType">Voucher Type</param>
         /// <returns>List of Charge</returns>
-        public List<ChargeProp> GetCharge(Ctx ctx, string searchText)
+        public List<ChargeProp> GetCharge(Ctx ctx, string searchText, string voucherType)
         {
             List<ChargeProp> _lstcharge = new List<ChargeProp>();
             //var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID() + " AND UPPER(Name) like UPPER('%" + searchText + "%')";
             var _sql = "SELECT Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND UPPER(Name) LIKE UPPER('%" + searchText + "%')";
+            //if the voucher Type not contra then hide those records which is belogns to Contra ChargeType
+            if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C")) 
+            {
+                _sql += " AND DTD001_ChargeType!='CON' ";
+            }
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Charge", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
             DataSet ds = DB.ExecuteDataset(_sql);
             if (ds != null && ds.Tables[0].Rows.Count > 0)
