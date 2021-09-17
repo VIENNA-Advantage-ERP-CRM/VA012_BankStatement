@@ -46,5 +46,20 @@ namespace VA012.Models
             }
             return _list;
         }
+
+        /// <summary>
+        /// Get PaymentBaseType
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="fields">fields</param>
+        /// <returns>PaymentBaseType</returns>
+        public string GetPaymentRule(Ctx ctx, string fields)
+        {
+            string[] paramValue = fields.Split(',');
+            //Assign parameter value
+            int _paymentMethod_ID = Util.GetValueOfInt(paramValue[0].ToString());
+            return Util.GetValueOfString(DB.ExecuteScalar("SELECT VA009_PAYMENTBASETYPE FROM VA009_PAYMENTMETHOD WHERE IsActive='Y' AND VA009_PAYMENTMETHOD_ID=" + _paymentMethod_ID, null, null));
+        }
+        
     }
 }

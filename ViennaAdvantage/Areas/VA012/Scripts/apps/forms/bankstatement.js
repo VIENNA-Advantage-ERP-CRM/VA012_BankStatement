@@ -5167,8 +5167,9 @@
                     }
                 });
 
+                //on change event or search charge 
                 _btnCharge.on(VIS.Events.onTouchStartOrClick, function (e) {
-                    VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetCharge", { "searchText": "" }, chargeDropDown);
+                    VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetCharge", { "searchText": "", voucherType: _cmbVoucherMatch.val() != null ? _cmbVoucherMatch.val() : "", bankAcct: _cmbBankAccount.val() != null ? _cmbBankAccount.val() : 0 }, chargeDropDown);
                 });
                 function chargeDropDown(result) {
                     datasource = [];
@@ -5208,7 +5209,7 @@
                     $.ajax({
                         url: VIS.Application.contextUrl + "BankStatement/GetCharge",
                         dataType: "json",
-                        data: { searchText: text },
+                        data: { searchText: text, voucherType: _cmbVoucherMatch.val() != null ? _cmbVoucherMatch.val() : "", bankAcct: _cmbBankAccount.val() != null ? _cmbBankAccount.val() : 0 },
                         success: function (data) {
                             var result = JSON.parse(data);
                             datasource = [];
@@ -5333,6 +5334,8 @@
                         //hide incase of Payment as Voucher/Match and other than charge as diffType
                         //modified condition according to the Charge
                         if (_cmbDifferenceType.val() == "CH") {
+                            //load Charge Data
+                            newRecordForm.loadCharge();
                             _divCharge.find("*").prop("disabled", false);
                             _divTaxRate.find("*").prop("disabled", false);
                             _divTaxAmount.find("*").prop("disabled", false);
@@ -5404,7 +5407,8 @@
                             //set or load Currency 
                             setCurrencyVal();
                         }
-
+                        //load Charge Data
+                        newRecordForm.loadCharge();
                         _divCtrlCashLine.find("*").prop("disabled", true);
                         _divCtrlCashLine.hide();
 
@@ -5479,6 +5483,8 @@
                             //set or load Currency 
                             setCurrencyVal();
                         }
+                        //load Charge Data
+                        newRecordForm.loadCharge();
 
                         _divContraType.show();
                         //Commented For Contra-29-1-16
@@ -6001,7 +6007,7 @@
                         return;
                     }
                     //CheckNo is mandatory if PaymentMethod is Check
-                    if (!_formData[0]["_ctrlPayment"] && _txtCheckNum.hasClass("va012-mandatory") && _formData[0]["_txtCheckNum"] != null && _formData[0]["_txtCheckNum"] != "") {
+                    if (!_formData[0]["_ctrlPayment"] && _txtCheckNum.hasClass("va012-mandatory") && (_formData[0]["_txtCheckNum"] == null || _formData[0]["_txtCheckNum"] == "")) {
                         VIS.ADialog.info("VA012_PleaseEnterCheckNo", null, "", "");
                         return;
                     }
@@ -6956,19 +6962,21 @@
 
             loadCharge: function () {
                 //Not in Use
-                var _sql = "SELECT NAME,C_CHARGE_ID FROM C_Charge WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadCharge);
+                //var _sql = "SELECT NAME,C_CHARGE_ID,DTD001_ChargeType FROM C_Charge WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
+                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetChargeData", { voucherType: _cmbVoucherMatch.val() != null ? _cmbVoucherMatch.val() : "", bankAcct: _cmbBankAccount.val() != null ? _cmbBankAccount.val() : 0 }, callbackloadCharge);
+                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadCharge);
                 function callbackloadCharge(_ds) {
                     _cmbCharge.html("");
                     _cmbCharge.append("<option value=0 ></option>");
                     if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbCharge.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                        for (var i = 0; i < _ds.length; i++) {
+                            //_cmbCharge.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            _cmbCharge.append("<option value=" + _ds[i].chargeID + ">" + VIS.Utility.encodeText(_ds[i].name) + "</option>");
                         }
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                    //_ds.dispose();
+                    //_ds = null;
+                    //_sql = null;
                     _cmbCharge.prop('selectedIndex', 0);
                 }
             },

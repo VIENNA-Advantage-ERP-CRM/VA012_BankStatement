@@ -1162,7 +1162,42 @@ namespace VA012.Models
                 {
                     _bankStatementLine.SetC_CashBook_ID(0);
                 }
-                _bankStatementLine.SetEftCheckNo(_formData[0]._txtCheckNo);
+
+                //Set PaymentMethod, CheckNo and checkDate and Tender Type
+                if (_formData[0]._txtPaymentMethod > 0)
+                {
+                    _bankStatementLine.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);
+                    string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT VA009_PAYMENTBASETYPE FROM VA009_PAYMENTMETHOD WHERE IsActive='Y' AND VA009_PAYMENTMETHOD_ID=" + _formData[0]._txtPaymentMethod));
+                    if ("S".Equals(_payBaseType))    // Check
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_Check);
+                    }
+                    else if ("K".Equals(_payBaseType))          // Credit Card
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_CreditCard);
+                    }
+                    else if ("D".Equals(_payBaseType))   // Direct Debit
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_DirectDebit);
+                    }
+                    else if ("T".Equals(_payBaseType))    // Direct Deposit
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_DirectDeposit);
+                    }
+                    else
+                    {
+                        _bankStatementLine.Set_Value("TenderType", X_C_Payment.TENDERTYPE_DirectDeposit);
+                    }
+                }
+                if (!string.IsNullOrEmpty(_formData[0]._txtCheckNum))
+                {
+                    _bankStatementLine.SetEftCheckNo(_formData[0]._txtCheckNum);
+                }
+                if (_formData[0]._txtCheckDate.HasValue)
+                {
+                    _bankStatementLine.SetEftValutaDate(_formData[0]._txtCheckDate);
+                }
+
                 if (_formData[0]._ctrlBusinessPartner > 0)
                 {
                     _bankStatementLine.SetC_BPartner_ID(_formData[0]._ctrlBusinessPartner);
@@ -1335,6 +1370,46 @@ namespace VA012.Models
             //clear the object
             trx = null;
             return "Success";
+        }
+
+        /// <summary>
+        /// Get the Charge Data
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="voucherType">Voucher Type</param>
+        /// <param name="bankAcct">C_BankAccount_ID</param>
+        /// <returns>List of Charge Data</returns>
+        public List<ChargeProp> GetChargeData(Ctx ctx, string voucherType, int bankAcct)
+        {
+            List<ChargeProp> _list = new List<ChargeProp>();
+            ChargeProp obj = null;
+
+            string _sql = "SELECT Name, C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID()+")";
+            if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
+            {
+                _sql += " AND DTD001_ChargeType!='CON' ";
+            }
+            //data should filter based on Bank Account Org_ID
+            if (bankAcct > 0)
+            {
+                int bnkOrg = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + bankAcct));
+                _sql += " AND AD_Org_ID IN(0, " + bnkOrg + ")";
+            }
+
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Charge", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                {
+                    obj = new ChargeProp();
+                    obj.chargeID = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Charge_ID"]);
+                    obj.name = Util.GetValueOfString(_ds.Tables[0].Rows[i]["Name"]);
+                    _list.Add(obj);
+                }
+            }
+            return _list;
         }
 
         /// <summary>
@@ -2222,15 +2297,17 @@ namespace VA012.Models
                     //Get the PaymentMethod_ID
                     statementDetail._txtPaymentMethod = Util.GetValueOfInt(data.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
                     //Get Auto Check No
-                    if (MDocBaseType.DOCBASETYPE_APINVOICE.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])) ||
-                        MDocBaseType.DOCBASETYPE_APCREDITMEMO.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])))
-                    {
-                        int _bankAcct_Id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BankAccount_ID FROM C_BankStatement WHERE IsActive='Y' AND C_BankStatement_ID=" + _bankStatementLine.GetC_BankStatement_ID(), null, null));
-                        statementDetail._errorMsg = UpdateCheckNoOnPayment(ctx, _bankAcct_Id, statementDetail._txtPaymentMethod, null);
-                        if (string.IsNullOrEmpty(statementDetail._errorMsg)) 
+                    if (string.IsNullOrEmpty(_bankStatementLine.GetEftCheckNo())) {
+                        if (MDocBaseType.DOCBASETYPE_APINVOICE.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])) ||
+                            MDocBaseType.DOCBASETYPE_APCREDITMEMO.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])))
                         {
-                            statementDetail._txtCheckNum = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT CurrentNext FROM C_BankAccountDoc WHERE IsActive='Y' AND  
+                            int _bankAcct_Id = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BankAccount_ID FROM C_BankStatement WHERE IsActive='Y' AND C_BankStatement_ID=" + _bankStatementLine.GetC_BankStatement_ID(), null, null));
+                            statementDetail._errorMsg = UpdateCheckNoOnPayment(ctx, _bankAcct_Id, statementDetail._txtPaymentMethod, null);
+                            if (string.IsNullOrEmpty(statementDetail._errorMsg))
+                            {
+                                statementDetail._txtCheckNum = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT CurrentNext FROM C_BankAccountDoc WHERE IsActive='Y' AND  
                             C_BankAccount_ID=" + _bankAcct_Id + " AND VA009_PaymentMethod_ID=" + statementDetail._txtPaymentMethod, null, null));
+                            }
                         }
                     }
                 }
@@ -2285,7 +2362,7 @@ namespace VA012.Models
             statementDetail._cmbCurrency = _bankStatementLine.GetC_Currency_ID();
             statementDetail._txtDescription = _bankStatementLine.GetDescription();
             statementDetail._txtVoucherNo = _bankStatementLine.GetVA012_VoucherNo();
-            statementDetail._txtCheckNo = _bankStatementLine.GetEftCheckNo();
+            statementDetail._txtCheckNum = _bankStatementLine.GetEftCheckNo();
             statementDetail._cmbCharge = _bankStatementLine.GetC_Charge_ID();
 
             if (_bankStatementLine.GetC_Charge_ID() > 0)
@@ -4194,12 +4271,25 @@ namespace VA012.Models
         /// </summary>
         /// <param name="ctx">Context</param>
         /// <param name="searchText">Seartch text</param>
+        /// <param name="voucherType">Voucher Type</param>
+        /// <param name="bankAcct">C_BankAccount_ID</param>
         /// <returns>List of Charge</returns>
-        public List<ChargeProp> GetCharge(Ctx ctx, string searchText)
+        public List<ChargeProp> GetCharge(Ctx ctx, string searchText, string voucherType, int bankAcct)
         {
             List<ChargeProp> _lstcharge = new List<ChargeProp>();
             //var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID() + " AND UPPER(Name) like UPPER('%" + searchText + "%')";
             var _sql = "SELECT Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND UPPER(Name) LIKE UPPER('%" + searchText + "%')";
+            //if the voucher Type not contra then hide those records which is belogns to Contra ChargeType
+            if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C")) 
+            {
+                _sql += " AND DTD001_ChargeType!='CON' ";
+            }
+            //added Bank Check
+            if (bankAcct > 0)
+            {
+                int bnkOrg = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + bankAcct));
+                _sql += " AND AD_Org_ID IN(0, " + bnkOrg + ")";
+            }
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Charge", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
             DataSet ds = DB.ExecuteDataset(_sql);
             if (ds != null && ds.Tables[0].Rows.Count > 0)
