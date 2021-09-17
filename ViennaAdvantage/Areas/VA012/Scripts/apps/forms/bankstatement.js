@@ -5169,7 +5169,7 @@
 
                 //on change event or search charge 
                 _btnCharge.on(VIS.Events.onTouchStartOrClick, function (e) {
-                    VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetCharge", { "searchText": "", voucherType: _cmbVoucherMatch.val() != null ? _cmbVoucherMatch.val() : "" }, chargeDropDown);
+                    VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetCharge", { "searchText": "", voucherType: _cmbVoucherMatch.val() != null ? _cmbVoucherMatch.val() : "", bankAcct: _cmbBankAccount.val() != null ? _cmbBankAccount.val() : 0 }, chargeDropDown);
                 });
                 function chargeDropDown(result) {
                     datasource = [];
@@ -5209,7 +5209,7 @@
                     $.ajax({
                         url: VIS.Application.contextUrl + "BankStatement/GetCharge",
                         dataType: "json",
-                        data: { searchText: text },
+                        data: { searchText: text, voucherType: _cmbVoucherMatch.val() != null ? _cmbVoucherMatch.val() : "", bankAcct: _cmbBankAccount.val() != null ? _cmbBankAccount.val() : 0 },
                         success: function (data) {
                             var result = JSON.parse(data);
                             datasource = [];
@@ -6963,7 +6963,7 @@
             loadCharge: function () {
                 //Not in Use
                 //var _sql = "SELECT NAME,C_CHARGE_ID,DTD001_ChargeType FROM C_Charge WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetChargeData", { voucherType: _cmbVoucherMatch.val() != null ? _cmbVoucherMatch.val() : "" }, callbackloadCharge);
+                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetChargeData", { voucherType: _cmbVoucherMatch.val() != null ? _cmbVoucherMatch.val() : "", bankAcct: _cmbBankAccount.val() != null ? _cmbBankAccount.val() : 0 }, callbackloadCharge);
                 //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadCharge);
                 function callbackloadCharge(_ds) {
                     _cmbCharge.html("");

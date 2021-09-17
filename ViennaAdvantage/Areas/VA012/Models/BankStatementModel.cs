@@ -1377,8 +1377,9 @@ namespace VA012.Models
         /// </summary>
         /// <param name="ctx">Context</param>
         /// <param name="voucherType">Voucher Type</param>
+        /// <param name="bankAcct">C_BankAccount_ID</param>
         /// <returns>List of Charge Data</returns>
-        public List<ChargeProp> GetChargeData(Ctx ctx, string voucherType)
+        public List<ChargeProp> GetChargeData(Ctx ctx, string voucherType, int bankAcct)
         {
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
@@ -1388,6 +1389,13 @@ namespace VA012.Models
             {
                 _sql += " AND DTD001_ChargeType!='CON' ";
             }
+            //data should filter based on Bank Account Org_ID
+            if (bankAcct > 0)
+            {
+                int bnkOrg = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + bankAcct));
+                _sql += " AND AD_Org_ID IN(0, " + bnkOrg + ")";
+            }
+
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Charge", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
 
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
@@ -4264,8 +4272,9 @@ namespace VA012.Models
         /// <param name="ctx">Context</param>
         /// <param name="searchText">Seartch text</param>
         /// <param name="voucherType">Voucher Type</param>
+        /// <param name="bankAcct">C_BankAccount_ID</param>
         /// <returns>List of Charge</returns>
-        public List<ChargeProp> GetCharge(Ctx ctx, string searchText, string voucherType)
+        public List<ChargeProp> GetCharge(Ctx ctx, string searchText, string voucherType, int bankAcct)
         {
             List<ChargeProp> _lstcharge = new List<ChargeProp>();
             //var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID() + " AND UPPER(Name) like UPPER('%" + searchText + "%')";
@@ -4274,6 +4283,12 @@ namespace VA012.Models
             if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C")) 
             {
                 _sql += " AND DTD001_ChargeType!='CON' ";
+            }
+            //added Bank Check
+            if (bankAcct > 0)
+            {
+                int bnkOrg = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + bankAcct));
+                _sql += " AND AD_Org_ID IN(0, " + bnkOrg + ")";
             }
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Charge", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
             DataSet ds = DB.ExecuteDataset(_sql);

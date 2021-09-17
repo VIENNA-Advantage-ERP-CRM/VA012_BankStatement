@@ -692,15 +692,16 @@ namespace VA012.Controllers
         /// </summary>
         /// <param name="searchText">Search text</param>
         /// <param name="voucherType">Voucher Type</param>
+        /// <param name="bankAcct">C_BankAccount_ID</param>
         /// <returns>Charge Data</returns>
-        public JsonResult GetCharge(string searchText, string voucherType)
+        public JsonResult GetCharge(string searchText, string voucherType, int bankAcct)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.GetCharge(ctx, searchText, voucherType));
+                retJSON = JsonConvert.SerializeObject(obj.GetCharge(ctx, searchText, voucherType, bankAcct));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -1095,15 +1096,16 @@ namespace VA012.Controllers
         /// Get Charge Data
         /// </summary>
         /// <param name="voucherType">Voucher Type</param>
+        /// <param name="bankAcct">C_BankAccount_ID</param>
         /// <returns>charge Data</returns>
-        public JsonResult GetChargeData(string voucherType)
+        public JsonResult GetChargeData(string voucherType, int bankAcct)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations _model = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(_model.GetChargeData(ctx, voucherType));
+                retJSON = JsonConvert.SerializeObject(_model.GetChargeData(ctx, voucherType, bankAcct));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
