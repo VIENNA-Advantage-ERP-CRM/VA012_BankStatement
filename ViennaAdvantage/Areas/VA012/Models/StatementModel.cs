@@ -26,7 +26,7 @@ namespace VA012.Models
             string[] paramValue = fields.ToString().Split(',');
             //Assign parameter value
             int cashLine_Id = Util.GetValueOfInt(paramValue[0].ToString());
-            int currency_Id= Util.GetValueOfInt(paramValue[1].ToString());
+            int currency_Id = Util.GetValueOfInt(paramValue[1].ToString());
             DateTime? stmtDate = Convert.ToDateTime(paramValue[2].ToString());
             int org_Id = Util.GetValueOfInt(paramValue[3].ToString());
             DataSet _ds = DB.ExecuteDataset("SELECT c.DateAcct, cl.Amount, cl.C_ConversionType_ID, cl.C_Currency_ID FROM C_Cash c INNER JOIN C_CashLine cl ON c.C_Cash_ID=cl.C_Cash_ID WHERE c.IsActive='Y' AND cl.C_CashLine_ID=" + cashLine_Id, null, null);
@@ -60,6 +60,22 @@ namespace VA012.Models
             int _paymentMethod_ID = Util.GetValueOfInt(paramValue[0].ToString());
             return Util.GetValueOfString(DB.ExecuteScalar("SELECT VA009_PAYMENTBASETYPE FROM VA009_PAYMENTMETHOD WHERE IsActive='Y' AND VA009_PAYMENTMETHOD_ID=" + _paymentMethod_ID, null, null));
         }
-        
+        /// <summary>
+        /// Get Invoice/Order PaymentMethodId
+        /// Author:Rakesh(VA228)
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="fields">fields</param>
+        /// <returns>PaymentMethodId</returns>
+        public string GetPaymentMethod(Ctx ctx, string fields)
+        {
+            string[] paramValue = fields.Split(',');
+            int id = Util.GetValueOfInt(paramValue[0].ToString());
+            //1->Invoice & 2->Order PaymentMethodId
+            if (Util.GetValueOfInt(paramValue[1].ToString()) == 1)
+                return Util.GetValueOfString(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_INVOICE WHERE C_INVOICE_ID=" + id, null, null));
+            else
+                return Util.GetValueOfString(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_ORDER WHERE C_ORDER_ID=" + id, null, null));
+        }
     }
 }

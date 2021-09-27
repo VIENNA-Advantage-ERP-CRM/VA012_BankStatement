@@ -952,3 +952,19 @@ overflow: hidden;*/
     font-size: 1.5rem;
     color: rgba(var(--v-c-primary), 1);
 }
+.va012-headersearchfilter,
+.va012-searchfilter {
+    display: flex;
+}
+.va012-searchfilter {
+    padding: .2rem;
+    flex: 1;
+    align-items: center;
+}
+.VA012-search-wrap {
+    min-width: 250px;
+}
+
+.VA012-search-wrap input {
+    flex: 1;
+}

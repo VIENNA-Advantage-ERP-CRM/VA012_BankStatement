@@ -44,5 +44,22 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
+        /// <summary>
+        /// Get Invoice/Order PaymentMethodId
+        /// Author:Rakesh(VA228)
+        /// </summary>
+        /// <param name="fields">fields</param>
+        /// <returns>PaymentMethodId</returns>
+        public JsonResult GetPaymentMethod(String fields)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementModel statement = new StatementModel();
+                retJSON = JsonConvert.SerializeObject(statement.GetPaymentMethod(ctx, fields));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
     }
 }
