@@ -191,9 +191,13 @@
         //  var cartGrid = null;
         //get the VA009_PaymentMethod_ID AD_Column_ID
         var ad_Column = null;
+        //Rakesh(VA228):Varibales declared on 23/Sep/2021
+        var _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
+        var _CountVA034 = 0;
 
         this.Initialize = function () {
-
+            //Rakesh:Get VA034 module
+            _CountVA034 = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "VA012/BankStatement/GetModulePrefix", { prefix: "VA034_" });
             loadRoot(loadFunctions.loadFormDesign());
             _txtTrxAmt.addVetoableChangeListener(this);
             _txtTaxAmount.addVetoableChangeListener(this);
@@ -601,12 +605,55 @@
             //    var clsName = str.substr(0, str.indexOf("_"));
             //    if (clsName.toLowerCase() == "va012.models.va012_trxno.importstatement")
             //        document.getElementById('VA012_BankChargeDiv').style.display = "block";
-            //});            
-        };
+            //});
 
+            //Rakesh(VA228):Bind SearchControl valuechanged event
+            _BPSearchControl.fireValueChanged = loadFunctions.loadDataOnBPChanged;
+            _btnSearchPayment.on(VIS.Events.onTouchStartOrClick, function () {
+                _lstPayments.html("");
+                newRecordForm.scheduleRefresh();
+                newRecordForm.prepayRefresh();
+                newRecordForm.refreshForm();
+                _paymentPageNo = 1;
+                //Used to handle the Scrolling for Transactions
+                _paymentPageCount = 0;
+                _paymentPAGESIZE = 50;
+                _paymentPageSizeInc = 1;
+                storepaymentdata = [];
+                loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+            });
+            _txtSearchPayment.keypress(function (e) {
+                if (e.which == 13) {
+
+                    _lstPayments.html("");
+                    newRecordForm.scheduleRefresh();
+                    newRecordForm.prepayRefresh();
+                    newRecordForm.refreshForm();
+                    _paymentPageNo = 1;
+                    //Used to handle the Scrolling for Transactions
+                    _paymentPageCount = 0;
+                    _paymentPAGESIZE = 50;
+                    _paymentPageSizeInc = 1;
+                    storepaymentdata = [];
+                    loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                }
+            });
+        };
         //Load All Functions
         var loadFunctions = {
-
+            loadDataOnBPChanged: function () {
+                _lstPayments.html("");
+                newRecordForm.scheduleRefresh();
+                newRecordForm.prepayRefresh();
+                newRecordForm.refreshForm();
+                _paymentPageNo = 1;
+                //Used to handle the Scrolling for Transactions
+                _paymentPageCount = 0;
+                _paymentPAGESIZE = 50;
+                _paymentPageSizeInc = 1;
+                storepaymentdata = [];
+                loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+            },
             loadFormDesign: function () {
 
                 _formDesign = $('<div class="va012-assign-content">');
@@ -1050,7 +1097,7 @@
                     + '                              </div>'
                     + '                              <!-- end of col -->');
                 divRow10.append(divRow10Col1).append(divRow10Col2).append(divRow10Col3);
-                
+
                 divRow11 = $('<div class="row va012-fl-padd" style="width:102%">');
                 divRow11Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCheckNum_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
@@ -1073,11 +1120,11 @@
                 //+ '                  </div>');
                 //+ '                  <!-- end of form-wrap -->'
                 payHeaderWrap = $('<div id="VA012_paymentHeaderWrap_' + $self.windowNo + '" class="va012-payment-header-wrap">'
-                    + '                          <div class="pull-left">'
-                    + '                              <a class="va012-frm-btn va012-btn-gray" style="cursor: default;">' + VIS.Msg.getMsg("VA012_UpcomingTransactions") + '</a>'
-                    + '                          </div>'
-                    + '                      <div style=" float: right; width: 60%; "> '
-                    + '                          <div class="va012-width-30" style=" float: left; width: 49%; ">'
+                    //+ '                          <div class="pull-left">'
+                    //+ '                              <a class="va012-frm-btn va012-btn-gray" style="cursor: default;">' + VIS.Msg.getMsg("VA012_UpcomingTransactions") + '</a>'
+                    //+ '                          </div>'
+                    + '                      <div class="va012-headersearchfilter"> '
+                    + '                          <div class="va012-searchfilter">'
                     + '                              <select id="VA012_cmbTransactionType_' + $self.windowNo + '">'
                     + '                             <option value="PY">' + VIS.Msg.getMsg("VA012_Payments") + '</option>'
                     + '                             <option value="PO">' + VIS.Msg.getMsg("VA012_PrepayOrders") + '</option>'
@@ -1085,10 +1132,16 @@
                     + '                              <option value="CO">' + VIS.Msg.getMsg("VA012_Contra") + '</option>'
                     + '                              </select>'
                     + '                          </div>'
-                    + '                          <div class="va012-width-30" style=" float: right; width: 49%; ">'
+                    + '                          <div class="va012-searchfilter">'
                     + '                              <select id="VA012_cmbSearchPaymentMethod_' + $self.windowNo + '">'
                     + '                              </select>'
                     + '                          </div>'
+                    + '                       <div id=' + "VA012_DivBusinessPartner_" + $self.windowNo + ' class="va012-searchfilter">'
+                    + '                       </div>'
+                    + '                       <div class="VA012-search-wrap va012-searchfilter">'
+                    + '                        <input value = "" placeholder="' + VIS.Msg.getMsg("VA012_Search") + '..." type = "text" id = ' + "VA012_txtSearch_Payment_" + $self.windowNo + '>'
+                    + '                        <a class= "VA012-search-icon" id = ' + "VA012_btnSearch_Payment_" + $self.windowNo + ' > <span class="glyphicon glyphicon-search"></span></a >'
+                    + '                       </div>'
                     + '                          </div>'
                     + '                      </div>'
                     + '                      <!-- end of payment-header-wrap -->'
@@ -1168,7 +1221,16 @@
                 divRow2.append(row2Col1).append(row2Col2).append(row2Col3);
                 //appended the added fields of C_Currency_ID and C_ConversionType_ID, added CheckNo,CheckDate and Payment Methods fields in divRow11 Element
                 divformWrap.append(divRow1).append(divRow2).append(divRow10).append(divRow11).append(divRow3).append(divRow4).append(divRow5).append(divRow6).append(divRow7).append(divRow8).append(divRow9);
+
+                //Rakesh(VA228):BP Lookup query based on client and orgazination
+                var bpValidation = "C_BPartner.IsActive='Y' AND C_BPartner.IsSummary ='N' AND C_BPartner.AD_Org_ID IN(0,@AD_Org_ID@) AND C_BPartner.AD_Client_ID = " + VIS.context.getAD_Client_ID();
+                var BPartnerLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3499, VIS.DisplayType.Search, "C_BPartner_ID", 0, false, bpValidation);
+                _BPSearchControl = new VIS.Controls.VTextBoxButton("C_BPartner_ID", true, false, true, VIS.DisplayType.Search, BPartnerLookUp);
+
                 divMidWrap.append(divtopWrap).append(divformWrap).append(payHeaderWrap);
+                //Append BP Search box into search header .attr("id", "C_BPartner_ID_" + $self.windowNo)
+                $(payHeaderWrap).find("#VA012_DivBusinessPartner_" + $self.windowNo).append(_BPSearchControl.getControl().attr("id", "C_BPartner_ID_" + $self.windowNo).addClass('BPSearchText').attr("placeholder", VIS.Msg.getMsg("VA012_BusinessPartner"))).append(_BPSearchControl.getBtn(0).addClass("btnBPSearch"));
+
                 contentDiv.append(divMidWrap).append(rightWrap);
                 tableTd1.append(contentDiv);
                 tableTr.append(tableTd).append(tableTd1);                   //+ '      </div>'
@@ -1298,23 +1360,29 @@
                 //always zero becoz this parameter 
                 //used in other function with calling this Same Controller
                 var page_No = 0;
+                //Rakesh(VA228):When bank selected
+                if (_cmbBankAccount.val() > 0) {
+                    $.ajax({
+                        url: VIS.Application.contextUrl + "BankStatement/MaxStatement",
+                        type: "GET",
+                        datatype: "json",
+                        data: ({ _bankAccount: _cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _origin: _origin, _pageNo: page_No }),
+                        contentType: "application/json; charset=utf-8",
+                        success: function (data) {
+                            if (data != null && data != "") {
+                                data = $.parseJSON($.parseJSON(data));
+                                _txtStatementNo.val(data.statementNo);
+                                _txtStatementPage.val(data.pageno);
+                                _txtStatementLine.val(data.lineno);
 
-                $.ajax({
-                    url: VIS.Application.contextUrl + "BankStatement/MaxStatement",
-                    type: "GET",
-                    datatype: "json",
-                    data: ({ _bankAccount: _cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _origin: _origin, _pageNo: page_No }),
-                    contentType: "application/json; charset=utf-8",
-                    success: function (data) {
-                        if (data != null && data != "") {
-                            data = $.parseJSON($.parseJSON(data));
-                            _txtStatementNo.val(data.statementNo);
-                            _txtStatementPage.val(data.pageno);
-                            _txtStatementLine.val(data.lineno);
-
-                        }
-                    },
-                });
+                            }
+                        },
+                    });
+                } else {
+                    _txtStatementNo.val("0");
+                    _txtStatementPage.val("0");
+                    _txtStatementLine.val("0");
+                }
 
             },
             getOverUnderPayment: function (_paymentID) {
@@ -1405,6 +1473,10 @@
                 _divPaymentMethod = $root.find("#VA012_divPaymentMethod_" + $self.windowNo);
                 _divCheckNum = $root.find("#VA012_divCheckNum_" + $self.windowNo);
                 _divCheckDate = $root.find("#VA012_divCheckDate_" + $self.windowNo);
+
+                //Rakesh(VA228):Get business partner and payment search control
+                _txtSearchPayment = $root.find("#VA012_txtSearch_Payment_" + $self.windowNo);
+                _btnSearchPayment = $root.find("#VA012_btnSearch_Payment_" + $self.windowNo);
             },
             getBaseCurrency: function () {
 
@@ -1510,8 +1582,6 @@
                 }
             },
 
-
-
             LoadPaymentsPages: function (_accountID, _paymentMethodID, _transactionType) {
                 if (_txtSearch.val() != null && _txtSearch.val() != "") {
                     _SEARCHREQUEST = true;
@@ -1519,13 +1589,14 @@
                 else {
                     _SEARCHREQUEST = false;
                 }
+                //Rakesh(VA228):Added business partnerid and searchtext parameter
                 $.ajax({
                     url: VIS.Application.contextUrl + "BankStatement/LoadPaymentsPages",
                     type: "GET",
                     datatype: "json",
                     contentType: "application/json; charset=utf-8",
                     async: false,
-                    data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _paymentPAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType }),
+                    data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _paymentPAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, businessPartnerId: _BPSearchControl.value, txtSearch: _txtSearchPayment.val() }),
                     success: function (data) {
                         if (data != null && data != "") {
 
@@ -1551,28 +1622,31 @@
                 //_txtPaymentSchedule.val("");
                 //_txtPrepayOrder.val("");
                 //handled Scrolling for Transaction tab
-                busyIndicator($(_paymentLists), true, "inherit");
 
+                //Rakesh(VA228):Load When BankAccountid is selected
+                if (_accountID > 0) {
+                    busyIndicator($(_paymentLists), true, "inherit");
+                    //Rakesh(VA228):Added business partnerid and searchtext parameter
+                    window.setTimeout(function () {
+                        $.ajax({
+                            url: VIS.Application.contextUrl + "BankStatement/LoadPayments",
+                            type: "GET",
+                            datatype: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _PAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, statementDate: (_statementDate == null || _statementDate == "") ? new (Date) : _statementDate, businessPartnerId: _BPSearchControl.value, txtSearch: _txtSearchPayment.val() }),
+                            success: function (data) {
+                                if (data != null && data != "") {
 
-                window.setTimeout(function () {
-                    $.ajax({
-                        url: VIS.Application.contextUrl + "BankStatement/LoadPayments",
-                        type: "GET",
-                        datatype: "json",
-                        contentType: "application/json; charset=utf-8",
-                        data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _PAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, statementDate: (_statementDate == null || _statementDate == "") ? new (Date) : _statementDate }),
-                        success: function (data) {
-                            if (data != null && data != "") {
-
-                                callbackloadPayments(data);
+                                    callbackloadPayments(data);
+                                    busyIndicator($(_paymentLists), false, "inherit");
+                                }
+                            },
+                            error: function () {
                                 busyIndicator($(_paymentLists), false, "inherit");
                             }
-                        },
-                        error: function () {
-                            busyIndicator($(_paymentLists), false, "inherit");
-                        }
-                    });
-                }, 2);
+                        });
+                    }, 2);
+                }
                 function callbackloadPayments(data) {
                     data = $.parseJSON(data);
                     if (data.length > 0) {
@@ -1650,9 +1724,8 @@
 
                             //By SUkhwinder
 
-                            var countVA034 = VIS.Utility.Util.getValueOfInt(VIS.DB.executeScalar("SELECT Count(AD_ModuleInfo_ID) FROM AD_ModuleInfo WHERE PREFIX='VA034_' AND IsActive = 'Y'"));
-
-                            if (_transactionType == "PY" && countVA034 > 0) {
+                            //Rakesh:Check VA034 Module replaced query with variable
+                            if (_transactionType == "PY" && _CountVA034 > 0) {
                                 _PaymentsHTML += '  <div class="col-md-2 col-sm-2">'
                                     + '     <div class="va012-form-check">'
                                     + '         <div class="va012-pay-text">'
@@ -3520,7 +3593,6 @@
                     _SEARCHREQUEST = false;
                 }
 
-                busyIndicator($(_lstStatement), true, "inherit");
                 //_secUnreconciled.html("");
                 //_secReconciled.html("");
 
@@ -3611,269 +3683,264 @@
                 //}
                 //_sqlCon += " GROUP BY BCURR.ISO_CODE ,NVL(CURR.StdPrecision,2)";
 
-                window.setTimeout(function () {
-                    //var _dsCon = VIS.DB.executeDataSet(_sqlCon.toString(), null, callbackloadConUncon);
-                    $.ajax({
-                        url: VIS.Application.contextUrl + "BankStatement/LoadConciledOrUnConciledStatements",
-                        type: "GET",
-                        datatype: "json",
-                        contentType: "application/json; charset=utf-8",
-                        async: false,
-                        data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _currencyID: _currencyId != null ? _currencyId : 0, _searchRequest: _SEARCHREQUEST }),
-                        success: function (data) {
-                            var _dsCon = $.parseJSON(data);
-                            //if (_dsCon != null && _dsCon != "") {
-                            callbackloadConUncon(_dsCon);
-                            busyIndicator($(_lstStatement), false, "inherit");
-                            //}
-                        },
-                        error: function () {
-                            busyIndicator($(_lstStatement), false, "inherit");
-                        }
-                    })
-                }, 2);
+                //Rakesh(VA228):Load ReConciled and UnConciledStatements when bank is selected
+                if (_cmbBankAccount.val() > 0) {
+                    busyIndicator($(_lstStatement), true, "inherit");
 
-                function callbackloadConUncon(_dsCon) {
-
-                    if (_dsCon != null && _dsCon.length > 0) {
-                        _secUnreconciled.html("");
-                        _secReconciled.html("");
-                        _secReconciled.append("<p>" + VIS.Msg.getMsg("VA012_Reconciled") + "</p><p style='margin-top: 4px;'>" + VIS.Msg.getMsg("VA012_Unreconciled") + "</p>")
-                        _secUnreconciled.append("<span style='padding-bottom: 2px;' class='va012-amount va012-font-green'><span class='va012-base-curr'>" + _dsCon[0].basecurrency + "</span> " + parseFloat(_dsCon[0].reconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span><span style='padding-bottom: 2px;' class='va012-amount va012-font-red'> <span class='va012-base-curr'>" + _dsCon[0].basecurrency + "</span> " + parseFloat(_dsCon[0].unreconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span>");
-                        //_dsCon.dispose();
-                        //_dsCon = null;
-                        //_sqlCon = null;
-
-                    }
-                    else {
-                        _secUnreconciled.html("");
-                        _secReconciled.html("");
-                        _secReconciled.append("<p>" + VIS.Msg.getMsg("VA012_Reconciled") + "</p><p style='margin-top: 4px;'>" + VIS.Msg.getMsg("VA012_Unreconciled") + "</p>")
-                        _secUnreconciled.append("<span style='padding-bottom: 2px;' class='va012-amount va012-font-green'><span class='va012-base-curr'>" + _clientBaseCurrency + "</span> 0</span><span style='padding-bottom: 2px;' class='va012-amount va012-font-red'><span class='va012-base-curr'>" + _clientBaseCurrency + "</span> 0</span>");
-                    }
-
-                    childDialogs.setStatementListHeight();
-
-                }
-
-
-
-
-
-
-                // _lstStatement.html("");
-                var status = "va012-red-color";
-
-
-
-
-                ////////////////////
-                window.setTimeout(function () {
-                    $.ajax({
-                        url: VIS.Application.contextUrl + "BankStatement/LoadStatements",
-                        type: "GET",
-                        datatype: "json",
-                        contentType: "application/json; charset=utf-8",
-                        async: false,
-                        data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _statementPageNo: _statementPageNo, _PAGESIZE: _PAGESIZE, _SEARCHREQUEST: _SEARCHREQUEST }),
-                        success: function (data) {
-                            if (data != null && data != "") {
-
-                                callbackloadStatement(data);
+                    window.setTimeout(function () {
+                        //var _dsCon = VIS.DB.executeDataSet(_sqlCon.toString(), null, callbackloadConUncon);
+                        $.ajax({
+                            url: VIS.Application.contextUrl + "BankStatement/LoadConciledOrUnConciledStatements",
+                            type: "GET",
+                            datatype: "json",
+                            contentType: "application/json; charset=utf-8",
+                            async: false,
+                            data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _currencyID: _currencyId != null ? _currencyId : 0, _searchRequest: _SEARCHREQUEST }),
+                            success: function (data) {
+                                var _dsCon = $.parseJSON(data);
+                                //if (_dsCon != null && _dsCon != "") {
+                                callbackloadConUncon(_dsCon);
+                                busyIndicator($(_lstStatement), false, "inherit");
+                                //}
+                            },
+                            error: function () {
                                 busyIndicator($(_lstStatement), false, "inherit");
                             }
-                        },
-                        error: function () {
-                            busyIndicator($(_lstStatement), false, "inherit");
+                        })
+                    }, 2);
+
+                    function callbackloadConUncon(_dsCon) {
+
+                        if (_dsCon != null && _dsCon.length > 0) {
+                            _secUnreconciled.html("");
+                            _secReconciled.html("");
+                            _secReconciled.append("<p>" + VIS.Msg.getMsg("VA012_Reconciled") + "</p><p style='margin-top: 4px;'>" + VIS.Msg.getMsg("VA012_Unreconciled") + "</p>")
+                            _secUnreconciled.append("<span style='padding-bottom: 2px;' class='va012-amount va012-font-green'><span class='va012-base-curr'>" + _dsCon[0].basecurrency + "</span> " + parseFloat(_dsCon[0].reconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span><span style='padding-bottom: 2px;' class='va012-amount va012-font-red'> <span class='va012-base-curr'>" + _dsCon[0].basecurrency + "</span> " + parseFloat(_dsCon[0].unreconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span>");
+                            //_dsCon.dispose();
+                            //_dsCon = null;
+                            //_sqlCon = null;
+
                         }
-                    })
-                }, 2);
+                        else {
+                            _secUnreconciled.html("");
+                            _secReconciled.html("");
+                            _secReconciled.append("<p>" + VIS.Msg.getMsg("VA012_Reconciled") + "</p><p style='margin-top: 4px;'>" + VIS.Msg.getMsg("VA012_Unreconciled") + "</p>")
+                            _secUnreconciled.append("<span style='padding-bottom: 2px;' class='va012-amount va012-font-green'><span class='va012-base-curr'>" + _clientBaseCurrency + "</span> 0</span><span style='padding-bottom: 2px;' class='va012-amount va012-font-red'><span class='va012-base-curr'>" + _clientBaseCurrency + "</span> 0</span>");
+                        }
 
+                        childDialogs.setStatementListHeight();
 
-                //VIS.DB.executeDataSetPaging(_sql.toString(), _statementPageNo, _PAGESIZE, null, callbackloadStatement);
-                function callbackloadStatement(data) {
-                    data = $.parseJSON(data);
-                    var _StatementsHTML = "";
+                    }
 
+                    // _lstStatement.html("");
+                    var status = "va012-red-color";
 
-                    if (data != null && data.length > 0) {
-                        for (var i = 0; i < data.length; i++) {
-                            _StatementsHTML = "";
-                            if (data[i].docstatus == "CO" || data[i].docstatus == "CL" || data[i].docstatus == "RE") {
-                                status = "va012-gray-color";
+                    ////////////////////
+                    window.setTimeout(function () {
+                        $.ajax({
+                            url: VIS.Application.contextUrl + "BankStatement/LoadStatements",
+                            type: "GET",
+                            datatype: "json",
+                            contentType: "application/json; charset=utf-8",
+                            async: false,
+                            data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _statementPageNo: _statementPageNo, _PAGESIZE: _PAGESIZE, _SEARCHREQUEST: _SEARCHREQUEST }),
+                            success: function (data) {
+                                if (data != null && data != "") {
+
+                                    callbackloadStatement(data);
+                                    busyIndicator($(_lstStatement), false, "inherit");
+                                }
+                            },
+                            error: function () {
+                                busyIndicator($(_lstStatement), false, "inherit");
                             }
-                            else {
-                                if (data[i].c_payment_id == null || data[i].c_payment_id == "0" || data[i].c_payment_id == 0) {
+                        })
+                    }, 2);
 
-                                    //Set Green Color if charge amount = Statement amount suggested by Ashish
+                    //VIS.DB.executeDataSetPaging(_sql.toString(), _statementPageNo, _PAGESIZE, null, callbackloadStatement);
+                    function callbackloadStatement(data) {
+                        data = $.parseJSON(data);
+                        var _StatementsHTML = "";
 
-                                    //if ((data[i].c_charge_id != null || data[i].c_charge_id == "") && (data[i].trxno != null || data[i].trxno == "")) {
-                                    //    status = "va012-red-color";
-                                    //}
-                                    if ((data[i].c_cashline_id != null && data[i].c_cashline_id != "0" && data[i].c_cashline_id != 0) /*&& data[i].usenexttime == true*/) {
-                                        status = "va012-green-color";
-                                    }
-                                    //set status as green incase of Charge reference is present
-                                    else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
-                                        
-                                        if (data[i].STMTAMT == data[i].trxamount)
-                                            status = "va012-green-color";
-                                        else
-                                        status = "va012-red-color";
-                                    }
-                                    else if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
-                                        status = "va012-red-color";
-                                    }
-                                    else {
-                                        status = "va012-red-color";
-                                    }
-                                    //_amtUnreconciled += data[i].trxamount;
+
+                        if (data != null && data.length > 0) {
+                            for (var i = 0; i < data.length; i++) {
+                                _StatementsHTML = "";
+                                if (data[i].docstatus == "CO" || data[i].docstatus == "CL" || data[i].docstatus == "RE") {
+                                    status = "va012-gray-color";
                                 }
                                 else {
-                                    status = "va012-green-color";
-                                    //_amtReconciled += data[i].trxamount;
+                                    if (data[i].c_payment_id == null || data[i].c_payment_id == "0" || data[i].c_payment_id == 0) {
+
+                                        //Set Green Color if charge amount = Statement amount suggested by Ashish
+
+                                        //if ((data[i].c_charge_id != null || data[i].c_charge_id == "") && (data[i].trxno != null || data[i].trxno == "")) {
+                                        //    status = "va012-red-color";
+                                        //}
+                                        if ((data[i].c_cashline_id != null && data[i].c_cashline_id != "0" && data[i].c_cashline_id != 0) /*&& data[i].usenexttime == true*/) {
+                                            status = "va012-green-color";
+                                        }
+                                        //set status as green incase of Charge reference is present
+                                        else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
+
+                                            if (data[i].STMTAMT == data[i].trxamount)
+                                                status = "va012-green-color";
+                                            else
+                                                status = "va012-red-color";
+                                        }
+                                        else if ((data[i].c_charge_id == null || data[i].c_charge_id == "") && (data[i].trxno == null || data[i].trxno == "")) {
+                                            status = "va012-red-color";
+                                        }
+                                        else {
+                                            status = "va012-red-color";
+                                        }
+                                        //_amtUnreconciled += data[i].trxamount;
+                                    }
+                                    else {
+                                        status = "va012-green-color";
+                                        //_amtReconciled += data[i].trxamount;
+                                    }
                                 }
+
+                                _StatementsHTML = '<div  data-uid="' + data[i].c_bankstatementline_id + '" class="va012-right-data-wrap ' + status + '">'
+                                    + '<div class="va012-statement-wrap">'
+                                    + '<div class="va012-fl-padd">'
+                                    + '<div class="col-md-4 col-sm-4 va012-padd-0">'
+                                    + '<div class="va012-form-check">'
+                                    + ' <input type="checkbox" data-uid="' + data[i].c_bankstatementline_id + '" >'
+                                    // + ' <div class="va012-form-text"> <span style="background: #999;color: white; padding: 3px;margin-left: 2px;">' + data[i].page + '/' + data[i].line + '</span>'
+                                    + ' <div class="va012-form-text"> <span style="background: rgba(var(--v-c-on-secondary), .4);color: rgba(var(--v-c-on-primary), 1); padding: 3px;margin-left: 2px;">' + data[i].statementno + '/' + data[i].page + '/' + data[i].line + '</span>'
+                                    + '<label>' + new Date(data[i].stmtLineDate).toLocaleDateString() + '</label>' //StatementLine Date 
+                                    + '<label>' + data[i].currency + ' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
+
+                                //if (data[i].isconverted == "Y") {
+                                //    _StatementsHTML += '<span>' + data[i].basecurrency + ' ' + Globalize.format(data[i].convertedamount, "N") + '</span>';
+                                //}
+
+                                if (data[i].trxno == "" || data[i].trxno == null) {
+                                    _StatementsHTML += '</div>'
+                                        + '</div>'
+                                        + '<!-- end of form-group -->'
+                                        + ' </div>'
+                                        + '<!-- end of col -->'
+                                        + '<div class="col-md-4 col-sm-4 va012-padd-0 va012-width-sm">'
+                                        + '<div class="va012-form-check">'
+                                        + '<div class="va012-pay-text">'
+                                        + ' <p>' + VIS.Utility.encodeText(data[i].description) + '</p>'
+                                        //+ ' <span>' + VIS.Utility.encodeText(data[i].bpgroup) + '</span>'
+                                        + '<span>' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
+                                        + ' </div>'
+                                        + '</div>'
+                                        + ' <!-- end of form-group -->'
+                                        + '</div>'
+                                        + ' <!-- end of col -->'
+
+
+                                        + ' <div class="col-md-2 col-sm-2 va012-padd-0">'
+                                        + '<div class="va012-form-check">'
+                                        + '<div class="va012-pay-text">'
+                                        + ' <p> </p>'
+                                        + ' </div>'
+                                        + '</div>'
+                                        + ' <!-- end of form-group -->'
+                                        + ' </div>'
+                                        + ' <!-- end of col -->'
+
+
+
+                                        + ' <div class="col-md-1 col-sm-1 va012-padd-0">'
+                                        + '<div class="va012-form-check">'
+                                        + '<div class="va012-pay-text">'
+                                        + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit" title=' + VIS.Msg.getMsg("EditRecord") + '></span> <span data-uid="' + data[i].c_bankstatement_id + '" class="glyphicon glyphicon-zoom-in" title=' + VIS.Msg.getMsg("ZoomToRecord") + '></span> </p>'
+                                        + ' </div>'
+                                        + '</div>'
+                                        + ' <!-- end of form-group -->'
+                                        + ' </div>'
+                                        + ' <!-- end of col -->'
+
+
+                                        + ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
+                                        + '<div class="va012-form-data">';
+                                }
+                                else {
+                                    _StatementsHTML += '</div>'
+                                        + '</div>'
+                                        + '<!-- end of form-group -->'
+                                        + ' </div>'
+                                        + '<!-- end of col -->'
+                                        + '<div class="col-md-4 col-sm-4 va012-padd-0 va012-width-sm">'
+                                        + '<div class="va012-form-check">'
+                                        + '<div class="va012-pay-text">'
+                                        + ' <p>' + VIS.Utility.encodeText(data[i].description) + '</p>'
+                                        + ' <span>' + VIS.Utility.encodeText(data[i].bpgroup) + '</span>'
+                                        + '<span>' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
+                                        + ' </div>'
+                                        + '</div>'
+                                        + ' <!-- end of form-group -->'
+                                        + '</div>'
+                                        + ' <!-- end of col -->'
+
+
+                                        + ' <div class="col-md-2 col-sm-2 va012-padd-0">'
+                                        + '<div class="va012-form-check">'
+                                        + '<div class="va012-pay-text">'
+                                        + ' <p>' + VIS.Utility.encodeText(data[i].trxno) + '</p>'
+                                        + ' </div>'
+                                        + '</div>'
+                                        + ' <!-- end of form-group -->'
+                                        + ' </div>'
+                                        + ' <!-- end of col -->'
+
+
+
+                                        + ' <div class="col-md-1 col-sm-1 va012-padd-0">'
+                                        + '<div class="va012-form-check">'
+                                        + '<div class="va012-pay-text">'
+                                        + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit"></span> <span data-uid="' + data[i].c_bankstatement_id + '" class="glyphicon glyphicon-zoom-in"></span> </p>'
+                                        + ' </div>'
+                                        + '</div>'
+                                        + ' <!-- end of form-group -->'
+                                        + ' </div>'
+                                        + ' <!-- end of col -->'
+
+
+                                        + ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
+                                        + '<div class="va012-form-data">';
+                                }
+
+                                //if (data[i].imageurl != null && data[i].imageurl != "") {
+                                //    _StatementsHTML += '    <img src="' + data[i].imageurl + '" alt="">';
+                                //}
+                                ////else if (data[i].binarydata != null) {
+
+                                ////    _StatementsHTML += '    <img src="data:image/png;base64,' + data[i].binarydata + '" alt="">';
+                                ////}
+                                //else {
+                                //    //_StatementsHTML += ' <img src="Areas/VA012/Images/defaultBP.png" alt="">';
+                                //    _StatementsHTML += '<i class="vis-chatimgwrap fa fa-user"></i>';
+                                //}
+
+                                _StatementsHTML += ' </div>'
+                                    + ' <!-- end of form-group -->'
+                                    + ' </div>'
+                                    + ' <!-- end of col -->'
+                                    + ' </div>'
+                                    + ' <!-- end of row -->'
+                                    + '</div>'
+                                    + '<!-- end of payment-wrap -->'
+                                    + '</div>'
+                                    + '<!-- end of right-data-wrap -->';
+                                _lstStatement.append(_StatementsHTML);
+
                             }
-
-                            _StatementsHTML = '<div  data-uid="' + data[i].c_bankstatementline_id + '" class="va012-right-data-wrap ' + status + '">'
-                                + '<div class="va012-statement-wrap">'
-                                + '<div class="va012-fl-padd">'
-                                + '<div class="col-md-4 col-sm-4 va012-padd-0">'
-                                + '<div class="va012-form-check">'
-                                + ' <input type="checkbox" data-uid="' + data[i].c_bankstatementline_id + '" >'
-                                // + ' <div class="va012-form-text"> <span style="background: #999;color: white; padding: 3px;margin-left: 2px;">' + data[i].page + '/' + data[i].line + '</span>'
-                                + ' <div class="va012-form-text"> <span style="background: rgba(var(--v-c-on-secondary), .4);color: rgba(var(--v-c-on-primary), 1); padding: 3px;margin-left: 2px;">' + data[i].statementno + '/' + data[i].page + '/' + data[i].line + '</span>'
-                                + '<label>' + new Date(data[i].stmtLineDate).toLocaleDateString() + '</label>' //StatementLine Date 
-                                + '<label>' + data[i].currency + ' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
-
-                            //if (data[i].isconverted == "Y") {
-                            //    _StatementsHTML += '<span>' + data[i].basecurrency + ' ' + Globalize.format(data[i].convertedamount, "N") + '</span>';
-                            //}
-
-                            if (data[i].trxno == "" || data[i].trxno == null) {
-                                _StatementsHTML += '</div>'
-                                    + '</div>'
-                                    + '<!-- end of form-group -->'
-                                    + ' </div>'
-                                    + '<!-- end of col -->'
-                                    + '<div class="col-md-4 col-sm-4 va012-padd-0 va012-width-sm">'
-                                    + '<div class="va012-form-check">'
-                                    + '<div class="va012-pay-text">'
-                                    + ' <p>' + VIS.Utility.encodeText(data[i].description) + '</p>'
-                                    //+ ' <span>' + VIS.Utility.encodeText(data[i].bpgroup) + '</span>'
-                                    + '<span>' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
-                                    + ' </div>'
-                                    + '</div>'
-                                    + ' <!-- end of form-group -->'
-                                    + '</div>'
-                                    + ' <!-- end of col -->'
-
-
-                                    + ' <div class="col-md-2 col-sm-2 va012-padd-0">'
-                                    + '<div class="va012-form-check">'
-                                    + '<div class="va012-pay-text">'
-                                    + ' <p> </p>'
-                                    + ' </div>'
-                                    + '</div>'
-                                    + ' <!-- end of form-group -->'
-                                    + ' </div>'
-                                    + ' <!-- end of col -->'
-
-
-
-                                    + ' <div class="col-md-1 col-sm-1 va012-padd-0">'
-                                    + '<div class="va012-form-check">'
-                                    + '<div class="va012-pay-text">'
-                                    + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit" title=' + VIS.Msg.getMsg("EditRecord") + '></span> <span data-uid="' + data[i].c_bankstatement_id + '" class="glyphicon glyphicon-zoom-in" title=' + VIS.Msg.getMsg("ZoomToRecord") + '></span> </p>'
-                                    + ' </div>'
-                                    + '</div>'
-                                    + ' <!-- end of form-group -->'
-                                    + ' </div>'
-                                    + ' <!-- end of col -->'
-
-
-                                    + ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
-                                    + '<div class="va012-form-data">';
-                            }
-                            else {
-                                _StatementsHTML += '</div>'
-                                    + '</div>'
-                                    + '<!-- end of form-group -->'
-                                    + ' </div>'
-                                    + '<!-- end of col -->'
-                                    + '<div class="col-md-4 col-sm-4 va012-padd-0 va012-width-sm">'
-                                    + '<div class="va012-form-check">'
-                                    + '<div class="va012-pay-text">'
-                                    + ' <p>' + VIS.Utility.encodeText(data[i].description) + '</p>'
-                                    + ' <span>' + VIS.Utility.encodeText(data[i].bpgroup) + '</span>'
-                                    + '<span>' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
-                                    + ' </div>'
-                                    + '</div>'
-                                    + ' <!-- end of form-group -->'
-                                    + '</div>'
-                                    + ' <!-- end of col -->'
-
-
-                                    + ' <div class="col-md-2 col-sm-2 va012-padd-0">'
-                                    + '<div class="va012-form-check">'
-                                    + '<div class="va012-pay-text">'
-                                    + ' <p>' + VIS.Utility.encodeText(data[i].trxno) + '</p>'
-                                    + ' </div>'
-                                    + '</div>'
-                                    + ' <!-- end of form-group -->'
-                                    + ' </div>'
-                                    + ' <!-- end of col -->'
-
-
-
-                                    + ' <div class="col-md-1 col-sm-1 va012-padd-0">'
-                                    + '<div class="va012-form-check">'
-                                    + '<div class="va012-pay-text">'
-                                    + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit"></span> <span data-uid="' + data[i].c_bankstatement_id + '" class="glyphicon glyphicon-zoom-in"></span> </p>'
-                                    + ' </div>'
-                                    + '</div>'
-                                    + ' <!-- end of form-group -->'
-                                    + ' </div>'
-                                    + ' <!-- end of col -->'
-
-
-                                    + ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
-                                    + '<div class="va012-form-data">';
-                            }
-
-                            //if (data[i].imageurl != null && data[i].imageurl != "") {
-                            //    _StatementsHTML += '    <img src="' + data[i].imageurl + '" alt="">';
-                            //}
-                            ////else if (data[i].binarydata != null) {
-
-                            ////    _StatementsHTML += '    <img src="data:image/png;base64,' + data[i].binarydata + '" alt="">';
-                            ////}
-                            //else {
-                            //    //_StatementsHTML += ' <img src="Areas/VA012/Images/defaultBP.png" alt="">';
-                            //    _StatementsHTML += '<i class="vis-chatimgwrap fa fa-user"></i>';
-                            //}
-
-                            _StatementsHTML += ' </div>'
-                                + ' <!-- end of form-group -->'
-                                + ' </div>'
-                                + ' <!-- end of col -->'
-                                + ' </div>'
-                                + ' <!-- end of row -->'
-                                + '</div>'
-                                + '<!-- end of payment-wrap -->'
-                                + '</div>'
-                                + '<!-- end of right-data-wrap -->';
-                            _lstStatement.append(_StatementsHTML);
-
                         }
+                        _sql = null;
+
+                        childDialogs.setStatementListHeight();
+                        loadFunctions.dropPayments();
+
                     }
-                    _sql = null;
-
-                    childDialogs.setStatementListHeight();
-                    loadFunctions.dropPayments();
-
                 }
-
             },
             setStatementListHeight: function () {
                 // Handle Form Load on  browser refresh with mutiple tab
@@ -4925,7 +4992,7 @@
                         else {
                             setCurrencyandConversionType(null);
                         }
-                        
+
                         //set the Payment Method and Check No
                         if (_scheduleList.length > 0) {
                             var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: 0, _InvSchdleList: _scheduleList });
@@ -5320,9 +5387,8 @@
                         //show Payment Method
                         _divPaymentMethod.show();
 
-                        ////By Sukhwinder on 25-08-2016
-                        var countVA034 = VIS.Utility.Util.getValueOfInt(VIS.DB.executeScalar("SELECT Count(AD_ModuleInfo_ID) FROM AD_ModuleInfo WHERE PREFIX='VA034_' AND IsActive = 'Y'"));
-                        if (countVA034 > 0) {
+                        //Rakesh:Check VA034 Module replaced query with variable
+                        if (_CountVA034 > 0) {
                             _divVoucherNo.show();
                             _divVoucherNo.find("*").prop("disabled", false);
                         }
@@ -6173,7 +6239,7 @@
                     //When user click save button with out selecting Order/Payment/Schedule then return validation message
                     if (VIS.Utility.Util.getValueOfString(_formData[0]["_scheduleList"]) == "" && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlPayment"]) == 0
                         && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlOrder"]) == 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) == 0
-                        && VIS.Utility.Util.getValueOfInt(_formData[0]["_cmbCharge"]) == 0 ) {
+                        && VIS.Utility.Util.getValueOfInt(_formData[0]["_cmbCharge"]) == 0) {
                         VIS.ADialog.info("VA012_PleaseSelectAnyOne", null, "", "");
                         return;
                     }
@@ -7820,6 +7886,7 @@
             newRecordForm.newRecordDispose();
             //clear value
             ad_Column = null;
+            _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
         };
         function busyIndicator(_obj, _isShow, _position) {
             $BusyIndicator = $("<div class='vis-apanel-busy va012-busy-bank-statement'>");
@@ -7837,8 +7904,6 @@
             }
             _obj.append($BusyIndicator);
         };
-
-
     };
 
     bankStatement.prototype.sizeChanged = function (height) {

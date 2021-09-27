@@ -135,6 +135,33 @@
         return "";
     };
 
+    //Set Payment method Based on InvoiceID and OrderId
+    VA012_Contra.prototype.SetPaymentMethod = function (ctx, windowNo, mTab, mField, value, oldValue) {
+
+        if (this.isCalloutActive() || value == null || value.toString() == "")  // assuming it is resetting value
+        {
+            return "";
+        }
+        this.setCalloutActive(true);
+        //1->Invoice & 2->Order PaymentMethodId
+        var type = "1";
+        if (mField.getColumnName() == "C_Invoice_ID") {
+            type = "1";
+        }
+        if (mField.getColumnName() == "C_Order_ID") {
+            type = "2";
+        }
+        var data = VIS.dataContext.getJSONRecord("VA012/Statement/GetPaymentMethod", Util.getValueOfInt(value) + "," + type);
+
+        //Set callout inactive to execute payment method callout
+        this.setCalloutActive(false);
+        if (data != null && data != "") {
+            mTab.setValue("VA009_PaymentMethod_ID", data);
+        }
+        ctx = windowNo = mTab = mField = value = oldValue = null;
+        return "";
+    };
+
     VA012.Model = VA012.Model || {};
     VA012.Model.VA012_Contra = VA012_Contra;
 })(VA012, jQuery);

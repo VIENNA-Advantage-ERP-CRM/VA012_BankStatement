@@ -607,15 +607,26 @@ namespace VA012.Controllers
         }
 
 
-
-        public JsonResult LoadPaymentsPages(int _accountID, int _paymentPageNo, int _PAGESIZE, int _paymentMethodID, string _transactionType)
+        /// <summary>
+        /// /Get the Count of Payments or Invoices or Orders or CashJournal Lines 
+        /// based on conditions
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="_accountID">C_BankAccount_ID</param>
+        /// <param name="_paymentPageNo">Currenct PageNo</param>
+        /// <param name="_PAGESIZE">Size of the Page</param>
+        /// <param name="_paymentMethodID">C_PaymentMethod_ID</param>
+        /// <param name="_transactionType">Current Transation Type</param>
+        /// <param name="businessPartnerId">Business partner id</param>
+        /// <returns>Count</returns>
+        public JsonResult LoadPaymentsPages(int _accountID, int _paymentPageNo, int _PAGESIZE, int _paymentMethodID, string _transactionType, int? businessPartnerId, string txtSearch = "")
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.LoadPaymentsPages(ctx, _accountID, _paymentPageNo, _PAGESIZE, _paymentMethodID, _transactionType));
+                retJSON = JsonConvert.SerializeObject(obj.LoadPaymentsPages(ctx, _accountID, _paymentPageNo, _PAGESIZE, _paymentMethodID, _transactionType, businessPartnerId, txtSearch));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -641,15 +652,18 @@ namespace VA012.Controllers
         /// <param name="_paymentMethodID">Payment Method ID</param>
         /// <param name="_transactionType">Transaction Type</param>
         /// <param name="statementDate">Statement Date</param>
+        /// <param name="businessPartnerId">Business PartnerId</param>
         /// <returns>List of Payments</returns>
-        public JsonResult LoadPayments(int _accountID, int _paymentPageNo, int _PAGESIZE, int _paymentMethodID, string _transactionType, DateTime? statementDate)
+        public JsonResult LoadPayments(int _accountID, int _paymentPageNo, int _PAGESIZE, int _paymentMethodID, string _transactionType, DateTime? statementDate, int? businessPartnerId, string txtSearch = "")
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
+                int CountVA034 = Env.IsModuleInstalled("VA034_") ? 1 : 0;
+                TempData["CountVA034"] = CountVA034;
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.LoadPayments(ctx, _accountID, _paymentPageNo, _PAGESIZE, _paymentMethodID, _transactionType, statementDate));
+                retJSON = JsonConvert.SerializeObject(obj.LoadPayments(ctx, _accountID, _paymentPageNo, _PAGESIZE, _paymentMethodID, _transactionType, statementDate, businessPartnerId, txtSearch));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -974,7 +988,8 @@ namespace VA012.Controllers
         /// </summary>
         /// <param name="_invoiceSchedules">C_InvoicePaySchedule_ID's</param>
         /// <returns>List</returns>
-        public JsonResult GetCurrencyandConversionType(string _invoiceSchedules) {
+        public JsonResult GetCurrencyandConversionType(string _invoiceSchedules)
+        {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
@@ -1064,7 +1079,7 @@ namespace VA012.Controllers
         /// <param name="_PayMethod">VA009_PaymentMethod_ID</param>
         /// <param name="_InvSchdleList">C_InvoicePaySchedule_ID's</param>
         /// <returns>return object that contains AutoCheckNo, PaymentMethod and status</returns>
-        public JsonResult GetAutoCheckNo(int bnkAct_Id, int _PayMethod,int[] _InvSchdleList) 
+        public JsonResult GetAutoCheckNo(int bnkAct_Id, int _PayMethod, int[] _InvSchdleList)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
@@ -1108,6 +1123,17 @@ namespace VA012.Controllers
                 retJSON = JsonConvert.SerializeObject(_model.GetChargeData(ctx, voucherType, bankAcct));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Check module prefix
+        /// </summary>
+        /// <param name="prefix">module prefix</param>
+        /// <returns>1/0</returns>
+        public JsonResult GetModulePrefix(string prefix)
+        {
+            int CountVA034 = Env.IsModuleInstalled(prefix) ? 1 : 0;
+            return Json(JsonConvert.SerializeObject(CountVA034), JsonRequestBehavior.AllowGet);
         }
     }
 }

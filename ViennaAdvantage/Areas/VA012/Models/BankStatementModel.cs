@@ -603,7 +603,7 @@ namespace VA012.Models
                         INNER JOIN C_BankStatement BS 
                         ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID)
                         WHERE BS.ISACTIVE       ='Y' 
-                        AND BSL.C_BANKSTATEMENTLINE_ID=" + _formData[0]._bankStatementLineID + 
+                        AND BSL.C_BANKSTATEMENTLINE_ID=" + _formData[0]._bankStatementLineID +
                         " AND BS.AD_Client_ID = " + ctx.GetAD_Client_ID();
             }
             else
@@ -753,12 +753,12 @@ namespace VA012.Models
                 //    return cashPaymentResult;
                 //}
             }
-                MBankStatement _bankStatement = null;
-                /*change by pratap*/
-                MPayment paymentrecord = null;
-                MDocType documentType = null;
-                /*change by pratap*/
-                MBankStatementLine _bankStatementLine = null;
+            MBankStatement _bankStatement = null;
+            /*change by pratap*/
+            MPayment paymentrecord = null;
+            MDocType documentType = null;
+            /*change by pratap*/
+            MBankStatementLine _bankStatementLine = null;
             if (_existingStatementID <= 0)
             {
                 //used transaction trx to handle the Errors
@@ -1116,7 +1116,7 @@ namespace VA012.Models
                 }
                 //Charge Amount will Update on Line when VoucherMatch Type is not Voucher
                 //when BP is not selected on Bank statement form then save the charge fields on Bank Statement Line
-                if (_formData[0]._cmbCharge > 0 && (_formData[0]._cmbVoucherMatch != "V"|| _formData[0]._ctrlBusinessPartner == 0))
+                if (_formData[0]._cmbCharge > 0 && (_formData[0]._cmbVoucherMatch != "V" || _formData[0]._ctrlBusinessPartner == 0))
                 {
                     _bankStatementLine.SetChargeAmt(_bankStatementLine.GetStmtAmt() - _bankStatementLine.GetTrxAmt());
                     _bankStatementLine.SetC_Charge_ID(_formData[0]._cmbCharge);
@@ -1384,7 +1384,7 @@ namespace VA012.Models
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
 
-            string _sql = "SELECT Name, C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID()+")";
+            string _sql = "SELECT Name, C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID() + ")";
             if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
             {
                 _sql += " AND DTD001_ChargeType!='CON' ";
@@ -1443,7 +1443,8 @@ namespace VA012.Models
                     INNER JOIN VA009_PaymentMethod pm ON inv.VA009_PaymentMethod_ID=pm.VA009_PaymentMethod_ID
                     INNER JOIN C_DocType dt ON inv.C_DocType_ID=dt.C_DocType_ID
                     WHERE pay.C_InvoicePaySchedule_ID IN (" + string.Join(",", invSchdleList) + @")";
-            if (payMethod > 0) {
+            if (payMethod > 0)
+            {
                 sql += " AND pm.VA009_PaymentMethod_ID = " + payMethod;
             }
             sql += " ORDER BY C_InvoicePaySchedule_ID DESC";
@@ -1788,7 +1789,8 @@ namespace VA012.Models
             {
                 decimal amount = 0;
                 ids = new string[_ds.Tables[0].Rows.Count];
-                for (int  i=0; _ds.Tables[0].Rows.Count>i; i++) {
+                for (int i = 0; _ds.Tables[0].Rows.Count > i; i++)
+                {
                     //amount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), currency, stmtDate, conversionType, ctx.GetAD_Client_ID(), _org_ID);
                     //Incase of cashLine It should change the sign
                     if (cashLineId != 0)
@@ -1803,12 +1805,13 @@ namespace VA012.Models
                     {
                         _convertedAmt += amount;
                     }
-                    else {
+                    else
+                    {
 
                         ids[i] = Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocumentNo"]);
                     }
                 }
-                
+
             }
             _list["_convertedAmt"] = _convertedAmt;
             _list["schedule_Ids"] = ids;
@@ -1835,8 +1838,10 @@ namespace VA012.Models
             {
                 _currency_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_Currency_ID"]);
                 _conversionType_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_ConversionType_ID"]);
-                for (int i = 0; _ds.Tables[0].Rows.Count > i; i++) {
-                    if (_currency_Id!= Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"])) {
+                for (int i = 0; _ds.Tables[0].Rows.Count > i; i++)
+                {
+                    if (_currency_Id != Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]))
+                    {
                         _currency_Id = 0;
                         _conversionType_Id = 0;
                         break;
@@ -1870,7 +1875,7 @@ namespace VA012.Models
             {
                 TaxAmt = tax.CalculateSurcharge(chargeAmt, IsTaxIncluded, _stdPrecision, out surchargeAmt);
             }
-            else 
+            else
             {
                 TaxAmt = tax.CalculateTax(chargeAmt, IsTaxIncluded, _stdPrecision);
             }
@@ -1917,7 +1922,7 @@ namespace VA012.Models
                 _ds = DB.ExecuteDataset(_sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
                 {
-                    
+
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                     {
                         list = new InvoicePaySchedule();
@@ -1989,7 +1994,7 @@ namespace VA012.Models
                 _sql = @"SELECT 
                     CASE 
                         WHEN(ORD.C_CURRENCY_ID!=" + bnkCurrency_ID + @")
-                        THEN CURRENCYCONVERT(ORD.GrandTotal, ORD.C_CURRENCY_ID," + bnkCurrency_ID+", " + GlobalVariable.TO_DATE(stmtDate, true) + @", ORD.C_ConversionType_ID," + ctx.GetAD_Client_ID() + ", " + bnkOrg_ID + @") 
+                        THEN CURRENCYCONVERT(ORD.GrandTotal, ORD.C_CURRENCY_ID," + bnkCurrency_ID + ", " + GlobalVariable.TO_DATE(stmtDate, true) + @", ORD.C_ConversionType_ID," + ctx.GetAD_Client_ID() + ", " + bnkOrg_ID + @") 
                         ELSE ORD.GrandTotal END GrandTotal
                         FROM C_Order ORD
                         INNER JOIN C_OrderLine ol ON (ORD.C_ORDER_ID=ol.C_ORDER_ID)
@@ -2297,7 +2302,8 @@ namespace VA012.Models
                     //Get the PaymentMethod_ID
                     statementDetail._txtPaymentMethod = Util.GetValueOfInt(data.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
                     //Get Auto Check No
-                    if (string.IsNullOrEmpty(_bankStatementLine.GetEftCheckNo())) {
+                    if (string.IsNullOrEmpty(_bankStatementLine.GetEftCheckNo()))
+                    {
                         if (MDocBaseType.DOCBASETYPE_APINVOICE.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])) ||
                             MDocBaseType.DOCBASETYPE_APCREDITMEMO.Equals(Util.GetValueOfString(data.Tables[0].Rows[0]["DocBaseType"])))
                         {
@@ -3405,42 +3411,48 @@ namespace VA012.Models
         /// <param name="_PAGESIZE">Size of the Page</param>
         /// <param name="_paymentMethodID">C_PaymentMethod_ID</param>
         /// <param name="_transactionType">Current Transation Type</param>
+        /// <param name="businessPartnerId">Business partner id</param>
         /// <returns>Count</returns>
-        public int LoadPaymentsPages(Ctx ctx, int _accountID, int _paymentPageNo, int _PAGESIZE, int _paymentMethodID, string _transactionType)
+        public int LoadPaymentsPages(Ctx ctx, int _accountID, int _paymentPageNo, int _PAGESIZE, int _paymentMethodID, string _transactionType, int? businessPartnerId, string txtSearch = "")
         {
             int _totalPageCount = 0;
             int _totalRecordCount = 0;
             string _sql = "";
             //fetch the record count according to the BankAccount_Organization
-            int _bankOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _accountID));
+            int bankCurr_ID = 0;
+            int _bankOrg_ID = 0;
+            DataSet ds = DB.ExecuteDataset("SELECT C_CURRENCY_ID,AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _accountID);
+            if (ds != null && ds.Tables[0].Rows.Count > 0)
+            {
+                bankCurr_ID = Util.GetValueOfInt(ds.Tables[0].Rows[0]["C_Currency_ID"]);
+                _bankOrg_ID = Util.GetValueOfInt(ds.Tables[0].Rows[0]["AD_Org_ID"]);
+            }
+
             //TableNames are Case Sensitive when Applied a MRole
             if (_transactionType == "PY")
             {
-                _sql = " SELECT COUNT(*) AS Records"
-                   + " FROM C_Payment PAY "
-                   + " LEFT JOIN C_BPartner BP "
-                   + " ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
+                _sql = @" SELECT COUNT(PAY.C_Payment_ID) AS Records
+                     FROM C_Payment PAY 
+                     LEFT JOIN C_BPartner BP
+                     ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
 
-                   + " LEFT JOIN C_BankStatementLine BSL "
-                   + " ON (PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID) "
+                     LEFT JOIN C_BankStatementLine BSL
+                     ON (PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID)
+                   
+                     LEFT JOIN C_BP_Group BPG
+                     ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
+                     LEFT JOIN C_Currency CURR
+                     ON (PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
+                       INNER JOIN C_BankAccount AC
+                        ON (AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID)
+                     LEFT JOIN C_Currency BCURR   ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID)
+                     LEFT JOIN VA009_PaymentMethod PM
+                     ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
 
-                   //+ " LEFT JOIN AD_IMAGE IMG "
-                   //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
-                   + " LEFT JOIN C_BP_Group BPG "
-                   + " ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID) "
-                   + " LEFT JOIN C_Currency CURR "
-                   + " ON (PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID) "
-                     + " INNER JOIN C_BankAccount AC  "
-                      + " ON (AC.C_BANKACCOUNT_ID =PAY.C_BANKACCOUNT_ID)  "
+                     INNER JOIN C_DocType DT
+                     ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID)
 
-                   + " LEFT JOIN VA009_PaymentMethod PM  "
-                   + " ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID ) "
-
-                   + " INNER JOIN C_DocType DT "
-                   + " ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID) "
-
-                   + " WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL)"/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID()*/
-               + " AND PAY.ISRECONCILED ='N' ";
+                     WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) AND PAY.ISRECONCILED ='N' ";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID()*/
 
 
                 _sql += " AND PAY.C_BANKACCOUNT_ID= " + _accountID;
@@ -3454,23 +3466,53 @@ namespace VA012.Models
                 {
                     _sql += " AND PAY.VA009_PAYMENTMETHOD_ID= " + _paymentMethodID;
                 }
+                if (businessPartnerId > 0)
+                {
+                    _sql += " AND PAY.C_BPARTNER_ID= " + businessPartnerId;
+                }
+                if (!string.IsNullOrEmpty(txtSearch))
+                {
+                    //Rakesh(VA228):when search text contain "=" then search with document no only
+                    if (txtSearch.Contains("="))
+                    {
+                        StringBuilder sql = new StringBuilder();
+                        String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+                        if (myStringArray.Length > 0)
+                        {
+                            sql.Append(" AND UPPER(PAY.DocumentNo) IN ( ");
+                            for (int z = 0; z < myStringArray.Length; z++)
+                            {
+                                if (z != 0)
+                                { sql.Append(","); }
+                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                            }
+                            sql.Append(")");
+                            _sql += sql.ToString();
+                        }
+                    }
+                    else
+                    {
+                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
+                        "OR CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
+                        "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END LIKE '%" + txtSearch + "%')";
+                    }
+                }
             }
             else if (_transactionType == "IS")
             {
                 _sql = @" SELECT 
-                              COUNT(*) AS Records
+                              COUNT(PAY.C_InvoicePaySchedule_ID) AS Records
                             FROM C_InvoicePaySchedule PAY
                             INNER JOIN C_Invoice INV
                             ON (pay.C_INVOICE_id=inv.C_INVOICE_id)
                             LEFT JOIN C_BPartner BP
                             ON (inv.C_BPARTNER_ID =BP.C_BPARTNER_ID)
-                            --LEFT JOIN AD_Image IMG
-                            --ON (BP.PIC=IMG.AD_IMAGE_ID)
                             LEFT JOIN C_BP_Group BPG
                             ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
                             LEFT JOIN C_Currency CURR
                             ON (inv.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
-
+                            LEFT JOIN C_Currency BCURR
+                            ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
                             INNER JOIN VA009_PaymentMethod PM  
                             ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
                             INNER JOIN C_DocType DT
@@ -3485,6 +3527,37 @@ namespace VA012.Models
                 if (_paymentMethodID > 0)
                 {
                     _sql += " AND PAY.VA009_PAYMENTMETHOD_ID= " + _paymentMethodID;
+                }
+                if (businessPartnerId > 0)
+                {
+                    _sql += " AND inv.C_BPARTNER_ID= " + businessPartnerId;
+                }
+                if (!string.IsNullOrEmpty(txtSearch))
+                {
+                    //Rakesh(VA228):when search text contain "=" then serach with document no only
+                    if (txtSearch.Contains("="))
+                    {
+                        StringBuilder sql = new StringBuilder();
+                        String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+                        if (myStringArray.Length > 0)
+                        {
+                            sql.Append(" AND UPPER(INV.DocumentNo) IN ( ");
+                            for (int z = 0; z < myStringArray.Length; z++)
+                            {
+                                if (z != 0)
+                                { sql.Append(","); }
+                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                            }
+                            sql.Append(")");
+                            _sql += sql.ToString();
+                        }
+                    }
+                    else
+                    {
+                        _sql += " AND (UPPER(INV.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
+                            "OR  CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
+                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END LIKE '%" + txtSearch + "%')";
+                    }
                 }
                 //                //Check Schedule already mapped to payment
                 //                _sql += @" AND PAY.C_INVOICEPAYSCHEDULE_ID NOT IN (SELECT NVL(C_INVOICEPAYSCHEDULE_ID,0)
@@ -3505,23 +3578,21 @@ namespace VA012.Models
             }
             else if (_transactionType == "PO")
             {
-                _sql = @" SELECT COUNT(*) AS Records
+                _sql = @" SELECT COUNT(PAY.C_Order_ID) AS Records
                         FROM C_Order PAY
                         LEFT JOIN C_DocType DT
                         ON (DT.C_DocType_ID=PAY.C_DocTypeTarget_ID)
                         LEFT JOIN C_BPartner BP
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
-                        --LEFT JOIN AD_Image IMG
-                        --ON (BP.PIC=IMG.AD_IMAGE_ID)
                         LEFT JOIN C_BP_Group BPG
                         ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
                         LEFT JOIN C_Currency CURR
                         ON (PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
+                        LEFT JOIN C_Currency BCURR
+                        ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
                        
-
                         INNER JOIN VA009_PaymentMethod PM  
                         ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
-
 
                         WHERE dt.DocSubTypeSO='PR'
                         AND PAY.DOCSTATUS    ='WP'
@@ -3535,22 +3606,51 @@ namespace VA012.Models
                 {
                     _sql += " AND PAY.VA009_PAYMENTMETHOD_ID= " + _paymentMethodID;
                 }
-
+                if (businessPartnerId > 0)
+                {
+                    _sql += " AND PAY.C_BPARTNER_ID= " + businessPartnerId;
+                }
+                if (!string.IsNullOrEmpty(txtSearch))
+                {
+                    //Rakesh(VA228):when search text contain "=" then serach with document no only
+                    if (txtSearch.Contains("="))
+                    {
+                        StringBuilder sql = new StringBuilder();
+                        String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+                        if (myStringArray.Length > 0)
+                        {
+                            sql.Append(" AND UPPER(PAY.DocumentNo) IN ( ");
+                            for (int z = 0; z < myStringArray.Length; z++)
+                            {
+                                if (z != 0)
+                                { sql.Append(","); }
+                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                            }
+                            sql.Append(")");
+                            _sql += sql.ToString();
+                        }
+                    }
+                    else
+                    {
+                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
+                        "OR ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) LIKE '%" + txtSearch + "%')";
+                    }
+                }
             }
             else if (_transactionType == "CO")
             {
-                _sql = @" SELECT COUNT(*) AS Records
+                _sql = @" SELECT COUNT(PAY.C_CashLine_ID) AS Records
                         FROM C_CashLine PAY 
                         INNER JOIN C_Cash CS 
                         ON (CS.C_CASH_ID=PAY.C_CASH_ID)
                         LEFT JOIN C_BPartner BP
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
-                        --LEFT JOIN AD_Image IMG
-                        --ON (BP.PIC=IMG.AD_IMAGE_ID)
                         LEFT JOIN C_BP_Group BPG
                         ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
                         LEFT JOIN C_Currency CURR
                         ON (PAY.C_CURRENCY_ID=CURR.C_CURRENCY_ID)
+                        LEFT JOIN C_Currency BCURR
+                        ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
                      WHERE CS.ISACTIVE   ='Y' AND CS.DOCSTATUS IN ('CO','CL')"
                    //AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
                    + " AND PAY.VA012_ISRECONCILED ='N' AND PAY.C_BANKACCOUNT_ID= " + _accountID;
@@ -3558,6 +3658,36 @@ namespace VA012.Models
                 if (_bankOrg_ID != 0)
                 {
                     _sql += " AND CS.AD_ORG_ID=" + _bankOrg_ID;
+                }
+                if (businessPartnerId > 0)
+                {
+                    _sql += " AND PAY.C_BPARTNER_ID= " + businessPartnerId;
+                }
+                if (!string.IsNullOrEmpty(txtSearch))
+                {
+                    //Rakesh(VA228):when search text contain "=" then search with document no only
+                    if (txtSearch.Contains("="))
+                    {
+                        StringBuilder sql = new StringBuilder();
+                        String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+                        if (myStringArray.Length > 0)
+                        {
+                            sql.Append(" AND UPPER(CS.DocumentNo) IN ( ");
+                            for (int z = 0; z < myStringArray.Length; z++)
+                            {
+                                if (z != 0)
+                                { sql.Append(","); }
+                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                            }
+                            sql.Append(")");
+                            _sql += sql.ToString();
+                        }
+                    }
+                    else
+                    {
+                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
+                        "OR ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) LIKE '%" + txtSearch + "%')";
+                    }
                 }
                 _sql += " ORDER BY CS.NAME";
             }
@@ -3579,8 +3709,9 @@ namespace VA012.Models
         /// <param name="_paymentMethodID">Payment Method ID</param>
         /// <param name="_transactionType">Transaction Type</param>
         /// <param name="statementDate">Statement Date</param>
+        /// <param name="businessPartnerId">Business PartnerId</param>
         /// <returns>List of Payment Records</returns>
-        public List<PaymentProp> LoadPayments(Ctx ctx, int _accountID, int _paymentPageNo, int _PAGESIZE, int _paymentMethodID, string _transactionType, DateTime? statementDate)
+        public List<PaymentProp> LoadPayments(Ctx ctx, int _accountID, int _paymentPageNo, int _PAGESIZE, int _paymentMethodID, string _transactionType, DateTime? statementDate, int? businessPartnerId, string txtSearch)
         {
             //int _accountCurrencyID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_CURRENCY_ID FROM C_BANKACCOUNT WHERE C_BANKACCOUNT_ID=" + _accountID));
             int bankCurr_ID = 0;
@@ -3593,16 +3724,12 @@ namespace VA012.Models
             }
             //multiply rate 
 
-
-            //
             string _sql = "";
-            int _CountVA034 = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(AD_MODULEINFO_ID) FROM AD_ModuleInfo WHERE PREFIX='VA034_' AND IsActive='Y'"));
+            int _CountVA034 = Env.IsModuleInstalled("VA034_") ? 1 : 0;
+            
             //TableNames are Case Sensitive when Applied a MRole
             if (_transactionType == "PY")
             {
-
-
-
                 _sql = " SELECT PAY.C_PAYMENT_ID, "
                              + " CURR.ISO_CODE AS CURRENCY, "
                             + "  PAY.DOCUMENTNO    AS PAYMENTNO, ";
@@ -3654,10 +3781,10 @@ namespace VA012.Models
                    + " ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
 
                    + " LEFT JOIN C_BankStatementLine BSL "
-                   + " ON ((PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID) AND 'VO' <> (SELECT NVL(DocStatus, 'XX') FROM C_BankStatement BST WHERE BST.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID)) "
+                   + " ON (PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID) "
 
                    + " LEFT JOIN C_BankStatement BS "
-                   + " ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID) "
+                   + " ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID AND 'VO' <> NVL(BS.DocStatus, 'XX')) "
 
 
                    + " LEFT JOIN C_BP_Group BPG "
@@ -3699,12 +3826,42 @@ namespace VA012.Models
                 {
                     _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
+                //Rakesh(VA228):Fetch based on business partner and search text
+                if (businessPartnerId > 0)
+                {
+                    _sql += " AND PAY.C_BPARTNER_ID=" + businessPartnerId;
+                }
+                if (!string.IsNullOrEmpty(txtSearch))
+                {
+                    //Rakesh(VA228):when search text contain "=" then serach with document no only
+                    if (txtSearch.Contains("="))
+                    {
+                        StringBuilder sql = new StringBuilder();
+                        String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+                        if (myStringArray.Length > 0)
+                        {
+                            //_sql += " AND UPPER(t.DocumentNo) IN ( ";
+                            sql.Append(" AND UPPER(PAY.DocumentNo) IN ( ");
+                            for (int z = 0; z < myStringArray.Length; z++)
+                            {
+                                if (z != 0)
+                                { sql.Append(","); }
+                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                            }
+                            sql.Append(")");
+                            _sql += sql.ToString();
+                        }
+                    }
+                    else
+                    {
+                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
+                        "OR CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
+                        "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END LIKE '%" + txtSearch + "%')";
+                    }
+                }
                 //Order by DateAcct requirement given by ranvir
                 //_sql += " ORDER BY PAY.DOCUMENTNO";
                 _sql += " ORDER BY PAY.DateAcct";
-
-
-
             }
             else if (_transactionType == "IS")
             {
@@ -3796,6 +3953,38 @@ namespace VA012.Models
                 {
                     _sql += " AND INV.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
+                //Rakesh(VA228):fetch record based on business partner id on date 23/Sep/2021 assigned by amit
+                if (businessPartnerId > 0)
+                {
+                    _sql += " AND INV.C_BPARTNER_ID= " + businessPartnerId;
+                }
+                if (!string.IsNullOrEmpty(txtSearch))
+                {
+                    //Rakesh(VA228):when search text contain "=" then search with document no only
+                    if (txtSearch.Contains("="))
+                    {
+                        StringBuilder sql = new StringBuilder();
+                        String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+                        if (myStringArray.Length > 0)
+                        {
+                            sql.Append(" AND UPPER(INV.DocumentNo) IN ( ");
+                            for (int z = 0; z < myStringArray.Length; z++)
+                            {
+                                if (z != 0)
+                                { sql.Append(","); }
+                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                            }
+                            sql.Append(")");
+                            _sql += sql.ToString();
+                        }
+                    }
+                    else
+                    {
+                        _sql += " AND (UPPER(INV.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
+                            "OR  CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
+                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END LIKE '%" + txtSearch + "%')";
+                    }
+                }
                 //                //Check Schedule already mapped to payment
                 //                _sql += @" AND PAY.C_INVOICEPAYSCHEDULE_ID NOT IN (SELECT NVL(C_INVOICEPAYSCHEDULE_ID,0)
                 //                            FROM
@@ -3875,6 +4064,37 @@ namespace VA012.Models
                 {
                     _sql += " AND PAY.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
                 }
+                if (businessPartnerId > 0)
+                {
+                    _sql += " AND PAY.C_BPARTNER_ID= " + businessPartnerId;
+                }
+                if (!string.IsNullOrEmpty(txtSearch))
+                {
+                    //Rakesh(VA228):when search text contain "=" then serach with document no only
+                    if (txtSearch.Contains("="))
+                    {
+                        StringBuilder sql = new StringBuilder();
+                        String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+                        if (myStringArray.Length > 0)
+                        {
+                            //_sql += " AND UPPER(t.DocumentNo) IN ( ";
+                            sql.Append(" AND UPPER(PAY.DocumentNo) IN ( ");
+                            for (int z = 0; z < myStringArray.Length; z++)
+                            {
+                                if (z != 0)
+                                { sql.Append(","); }
+                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                            }
+                            sql.Append(")");
+                            _sql += sql.ToString();
+                        }
+                    }
+                    else
+                    {
+                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
+                        "OR ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) LIKE '%" + txtSearch + "%')";
+                    }
+                }
                 //Change required by Ranvir Order by Date Account
                 //_sql += " ORDER BY PAY.DOCUMENTNO";
                 _sql += " ORDER BY PAY.DateAcct";
@@ -3892,8 +4112,6 @@ namespace VA012.Models
                             ELSE cs.NAME
                           END                                         AS BUSINESSPARTNER,
                             ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
-                            --BPG.NAME                                    AS BPGROUP,
-                            --IMG.AD_IMAGE_ID ,
                             BCURR.ISO_CODE AS BASECURRENCY,
                             CASE
                             WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
@@ -3923,10 +4141,10 @@ namespace VA012.Models
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
 
                          LEFT JOIN C_BankStatementLine BSL 
-                         ON ((PAY.C_CASHLINE_ID =BSL.C_CASHLINE_ID) AND 'VO' <> (SELECT NVL(DocStatus, 'XX') FROM C_BankStatement BST WHERE BST.C_BANKSTATEMENT_ID = BSL.C_BANKSTATEMENT_ID))
+                         ON (PAY.C_CASHLINE_ID =BSL.C_CASHLINE_ID)
 
                          LEFT JOIN C_BankStatement BS 
-                         ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID)
+                         ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID AND 'VO' <> NVL(BS.DocStatus, 'XX'))
 
                         --LEFT JOIN AD_Image IMG
                         --ON (BP.PIC=IMG.AD_IMAGE_ID)
@@ -3951,6 +4169,36 @@ namespace VA012.Models
                 if (statementDate != null)
                 {
                     _sql += " AND CS.dateacct <= " + GlobalVariable.TO_DATE(statementDate, true);
+                }
+                if (businessPartnerId > 0)
+                {
+                    _sql += " AND PAY.C_BPARTNER_ID= " + businessPartnerId;
+                }
+                if (!string.IsNullOrEmpty(txtSearch))
+                {
+                    //Rakesh(VA228):when search text contain "=" then search with document no only
+                    if (txtSearch.Contains("="))
+                    {
+                        StringBuilder sql = new StringBuilder();
+                        String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+                        if (myStringArray.Length > 0)
+                        {
+                            sql.Append(" AND UPPER(CS.DocumentNo) IN ( ");
+                            for (int z = 0; z < myStringArray.Length; z++)
+                            {
+                                if (z != 0)
+                                { sql.Append(","); }
+                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                            }
+                            sql.Append(")");
+                            _sql += sql.ToString();
+                        }
+                    }
+                    else
+                    {
+                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
+                        "OR ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) LIKE '%" + txtSearch + "%')";
+                    }
                 }
                 //change required by Ranvir
                 //_sql += " ORDER BY CS.DOCUMENTNO";
@@ -4172,7 +4420,6 @@ namespace VA012.Models
                         + " OR UPPER(BSL.TrxAmt) LIKE UPPER('%" + _txtSearch + "%') "
                         + " OR UPPER(BSL.TRXNO) LIKE UPPER('%" + _txtSearch + "%'))";
             }
-
             //_sql += " ORDER BY BSL.StatementLineDate DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+')) DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
             _sql += " ORDER BY ( CASE  WHEN BS.DOCSTATUS='DR' THEN 1 ELSE 0 END) DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+'), '999999999999') DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
             List<StatementLineProp> _statements = new List<StatementLineProp>();
@@ -4280,7 +4527,7 @@ namespace VA012.Models
             //var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID() + " AND UPPER(Name) like UPPER('%" + searchText + "%')";
             var _sql = "SELECT Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND UPPER(Name) LIKE UPPER('%" + searchText + "%')";
             //if the voucher Type not contra then hide those records which is belogns to Contra ChargeType
-            if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C")) 
+            if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
             {
                 _sql += " AND DTD001_ChargeType!='CON' ";
             }
@@ -4431,7 +4678,7 @@ namespace VA012.Models
                 _sql = @"SELECT CASE
                                     WHEN(inv.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
                                     THEN CURRENCYCONVERT(PAY.DueAmt, inv.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) +
-                                            @", "+ _formData[0]._txtConversionType + @", INV.AD_Client_ID, "+ _formData[0]._bankAcctOrg_ID + @")
+                                            @", " + _formData[0]._txtConversionType + @", INV.AD_Client_ID, " + _formData[0]._bankAcctOrg_ID + @")
                                     ELSE ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2)) END AS AMOUNT,
                                  CASE
                                     WHEN(INV.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
@@ -4623,7 +4870,8 @@ namespace VA012.Models
                             {
                                 return _pay.GetC_Payment_ID().ToString();
                             }
-                            else {
+                            else
+                            {
                                 //if Payment is not Completed then delete the record
                                 if (!_pay.Delete(true, _trx))
                                 {
@@ -5059,7 +5307,8 @@ namespace VA012.Models
                 {
                     _txtAmount = MConversionRate.Convert(ctx, _formData[0]._txtAmount, _formData[0]._cmbCurrency, _formData[0]._txtCurrency, _formData[0]._dtStatementDate, _formData[0]._txtConversionType, ctx.GetAD_Client_ID(), _formData[0]._bankAcctOrg_ID);
                 }
-                else {
+                else
+                {
                     _txtAmount = _formData[0]._txtAmount;
                 }
 
@@ -6197,7 +6446,7 @@ namespace VA012.Models
                 //unConvertedAmount
                 _unConvtpaymentAmt = Decimal.Negate(Util.GetValueOfDecimal(_ds1.Tables[0].Rows[0]["actualAmt"]));
                 _currency_Id = Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_Currency_ID"]);//get the C_Currency_ID from CashJournalLine
-                 //ConversionType also want on the form when select CashLine as per requirement
+                                                                                           //ConversionType also want on the form when select CashLine as per requirement
                 _conversionType_Id = Util.GetValueOfInt(_ds1.Tables[0].Rows[0]["C_ConversionType_ID"]);
                 //Get the Cash AcctDate 
                 _acctDate = Util.GetValueOfDateTime(_ds1.Tables[0].Rows[0]["DateAcct"]);
@@ -6589,7 +6838,7 @@ namespace VA012.Models
             MatchBase list = null;
             //added Client_ID to get Bank's with respect to Client
             //DataSet ds = DB.ExecuteDataset("SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y' AND AD_Client_ID=" + ctx.GetAD_Client_ID(), null, null);
-            string _sql= "SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y'";
+            string _sql = "SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y'";
             //Added MRole Check
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Bank", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
             DataSet ds = DB.ExecuteDataset(_sql, null, null);
@@ -6677,7 +6926,7 @@ namespace VA012.Models
         /// <returns>List of payment methods</returns>
         public List<ChargeProp> GetPaymentMethods(Ctx ctx)
         {
-            List< ChargeProp> _list = new List<ChargeProp>();
+            List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
             //here Cash is not into consideration
             string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE!='B' AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ")";
