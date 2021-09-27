@@ -45,7 +45,8 @@ namespace VA012.Controllers
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
         /// <summary>
-        /// Get Invoice detail like PaymentMethod
+        /// Get Invoice/Order PaymentMethodId
+        /// Author:Rakesh(VA228)
         /// </summary>
         /// <param name="fields">fields</param>
         /// <returns>PaymentMethodId</returns>

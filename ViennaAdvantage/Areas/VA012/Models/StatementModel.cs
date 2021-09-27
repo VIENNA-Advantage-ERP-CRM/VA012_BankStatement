@@ -61,7 +61,8 @@ namespace VA012.Models
             return Util.GetValueOfString(DB.ExecuteScalar("SELECT VA009_PAYMENTBASETYPE FROM VA009_PAYMENTMETHOD WHERE IsActive='Y' AND VA009_PAYMENTMETHOD_ID=" + _paymentMethod_ID, null, null));
         }
         /// <summary>
-        /// Get Invoice PaymentMethod
+        /// Get Invoice/Order PaymentMethodId
+        /// Author:Rakesh(VA228)
         /// </summary>
         /// <param name="ctx">Context</param>
         /// <param name="fields">fields</param>
