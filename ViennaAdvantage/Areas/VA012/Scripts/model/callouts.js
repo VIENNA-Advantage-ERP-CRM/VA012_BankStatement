@@ -108,7 +108,7 @@
             return "";
         }
         this.setCalloutActive(true);
-        var payBaseType = VIS.dataContext.getJSONRecord("VA012/Statement//GetPaymentRule", Util.getValueOfInt(value));
+        var payBaseType = VIS.dataContext.getJSONRecord("VA012/Statement/GetPaymentRule", Util.getValueOfInt(value));
 
         if (payBaseType != null && payBaseType != "") {
             if (payBaseType == "D") {
@@ -156,7 +156,8 @@
         //Set callout inactive to execute payment method callout
         this.setCalloutActive(false);
         if (data != null && data != "") {
-            mTab.setValue("VA009_PaymentMethod_ID", data);
+            mTab.setValue("VA009_PaymentMethod_ID", data.VA009_PaymentMethod_ID);
+            mTab.setValue("C_ConversionType_ID", data.C_ConversionType_ID);
         }
         ctx = windowNo = mTab = mField = value = oldValue = null;
         return "";
