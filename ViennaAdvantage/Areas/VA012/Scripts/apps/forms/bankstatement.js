@@ -7921,7 +7921,6 @@
 
     bankStatement.prototype.sizeChanged = function (height) {
         _table.height(height);
-        bankStatement.SetMidWidth();
     };
 
     bankStatement.prototype.dispose = function () {
