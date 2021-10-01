@@ -1021,7 +1021,7 @@ overflow: hidden;*/
 
 .va012-headersearchfilter,
 .va012-searchfilter {
-    display: flex;
+    display: inline-block;
 }
 
 .va012-searchfilter {
@@ -1029,11 +1029,15 @@ overflow: hidden;*/
     flex: 1;
     align-items: center;
 }
-
-.VA012-search-wrap {
+/*.VA012-search-wrap {
     min-width: 250px;
+}*/
+
+.VA012-search-wrap input {
+    flex: 1;
 }
 
-    .VA012-search-wrap input {
-        flex: 1;
-    }
+.va012-search-icon-right {
+    float: right !important;
+    cursor: pointer;
+}
