@@ -291,7 +291,15 @@ namespace VA012.Models
                                             _BnkStmtLine.SetDescription(Util.GetValueOfString(dt.Rows[i][1]));// Set Transaction Purticular
                                             _BnkStmtLine.SetMemo(_branchName);// Set Deposite Branch
                                             if (Util.GetValueOfString(dt.Rows[i][2]) != "")
+                                            {
                                                 _BnkStmtLine.SetEftCheckNo(Util.GetValueOfString(dt.Rows[i][2]));
+                                                //Rakesh(VA228):Set Tender Type Cheque(K)
+                                                if (_BnkStmtLine.Get_ColumnIndex("TenderType") >= 0)
+                                                {
+                                                    _BnkStmtLine.Set_Value("TenderType", "K");
+                                                }
+                                                _BnkStmtLine.SetEftValutaDate(DateTime.Parse(_date));
+                                            }
 
                                             if (Util.GetValueOfString(dt.Rows[i][6]) != "")
                                             {

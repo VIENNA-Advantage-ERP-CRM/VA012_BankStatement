@@ -1140,7 +1140,7 @@
                     + '                       </div>'
                     + '                       <div class="VA012-search-wrap va012-searchfilter">'
                     + '                        <input value = "" placeholder="' + VIS.Msg.getMsg("VA012_Search") + '..." type = "text" id = ' + "VA012_txtSearch_Payment_" + $self.windowNo + '>'
-                    + '                        <a class= "VA012-search-icon" id = ' + "VA012_btnSearch_Payment_" + $self.windowNo + ' > <span class="glyphicon glyphicon-search"></span></a >'
+                    + '                        <a class= "va012-search-icon va012-search-icon-right" id = ' + "VA012_btnSearch_Payment_" + $self.windowNo + ' > <span class="glyphicon glyphicon-search"></span></a >'
                     + '                       </div>'
                     + '                          </div>'
                     + '                      </div>'
@@ -1255,6 +1255,7 @@
                 _chargeSrch.append($ChargeControl.getControl().css('width', '93%')).append($ChargeControl.getBtn(0).css('width', '30px').css('height', '30px').css('padding', '0px').css('border-color', '#BBBBBB'));
                 divTable.append(tableTr);
                 _formDesign.append(divContainer).append(divTable);
+
                 //_txtTrxAmt.addVetoableChangeListener(this);
                 return _formDesign;
             },
@@ -4346,7 +4347,18 @@
                     if (_result._txtCheckDate) {
                         _txtCheckDate.val(Globalize.format(new Date(_result._txtCheckDate), "yyyy-MM-dd"));
                     }
-                    _txtPaymentMethod.trigger('change');
+                    //Rakesh:If cheque number exists on bank statement line and autocheck is false for selected bank assigned by amit
+                    if (_result._txtCheckNum && !_result._isAutoCheck) {
+                        _divCheckNum.show();
+                        _txtCheckNum.addClass("va012-mandatory");
+                        _divCheckDate.show();
+                        _txtCheckDate.addClass("va012-mandatory");
+                    } else {
+                        //Show message if eftcheck number present and autocheck functionality enabled for selected bank
+                        if (_result._txtCheckNum && _result._isAutoCheck)
+                            VIS.ADialog.info("", null, VIS.Msg.getMsg("VA012_ChequeReplace"), "");
+                        _txtPaymentMethod.trigger('change');
+                    }
                 }
             },
             //End Load Statement Dialog
@@ -5746,13 +5758,14 @@
                 //on change event for PaymentMethod
                 _txtPaymentMethod.on('change', function () {
                     if (VIS.Utility.Util.getValueOfInt(_txtPaymentMethod.val()) > 0) {
-                        var _whrClause = "IsActive='Y' AND VA009_PaymentMethod_ID=" + _txtPaymentMethod.val();
-                        var getBaseType = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetPaymentBaseType", { _whereClause: _whrClause });
-                        if (getBaseType == "S") {
+                        //var _whrClause = "IsActive='Y' AND VA009_PaymentMethod_ID=" + _txtPaymentMethod.val();
+                        //var getBaseType = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetPaymentBaseType", { _whereClause: _whrClause });
+                        //Rakesh(VA228):Get auto checkno and payment base type
+                        var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: _txtPaymentMethod.val(), _InvSchdleList: _scheduleList });
+                        if (_getPayMethodList._paymentBaseType == "S") {
                             _divCheckNum.show();
                             if (_scheduleList.length > 0) {
                                 //set the Payment Method and Check No
-                                var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: _txtPaymentMethod.val(), _InvSchdleList: _scheduleList });
                                 if (_getPayMethodList) {
                                     if (_getPayMethodList._checkNo) {
                                         _txtCheckNum.val(_getPayMethodList._checkNo);
@@ -7908,6 +7921,7 @@
 
     bankStatement.prototype.sizeChanged = function (height) {
         _table.height(height);
+        bankStatement.SetMidWidth();
     };
 
     bankStatement.prototype.dispose = function () {
