@@ -1494,6 +1494,7 @@ namespace VA012.Models
                 }
             }
             _obj._paymentMethod_Id = payMethod;
+            _obj._paymentBaseType = _PaymentBaseType;
             return _obj;
         }
 
@@ -2370,6 +2371,8 @@ namespace VA012.Models
             statementDetail._txtVoucherNo = _bankStatementLine.GetVA012_VoucherNo();
             statementDetail._txtCheckNum = _bankStatementLine.GetEftCheckNo();
             statementDetail._cmbCharge = _bankStatementLine.GetC_Charge_ID();
+            //Rakesh:Get EFT Check date
+            statementDetail._txtCheckDate = _bankStatementLine.GetEftValutaDate();
 
             if (_bankStatementLine.GetC_Charge_ID() > 0)
             {
@@ -2415,6 +2418,9 @@ namespace VA012.Models
             {
                 statementDetail._cmbDifferenceType = "CH";
             }
+            //Rakesh(VA228):Get autocheck for selected bank on bank statement header
+            string autoChek = Util.GetValueOfString(DB.ExecuteScalar("Select ChkNoAutoControl from C_BankAccount WHERE C_BankAccount_ID=" + _bankStatement.GetC_BankAccount_ID()));
+            statementDetail._isAutoCheck = autoChek == "Y" ? true : false;
             return statementDetail;
 
         }
@@ -3726,7 +3732,7 @@ namespace VA012.Models
 
             string _sql = "";
             int _CountVA034 = Env.IsModuleInstalled("VA034_") ? 1 : 0;
-            
+
             //TableNames are Case Sensitive when Applied a MRole
             if (_transactionType == "PY")
             {
@@ -4818,14 +4824,19 @@ namespace VA012.Models
                             _pay.SetTenderType(X_C_Payment.TENDERTYPE_Check);
                             //In Case of Payment is of check type then we insert Check Date + Check Number
                             _pay.SetCheckDate(_formData[0]._dtStatementDate);
-                            string checkMsg = UpdateCheckNoOnPayment(ctx, _pay.GetC_BankAccount_ID(), _pay.GetVA009_PaymentMethod_ID(), _trx);
-                            if (checkMsg != "")
+                            //Rakesh(VA228):When check number is prsent on bank statementline
+                            //TO DO:ChequeNo and ChequeDate to be updated on bank statement line
+                            if (string.IsNullOrEmpty(_formData[0]._txtCheckNum))
                             {
-                                _trx.Rollback();
-                                checkMsg = Msg.GetMsg(ctx, checkMsg);
-                                long _acctNo = Convert.ToInt64(DB.ExecuteScalar("SELECT AccountNo FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + _pay.GetC_BankAccount_ID(), null, _trx));
-                                //Want space between the Message and AccountNo
-                                return checkMsg + " : " + _acctNo;
+                                string checkMsg = UpdateCheckNoOnPayment(ctx, _pay.GetC_BankAccount_ID(), _pay.GetVA009_PaymentMethod_ID(), _trx);
+                                if (checkMsg != "")
+                                {
+                                    _trx.Rollback();
+                                    checkMsg = Msg.GetMsg(ctx, checkMsg);
+                                    long _acctNo = Convert.ToInt64(DB.ExecuteScalar("SELECT AccountNo FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + _pay.GetC_BankAccount_ID(), null, _trx));
+                                    //Want space between the Message and AccountNo
+                                    return checkMsg + " : " + _acctNo;
+                                }
                             }
                             //If Payment Method BaseType is Check then set the CheckNo and CheckDate
                             _pay.SetCheckNo(_formData[0]._txtCheckNum);
@@ -4933,15 +4944,20 @@ namespace VA012.Models
                             _pay.SetTenderType(X_C_Payment.TENDERTYPE_Check);
                             //Arpit In Case of Payment is of check type then we insert Check Date + Check Number
                             _pay.SetCheckDate(_formData[0]._dtStatementDate);
-                            string checkMsg = UpdateCheckNoOnPayment(ctx, _pay.GetC_BankAccount_ID(), _pay.GetVA009_PaymentMethod_ID(), _trx);
-                            if (checkMsg != "")
+                            //Rakesh(VA228):When check number is prsent on bank statementline
+                            //TO DO:ChequeNo and ChequeDate to be updated on bank statement line
+                            if (string.IsNullOrEmpty(_formData[0]._txtCheckNum))
                             {
-                                _trx.Rollback();
-                                checkMsg = Msg.GetMsg(ctx, checkMsg);
-                                //MBankAccount ba = new MBankAccount(ctx, Util.GetValueOfInt(ds.Tables[0].Rows[i]["c_bankaccount_id"]), Get_TrxName());
-                                int _acctNo = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AccountNo FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + _pay.GetC_BankAccount_ID(), null, _trx));
-                                //Want space between the Message and AccountNo
-                                return checkMsg + " : " + _acctNo;
+                                string checkMsg = UpdateCheckNoOnPayment(ctx, _pay.GetC_BankAccount_ID(), _pay.GetVA009_PaymentMethod_ID(), _trx);
+                                if (checkMsg != "")
+                                {
+                                    _trx.Rollback();
+                                    checkMsg = Msg.GetMsg(ctx, checkMsg);
+                                    //MBankAccount ba = new MBankAccount(ctx, Util.GetValueOfInt(ds.Tables[0].Rows[i]["c_bankaccount_id"]), Get_TrxName());
+                                    int _acctNo = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AccountNo FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + _pay.GetC_BankAccount_ID(), null, _trx));
+                                    //Want space between the Message and AccountNo
+                                    return checkMsg + " : " + _acctNo;
+                                }
                             }
                             //If Payment Method BaseType is Check then set the CheckNo and CheckDate
                             _pay.SetCheckNo(_formData[0]._txtCheckNum);
@@ -7027,6 +7043,7 @@ namespace VA012.Models
         public int _paymentMethod_Id { get; set; }
         public DateTime? _checkDate { get; set; }
         public string _checkNo { get; set; }
+        public string _paymentBaseType { get; set; }
     }
 
     public class ProcessResponse
@@ -7131,6 +7148,7 @@ namespace VA012.Models
         public DateTime? _txtCheckDate { get; set; }
         public string _errorMsg { get; set; }
         public string _txtCheckNum { get; set; }
+        public bool _isAutoCheck { get; set; }
         // public List<GetScheduleProp> _getSchedules { get; set; }
     }
     public class PaymentProp
