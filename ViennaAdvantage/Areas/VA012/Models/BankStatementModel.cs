@@ -1432,11 +1432,19 @@ namespace VA012.Models
         /// <returns>return object that contains AutoCheckNo, PaymentMethod and status</returns>
         public PaymentResponse GetAutoCheckNo(Ctx ctx, int bnkAct_Id, int payMethod, int[] invSchdleList)
         {
-            string sql;
             string _PaymentBaseType = null;
+            PaymentResponse _obj = new PaymentResponse();
+
+            //Rakesh(VA228):When no invoice schedule present get payment base type
+            if (invSchdleList == null)
+            {
+                _PaymentBaseType = Util.GetValueOfString(DB.ExecuteScalar("SELECT VA009_PaymentBaseType FROM VA009_PaymentMethod WHERE IsActive='Y' AND VA009_PaymentMethod_ID=" + payMethod, null, null));
+                _obj._paymentBaseType = _PaymentBaseType;
+                return _obj;
+            }
+            string sql;
             string _DocBaseType = null;
             DataSet _ds = null;
-            PaymentResponse _obj = new PaymentResponse();
             //get PaymentMethod,BaseType and DocBaseType if PaymentMethod is zero otherwise get CheckNo along with paymentMethod
             sql = @"SELECT dt.DocBaseType,pm.VA009_PaymentBaseType, pay.VA009_PaymentMethod_ID FROM C_Invoice inv
                     INNER JOIN C_InvoicePaySchedule pay ON inv.C_Invoice_ID=pay.C_Invoice_ID
@@ -4945,7 +4953,6 @@ namespace VA012.Models
                             //Arpit In Case of Payment is of check type then we insert Check Date + Check Number
                             _pay.SetCheckDate(_formData[0]._dtStatementDate);
                             //Rakesh(VA228):When check number is prsent on bank statementline
-                            //TO DO:ChequeNo and ChequeDate to be updated on bank statement line
                             if (string.IsNullOrEmpty(_formData[0]._txtCheckNum))
                             {
                                 string checkMsg = UpdateCheckNoOnPayment(ctx, _pay.GetC_BankAccount_ID(), _pay.GetVA009_PaymentMethod_ID(), _trx);
