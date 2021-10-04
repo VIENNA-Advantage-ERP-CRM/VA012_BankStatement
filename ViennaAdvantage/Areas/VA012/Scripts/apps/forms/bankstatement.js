@@ -4347,16 +4347,14 @@
                     if (_result._txtCheckDate) {
                         _txtCheckDate.val(Globalize.format(new Date(_result._txtCheckDate), "yyyy-MM-dd"));
                     }
-                    //Rakesh:If cheque number exists on bank statement line and autocheck is false for selected bank assigned by amit
-                    if (_result._txtCheckNum && !_result._isAutoCheck) {
+                    //Rakesh:If cheque number exists on bank statement line for selected bank assigned as discussed with amit & ashish
+                    if (_result._txtCheckNum) {
                         _divCheckNum.show();
                         _txtCheckNum.addClass("va012-mandatory");
                         _divCheckDate.show();
                         _txtCheckDate.addClass("va012-mandatory");
                     } else {
-                        //Show message if eftcheck number present and autocheck functionality enabled for selected bank
-                        if (_result._txtCheckNum && _result._isAutoCheck)
-                            VIS.ADialog.info("", null, VIS.Msg.getMsg("VA012_ChequeReplace"), "");
+                        //execute autocheck functionality for selected bank and payment method
                         _txtPaymentMethod.trigger('change');
                     }
                 }
