@@ -7170,7 +7170,6 @@ namespace VA012.Models
         public string _errorMsg { get; set; }
         public string _txtCheckNum { get; set; }
         public bool _isAutoCheck { get; set; }
-        public bool _isOverrideAutoCheck { get; set; }
         // public List<GetScheduleProp> _getSchedules { get; set; }
     }
     public class PaymentProp
