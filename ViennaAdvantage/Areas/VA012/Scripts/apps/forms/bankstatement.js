@@ -194,7 +194,6 @@
         //Rakesh(VA228):Varibales declared on 23/Sep/2021
         var _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
         var _CountVA034 = 0;
-        var _IsOverrideAutoCheck = true;
 
         this.Initialize = function () {
             //Rakesh:Get VA034 module
