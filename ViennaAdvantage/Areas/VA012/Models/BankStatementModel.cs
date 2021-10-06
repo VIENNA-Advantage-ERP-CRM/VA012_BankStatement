@@ -587,6 +587,7 @@ namespace VA012.Models
             string _isMatchingConfirmed = "N";
             DataSet _ds = new DataSet();
             string _qryStmt = "";
+            string eftCheckNo = string.Empty;
 
             //Using transaction to handle the Exception while Saving the data
             Trx trx = Trx.GetTrx(Trx.CreateTrxName("STrx"));
@@ -594,7 +595,7 @@ namespace VA012.Models
             if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0)
             {
                 _qryStmt = @"SELECT BS.C_BANKSTATEMENT_ID,BS.C_BANKACCOUNT_ID,
-                            BS.DOCSTATUS,
+                            BS.DOCSTATUS,BSL.EFTCheckNo,
                             NVL(BSL.C_PAYMENT_ID,0) AS C_PAYMENT_ID,
                             NVL(BSL.C_CHARGE_ID,0)  AS C_CHARGE_ID,
                             NVL(BSL.C_CASHLINE_ID,0) AS C_CASHLINE_ID,
@@ -628,7 +629,11 @@ namespace VA012.Models
                     _statementChargeID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_CHARGE_ID"]);
                     _statementCashLineID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_CASHLINE_ID"]);
                     _isMatchingConfirmed = Util.GetValueOfString(_ds.Tables[0].Rows[0]["VA012_ISMATCHINGCONFIRMED"]);
-
+                    if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0)
+                    {
+                        //Rakesh:Get eft check no.
+                        eftCheckNo = Util.GetValueOfString(_ds.Tables[0].Rows[0]["EFTCheckNo"]);
+                    }
                     if (_formData[0]._bankStatementLineID > 0)
                     {
                         if (_statementDocStatus == "CO" || _statementDocStatus == "CL" || _statementDocStatus == "RE" || _statementDocStatus == "VO")
@@ -693,7 +698,7 @@ namespace VA012.Models
             if (_formData[0]._ctrlPayment <= 0 && !string.IsNullOrEmpty(_formData[0]._scheduleList))
             {
                 //added trx parameter to handle the transaction
-                schedulePaymentResult = CreatePaymentFromSchedule(ctx, _formData, trx);
+                schedulePaymentResult = CreatePaymentFromSchedule(ctx, _formData, trx, eftCheckNo);
                 if (int.TryParse(schedulePaymentResult, out paymentID))
                 {
                 }
@@ -1473,7 +1478,7 @@ namespace VA012.Models
                 && "S".Equals(_PaymentBaseType)) || ("S".Equals(_PaymentBaseType) && payMethod > 0))
             {
                 //get Bank Account document record on respective condition
-                sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext FROM 
+                sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext,C_BankAccount.ChkNoAutoControl FROM 
                             C_BankAccountDoc C_BankAccountDoc INNER JOIN C_BankAccount C_BankAccount ON (C_BankAccount.C_BankAccount_ID = C_BankAccountDoc.C_BankAccount_ID)
                         Where C_BankAccountDoc.IsActive='Y' 
                         AND C_BankAccountDoc.PaymentRule='S' 
@@ -1494,6 +1499,7 @@ namespace VA012.Models
                     {
                         _obj._checkNo = Util.GetValueOfString(_ds.Tables[0].Rows[0]["CurrentNext"]);
                     }
+                    _obj._isCheckNoAutoControlled = Util.GetValueOfString(_ds.Tables[0].Rows[0]["ChkNoAutoControl"]) == "Y" ? true : false;
                 }
                 else
                 {
@@ -4658,8 +4664,9 @@ namespace VA012.Models
         /// <param name="ctx">Context</param>
         /// <param name="_formData">List fo Form Data</param>
         /// <param name="_trx">Transaction</param>
+        /// <param name="eftCheckNo">bank statement line eftcheck no</param>
         /// <returns>either DocNo or Error Msg(string type Value)</returns>
-        public string CreatePaymentFromSchedule(Ctx ctx, List<StatementProp> _formData, Trx _trx)
+        public string CreatePaymentFromSchedule(Ctx ctx, List<StatementProp> _formData, Trx _trx, string eftCheckNo)
         {
             //Get Transaction
             //Trx trx = Trx.GetTrx("Payment_" + DateTime.Now.ToString("yyMMddHHmmssff"));
@@ -4824,6 +4831,14 @@ namespace VA012.Models
 
                         _pay.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_INVOICE_ID"]));
                         _pay.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_INVOICEPAYSCHEDULE_ID"]));
+
+                        //Rakesh:Override autocheckno. with eftcheck number if exists on bankstatementline
+                        if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0 && !string.IsNullOrEmpty(eftCheckNo))
+                        {
+                            if (_pay.Get_ColumnIndex("IsOverrideAutoCheck") >= 0)
+                                _pay.Set_Value("IsOverrideAutoCheck", true);
+                        }
+
 
                         //Set auto CheckNo
                         string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT VA009_PAYMENTBASETYPE from VA009_PAYMENTMETHOD where VA009_PAYMENTMETHOD_ID=" + _formData[0]._txtPaymentMethod));
@@ -7051,6 +7066,7 @@ namespace VA012.Models
         public DateTime? _checkDate { get; set; }
         public string _checkNo { get; set; }
         public string _paymentBaseType { get; set; }
+        public bool _isCheckNoAutoControlled { get; set; }
     }
 
     public class ProcessResponse
@@ -7156,6 +7172,7 @@ namespace VA012.Models
         public string _errorMsg { get; set; }
         public string _txtCheckNum { get; set; }
         public bool _isAutoCheck { get; set; }
+        public bool _isOverrideAutoCheck { get; set; }
         // public List<GetScheduleProp> _getSchedules { get; set; }
     }
     public class PaymentProp
