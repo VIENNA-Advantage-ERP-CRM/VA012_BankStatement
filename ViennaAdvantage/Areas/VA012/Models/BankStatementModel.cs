@@ -1478,7 +1478,7 @@ namespace VA012.Models
                 && "S".Equals(_PaymentBaseType)) || ("S".Equals(_PaymentBaseType) && payMethod > 0))
             {
                 //get Bank Account document record on respective condition
-                sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext,C_BankAccount.ChkNoAutoControl FROM 
+                sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext FROM 
                             C_BankAccountDoc C_BankAccountDoc INNER JOIN C_BankAccount C_BankAccount ON (C_BankAccount.C_BankAccount_ID = C_BankAccountDoc.C_BankAccount_ID)
                         Where C_BankAccountDoc.IsActive='Y' 
                         AND C_BankAccountDoc.PaymentRule='S' 
@@ -1499,7 +1499,6 @@ namespace VA012.Models
                     {
                         _obj._checkNo = Util.GetValueOfString(_ds.Tables[0].Rows[0]["CurrentNext"]);
                     }
-                    _obj._isCheckNoAutoControlled = Util.GetValueOfString(_ds.Tables[0].Rows[0]["ChkNoAutoControl"]) == "Y" ? true : false;
                 }
                 else
                 {
@@ -7066,7 +7065,6 @@ namespace VA012.Models
         public DateTime? _checkDate { get; set; }
         public string _checkNo { get; set; }
         public string _paymentBaseType { get; set; }
-        public bool _isCheckNoAutoControlled { get; set; }
     }
 
     public class ProcessResponse
