@@ -1136,5 +1136,21 @@ namespace VA012.Controllers
             int CountVA034 = Env.IsModuleInstalled(prefix) ? 1 : 0;
             return Json(JsonConvert.SerializeObject(CountVA034), JsonRequestBehavior.AllowGet);
         }
+        /// <summary>
+        /// Get default conversion type id
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>Default C_ConversionType_ID</returns>
+        public JsonResult GetDefaultConversionType()
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetDefaultConversionType(ctx));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
     }
 }

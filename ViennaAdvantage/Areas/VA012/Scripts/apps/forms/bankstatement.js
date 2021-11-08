@@ -194,6 +194,8 @@
         //Rakesh(VA228):Varibales declared on 23/Sep/2021
         var _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
         var _CountVA034 = 0;
+        //VA228:Hold edit event id
+        var _StatementListEditEvent = null;
 
         this.Initialize = function () {
             //Rakesh:Get VA034 module
@@ -3974,6 +3976,8 @@
                 var _bankStatementLineID = 0;
                 var _dragPaymentID = 0;//to avoid undefined issue
                 if (target.hasClass('glyphicon-edit')) {
+                    //VA228:Store edit target event to call statement line edit when cancel button clicked on invoice pay schedule child dialog canclled
+                    _StatementListEditEvent = e;
                     _bankStatementLineID = target.data("uid");
                     _btnNewRecord.attr("activestatus", "1"); // adjust the scrolling
                     _btnNewRecord.attr("src", "Areas/VA012/Images/hide.png");
@@ -4295,8 +4299,9 @@
                     }
                     //Incase of Contra also should update the ConversionType if not found ConversionType then the field is mandatory
                     if (_result._txtConversionType == 0) {
-                        _txtConversionType.prop('selectedIndex', 0);
-                        _txtConversionType.addClass("va012-mandatory");
+                        //VA228:Showing default conversion type when conversion type loaded not required below functionality
+                        //_txtConversionType.prop('selectedIndex', 0);
+                        //_txtConversionType.addClass("va012-mandatory");
                         _txtConversionType.attr("disabled", false);
                     }
                     else {
@@ -4842,7 +4847,8 @@
                 _cmbPaymentSchedule.on('change', function () {
                     if (_cmbPaymentSchedule.val() > 0) {
                         //get the Amount in standard format
-                        if (loadFunctions.checkScheduleCondition(_cmbPaymentSchedule.val(), parseInt($_formNewRecord.attr("data-uid")), _scheduleList.toString(), convertAmtCulture(_txtAmount.getControl().val()))) {
+                        //VA228:Removed schedule list to check no need to check transaction date less due date assigned by amit 11/02/2021
+                        if (loadFunctions.checkScheduleCondition(_cmbPaymentSchedule.val(), parseInt($_formNewRecord.attr("data-uid")), "", convertAmtCulture(_txtAmount.getControl().val()))) {
                             //alert("done");
                             // fixed Issue while checking condition with interger like 123 compare with "123"
                             if (!isInList(parseInt(_cmbPaymentSchedule.val()), _scheduleList)) {
@@ -5127,8 +5133,13 @@
                 };
                 paymentScheduleDialog.onCancelClick = function () {
                     newRecordForm.scheduleRefresh();
-                    newRecordForm.refreshForm();
+                    //newRecordForm.refreshForm();
                     disposeSchedule();
+                    //VA228:If edit event hols any value click last selected statement list to rollback changes else refresh form
+                    if (_StatementListEditEvent != null)
+                        childDialogs.statementListEdit(_StatementListEditEvent);
+                    else
+                        newRecordForm.refreshForm();
                 };
                 //paymentScheduleDialog.onClose = function () {
                 //    newRecordForm.scheduleRefresh();
@@ -5352,6 +5363,7 @@
                     //set the mandatory class to the Currency field
                     _txtCurrency.trigger('change');
                     loadFunctions.setPaymentListHeight();
+                    _StatementListEditEvent = null;
                 });
                 _btnUndo.on(VIS.Events.onTouchStartOrClick, function () {
 
@@ -5368,6 +5380,7 @@
                     //}
                     //set the mandatory class to the Currency field
                     _txtCurrency.trigger('change');
+                    _StatementListEditEvent = null;
                 });
                 $_formNewRecord.hide();
                 _cmbVoucherMatch.on('change', function () {
@@ -7541,7 +7554,7 @@
                 this.loadPaymentMethods();
                 _txtCurrency.addClass("va012-mandatory");
                 //C_ConversionType_ID
-                _txtConversionType.prop('selectedIndex', 0);
+                //_txtConversionType.prop('selectedIndex', 0);
                 //_txtConversionType disabled false 
                 _txtConversionType.attr("disabled", false);
                 _txtCurrency.attr("disabled", false);
@@ -7760,8 +7773,15 @@
                     for (var i = 0; i < getConvType.length; i++) {
                         _txtConversionType.append('<option value=' + getConvType[i].Key + '>' + getConvType[i].Name + '</option>');
                     }
-                    _txtConversionType.val(0);
-                    _txtConversionType.addClass('va012-mandatory');
+                    //VS228:Get default conversion type id
+                    var conversionTypeId = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetDefaultConversionType");
+                    if (conversionTypeId != "") {
+                        _txtConversionType.val(conversionTypeId);
+                        _txtConversionType.removeClass("va012-mandatory");
+                    } else {
+                        _txtConversionType.val(0);
+                        _txtConversionType.addClass('va012-mandatory');
+                    }
                 }
             },
 

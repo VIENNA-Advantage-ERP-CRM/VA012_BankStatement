@@ -7009,6 +7009,19 @@ namespace VA012.Models
             }
             return _list;
         }
+        /// <summary>
+        /// Get default conversion type id
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>Default C_ConversionType_ID</returns>
+        public string GetDefaultConversionType(Ctx ctx)
+        {
+            string id = Util.GetValueOfString(DB.ExecuteScalar("SELECT C_ConversionType_ID FROM C_ConversionType " +
+                "WHERE IsActive='Y' AND IsDefault='Y' AND AD_Org_ID IN(0," + ctx.GetAD_Org_ID() + ") ORDER BY AD_Org_ID DESC", null, null));
+            if (!string.IsNullOrEmpty(id))
+                return id;
+            return "";
+        }
     }
 
     public class TaxRate
