@@ -5009,6 +5009,7 @@
                         if (_scheduleList.length > 0) {
                             var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: 0, _InvSchdleList: _scheduleList });
                             if (_getPayMethodList) {
+                                //VA228:fixed undefind issue converted to object instead of list
                                 _txtPaymentMethod.val(_getPayMethodList._paymentMethod_Id).prop("selected", true);
                                 if (_getPayMethodList._checkNo) {
                                     _txtCheckNum.val(_getPayMethodList._checkNo);
