@@ -5009,9 +5009,9 @@
                         if (_scheduleList.length > 0) {
                             var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: 0, _InvSchdleList: _scheduleList });
                             if (_getPayMethodList) {
-                                _txtPaymentMethod.val(_getPayMethodList[0]._paymentMethod_Id).prop("selected", true);
-                                if (_getPayMethodList[0]._checkNo) {
-                                    _txtCheckNum.val(_getPayMethodList[0]._checkNo);
+                                _txtPaymentMethod.val(_getPayMethodList._paymentMethod_Id).prop("selected", true);
+                                if (_getPayMethodList._checkNo) {
+                                    _txtCheckNum.val(_getPayMethodList._checkNo);
                                 }
                                 else {
                                     _txtCheckNum.val("");
