@@ -2633,7 +2633,7 @@
                                         _dragDestinationID = $_formNewRecord[0].attributes["data-uid"].value;
                                     }
                                     if ($_ctrlPayment != null && $_ctrlPayment.value > 0 && _dragDestinationID > 0) {
-                                        childDialogs.statementListRecordEdit(_dragDestinationID, $_ctrlPayment.value);
+                                        childDialogs.statementListRecordEdit(_dragDestinationID, $_ctrlPayment.value, true);
                                         //set Statement Date as Readonly
                                         _dtStatementDate.attr("readonly", true);
                                         _status = true;
@@ -2817,7 +2817,7 @@
                                         _dragDestinationID = $_formNewRecord[0].attributes["data-uid"].value;
                                     }
                                     if (_dragSourceID > 0 && _dragDestinationID > 0) {
-                                        childDialogs.statementListRecordEdit(_dragDestinationID, _dragSourceID);
+                                        childDialogs.statementListRecordEdit(_dragDestinationID, _dragSourceID, true);
                                         //set Statement Date as Readonly
                                         _dtStatementDate.attr("readonly", true);
                                         _status = true;
@@ -3963,7 +3963,7 @@
                 _btnNewRecord.addClass("fa fa-minus");
                 $_formNewRecord.show();
                 loadFunctions.setPaymentListHeight();
-                childDialogs.statementListRecordEdit(_bankStatementLineID, _dragPaymentID);
+                childDialogs.statementListRecordEdit(_bankStatementLineID, _dragPaymentID, true);
                 _bankStatementLineID = 0;
                 return true;
             },
@@ -3984,9 +3984,8 @@
                     loadFunctions.setPaymentListHeight()
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
-
                     _openingFromEdit = true;
-                    childDialogs.statementListRecordEdit(_bankStatementLineID, _dragPaymentID);
+                    childDialogs.statementListRecordEdit(_bankStatementLineID, _dragPaymentID, true);
                     _bankStatementLineID = 0;
                     loadFunctions.addEffect(target, $_formNewRecord);
                 }
@@ -4039,12 +4038,12 @@
                     }
                 }
             },
-            statementListRecordEdit: function (_bankStatementLineID, _dragPaymentID) {
+            statementListRecordEdit: function (_bankStatementLineID, _dragPaymentID, refreshFields) {
                 //should refresh the form when _dragPaymentID is Zero
                 if (VIS.Utility.Util.getValueOfInt(_dragPaymentID) == 0) {
-                    newRecordForm.refreshForm();
+                    newRecordForm.refreshForm(refreshFields);
                 }
-                childDialogs.getStatementLineForEdit(_bankStatementLineID, _dragPaymentID, childDialogs.afterRecordGet);
+                childDialogs.getStatementLineForEdit(_bankStatementLineID, _dragPaymentID, childDialogs.afterRecordGet, refreshFields);
 
             },
             selectedScheduleList: function (e) {
@@ -4060,17 +4059,17 @@
                 }
             },
 
-            getStatementLineForEdit: function (_bankStatementLineID, _dragPaymentID, callback) {
+            getStatementLineForEdit: function (_bankStatementLineID, _dragPaymentID, callback, refreshFields) {
                 $.ajax({
                     type: 'POST',
                     url: VIS.Application.contextUrl + "VA012/BankStatement/GetStatementLine",
                     contentType: "application/json; charset=utf-8",
                     data: JSON.stringify({ _bankStatementLineID: _bankStatementLineID, trxType: _cmbTransactionType.val(), payment_ID: _dragPaymentID != null ? _dragPaymentID : 0 }),
-                    success: function (data) { callback(data); },
+                    success: function (data) { callback(data, refreshFields); },
                     error: function (data) { VIS.ADialog.info(data, null, "", ""); }
                 });
             },
-            afterRecordGet: function (data) {
+            afterRecordGet: function (data, refreshFields) {
                 if (data != null && data != "") {
                     //debugger;
                     var _result = $.parseJSON(data);
@@ -4274,7 +4273,8 @@
                         $_ctrlInvoice.setValue(_result._ctrlInvoice, false, true);
                     }
                     else {
-                        if (!_openingFromDrop) {
+                        //VA228:Do not reset invoice field when clearing from invoice payment schedule popup
+                        if (!_openingFromDrop && refreshFields) {
                             $_ctrlInvoice.setValue();
                         }
                     }
@@ -4295,8 +4295,9 @@
                     }
                     //Incase of Contra also should update the ConversionType if not found ConversionType then the field is mandatory
                     if (_result._txtConversionType == 0) {
-                        _txtConversionType.prop('selectedIndex', 0);
-                        _txtConversionType.addClass("va012-mandatory");
+                        //VA228:Showing default conversion type when conversion type loaded not required below functionality
+                        //_txtConversionType.prop('selectedIndex', 0);
+                        //_txtConversionType.addClass("va012-mandatory");
                         _txtConversionType.attr("disabled", false);
                     }
                     else {
@@ -4842,7 +4843,8 @@
                 _cmbPaymentSchedule.on('change', function () {
                     if (_cmbPaymentSchedule.val() > 0) {
                         //get the Amount in standard format
-                        if (loadFunctions.checkScheduleCondition(_cmbPaymentSchedule.val(), parseInt($_formNewRecord.attr("data-uid")), _scheduleList.toString(), convertAmtCulture(_txtAmount.getControl().val()))) {
+                        //VA228:Removed schedule list to check no need to check transaction date less due date assigned by amit 11/02/2021
+                        if (loadFunctions.checkScheduleCondition(_cmbPaymentSchedule.val(), parseInt($_formNewRecord.attr("data-uid")), "", convertAmtCulture(_txtAmount.getControl().val()))) {
                             //alert("done");
                             // fixed Issue while checking condition with interger like 123 compare with "123"
                             if (!isInList(parseInt(_cmbPaymentSchedule.val()), _scheduleList)) {
@@ -4975,7 +4977,7 @@
                         //Set the Unreconciled Line on New Form if no schedule is match with Line
                         //New form will update by the Line values when remove all the selected Schedules on new form
                         if (_scheduleList.length == 0 && $_formNewRecord[0].attributes["data-uid"].value > 0) {
-                            childDialogs.statementListRecordEdit($_formNewRecord[0].attributes["data-uid"].value, 0);
+                            childDialogs.statementListRecordEdit($_formNewRecord[0].attributes["data-uid"].value, 0, false);
                         }
 
                         target.parent().parent().remove();
@@ -5127,8 +5129,15 @@
                 };
                 paymentScheduleDialog.onCancelClick = function () {
                     newRecordForm.scheduleRefresh();
-                    newRecordForm.refreshForm();
                     disposeSchedule();
+
+                    //VA228:If data-uid holds any value get last selected statement list to rollback changes else refresh form
+                    if ($_formNewRecord[0].attributes["data-uid"].value > 0) {
+                        childDialogs.statementListRecordEdit($_formNewRecord[0].attributes["data-uid"].value, 0, false);
+                    } else {
+                        //VA228:false->do not clear invoice selected
+                        newRecordForm.refreshForm(false);
+                    }
                 };
                 //paymentScheduleDialog.onClose = function () {
                 //    newRecordForm.scheduleRefresh();
@@ -7150,7 +7159,7 @@
                                 newRecordForm.refreshForm();
                             }
                             if (_stmtLn_ID > 0 && _paymentSelectedVal == null && $_ctrlPayment.value == null) {
-                                childDialogs.statementListRecordEdit(_stmtLn_ID, 0);
+                                childDialogs.statementListRecordEdit(_stmtLn_ID, 0, true);
                             }
                         }
                     }
@@ -7230,7 +7239,7 @@
                             newRecordForm.refreshForm();
                         }
                         if (_stmt_Id > 0 && _orderSelectedVal == null && !$_ctrlOrder.value) {
-                            childDialogs.statementListRecordEdit(_stmt_Id, 0);
+                            childDialogs.statementListRecordEdit(_stmt_Id, 0, true);
                         }
                     }
                 };
@@ -7299,7 +7308,7 @@
                             newRecordForm.refreshForm();
                         }
                         if (_stmt_ID > 0 && _cashLineSelectedVal == null && $_ctrlCashLine.value == null) {
-                            childDialogs.statementListRecordEdit(_stmt_ID, 0);
+                            childDialogs.statementListRecordEdit(_stmt_ID, 0, true);
                         }
                     }
                 };
@@ -7464,7 +7473,7 @@
                     }
                 }
             },
-            refreshForm: function () {
+            refreshForm: function (refreshFields) {
                 $_formNewRecord.attr("data-uid", 0);
                 // _btnCreatePayment.hide();
                 //when it is statementNo onchange event then it will skipt to call getMaxStatement
@@ -7508,8 +7517,10 @@
                 $_ctrlPayment.setValue();
                 $_ctrlOrder.setValue();
                 $_ctrlCashLine.setValue();
-                $_ctrlBusinessPartner.setValue();
-                $_ctrlInvoice.setValue();
+                $_ctrlBusinessPartner.setValue(); 
+                //VA228:Do not reset invoice field when clearing from invoice payment schedule popup
+                if (refreshFields == undefined)
+                    $_ctrlInvoice.setValue();
                 _bPartnerSelectedVal = 0;
                 _paymentSelectedVal = 0;
                 _orderSelectedVal = 0;
@@ -7541,7 +7552,7 @@
                 this.loadPaymentMethods();
                 _txtCurrency.addClass("va012-mandatory");
                 //C_ConversionType_ID
-                _txtConversionType.prop('selectedIndex', 0);
+                //_txtConversionType.prop('selectedIndex', 0);
                 //_txtConversionType disabled false 
                 _txtConversionType.attr("disabled", false);
                 _txtCurrency.attr("disabled", false);
@@ -7760,8 +7771,15 @@
                     for (var i = 0; i < getConvType.length; i++) {
                         _txtConversionType.append('<option value=' + getConvType[i].Key + '>' + getConvType[i].Name + '</option>');
                     }
-                    _txtConversionType.val(0);
-                    _txtConversionType.addClass('va012-mandatory');
+                    //VS228:Get default conversion type id from context
+                    var conversionTypeId = VIS.Env.getCtx().getContextAsInt("#C_ConversionType_ID")
+                    if (conversionTypeId != 0) {
+                        _txtConversionType.val(conversionTypeId);
+                        _txtConversionType.removeClass("va012-mandatory");
+                    } else {
+                        _txtConversionType.val(0);
+                        _txtConversionType.addClass('va012-mandatory');
+                    }
                 }
             },
 
