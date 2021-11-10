@@ -194,6 +194,7 @@
         //Rakesh(VA228):Varibales declared on 23/Sep/2021
         var _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
         var _CountVA034 = 0;
+        var _EftCheckNo = null;
 
         this.Initialize = function () {
             //Rakesh:Get VA034 module
@@ -2223,7 +2224,8 @@
 
                             if (_cmbTransactionType.val() == "IS") {
                                 //get the Amount in standard format
-                                if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _scheduleList.toString(), convertAmtCulture(_txtAmount.getControl().val()))) {
+                                //VA228:Removed schedule list to check no need to check transaction date less due date assigned by amit 11/09/2021
+                                if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), "", convertAmtCulture(_txtAmount.getControl().val()))) {
                                     //alert("done");
                                     var amount = 0;
                                     if (!isInList(parseInt(($(ui.draggable)).data('uid')), _scheduleList)) {
@@ -2289,8 +2291,10 @@
                                         else {
                                             _txtPaymentMethod.val(0).prop("selected", true);
                                         }
-                                        //call change event of Payment Method
-                                        _txtPaymentMethod.trigger("change");
+                                        //VA228:Do not execute autocheck functionality if EftCheckNo exists on bank statement line
+                                        if (!_EftCheckNo)
+                                            //call change event of Payment Method
+                                            _txtPaymentMethod.trigger("change");
                                     }
                                     else {
                                         VIS.ADialog.info("VA012_AlreadySelected", null, "", "");
@@ -4354,6 +4358,8 @@
                         _txtCheckNum.addClass("va012-mandatory");
                         _divCheckDate.show();
                         _txtCheckDate.addClass("va012-mandatory");
+                        //VA228:Use _EftCheckNo value while dragdrop invoice schedule
+                        _EftCheckNo = _result._txtCheckNum;
                     } else {
                         //execute autocheck functionality for selected bank and payment method
                         _txtPaymentMethod.trigger('change');
@@ -7518,7 +7524,7 @@
                 $_ctrlPayment.setValue();
                 $_ctrlOrder.setValue();
                 $_ctrlCashLine.setValue();
-                $_ctrlBusinessPartner.setValue(); 
+                $_ctrlBusinessPartner.setValue();
                 //VA228:Do not reset invoice field when clearing from invoice payment schedule popup
                 if (refreshFields == undefined)
                     $_ctrlInvoice.setValue();
@@ -7566,6 +7572,7 @@
                 _txtCheckDate.val("");
                 _divCheckDate.hide();
                 _txtCheckDate.removeClass("va012-mandatory");
+                _EftCheckNo = null;
             },
             scheduleRefresh: function () {
                 _scheduleList = [];
@@ -7917,6 +7924,7 @@
             //clear value
             ad_Column = null;
             _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
+            _EftCheckNo = null;
         };
         function busyIndicator(_obj, _isShow, _position) {
             $BusyIndicator = $("<div class='vis-apanel-busy va012-busy-bank-statement'>");
