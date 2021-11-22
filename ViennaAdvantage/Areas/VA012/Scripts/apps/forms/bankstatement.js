@@ -6095,7 +6095,8 @@
                         return;
                     }
                     //PaymentMethod is mandatory if transaction is not contra
-                    if (!_formData[0]["_txtPaymentMethod"] && !_formData[0]["_ctrlCashLine"]) {
+                    //VA228:cashline contra check changed and transaction type not equal contra check applied
+                    if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtPaymentMethod"]) <= 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) <= 0 && _cmbTransactionType.val() != "CO") {
                         VIS.ADialog.info("VA012_PleaseSelectPayMethod", null, "", "");
                         return;
                     }
