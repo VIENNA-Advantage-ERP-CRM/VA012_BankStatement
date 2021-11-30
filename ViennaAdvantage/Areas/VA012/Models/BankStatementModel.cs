@@ -7236,7 +7236,6 @@ namespace VA012.Models
     {
         public int chargeID { get; set; }
         public string name { get; set; }
-        public string value { get; set; }
     }
     //public class GetScheduleProp
     //{
