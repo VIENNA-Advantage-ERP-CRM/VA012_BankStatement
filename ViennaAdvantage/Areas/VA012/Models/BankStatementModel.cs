@@ -1388,8 +1388,8 @@ namespace VA012.Models
         {
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
-
-            string _sql = "SELECT Name, C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID() + ")";
+            //Bug639--  Get charge Name AS  Value_Name         
+            string _sql = "SELECT Value ||'_' ||Name AS Name, C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID() + ")";
             if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
             {
                 _sql += " AND DTD001_ChargeType!='CON' ";
@@ -2389,7 +2389,8 @@ namespace VA012.Models
 
             if (_bankStatementLine.GetC_Charge_ID() > 0)
             {
-                statementDetail._txtCharge = chrg.GetName();
+                //Bug639--  Get charge Name AS  Value_Name         
+                statementDetail._txtCharge = chrg.Get_Value("Value") + "_"+ chrg.GetName() ;
             }
             else
             {
@@ -4544,7 +4545,8 @@ namespace VA012.Models
         {
             List<ChargeProp> _lstcharge = new List<ChargeProp>();
             //var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID() + " AND UPPER(Name) like UPPER('%" + searchText + "%')";
-            var _sql = "SELECT Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND UPPER(Name) LIKE UPPER('%" + searchText + "%')";
+            //Bug639--  Get charge Name AS  Value_Name         
+            var _sql = "SELECT Value ||'_' ||Name AS Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND UPPER(Name) LIKE UPPER('%" + searchText + "%')";
             //if the voucher Type not contra then hide those records which is belogns to Contra ChargeType
             if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
             {
