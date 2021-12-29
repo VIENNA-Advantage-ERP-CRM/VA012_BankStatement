@@ -7800,7 +7800,7 @@
                 //shown the records only IsActive is true.
                 if (ad_Column) {//check AD_Column_ID has value or not
                     //VIS.MLookupFactory.get(Context, windowNo, AD_Column_ID, AD_Reference_ID,ColumnName, AD_Reference_Value_ID, IsParent, ValidationCode);
-                    var _txtPaymentMethodLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, ad_Column, VIS.DisplayType.TableDir, "VA009_PaymentMethod_ID", 0, false, "VA009_PaymentMethod.IsActive='Y' AND VA009_PaymentMethod.VA009_PAYMENTBASETYPE!='B'");
+                    var _txtPaymentMethodLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, ad_Column, VIS.DisplayType.TableDir, "VA009_PaymentMethod_ID", 0, false, "VA009_PaymentMethod.IsActive='Y' AND VA009_PaymentMethod.VA009_PAYMENTBASETYPE NOT IN ('B','P')");
                     //_txtConversionTypeLookUp.getData(mandatory, onlyValidated, onlyActive, temporary);
                     var getPaymentMethod = _txtPaymentMethodLookUp.getData(true, true, false, false);
 
