@@ -2382,7 +2382,12 @@ namespace VA012.Models
             statementDetail._cmbCurrency = _bankStatementLine.GetC_Currency_ID();
             statementDetail._txtDescription = _bankStatementLine.GetDescription();
             statementDetail._txtVoucherNo = _bankStatementLine.GetVA012_VoucherNo();
-            statementDetail._txtCheckNum = _bankStatementLine.GetEftCheckNo();
+            if (_bankStatementLine.GetEftCheckNo() != null)
+            {
+                //1052--in case of payment and unreconciled statement line :fetch the check no from bank statement line
+                //if check no exist other wise checkno from  payment will be used.
+                statementDetail._txtCheckNum = _bankStatementLine.GetEftCheckNo();
+            }
             statementDetail._cmbCharge = _bankStatementLine.GetC_Charge_ID();
             //Rakesh:Get EFT Check date
             statementDetail._txtCheckDate = _bankStatementLine.GetEftValutaDate();
