@@ -2630,6 +2630,13 @@
                                 //_txtTrxAmt.trigger('change');
                             }
                             else {
+                                //1052-- on the drag of unreconciled statement line and payment set check no
+                                if (result._checkNo && VIS.Utility.Util.getValueOfString(_txtCheckNum.val()).equals("")) {
+                                    _divCheckNum.show();
+                                    _txtCheckNum.val(result._checkNo);
+                                    _txtCheckNum.attr("disabled", false);
+                                    _txtCheckNum.removeClass("va012-mandatory");
+                                }
                                 //handled the case when drag the unreconciled Line into new form after that 
                                 //try to drag or select the Payment in Payment field on new form 
                                 if (_dragDestinationID == 0 && _amount != 0) {
@@ -2650,6 +2657,7 @@
                                     VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                     _status = false;
                                 }
+                                
                             }
                         }
                         else {
