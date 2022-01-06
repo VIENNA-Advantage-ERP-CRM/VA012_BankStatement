@@ -1388,8 +1388,8 @@ namespace VA012.Models
         {
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
-
-            string _sql = "SELECT Name, C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID() + ")";
+            //Bug639--  Get charge Name AS  Value_Name         
+            string _sql = "SELECT Value ||'_' ||Name AS Name, C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID() + ")";
             if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
             {
                 _sql += " AND DTD001_ChargeType!='CON' ";
@@ -2382,14 +2382,20 @@ namespace VA012.Models
             statementDetail._cmbCurrency = _bankStatementLine.GetC_Currency_ID();
             statementDetail._txtDescription = _bankStatementLine.GetDescription();
             statementDetail._txtVoucherNo = _bankStatementLine.GetVA012_VoucherNo();
-            statementDetail._txtCheckNum = _bankStatementLine.GetEftCheckNo();
+            if (_bankStatementLine.GetEftCheckNo() != null)
+            {
+                //1052--in case of payment and unreconciled statement line :fetch the check no from bank statement line
+                //if check no exist other wise checkno from  payment will be used.
+                statementDetail._txtCheckNum = _bankStatementLine.GetEftCheckNo();
+            }
             statementDetail._cmbCharge = _bankStatementLine.GetC_Charge_ID();
             //Rakesh:Get EFT Check date
             statementDetail._txtCheckDate = _bankStatementLine.GetEftValutaDate();
 
             if (_bankStatementLine.GetC_Charge_ID() > 0)
             {
-                statementDetail._txtCharge = chrg.GetName();
+                //Bug639--  Get charge Name AS  Value_Name         
+                statementDetail._txtCharge = chrg.Get_Value("Value") + "_"+ chrg.GetName() ;
             }
             else
             {
@@ -4542,9 +4548,11 @@ namespace VA012.Models
         /// <returns>List of Charge</returns>
         public List<ChargeProp> GetCharge(Ctx ctx, string searchText, string voucherType, int bankAcct)
         {
-            List<ChargeProp> _lstcharge = new List<ChargeProp>();
+         List<ChargeProp> _lstcharge = new List<ChargeProp>();
             //var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID() + " AND UPPER(Name) like UPPER('%" + searchText + "%')";
-            var _sql = "SELECT Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND UPPER(Name) LIKE UPPER('%" + searchText + "%')";
+            //Bug639--  Get charge Name AS  Value_Name        
+            var _sql = "SELECT Value ||'_' ||Name AS Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' " +
+                       "AND (UPPER(Name) LIKE UPPER('%" + searchText + "%') OR UPPER(Value) LIKE UPPER('%" + searchText + "%'))";
             //if the voucher Type not contra then hide those records which is belogns to Contra ChargeType
             if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
             {
@@ -6965,8 +6973,8 @@ namespace VA012.Models
         {
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
-            //here Cash is not into consideration
-            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE!='B' AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ")";
+            //here Cash and On Credit is not into consideration
+            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE NOT IN ('B','P') AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ")";
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "VA009_PaymentMethod", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
 
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
