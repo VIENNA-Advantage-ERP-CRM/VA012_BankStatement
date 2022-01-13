@@ -3452,7 +3452,7 @@ namespace VA012.Models
                 bankCurr_ID = Util.GetValueOfInt(ds.Tables[0].Rows[0]["C_Currency_ID"]);
                 _bankOrg_ID = Util.GetValueOfInt(ds.Tables[0].Rows[0]["AD_Org_ID"]);
             }
-
+            //VA230:Removed extra blank lines and cast amount into varchar(255) in where condition when searchtext contains values in sql query to fix issue in postgre
             //TableNames are Case Sensitive when Applied a MRole
             if (_transactionType == "PY")
             {
@@ -3460,10 +3460,8 @@ namespace VA012.Models
                      FROM C_Payment PAY 
                      LEFT JOIN C_BPartner BP
                      ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
-
                      LEFT JOIN C_BankStatementLine BSL
                      ON (PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID)
-                   
                      LEFT JOIN C_BP_Group BPG
                      ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
                      LEFT JOIN C_Currency CURR
@@ -3473,13 +3471,9 @@ namespace VA012.Models
                      LEFT JOIN C_Currency BCURR   ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID)
                      LEFT JOIN VA009_PaymentMethod PM
                      ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
-
                      INNER JOIN C_DocType DT
                      ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID)
-
-                     WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE       IS NULL) AND PAY.ISRECONCILED ='N' ";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID()*/
-
-
+                     WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE IS NULL) AND PAY.ISRECONCILED ='N' ";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID()*/
                 _sql += " AND PAY.C_BANKACCOUNT_ID= " + _accountID;
 
                 //filter the records based on Bank Organization not the context Org
@@ -3518,8 +3512,8 @@ namespace VA012.Models
                     else
                     {
                         _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
-                        "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END LIKE '%" + txtSearch + "%')";
+                        "OR CAST(CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
+                        "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
                     }
                 }
             }
@@ -3580,8 +3574,8 @@ namespace VA012.Models
                     else
                     {
                         _sql += " AND (UPPER(INV.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                            "OR  CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
-                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END LIKE '%" + txtSearch + "%')";
+                            "OR  CAST(CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
+                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END AS VARCHAR(255))  LIKE '%" + txtSearch + "%')";
                     }
                 }
                 //                //Check Schedule already mapped to payment
@@ -3615,13 +3609,11 @@ namespace VA012.Models
                         ON (PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
                         LEFT JOIN C_Currency BCURR
                         ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
-                       
                         INNER JOIN VA009_PaymentMethod PM  
                         ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
-
                         WHERE dt.DocSubTypeSO='PR'
-                        AND PAY.DOCSTATUS    ='WP'
-                            AND PAY.ISACTIVE      ='Y' AND PM.VA009_PAYMENTBASETYPE!='B'";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();*/
+                        AND PAY.DOCSTATUS='WP'
+                        AND PAY.ISACTIVE='Y' AND PM.VA009_PAYMENTBASETYPE!='B'";
                 //filter the recPAYs based on Bank Organization not the context Org
                 if (_bankOrg_ID != 0)
                 {
@@ -3658,7 +3650,7 @@ namespace VA012.Models
                     else
                     {
                         _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) LIKE '%" + txtSearch + "%')";
+                        "OR CAST(ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255))  LIKE '%" + txtSearch + "%')";
                     }
                 }
             }
@@ -3711,7 +3703,7 @@ namespace VA012.Models
                     else
                     {
                         _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) LIKE '%" + txtSearch + "%')";
+                        "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
                     }
                 }
                 _sql += " ORDER BY CS.NAME";
@@ -3752,6 +3744,7 @@ namespace VA012.Models
             string _sql = "";
             int _CountVA034 = Env.IsModuleInstalled("VA034_") ? 1 : 0;
 
+            //VA230:Removed extra blank lines and cast amount into varchar(255) in where condition when searchtext contains values in sql query to fix issue in postgre
             //TableNames are Case Sensitive when Applied a MRole
             if (_transactionType == "PY")
             {
@@ -3828,7 +3821,7 @@ namespace VA012.Models
                    + " INNER JOIN C_DocType DT "
                    + " ON (DT.C_DOCTYPE_ID =PAY.C_DOCTYPE_ID) "
 
-                   + " WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE IS NULL)"/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID()*/
+                   + " WHERE PAY.ISACTIVE   ='Y' AND PAY.DOCSTATUS IN ('CO','CL') AND (PM.VA009_PAYMENTBASETYPE !='B' OR PM.VA009_PAYMENTBASETYPE IS NULL)"
                + " AND PAY.ISRECONCILED ='N' ";
 
 
@@ -3880,8 +3873,8 @@ namespace VA012.Models
                     else
                     {
                         _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
-                        "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END LIKE '%" + txtSearch + "%')";
+                        "OR CAST(CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
+                        "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
                     }
                 }
                 //Order by DateAcct requirement given by ranvir
@@ -3902,9 +3895,7 @@ namespace VA012.Models
                                     WHEN (DT.DOCBASETYPE IN ('API','ARC'))
                                     THEN ROUND(PAY.DUEAMT,NVL(BCURR.StdPrecision,2))*-1
                                   END      AS PAYMENTAMOUNT,
-                              --BPG.NAME   AS BPGROUP,
                                 INV.InvoiceReference AS InvoiceRef,
-                              --IMG.AD_IMAGE_ID ,
                               BCURR.ISO_CODE AS BASECURRENCY,
                                CASE
                                 WHEN(inv.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
@@ -3940,29 +3931,18 @@ namespace VA012.Models
                             ON (PAY.C_INVOICE_id=INV.C_INVOICE_id)
                             LEFT JOIN C_BPartner BP
                             ON (INV.C_BPARTNER_ID =BP.C_BPARTNER_ID)
-                           /* --LEFT JOIN AD_Image IMG
-                            -- ON (BP.PIC=IMG.AD_IMAGE_ID)*/
                             LEFT JOIN C_BP_Group BPG
                             ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
                             LEFT JOIN C_Currency CURR
                             ON (inv.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
-                            /*--INNER JOIN AD_ClientInfo CINFO
-                            --ON (CINFO.AD_CLIENT_ID =PAY.AD_CLIENT_ID)
-                            --INNER JOIN C_AcctSchema AC
-                            --ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID)
-                            --LEFT JOIN C_Currency BCURR
-                            --ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID) */
                             LEFT JOIN C_Currency BCURR
                             ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
-
                             INNER JOIN VA009_PaymentMethod PM  
                             ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
                             INNER JOIN C_DocType DT
                             ON (DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID)
                             WHERE  pay.VA009_IsPaid='N'
-                            AND PAY.ISACTIVE      ='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B'";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();*/
-
-
+                            AND PAY.ISACTIVE='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B'";
 
                 if (bankOrg_ID != 0)
                 {
@@ -4006,8 +3986,8 @@ namespace VA012.Models
                     else
                     {
                         _sql += " AND (UPPER(INV.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                            "OR  CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
-                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END LIKE '%" + txtSearch + "%')";
+                            "OR  CAST(CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
+                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
                     }
                 }
                 //                //Check Schedule already mapped to payment
@@ -4038,8 +4018,6 @@ namespace VA012.Models
                           PAY.C_BPARTNER_ID ,
                           BP.NAME        AS BUSINESSPARTNER,
                           ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) AS PAYMENTAMOUNT,
-                          --BPG.NAME       AS BPGROUP,
-                          --IMG.AD_IMAGE_ID ,
                           BCURR.ISO_CODE AS BASECURRENCY,
                           CASE
                             WHEN(PAY.C_CURRENCY_ID!=BCURR.C_CURRENCY_ID)
@@ -4059,22 +4037,17 @@ namespace VA012.Models
                         ON (PAY.C_DocTypeTarget_ID=DT.C_DocType_ID)
                         LEFT JOIN C_BPartner BP
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
-                        --LEFT JOIN AD_Image IMG
-                        --ON (BP.PIC=IMG.AD_IMAGE_ID)
                         LEFT JOIN C_BP_Group BPG
                         ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
                         LEFT JOIN C_Currency CURR
                         ON (PAY.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
                         LEFT JOIN C_Currency BCURR
                         ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
-                     
                         INNER JOIN VA009_PaymentMethod PM  
                         ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
-
-
                         WHERE dt.DocSubTypeSO='PR'
-                        AND PAY.DOCSTATUS    ='WP'
-                            AND PAY.ISACTIVE      ='Y' AND PM.VA009_PAYMENTBASETYPE!='B'";/* AND PAY.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();*/
+                        AND PAY.DOCSTATUS='WP'
+                        AND PAY.ISACTIVE='Y' AND PM.VA009_PAYMENTBASETYPE!='B'";
                 if (bankOrg_ID != 0)
                 {
                     _sql += " AND PAY.AD_ORG_ID=" + bankOrg_ID;
@@ -4117,7 +4090,7 @@ namespace VA012.Models
                     else
                     {
                         _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) LIKE '%" + txtSearch + "%')";
+                        "OR CAST(ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
                     }
                 }
                 //Change required by Ranvir Order by Date Account
@@ -4164,26 +4137,20 @@ namespace VA012.Models
                         ON (chrg.c_charge_id=PAY.c_charge_id)
                         LEFT JOIN C_BPartner BP
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
-
-                         LEFT JOIN C_BankStatementLine BSL 
+                        LEFT JOIN C_BankStatementLine BSL 
                          ON (PAY.C_CASHLINE_ID =BSL.C_CASHLINE_ID)
-
                          LEFT JOIN C_BankStatement BS 
                          ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID AND 'VO' <> NVL(BS.DocStatus, 'XX'))
-
-                        --LEFT JOIN AD_Image IMG
-                        --ON (BP.PIC=IMG.AD_IMAGE_ID)
                         LEFT JOIN C_BP_Group BPG
                         ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
                         LEFT JOIN C_Currency CURR
                         ON (PAY.C_CURRENCY_ID=CURR.C_CURRENCY_ID)
                         LEFT JOIN C_Currency BCURR
                         ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
-                       
-                     WHERE CS.ISACTIVE   ='Y' 
-                        AND PAY.CashType           ='C'
+                        WHERE CS.ISACTIVE   ='Y' 
+                        AND PAY.CashType='C'
                         AND chrg.dtd001_chargetype ='CON'                        
-                        AND CS.DOCSTATUS IN ('CO','CL')"/* AND CS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"*/
+                        AND CS.DOCSTATUS IN ('CO','CL')"
                     + " AND PAY.VA012_ISRECONCILED ='N' AND PAY.C_BANKACCOUNT_ID= " + _accountID;
 
                 if (bankOrg_ID != 0)
@@ -4222,7 +4189,7 @@ namespace VA012.Models
                     else
                     {
                         _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) LIKE '%" + txtSearch + "%')";
+                        "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
                     }
                 }
                 //change required by Ranvir

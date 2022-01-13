@@ -660,7 +660,6 @@ span.va012-font-red {
     border: 1px solid rgba(var(--v-c-on-secondary),.2);
     color: rgba(var(--v-c-on-secondary),.7);
     text-align: center;
-    margin-left: 5px;
 }
 
     .va012-search-icon > span {
