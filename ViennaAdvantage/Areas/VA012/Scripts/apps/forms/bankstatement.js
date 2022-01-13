@@ -1141,7 +1141,7 @@
                     + '                       </div>'
                     + '                       <div class="VA012-search-wrap va012-searchfilter">'
                     + '                        <input value = "" placeholder="' + VIS.Msg.getMsg("VA012_Search") + '..." type = "text" id = ' + "VA012_txtSearch_Payment_" + $self.windowNo + '>'
-                    + '                        <a class= "va012-search-icon va012-search-icon-right" id = ' + "VA012_btnSearch_Payment_" + $self.windowNo + ' > <span class="glyphicon glyphicon-search"></span></a >'
+                    + '                        <a class= "va012-search-icon va012-search-icon-right" id = ' + "VA012_btnSearch_Payment_" + $self.windowNo + ' title="' + VIS.Msg.getMsg("VA012_SearchTitle") + '"> <span class="glyphicon glyphicon-search"></span></a >'
                     + '                       </div>'
                     + '                          </div>'
                     + '                      </div>'
