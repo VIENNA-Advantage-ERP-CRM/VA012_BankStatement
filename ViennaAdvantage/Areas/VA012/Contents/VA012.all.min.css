@@ -37,29 +37,29 @@
 (640,33): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
 (660,33): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
 (661,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(673,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(684,37): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(688,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(693,41): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
-(694,44): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
-(695,31): run-time error CSS1039: Token not allowed after unary operator: '-v-c-secondary'
-(699,40): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(790,37): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(814,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
-(815,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
-(842,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
-(844,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
-(851,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(853,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
-(861,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
-(863,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
-(868,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-secondary'
-(870,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
-(879,37): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(904,33): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(905,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(942,38): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
-(953,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
+(672,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(683,37): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(687,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(692,41): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
+(693,44): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
+(694,31): run-time error CSS1039: Token not allowed after unary operator: '-v-c-secondary'
+(698,40): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(789,37): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(813,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
+(814,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
+(841,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
+(843,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
+(850,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(852,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
+(860,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
+(862,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
+(867,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-secondary'
+(869,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-primary'
+(878,37): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(903,33): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(904,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(941,38): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
+(952,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
  */
 
 body {
@@ -725,7 +725,6 @@ span.va012-font-red {
     border: 1px solid rgba(var(--v-c-on-secondary),.2);
     color: rgba(var(--v-c-on-secondary),.7);
     text-align: center;
-    margin-left: 5px;
 }
 
     .va012-search-icon > span {
