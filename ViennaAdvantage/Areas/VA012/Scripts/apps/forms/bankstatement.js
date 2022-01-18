@@ -621,8 +621,6 @@
                 _paymentPAGESIZE = 50;
                 _paymentPageSizeInc = 1;
                 storepaymentdata = [];
-                //Handle search amount in culture
-                convertSearchAmountToDotFormat();
                 loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
             });
             _txtSearchPayment.keypress(function (e) {
@@ -638,8 +636,6 @@
                     _paymentPAGESIZE = 50;
                     _paymentPageSizeInc = 1;
                     storepaymentdata = [];
-                    //Handle search amount in culture
-                    convertSearchAmountToDotFormat();
                     loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
                 }
             });
@@ -656,10 +652,11 @@
                 if (!txtValue.contains("=")) {
                     if (txtValue.contains(",")) {
                         //replace , with . to search value on server side
-                        _txtSearchPayment.val(txtValue.replace(',', '.'));
+                        txtValue = txtValue.replace(',', '.');
                     }
                 }
             }
+            return txtValue;
         }
         //Load All Functions
         var loadFunctions = {
@@ -1649,6 +1646,8 @@
                 //Rakesh(VA228):Load When BankAccountid is selected
                 if (_accountID > 0) {
                     busyIndicator($(_paymentLists), true, "inherit");
+                    //Handle amount in searchtext field
+                    var txtSearchText = convertSearchAmountToDotFormat();
                     //Rakesh(VA228):Added business partnerid and searchtext parameter
                     window.setTimeout(function () {
                         $.ajax({
@@ -1656,7 +1655,7 @@
                             type: "GET",
                             datatype: "json",
                             contentType: "application/json; charset=utf-8",
-                            data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _PAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, statementDate: (_statementDate == null || _statementDate == "") ? new (Date) : _statementDate, businessPartnerId: _BPSearchControl.value, txtSearch: _txtSearchPayment.val() }),
+                            data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _PAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, statementDate: (_statementDate == null || _statementDate == "") ? new (Date) : _statementDate, businessPartnerId: _BPSearchControl.value, txtSearch: txtSearchText }),
                             success: function (data) {
                                 if (data != null && data != "") {
 
@@ -2678,7 +2677,7 @@
                                     VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                     _status = false;
                                 }
-                                
+
                             }
                         }
                         else {
