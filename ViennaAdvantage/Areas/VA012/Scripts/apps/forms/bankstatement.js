@@ -1646,7 +1646,7 @@
                 //Rakesh(VA228):Load When BankAccountid is selected
                 if (_accountID > 0) {
                     busyIndicator($(_paymentLists), true, "inherit");
-                    //Handle amount in searchtext field
+                    //Handle amount search according to culture in searchtext field
                     var txtSearchText = convertSearchAmountToDotFormat();
                     //Rakesh(VA228):Added business partnerid and searchtext parameter
                     window.setTimeout(function () {
