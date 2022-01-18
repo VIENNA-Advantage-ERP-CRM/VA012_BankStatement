@@ -621,6 +621,7 @@
                 _paymentPAGESIZE = 50;
                 _paymentPageSizeInc = 1;
                 storepaymentdata = [];
+                //Handle search amount in culture
                 convertSearchAmountToDotFormat();
                 loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
             });
@@ -637,6 +638,7 @@
                     _paymentPAGESIZE = 50;
                     _paymentPageSizeInc = 1;
                     storepaymentdata = [];
+                    //Handle search amount in culture
                     convertSearchAmountToDotFormat();
                     loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
                 }
