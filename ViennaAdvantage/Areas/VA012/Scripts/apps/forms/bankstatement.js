@@ -174,7 +174,7 @@
         //to handle the amounts in culture
         var format = VIS.DisplayType.GetNumberFormat(VIS.DisplayType.Amount);
         this.dotFormatter = VIS.Env.isDecimalPoint();
-
+        var culture = new VIS.CultureSeparator();
         //End Variable Declaration
 
         //Syatem Date
@@ -621,6 +621,7 @@
                 _paymentPAGESIZE = 50;
                 _paymentPageSizeInc = 1;
                 storepaymentdata = [];
+                convertSearchAmountToDotFormat();
                 loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
             });
             _txtSearchPayment.keypress(function (e) {
@@ -636,10 +637,28 @@
                     _paymentPAGESIZE = 50;
                     _paymentPageSizeInc = 1;
                     storepaymentdata = [];
+                    convertSearchAmountToDotFormat();
                     loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
                 }
             });
         };
+        /**VA230:Convert search amount to dot format */
+        function convertSearchAmountToDotFormat() {
+            //Get decimal seperator
+            var isDotSeparator = culture.isDecimalSeparatorDot(window.navigator.language);
+            var txtValue = _txtSearchPayment.val();
+
+            //format should not be dot format
+            if (txtValue != '' && !isDotSeparator) {
+                //search text should not contains multisearh (= operator) 
+                if (!txtValue.contains("=")) {
+                    if (txtValue.contains(",")) {
+                        //replace , with . to search value on server side
+                        _txtSearchPayment.val(txtValue.replace(',', '.'));
+                    }
+                }
+            }
+        }
         //Load All Functions
         var loadFunctions = {
             loadDataOnBPChanged: function () {
