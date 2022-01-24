@@ -174,7 +174,7 @@
         //to handle the amounts in culture
         var format = VIS.DisplayType.GetNumberFormat(VIS.DisplayType.Amount);
         this.dotFormatter = VIS.Env.isDecimalPoint();
-
+        var culture = new VIS.CultureSeparator();
         //End Variable Declaration
 
         //Syatem Date
@@ -640,6 +640,24 @@
                 }
             });
         };
+        /**VA230:Convert search amount to dot format */
+        function convertSearchAmountToDotFormat() {
+            //Get decimal seperator
+            var isDotSeparator = culture.isDecimalSeparatorDot(window.navigator.language);
+            var txtValue = _txtSearchPayment.val();
+
+            //format should not be dot format
+            if (txtValue != '' && !isDotSeparator) {
+                //search text should not contains multisearh (= operator) 
+                if (!txtValue.contains("=")) {
+                    if (txtValue.contains(",")) {
+                        //replace , with . to search value on server side
+                        txtValue = txtValue.replace(',', '.');
+                    }
+                }
+            }
+            return txtValue;
+        }
         //Load All Functions
         var loadFunctions = {
             loadDataOnBPChanged: function () {
@@ -1628,6 +1646,8 @@
                 //Rakesh(VA228):Load When BankAccountid is selected
                 if (_accountID > 0) {
                     busyIndicator($(_paymentLists), true, "inherit");
+                    //Handle amount search according to culture in searchtext field
+                    var txtSearchText = convertSearchAmountToDotFormat();
                     //Rakesh(VA228):Added business partnerid and searchtext parameter
                     window.setTimeout(function () {
                         $.ajax({
@@ -1635,7 +1655,7 @@
                             type: "GET",
                             datatype: "json",
                             contentType: "application/json; charset=utf-8",
-                            data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _PAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, statementDate: (_statementDate == null || _statementDate == "") ? new (Date) : _statementDate, businessPartnerId: _BPSearchControl.value, txtSearch: _txtSearchPayment.val() }),
+                            data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _PAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, statementDate: (_statementDate == null || _statementDate == "") ? new (Date) : _statementDate, businessPartnerId: _BPSearchControl.value, txtSearch: txtSearchText }),
                             success: function (data) {
                                 if (data != null && data != "") {
 
@@ -2657,7 +2677,7 @@
                                     VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
                                     _status = false;
                                 }
-                                
+
                             }
                         }
                         else {
