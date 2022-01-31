@@ -4934,6 +4934,12 @@ namespace VA012.Models
                         _pay.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);
                         //_pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
 
+                        //VA230:Override autocheckno. with eftcheck number if exists on bankstatementline
+                        if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0 && !string.IsNullOrEmpty(eftCheckNo))
+                        {
+                            if (_pay.Get_ColumnIndex("IsOverrideAutoCheck") >= 0)
+                                _pay.Set_Value("IsOverrideAutoCheck", true);
+                        }
                         //Set auto CheckNo
                         string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"select VA009_PAYMENTBASETYPE from VA009_PAYMENTMETHOD where VA009_PAYMENTMETHOD_ID=" + Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"])));
                         if ("S".Equals(_payBaseType))    // Check

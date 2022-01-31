@@ -1579,14 +1579,15 @@
 
             loadBankAccount: function () {
 
-                var _sql = "SELECT ACCOUNTNO,C_BANKACCOUNT_ID FROM C_BANKACCOUNT WHERE ISACTIVE='Y' AND C_BANK_ID=" + _cmbBank.val();
+                //VA230:Get Bank Account Currency
+                var _sql = "SELECT ACCOUNTNO,C_BANKACCOUNT_ID,C_Currency_ID FROM C_BANKACCOUNT WHERE ISACTIVE='Y' AND C_BANK_ID=" + _cmbBank.val();
                 var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccount);
                 function callbackloadBankAccount(_ds) {
                     _cmbBankAccount.html("");
                     _cmbBankAccount.append("<option value=0 ></option>");
                     if (_ds != null) {
                         for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbBankAccount.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bankaccount_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.accountno) + "</option>");
+                            _cmbBankAccount.append("<option currencyid=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_currency_id) + " value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bankaccount_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.accountno) + "</option>");
                         }
                     }
                     _ds.dispose();
@@ -4938,14 +4939,17 @@
                         var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: 0, _InvSchdleList: _scheduleList });
                         if (_getPayMethodList) {
                             _txtPaymentMethod.val(_getPayMethodList._paymentMethod_Id).prop("selected", true);
-                            if (_getPayMethodList._checkNo) {
-                                _txtCheckNum.val(_getPayMethodList._checkNo);
+                            //VA230:Do not execute autocheck functionality if EftCheckNo exists on bank statement line
+                            if (!_EftCheckNo) {
+                                if (_getPayMethodList._checkNo) {
+                                    _txtCheckNum.val(_getPayMethodList._checkNo);
+                                }
+                                else {
+                                    _txtCheckNum.val("");
+                                }
+                                //call change event of Payment Method
+                                _txtPaymentMethod.trigger("change");
                             }
-                            else {
-                                _txtCheckNum.val("");
-                            }
-                            //call change event of Payment Method
-                            _txtPaymentMethod.trigger("change");
                         }
                     }
                 }
@@ -6123,8 +6127,8 @@
                         return;
                     }
                     //PaymentMethod is mandatory if transaction is not contra
-                    //VA228:cashline contra check changed and transaction type not equal contra check applied
-                    if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtPaymentMethod"]) <= 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) <= 0 && _cmbTransactionType.val() != "CO") {
+                    //VA230:cashline contra check changed and transaction type not equal contra check applied_cmbVoucherMatch
+                    if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtPaymentMethod"]) <= 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) <= 0 && _formData[0]["_cmbVoucherMatch"] != "C") {
                         VIS.ADialog.info("VA012_PleaseSelectPayMethod", null, "", "");
                         return;
                     }
@@ -7586,7 +7590,7 @@
                 _txtPaymentMethod.addClass("va012-mandatory");
                 //Load Payment Methods
                 this.loadPaymentMethods();
-                _txtCurrency.addClass("va012-mandatory");
+                //_txtCurrency.addClass("va012-mandatory");
                 //C_ConversionType_ID
                 //_txtConversionType.prop('selectedIndex', 0);
                 //_txtConversionType disabled false 
@@ -7787,8 +7791,13 @@
                     for (var i = 0; i < getCurrency.length; i++) {
                         _txtCurrency.append('<option value=' + getCurrency[i].Key + '>' + getCurrency[i].Name + '</option>');
                     }
-                    _txtCurrency.val(0);
-                    _txtCurrency.addClass('va012-mandatory');
+                    //VA230:Set selected bank account currency as default currency
+                    var bankAccountCurrencyId = VIS.Utility.Util.getValueOfInt($('option:selected', _cmbBankAccount).attr('currencyid'));
+                    _txtCurrency.val(bankAccountCurrencyId);
+                    if (bankAccountCurrencyId <= 0)
+                        _txtCurrency.addClass('va012-mandatory');
+                    else
+                        _txtCurrency.removeClass('va012-mandatory');
                 }
             },
 
