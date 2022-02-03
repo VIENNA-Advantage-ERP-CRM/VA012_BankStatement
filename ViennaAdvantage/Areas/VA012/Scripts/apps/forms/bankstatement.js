@@ -6862,7 +6862,8 @@
                     if (convertAmtCulture(_txtTrxAmt.getControl().val()) == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) > 0) {
                         return;
                     }
-                    if (_cmbVoucherMatch.val() != "V") {
+                    //VA230:if type is Payment
+                    if (_cmbVoucherMatch.val() == "M") {
                         return;
                     }
 
@@ -6892,7 +6893,7 @@
                     if (convertAmtCulture(_txtTrxAmt.getControl().val()) == 0 && VIS.Utility.Util.getValueOfInt($_ctrlOrder.value) > 0) {
                         return;
                     }
-                    if (_cmbVoucherMatch.val() != "V") {
+                    if (_cmbVoucherMatch.val() == "M") {
                         return;
                     }
 
