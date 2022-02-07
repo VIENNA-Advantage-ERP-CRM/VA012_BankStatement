@@ -6947,7 +6947,7 @@ namespace VA012.Models
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
             //here Cash and On Credit is not into consideration
-            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE NOT IN ('B','P') AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ")";
+            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE NOT IN ('B','P') AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ") ORDER BY VA009_NAME";
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "VA009_PaymentMethod", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
 
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
