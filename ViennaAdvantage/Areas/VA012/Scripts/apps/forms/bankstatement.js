@@ -195,6 +195,7 @@
         var _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
         var _CountVA034 = 0;
         var _EftCheckNo = null;
+        var _divTrxOrg = null, _ctrlTrxOrg = null, $_ctrlTrxOrg = null, _trxOrgSelectedVal = null;
 
         this.Initialize = function () {
             //Rakesh:Get VA034 module
@@ -1038,9 +1039,17 @@
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div id="VA012_divPrepayOrder_' + $self.windowNo + '" class="va012-form-data" >'
                     + '                              <label>' + VIS.Msg.getMsg("VA012_PrepayOrders") + '</label>'
-                    + '                              <div id="VA012_ctrlOrder_' + $self.windowNo + '" class="va012-div-prepay"></div>'
+                    + '                              <div id="VA012_ctrlOrder_' + $self.windowNo + '"></div>'
                     //+ '                              <input disabled id="VA012_txtPrepayOrder_' + $self.windowNo + '" type="text" class="va012-input-size">'
                     //+ '                              <a tabindex="1" id="VA012_btnPrepay_' + $self.windowNo + '" class="va012-edit-icon"></a>'
+                    + '                              </div>'
+                    + '                              <!-- end of form-data -->'
+                    + '                          </div>'
+                    + '                          <!-- end of col -->'
+                    + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                              <div id="VA012_divTrxOrg_' + $self.windowNo + '" class="va012-form-data" >'
+                    + '                              <label>' + VIS.Msg.getMsg("VA012_TrxOrg") + '</label>'
+                    + '                              <div id="VA012_ctrlTrxOrg_' + $self.windowNo + '"></div>'
                     + '                              </div>'
                     + '                              <!-- end of form-data -->'
                     + '                          </div>'
@@ -1497,6 +1506,10 @@
                 //Rakesh(VA228):Get business partner and payment search control
                 _txtSearchPayment = $root.find("#VA012_txtSearch_Payment_" + $self.windowNo);
                 _btnSearchPayment = $root.find("#VA012_btnSearch_Payment_" + $self.windowNo);
+                _divPaymentSchedule = $root.find("#VA012_divPaymentSchedule_" + $self.windowNo);
+                //Get Trx Orgazination search control
+                _divTrxOrg = $root.find("#VA012_divTrxOrg_" + $self.windowNo);
+
             },
             getBaseCurrency: function () {
 
@@ -4301,6 +4314,14 @@
                             $_ctrlBusinessPartner.setValue();
                         }
                     }
+                    //VA230:Set trx org
+                    if (_result._ctrlTrxOrg > 0) {
+                        $_ctrlTrxOrg.setValue(_result._ctrlTrxOrg, false, true);
+                    } else {
+                        if (!_openingFromDrop) {
+                            $_ctrlTrxOrg.setValue();
+                        }
+                    }
                     if (_result._ctrlInvoice > 0) {
                         $_ctrlInvoice.setValue(_result._ctrlInvoice, false, true);
                     }
@@ -5271,6 +5292,7 @@
                 newRecordForm.loadPayment();
                 newRecordForm.loadOrder();
                 newRecordForm.loadBusinessPartner();
+                newRecordForm.loadTrxOrg();
                 newRecordForm.loadInvoice();
                 newRecordForm.loadCashLine();
                 //to check mandatory fields and their logic to set background color
@@ -5659,6 +5681,9 @@
                     //_cmbTaxRate.removeClass("va012-mandatory");
                     //_txtCharge.removeClass("va012-mandatory");
 
+                    //VA230:Hide trx org div
+                    _divTrxOrg.hide();
+                    _divTrxOrg.find("*").prop("disabled", true);
                     //_divMore.show();
                     _btnMore.text(VIS.Msg.getMsg("VA012_More"));
                     loadFunctions.setPaymentListHeight();
@@ -6026,6 +6051,16 @@
                         _divCtrlBusinessPartner.show();
                         _divPrepayOrder.show();
                         _divPaymentSchedule.show();
+                        //VA230:Show trx org div voucher type is Voucher
+                        if (_cmbVoucherMatch.val() == "V") {
+                            _divTrxOrg.show();
+                            if (_bPartnerSelectedVal > 0) {
+                                _divTrxOrg.find("*").prop("disabled", true);
+                            }
+                            else {
+                                _divTrxOrg.find("*").prop("disabled", false);
+                            }
+                        }
                     }
                     else {
                         _btnMore.attr("visiblestatus", "0");
@@ -6966,6 +7001,8 @@
                 _txtPaymentMethod = $_formNewRecord.find("#VA012_txtPaymentMethod_" + $self.windowNo);
                 _txtCheckNum = $_formNewRecord.find("#VA012_txtCheckNum_" + $self.windowNo);
                 _txtCheckDate = $_formNewRecord.find("#VA012_txtCheckDate_" + $self.windowNo);
+                //Get Trx Org Control
+                _ctrlTrxOrg = $_formNewRecord.find("#VA012_ctrlTrxOrg_" + $self.windowNo);
             },
 
 
@@ -7362,6 +7399,30 @@
                 $_ctrlBusinessPartner.fireValueChanged = function () {
                     _bPartnerSelectedVal = 0;
                     _bPartnerSelectedVal = $_ctrlBusinessPartner.value;
+                    //VA230:If business partner selected then make trx org readonly
+                    if (_bPartnerSelectedVal > 0) {
+                        _divTrxOrg.find("*").prop("disabled", true);
+                        _trxOrgSelectedVal = 0;
+                        $_ctrlTrxOrg.setValue();
+                    } else {
+                        _divTrxOrg.find("*").prop("disabled", false);
+                        _trxOrgSelectedVal = 0;
+                    }
+                };
+            },
+            //VA230:Load trx org
+            loadTrxOrg: function () {
+                var orgValidation = "AD_Org.IsActive='Y' AND AD_Org.IsSummary ='N' AND (AD_Org.IsCostCenter='Y' OR AD_Org.IsProfitCenter='Y') AND CAST(AD_Org.LegalEntityOrg AS int) IN(0,@AD_Org_ID@) AND AD_Org.AD_Client_ID = " + VIS.context.getAD_Client_ID();
+                var lookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 0, VIS.DisplayType.Search, "AD_Org_ID", 0, false, orgValidation);
+                $_ctrlTrxOrg = new VIS.Controls.VTextBoxButton("AD_Org_ID", false, false, true, VIS.DisplayType.Search, lookUp);
+                $_ctrlTrxOrg.getControl().addClass("va012-input-size-2");
+                $_ctrlTrxOrg.getControl().attr("tabindex", "13");
+                _ctrlTrxOrg.append($_ctrlTrxOrg.getControl());
+                _ctrlTrxOrg.append($_ctrlTrxOrg.getBtn(0));
+                _ctrlTrxOrg.append($_ctrlTrxOrg.getBtn(1));
+                $_ctrlTrxOrg.fireValueChanged = function () {
+                    _trxOrgSelectedVal = 0;
+                    _trxOrgSelectedVal = $_ctrlTrxOrg.value;
                 };
             },
             loadInvoice: function () {
@@ -7447,6 +7508,7 @@
                 formData["_txtPaymentMethod"] = _txtPaymentMethod.val();
                 formData["_txtCheckNum"] = _txtCheckNum.val();
                 formData["_txtCheckDate"] = _txtCheckDate.val();
+                formData["_ctrlTrxOrg"] = _trxOrgSelectedVal;
 
                 _formData.push(formData);
                 return _formData;
@@ -7558,6 +7620,7 @@
                 if (refreshFields == undefined)
                     $_ctrlInvoice.setValue();
                 _bPartnerSelectedVal = 0;
+                _trxOrgSelectedVal = 0;
                 _paymentSelectedVal = 0;
                 _orderSelectedVal = 0;
                 //clear the CashLine_ID
@@ -7658,6 +7721,7 @@
                 $_ctrlBusinessPartner.setValue();
                 $_ctrlInvoice.setValue();
                 _bPartnerSelectedVal = 0;
+                _trxOrgSelectedVal = 0;
                 _paymentSelectedVal = 0;
                 _orderSelectedVal = 0;
                 //clear the CashLine_ID
@@ -7769,6 +7833,7 @@
                 _txtPaymentMethod = null;
                 _txtCheckDate = null;
                 _txtCheckNum = null;
+                _ctrlTrxOrg = null, $_ctrlTrxOrg = null, _trxOrgSelectedVal = null
             },
 
             //load Currencies           
@@ -7953,7 +8018,7 @@
             //clear value
             ad_Column = null;
             _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
-            _EftCheckNo = null;
+            _EftCheckNo = null, _divTrxOrg = null, _ctrlTrxOrg = null, $_ctrlTrxOrg = null;
         };
         function busyIndicator(_obj, _isShow, _position) {
             $BusyIndicator = $("<div class='vis-apanel-busy va012-busy-bank-statement'>");
