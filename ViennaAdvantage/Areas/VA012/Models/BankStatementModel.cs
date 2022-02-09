@@ -6858,7 +6858,7 @@ namespace VA012.Models
             MatchBase list = null;
             //added Client_ID to get Bank's with respect to Client
             //DataSet ds = DB.ExecuteDataset("SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y' AND AD_Client_ID=" + ctx.GetAD_Client_ID(), null, null);
-            string _sql = "SELECT NAME,C_BANK_ID,AD_Org_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y'";
+            string _sql = "SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y' AND IsOwnBank='Y'";
             //Added MRole Check
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Bank", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
             DataSet ds = DB.ExecuteDataset(_sql, null, null);
@@ -6869,7 +6869,6 @@ namespace VA012.Models
                     list = new MatchBase();
                     list.Value = Util.GetValueOfString(ds.Tables[0].Rows[i]["C_BANK_ID"]);
                     list.Name = Util.GetValueOfString(ds.Tables[0].Rows[i]["NAME"]);
-                    list.OrgId= Util.GetValueOfInt(ds.Tables[0].Rows[i]["AD_Org_ID"]);
                     bankList.Add(list);
                 }
             }
@@ -7022,7 +7021,6 @@ namespace VA012.Models
     {
         public string Value { get; set; }
         public string Name { get; set; }
-        public int OrgId { get; set; }
     }
     public class PrepayResponse
     {

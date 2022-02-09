@@ -292,7 +292,8 @@
                 _lstStatement.html("");
                 _statementPageNo = 1;
                 childDialogs.loadStatement(_statementID);
-
+                //VA230: Get bankaccount orgazination id
+                loadFunctions.SetBankAccountOrganizationInContext(VIS.Utility.Util.getValueOfInt($('option:selected', _cmbBankAccount).attr('orgid')));
             });
             _cmbSearchPaymentMethod.on('change', function () {
 
@@ -1572,7 +1573,7 @@
                     if (_ds != null) {
                         for (var i = 0; i < _ds.length; i++) {
                             //_cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bank_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
-                            _cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + " orgid=" + VIS.Utility.Util.getValueOfInt(_ds[i].OrgId) + ">" + _ds[i].Name + "</option>");
+                            _cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + ">" + _ds[i].Name + "</option>");
                         }
                     }
                     //_ds.dispose();
@@ -1591,16 +1592,14 @@
             },
 
             loadBankAccount: function () {
-                //VA230: Get bank orgazination id
-                loadFunctions.SetBankOrganizationInContext(VIS.Utility.Util.getValueOfInt($('option:selected', _cmbBank).attr('orgid')));
-                var _sql = "SELECT ACCOUNTNO,C_BANKACCOUNT_ID FROM C_BANKACCOUNT WHERE ISACTIVE='Y' AND C_BANK_ID=" + _cmbBank.val();
+                var _sql = "SELECT ACCOUNTNO,C_BANKACCOUNT_ID,AD_ORG_ID FROM C_BANKACCOUNT WHERE ISACTIVE='Y' AND C_BANK_ID=" + _cmbBank.val();
                 var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccount);
                 function callbackloadBankAccount(_ds) {
                     _cmbBankAccount.html("");
                     _cmbBankAccount.append("<option value=0 ></option>");
                     if (_ds != null) {
                         for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbBankAccount.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bankaccount_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.accountno) + "</option>");
+                            _cmbBankAccount.append("<option orgid=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.ad_org_id) + " value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bankaccount_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.accountno) + "</option>");
                         }
                     }
                     _ds.dispose();
@@ -1615,9 +1614,9 @@
                     loadFunctions.loadSearchPaymentMethod();
                 }
             },
-            SetBankOrganizationInContext: function(orgId) {
+            SetBankAccountOrganizationInContext: function(orgId) {
                 var ctx = VIS.Env.getCtx();
-                ctx.setContext($self.windowNo, "Bank_Org_ID", orgId);
+                ctx.setContext($self.windowNo, "BankAccount_Org_ID", orgId);
             },
             LoadPaymentsPages: function (_accountID, _paymentMethodID, _transactionType) {
                 if (_txtSearch.val() != null && _txtSearch.val() != "") {
@@ -7416,7 +7415,7 @@
             },
             //VA230:Load trx org
             loadTrxOrg: function () {
-                var orgValidation = "AD_Org.IsActive='Y' AND AD_Org.IsSummary ='N' AND (AD_Org.IsCostCenter='Y' OR AD_Org.IsProfitCenter='Y') AND CAST(AD_Org.LegalEntityOrg AS int) IN(0,@Bank_Org_ID@) AND AD_Org.AD_Client_ID = " + VIS.context.getAD_Client_ID();
+                var orgValidation = "AD_Org.IsActive='Y' AND AD_Org.IsSummary ='N' AND (AD_Org.IsCostCenter='Y' OR AD_Org.IsProfitCenter='Y') AND CAST(AD_Org.LegalEntityOrg AS int) IN(0,@BankAccount_Org_ID@) AND AD_Org.AD_Client_ID = " + VIS.context.getAD_Client_ID();
                 var lookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 0, VIS.DisplayType.Search, "AD_Org_ID", 0, false, orgValidation);
                 $_ctrlTrxOrg = new VIS.Controls.VTextBoxButton("AD_Org_ID", false, false, true, VIS.DisplayType.Search, lookUp);
                 $_ctrlTrxOrg.getControl().addClass("va012-input-size-2");
