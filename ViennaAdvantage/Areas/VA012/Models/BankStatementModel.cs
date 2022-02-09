@@ -1212,6 +1212,12 @@ namespace VA012.Models
                 {
                     _bankStatementLine.SetC_BPartner_ID(0);
                 }
+                //VA230:Set Trx Org Value
+                if (_bankStatementLine.Get_ColumnIndex("AD_OrgTrx_ID") >= 0)
+                {
+                    _bankStatementLine.Set_Value("AD_OrgTrx_ID", Util.GetValueOfInt(_formData[0]._ctrlTrxOrg));
+                }
+
                 //If Invoice is have then set Invoice from Payment
                 //_bankStatementLine.SetC_Invoice_ID(_formData[0]._ctrlInvoice);
                 //when drag the record at that time _formData[0]._ctrlInvoice is null 
@@ -2395,7 +2401,7 @@ namespace VA012.Models
             if (_bankStatementLine.GetC_Charge_ID() > 0)
             {
                 //Bug639--  Get charge Name AS  Value_Name         
-                statementDetail._txtCharge = chrg.Get_Value("Value") + "_"+ chrg.GetName() ;
+                statementDetail._txtCharge = chrg.Get_Value("Value") + "_" + chrg.GetName();
             }
             else
             {
@@ -2440,6 +2446,8 @@ namespace VA012.Models
             //Rakesh(VA228):Get autocheck for selected bank on bank statement header
             string autoChek = Util.GetValueOfString(DB.ExecuteScalar("Select ChkNoAutoControl from C_BankAccount WHERE C_BankAccount_ID=" + _bankStatement.GetC_BankAccount_ID()));
             statementDetail._isAutoCheck = autoChek == "Y" ? true : false;
+            //Get trx org
+            statementDetail._ctrlTrxOrg = Util.GetValueOfInt(_bankStatementLine.Get_Value("AD_OrgTrx_ID"));
             return statementDetail;
 
         }
@@ -4515,7 +4523,7 @@ namespace VA012.Models
         /// <returns>List of Charge</returns>
         public List<ChargeProp> GetCharge(Ctx ctx, string searchText, string voucherType, int bankAcct)
         {
-         List<ChargeProp> _lstcharge = new List<ChargeProp>();
+            List<ChargeProp> _lstcharge = new List<ChargeProp>();
             //var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID() + " AND UPPER(Name) like UPPER('%" + searchText + "%')";
             //Bug639--  Get charge Name AS  Value_Name        
             var _sql = "SELECT Value ||'_' ||Name AS Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' " +
@@ -7146,6 +7154,7 @@ namespace VA012.Models
         public string _txtCheckNum { get; set; }
         public bool _isAutoCheck { get; set; }
         // public List<GetScheduleProp> _getSchedules { get; set; }
+        public int _ctrlTrxOrg { get; set; }
     }
     public class PaymentProp
     {
