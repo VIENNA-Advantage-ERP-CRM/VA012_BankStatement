@@ -1614,7 +1614,7 @@
                     loadFunctions.loadSearchPaymentMethod();
                 }
             },
-            SetBankAccountOrganizationInContext: function(orgId) {
+            SetBankAccountOrganizationInContext: function (orgId) {
                 var ctx = VIS.Env.getCtx();
                 ctx.setContext($self.windowNo, "BankAccount_Org_ID", orgId);
             },
@@ -6162,7 +6162,7 @@
                     }
                     //PaymentMethod is mandatory if transaction is not contra
                     //VA228:cashline contra check changed and transaction type not equal contra check applied
-                    if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtPaymentMethod"]) <= 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) <= 0 && _cmbTransactionType.val() != "CO") {
+                    if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtPaymentMethod"]) <= 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) <= 0 && _formData[0]["_cmbVoucherMatch"] != "C") {
                         VIS.ADialog.info("VA012_PleaseSelectPayMethod", null, "", "");
                         return;
                     }
