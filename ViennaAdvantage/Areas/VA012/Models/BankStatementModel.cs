@@ -4099,8 +4099,8 @@ namespace VA012.Models
                         0 as C_BANKSTATEMENTLINE_ID,'Receipt' AS PaymentType,
                         'CO' AS DocStatus ,
                         ' ' as TrxNo , PM.VA009_Name, PAY.DateAcct,PAY.VA009_PAYMENTMETHOD_ID,PM.VA009_PaymentBaseType
-                        FROM C_Order PAY
-                        LEFT JOIN C_DocType DT
+                        FROM C_Order PAY 
+                        INNER JOIN C_DocType DT 
                         ON (PAY.C_DocTypeTarget_ID=DT.C_DocType_ID)
                         LEFT JOIN C_BPartner BP
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
@@ -4111,7 +4111,7 @@ namespace VA012.Models
                         LEFT JOIN C_Currency BCURR
                         ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
                         INNER JOIN VA009_PaymentMethod PM  
-                        ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
+                        ON (PM.VA009_PAYMENTMETHOD_ID=PAY.VA009_PAYMENTMETHOD_ID)
                         WHERE dt.DocSubTypeSO='PR'
                         AND PAY.DOCSTATUS='WP'
                         AND PAY.ISACTIVE='Y' AND PM.VA009_PAYMENTBASETYPE!='B'";
