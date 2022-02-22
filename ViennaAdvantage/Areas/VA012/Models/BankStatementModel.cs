@@ -631,8 +631,21 @@ namespace VA012.Models
                     _isMatchingConfirmed = Util.GetValueOfString(_ds.Tables[0].Rows[0]["VA012_ISMATCHINGCONFIRMED"]);
                     if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0)
                     {
-                        //Rakesh:Get eft check no.
-                        eftCheckNo = Util.GetValueOfString(_ds.Tables[0].Rows[0]["EFTCheckNo"]);
+                        //VA230:If EftCheck no not present on bank statement line
+                        if (!string.IsNullOrEmpty(Util.GetValueOfString(_ds.Tables[0].Rows[0]["EFTCheckNo"])))
+                        {
+                            //VA230:Get eft check no.
+                            eftCheckNo = Util.GetValueOfString(_ds.Tables[0].Rows[0]["EFTCheckNo"]);
+                        }
+                        else
+                        {
+                            //get manual entered check no
+                            eftCheckNo = _formData[0]._txtCheckNum;
+                        }
+                    }
+                    else
+                    {
+                        eftCheckNo = _formData[0]._txtCheckNum;
                     }
                     if (_formData[0]._bankStatementLineID > 0)
                     {
@@ -698,7 +711,7 @@ namespace VA012.Models
             if (_formData[0]._ctrlPayment <= 0 && !string.IsNullOrEmpty(_formData[0]._scheduleList))
             {
                 //added trx parameter to handle the transaction
-                schedulePaymentResult = CreatePaymentFromSchedule(ctx, _formData, trx, eftCheckNo);
+                schedulePaymentResult = CreatePaymentFromSchedule(ctx, _formData, trx, eftCheckNo, _formData[0]._OverrideAutoCheck);
                 if (int.TryParse(schedulePaymentResult, out paymentID))
                 {
                 }
@@ -1212,6 +1225,11 @@ namespace VA012.Models
                 {
                     _bankStatementLine.SetC_BPartner_ID(0);
                 }
+                //VA230:Set Trx Org Value
+                if (_bankStatementLine.Get_ColumnIndex("AD_OrgTrx_ID") >= 0)
+                {
+                    _bankStatementLine.Set_Value("AD_OrgTrx_ID", Util.GetValueOfInt(_formData[0]._ctrlTrxOrg));
+                }
                 //If Invoice is have then set Invoice from Payment
                 //_bankStatementLine.SetC_Invoice_ID(_formData[0]._ctrlInvoice);
                 //when drag the record at that time _formData[0]._ctrlInvoice is null 
@@ -1434,12 +1452,51 @@ namespace VA012.Models
         /// <param name="bnkAct_Id">C_BankAccount_ID</param>
         /// <param name="payMethod">VA009_PaymentMethod_ID</param>
         /// <param name="invSchdleList">C_InvoicePaySchedule_ID's</param>
+        /// <param name="voucherMatch">check voucher/match type</param>
         /// <returns>return object that contains AutoCheckNo, PaymentMethod and status</returns>
-        public PaymentResponse GetAutoCheckNo(Ctx ctx, int bnkAct_Id, int payMethod, int[] invSchdleList)
+        public PaymentResponse GetAutoCheckNo(Ctx ctx, int bnkAct_Id, int payMethod, int[] invSchdleList, string voucherMatch)
         {
             string _PaymentBaseType = null;
             PaymentResponse _obj = new PaymentResponse();
-
+            string sql;
+            string _DocBaseType = null;
+            DataSet _ds = null;
+            //VA230:Get checkno when voucher match type selected
+            if (voucherMatch == "V")
+            {
+                //get Bank Account document record on respective condition
+                sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext FROM 
+                            C_BankAccountDoc C_BankAccountDoc INNER JOIN C_BankAccount C_BankAccount ON (C_BankAccount.C_BankAccount_ID = C_BankAccountDoc.C_BankAccount_ID)
+                        WHERE C_BankAccountDoc.IsActive='Y' 
+                        AND C_BankAccountDoc.PaymentRule='S' 
+                        AND C_BankAccount.ChkNoAutoControl = 'Y' 
+                        AND C_BankAccountDoc.EndChkNumber != (C_BankAccountDoc.CurrentNext-1)
+                        AND C_BankAccountDoc.VA009_PaymentMethod_ID = " + payMethod + @"
+                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id + " ORDER BY C_BankAccountDoc.Priority ASC";
+                //Used DataSet in place of Execute Scalar to get all values from one query
+                _ds = DB.ExecuteDataset(sql, null, null);
+                if (_ds != null && _ds.Tables[0].Rows.Count > 0 && Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BankAccountDoc_ID"]) > 0)
+                {
+                    if (Util.GetValueOfInt(_ds.Tables[0].Rows[0]["CurrentNext"]) <= 0)
+                    {
+                        _obj._status = Msg.GetMsg(ctx, "VA009_NoCurNxtForAcctNo");
+                        return _obj;
+                    }
+                    else
+                    {
+                        _obj._checkNo = Util.GetValueOfString(_ds.Tables[0].Rows[0]["CurrentNext"]);
+                    }
+                }
+                else
+                {
+                    //Auto check control not defined for selected Payment Method on Bank Account Document
+                    _obj._status = Msg.GetMsg(ctx, "VA009_PayMthodOrBkAcctDocNotFund");
+                }
+                _PaymentBaseType = Util.GetValueOfString(DB.ExecuteScalar("SELECT VA009_PaymentBaseType FROM VA009_PaymentMethod WHERE IsActive='Y' AND VA009_PaymentMethod_ID=" + payMethod, null, null));
+                _obj._paymentMethod_Id = payMethod;
+                _obj._paymentBaseType = _PaymentBaseType;
+                return _obj;
+            }
             //Rakesh(VA228):When no invoice schedule present get payment base type
             if (invSchdleList == null)
             {
@@ -1447,9 +1504,7 @@ namespace VA012.Models
                 _obj._paymentBaseType = _PaymentBaseType;
                 return _obj;
             }
-            string sql;
-            string _DocBaseType = null;
-            DataSet _ds = null;
+
             //get PaymentMethod,BaseType and DocBaseType if PaymentMethod is zero otherwise get CheckNo along with paymentMethod
             sql = @"SELECT dt.DocBaseType,pm.VA009_PaymentBaseType, pay.VA009_PaymentMethod_ID FROM C_Invoice inv
                     INNER JOIN C_InvoicePaySchedule pay ON inv.C_Invoice_ID=pay.C_Invoice_ID
@@ -1480,12 +1535,12 @@ namespace VA012.Models
                 //get Bank Account document record on respective condition
                 sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext FROM 
                             C_BankAccountDoc C_BankAccountDoc INNER JOIN C_BankAccount C_BankAccount ON (C_BankAccount.C_BankAccount_ID = C_BankAccountDoc.C_BankAccount_ID)
-                        Where C_BankAccountDoc.IsActive='Y' 
+                        WHERE C_BankAccountDoc.IsActive='Y' 
                         AND C_BankAccountDoc.PaymentRule='S' 
                         AND C_BankAccount.ChkNoAutoControl = 'Y' 
-                        AND EndChkNumber != (CurrentNext-1)
+                        AND C_BankAccountDoc.EndChkNumber != (C_BankAccountDoc.CurrentNext-1)
                         AND C_BankAccountDoc.VA009_PaymentMethod_ID = " + payMethod + @"
-                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id;
+                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id + " ORDER BY C_BankAccountDoc.Priority ASC";
                 //Used DataSet in place of Execute Scalar to get all values from one query
                 _ds = DB.ExecuteDataset(sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0 && Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BankAccountDoc_ID"]) > 0)
@@ -2326,7 +2381,12 @@ namespace VA012.Models
                             if (string.IsNullOrEmpty(statementDetail._errorMsg))
                             {
                                 statementDetail._txtCheckNum = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT CurrentNext FROM C_BankAccountDoc WHERE IsActive='Y' AND  
-                            C_BankAccount_ID=" + _bankAcct_Id + " AND VA009_PaymentMethod_ID=" + statementDetail._txtPaymentMethod, null, null));
+                            C_BankAccount_ID=" + _bankAcct_Id + " AND VA009_PaymentMethod_ID=" + statementDetail._txtPaymentMethod + " AND EndChkNumber != (CurrentNext-1) ORDER BY Priority ASC", null, null));
+                                statementDetail._autoCheckControlled = true;
+                            }
+                            else
+                            {
+                                statementDetail._autoCheckControlled = false;
                             }
                         }
                     }
@@ -2395,7 +2455,7 @@ namespace VA012.Models
             if (_bankStatementLine.GetC_Charge_ID() > 0)
             {
                 //Bug639--  Get charge Name AS  Value_Name         
-                statementDetail._txtCharge = chrg.Get_Value("Value") + "_"+ chrg.GetName() ;
+                statementDetail._txtCharge = chrg.Get_Value("Value") + "_" + chrg.GetName();
             }
             else
             {
@@ -2440,6 +2500,13 @@ namespace VA012.Models
             //Rakesh(VA228):Get autocheck for selected bank on bank statement header
             string autoChek = Util.GetValueOfString(DB.ExecuteScalar("Select ChkNoAutoControl from C_BankAccount WHERE C_BankAccount_ID=" + _bankStatement.GetC_BankAccount_ID()));
             statementDetail._isAutoCheck = autoChek == "Y" ? true : false;
+            //VA230:Check and get trx org
+            if (_bankStatementLine.Get_ColumnIndex("AD_OrgTrx_ID") >= 0)
+            {
+                statementDetail._ctrlTrxOrg = Util.GetValueOfInt(_bankStatementLine.Get_Value("AD_OrgTrx_ID"));
+            }
+            if (statementDetail._txtPaymentMethod == 0)
+                statementDetail._txtPaymentMethod = _bankStatementLine.GetVA009_PaymentMethod_ID();
             return statementDetail;
 
         }
@@ -3793,7 +3860,7 @@ namespace VA012.Models
                    + " BSL.C_BANKSTATEMENTLINE_ID, "
                     + "  CASE WHEN dt.docbasetype IN ('APP')   THEN 'Payment'   WHEN dt.docbasetype IN ('ARR')   THEN 'Receipt'   END AS PaymentType ,"
                     + " BS.DocStatus AS DocStatus ,"
-                   + " PAY.TrxNo , PM.VA009_Name, pay.DateAcct "
+                   + " PAY.TrxNo , PM.VA009_Name, pay.DateAcct,PAY.VA009_PAYMENTMETHOD_ID,PM.VA009_PaymentBaseType "
                     + " FROM C_Payment PAY "
                    + " LEFT JOIN C_BPartner BP "
                    + " ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
@@ -3925,7 +3992,7 @@ namespace VA012.Models
                             THEN 'Receipt'
                              END AS PaymentType,
                              'CO' AS DocStatus ,
-                            ' ' as TrxNo , PM.VA009_Name, INV.DateAcct, PAY.DueDate
+                            ' ' as TrxNo , PM.VA009_Name, INV.DateAcct, PAY.DueDate,PAY.VA009_PAYMENTMETHOD_ID,PM.VA009_PaymentBaseType
                             FROM C_InvoicePaySchedule PAY
                             INNER JOIN C_Invoice INV
                             ON (PAY.C_INVOICE_id=INV.C_INVOICE_id)
@@ -4031,7 +4098,7 @@ namespace VA012.Models
                           END AS ISCONVERTED,
                         0 as C_BANKSTATEMENTLINE_ID,'Receipt' AS PaymentType,
                         'CO' AS DocStatus ,
-                        ' ' as TrxNo , PM.VA009_Name, PAY.DateAcct
+                        ' ' as TrxNo , PM.VA009_Name, PAY.DateAcct,PAY.VA009_PAYMENTMETHOD_ID,PM.VA009_PaymentBaseType
                         FROM C_Order PAY
                         LEFT JOIN C_DocType DT
                         ON (PAY.C_DocTypeTarget_ID=DT.C_DocType_ID)
@@ -4129,7 +4196,7 @@ namespace VA012.Models
                             THEN 'Payment'
                             END AS PaymentType,
                             BS.DocStatus AS DocStatus ,
-                              ' '  as TrxNo , '' as VA009_Name, CS.DateAcct
+                              ' '  as TrxNo , '' as VA009_Name, CS.DateAcct,0 as VA009_PAYMENTMETHOD_ID,'' as VA009_PaymentBaseType
                         FROM C_CashLine PAY 
                         INNER JOIN C_Cash CS
                         ON (CS.C_CASH_ID=PAY.C_CASH_ID)
@@ -4249,6 +4316,8 @@ namespace VA012.Models
                             _payment.DueDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[i]["DueDate"]);
                             _payment.DueAmt = DisplayType.GetNumberFormat(DisplayType.Amount).GetFormatAmount(_ds.Tables[0].Rows[i]["PAYMENTAMOUNT"], ctx.GetContext("#ClientLanguage"));
                         }
+                        _payment.PaymentMethodId = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["VA009_PAYMENTMETHOD_ID"]);
+                        _payment.PaymentBaseType = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA009_PaymentBaseType"]);
 
                         //if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
                         //{
@@ -4515,7 +4584,7 @@ namespace VA012.Models
         /// <returns>List of Charge</returns>
         public List<ChargeProp> GetCharge(Ctx ctx, string searchText, string voucherType, int bankAcct)
         {
-         List<ChargeProp> _lstcharge = new List<ChargeProp>();
+            List<ChargeProp> _lstcharge = new List<ChargeProp>();
             //var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID() + " AND UPPER(Name) like UPPER('%" + searchText + "%')";
             //Bug639--  Get charge Name AS  Value_Name        
             var _sql = "SELECT Value ||'_' ||Name AS Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' " +
@@ -4610,9 +4679,9 @@ namespace VA012.Models
                         Where C_BankAccountDoc.IsActive='Y' 
                         AND C_BankAccountDoc.PaymentRule='S' 
                         AND C_BankAccount.ChkNoAutoControl = 'Y' 
-                        AND EndChkNumber != (CurrentNext-1)
+                        AND C_BankAccountDoc.EndChkNumber != (C_BankAccountDoc.CurrentNext-1)
                         AND C_BankAccountDoc.VA009_PaymentMethod_ID = " + _paymentMethod + @"
-                        AND C_BankAccountDoc.C_BankAccount_ID=" + _bankAcct;
+                        AND C_BankAccountDoc.C_BankAccount_ID=" + _bankAcct + " ORDER BY C_BankAccountDoc.Priority ASC";
             //int bankAcctDoc_ID = Util.GetValueOfInt(DB.ExecuteScalar(sql, null, trx));
             //Used DataSet in place of Execute Scalar to get all values from one query
             DataSet _ds = DB.ExecuteDataset(sql, null, trx);
@@ -4639,8 +4708,9 @@ namespace VA012.Models
         /// <param name="_formData">List fo Form Data</param>
         /// <param name="_trx">Transaction</param>
         /// <param name="eftCheckNo">bank statement line eftcheck no</param>
+        /// <param name="overrideAutoCheck">check whether check to override or not </param>
         /// <returns>either DocNo or Error Msg(string type Value)</returns>
-        public string CreatePaymentFromSchedule(Ctx ctx, List<StatementProp> _formData, Trx _trx, string eftCheckNo)
+        public string CreatePaymentFromSchedule(Ctx ctx, List<StatementProp> _formData, Trx _trx, string eftCheckNo, bool overrideAutoCheck)
         {
             //Get Transaction
             //Trx trx = Trx.GetTrx("Payment_" + DateTime.Now.ToString("yyMMddHHmmssff"));
@@ -4810,7 +4880,7 @@ namespace VA012.Models
                         if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0 && !string.IsNullOrEmpty(eftCheckNo))
                         {
                             if (_pay.Get_ColumnIndex("IsOverrideAutoCheck") >= 0)
-                                _pay.Set_Value("IsOverrideAutoCheck", true);
+                                _pay.Set_Value("IsOverrideAutoCheck", overrideAutoCheck);
                         }
 
 
@@ -4938,7 +5008,7 @@ namespace VA012.Models
                         if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0 && !string.IsNullOrEmpty(eftCheckNo))
                         {
                             if (_pay.Get_ColumnIndex("IsOverrideAutoCheck") >= 0)
-                                _pay.Set_Value("IsOverrideAutoCheck", true);
+                                _pay.Set_Value("IsOverrideAutoCheck", overrideAutoCheck);
                         }
                         //Set auto CheckNo
                         string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"select VA009_PAYMENTBASETYPE from VA009_PAYMENTMETHOD where VA009_PAYMENTMETHOD_ID=" + Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"])));
@@ -6947,7 +7017,7 @@ namespace VA012.Models
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
             //here Cash and On Credit is not into consideration
-            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE NOT IN ('B','P') AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ")";
+            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID,VA009_PaymentBaseType FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE NOT IN ('B','P') AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ") ORDER BY VA009_NAME";
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "VA009_PaymentMethod", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
 
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
@@ -6958,6 +7028,7 @@ namespace VA012.Models
                     obj = new ChargeProp();
                     obj.chargeID = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["VA009_PAYMENTMETHOD_ID"]);
                     obj.name = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA009_NAME"]);
+                    obj.PaymentBaseType = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA009_PaymentBaseType"]);
                     _list.Add(obj);
                 }
             }
@@ -6990,8 +7061,44 @@ namespace VA012.Models
             }
             return _list;
         }
+        /// <summary>
+        /// Author: VA230
+        /// Get List of Bank Accounts
+        /// </summary>
+        /// <param name="bankId">bank id</param>
+        /// <returns>List of Bank Accounts</returns>
+        public List<BankAccountsList> GetBankAccount(Ctx ctx, int bankId)
+        {
+            List<BankAccountsList> bankList = new List<BankAccountsList>();
+            string _sql = @"SELECT C_BankAccount.C_BANKACCOUNT_ID,C_BankAccount.ACCOUNTNO,C_BankAccount.C_CURRENCY_ID,C.STDPRECISION,C_BankAccount.AD_Org_ID FROM C_BankAccount C_BankAccount 
+                            INNER JOIN C_Currency C ON(C.C_Currency_ID = C_BankAccount.C_Currency_ID) WHERE C_BankAccount.ISACTIVE = 'Y' AND C_BankAccount.C_BANK_ID =" + bankId;
+            //Added MRole Check
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_BankAccount", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+            DataSet ds = DB.ExecuteDataset(_sql, null, null);
+            if (ds != null && ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    BankAccountsList list = new BankAccountsList();
+                    list.BankAccountId = Util.GetValueOfInt(ds.Tables[0].Rows[i]["C_BANKACCOUNT_ID"]);
+                    list.AccountNo = Util.GetValueOfString(ds.Tables[0].Rows[i]["ACCOUNTNO"]);
+                    list.CurrencyId = Util.GetValueOfInt(ds.Tables[0].Rows[i]["C_CURRENCY_ID"]);
+                    list.StdPrecision = Util.GetValueOfInt(ds.Tables[0].Rows[i]["STDPRECISION"]);
+                    list.OrgId = Util.GetValueOfInt(ds.Tables[0].Rows[i]["AD_Org_ID"]);
+                    bankList.Add(list);
+                }
+            }
+            return bankList;
+        }
     }
-
+    public class BankAccountsList
+    {
+        public int BankAccountId { get; set; }
+        public string AccountNo { get; set; }
+        public int CurrencyId { get; set; }
+        public int StdPrecision { get; set; }
+        public int OrgId { get; set; }
+    }
     public class TaxRate
     {
         public int C_Tax_ID { get; set; }
@@ -7151,6 +7258,11 @@ namespace VA012.Models
         public string _errorMsg { get; set; }
         public string _txtCheckNum { get; set; }
         public bool _isAutoCheck { get; set; }
+        public int _ctrlTrxOrg { get; set; }
+        public bool _autoCheckControlled { get; set; }
+        public string _EftOrManualCheckNo { get; set; }
+        public bool _OverrideAutoCheck { get; set; }
+
         // public List<GetScheduleProp> _getSchedules { get; set; }
     }
     public class PaymentProp
@@ -7181,6 +7293,8 @@ namespace VA012.Models
         public DateTime? DateAcct { get; set; }
         public DateTime? DueDate { get; internal set; }
         public string DueAmt { get; internal set; }
+        public int PaymentMethodId { get; set; }
+        public string PaymentBaseType { get; set; }
     }
     public class StatementLineProp
     {
@@ -7215,6 +7329,7 @@ namespace VA012.Models
     {
         public int chargeID { get; set; }
         public string name { get; set; }
+        public string PaymentBaseType { get; set; }
     }
     //public class GetScheduleProp
     //{
