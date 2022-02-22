@@ -1472,7 +1472,7 @@ namespace VA012.Models
                         AND C_BankAccount.ChkNoAutoControl = 'Y' 
                         AND C_BankAccountDoc.EndChkNumber != (C_BankAccountDoc.CurrentNext-1)
                         AND C_BankAccountDoc.VA009_PaymentMethod_ID = " + payMethod + @"
-                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id + " AND C_BankAccountDoc.EndChkNumber != (C_BankAccountDoc.CurrentNext-1) ORDER BY C_BankAccountDoc.Priority ASC";
+                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id + " ORDER BY C_BankAccountDoc.Priority ASC";
                 //Used DataSet in place of Execute Scalar to get all values from one query
                 _ds = DB.ExecuteDataset(sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0 && Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BankAccountDoc_ID"]) > 0)
@@ -7071,7 +7071,7 @@ namespace VA012.Models
         {
             List<BankAccountsList> bankList = new List<BankAccountsList>();
             string _sql = @"SELECT C_BankAccount.C_BANKACCOUNT_ID,C_BankAccount.ACCOUNTNO,C_BankAccount.C_CURRENCY_ID,C.STDPRECISION,C_BankAccount.AD_Org_ID FROM C_BankAccount C_BankAccount 
-                            INNER JOIN C_Currency C ON C.C_Currency_ID = C_BankAccount.C_Currency_ID WHERE C_BankAccount.ISACTIVE = 'Y' AND C_BankAccount.C_BANK_ID =" + bankId;
+                            INNER JOIN C_Currency C ON(C.C_Currency_ID = C_BankAccount.C_Currency_ID) WHERE C_BankAccount.ISACTIVE = 'Y' AND C_BankAccount.C_BANK_ID =" + bankId;
             //Added MRole Check
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_BankAccount", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
             DataSet ds = DB.ExecuteDataset(_sql, null, null);
