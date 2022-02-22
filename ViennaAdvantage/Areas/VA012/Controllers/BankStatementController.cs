@@ -1128,7 +1128,7 @@ namespace VA012.Controllers
 
         /// <summary>
         /// Check module prefix
-        /// Author:Rakesh (VA228)
+        /// Author:Rakesh (VA230)
         /// </summary>
         /// <param name="prefix">module prefix</param>
         /// <returns>1/0</returns>
@@ -1136,6 +1136,23 @@ namespace VA012.Controllers
         {
             int CountVA034 = Env.IsModuleInstalled(prefix) ? 1 : 0;
             return Json(JsonConvert.SerializeObject(CountVA034), JsonRequestBehavior.AllowGet);
+        }
+        /// <summary>
+        /// Author: VA230
+        /// Get List of Bank Accounts
+        /// </summary>
+        /// <param name="bankId">bank id</param>
+        /// <returns>List of Bank Accounts</returns>
+        public JsonResult GetBankAccount(int bankId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetBankAccount(ctx, bankId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
     }
 }

@@ -1547,12 +1547,6 @@
             },
 
             loadBank: function () {
-
-                //var _sql = "SELECT NAME,C_BANK_ID FROM C_BANK WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                //var _sql = "SELECT NAME,C_BANK_ID FROM C_Bank WHERE ISACTIVE='Y'";
-
-                //_sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Bank", true, false);
-                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBank);
                 //get Bank's from Controller and append to bank list dropdown
                 //fetch IsOwnBank is true those bank only will get
                 $.ajax({
@@ -1572,13 +1566,9 @@
                     _cmbBank.append("<option value=0 ></option>");
                     if (_ds != null) {
                         for (var i = 0; i < _ds.length; i++) {
-                            //_cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bank_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
                             _cmbBank.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + ">" + _ds[i].Name + "</option>");
                         }
                     }
-                    //_ds.dispose();
-                    //_ds = null;
-                    //_sql = null;
                     _cmbBank.prop('selectedIndex', 0);
                     if (C_BANK_ID > 0) {
                         _cmbBank.val(C_BANK_ID).prop('selected', true);
@@ -1586,28 +1576,31 @@
                         // _cmbBank.trigger('change');
                     }
                     loadFunctions.loadBankAccount();
-
-
                 }
             },
+            /**VA230:Get Bank Account detail like Currency,precision based on bank selected */
             loadBankAccount: function () {
-
-                //VA230:Get Bank Account detail like Currency,precision
-                var _sql = "SELECT B.ACCOUNTNO,B.C_BANKACCOUNT_ID,B.C_CURRENCY_ID,C.STDPRECISION,B.AD_Org_ID FROM C_BANKACCOUNT B"
-                    + " INNER JOIN C_Currency C ON C.C_Currency_ID = B.C_Currency_ID"
-                    + " WHERE B.ISACTIVE = 'Y' AND B.C_BANK_ID =" + _cmbBank.val();
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccount);
-                function callbackloadBankAccount(_ds) {
-                    _cmbBankAccount.html("");
-                    _cmbBankAccount.append("<option value=0 ></option>");
-                    if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbBankAccount.append("<option orgid=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.ad_org_id) + " stdprecision=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.stdprecision) + " currencyid=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_currency_id) + " value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bankaccount_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.accountno) + "</option>");
+                $.ajax({
+                    url: VIS.Application.contextUrl + "BankStatement/GetBankAccount",
+                    type: "GET",
+                    datatype: "json",
+                    contentType: "application/json; charset=utf-8",
+                    data: ({ bankId: _cmbBank.val() }),
+                    success: function (data) {
+                        if (data != null && data != "") {
+                            data = $.parseJSON(data);
+                            callbackloadBankAccount(data);
                         }
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                });
+                function callbackloadBankAccount(data) {
+                    _cmbBankAccount.html("");
+                    _cmbBankAccount.append("<option value=0 ></option>");
+                    if (data != null) {
+                        for (var i = 0; i < data.length; i++) {
+                            _cmbBankAccount.append("<option orgid=" + VIS.Utility.Util.getValueOfInt(data[i].OrgId) + " stdprecision=" + VIS.Utility.Util.getValueOfInt(data[i].StdPrecision) + " currencyid=" + VIS.Utility.Util.getValueOfInt(data[i].CurrencyId) + " value=" + VIS.Utility.Util.getValueOfInt(data[i].BankAccountId) + ">" + VIS.Utility.encodeText(data[i].AccountNo) + "</option>");
+                        }
+                    }
                     _cmbBankAccount.prop('selectedIndex', 0);
                     if (C_BANKACCOUNT_ID > 0) {
                         _cmbBankAccount.val(C_BANKACCOUNT_ID).prop('selected', true);
@@ -1911,22 +1904,6 @@
                     _cmbBankAccount.trigger('change');
                 }
             },
-            loadNewStatementFormData: function () {
-                newRecordForm.loadPayment();
-                //newRecordForm.loadCurrency();
-                newRecordForm.loadCashLine();
-                _lstPayments.html("");
-                newRecordForm.scheduleRefresh();
-                newRecordForm.prepayRefresh();
-                newRecordForm.refreshForm();
-                _paymentPageNo = 1;
-                storepaymentdata = [];
-                loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
-                _statementLinesList = [];
-                _lstStatement.html("");
-                _statementPageNo = 1;
-                childDialogs.loadStatement(_statementID);
-            },
             paymentScroll: function () {
                 //handled scrolling issue
                 _paymentPageCount = 0;
@@ -2222,7 +2199,9 @@
                     drop: function (event, ui) {
 
                         if (($(ui.draggable)).data('uid') > 0) {
-
+                            //VA230:Get payment method base type and payment methodid
+                            _PaymentBaseType = VIS.Utility.Util.getValueOfString($(ui.draggable).attr('paymentbasetype'));
+                            _PaymentMethodId = VIS.Utility.Util.getValueOfInt($(ui.draggable).attr('paymentmethodid'));
 
                             if (_cmbTransactionType.val() == "CO") {
                                 if (_cmbVoucherMatch.val() == "C") {
@@ -2337,12 +2316,50 @@
                                         //_txtTrxAmt.trigger('change');
                                         /*change by pratap*/
                                         loadFunctions.setInvoiceAndBPartner(($(ui.draggable)).data('uid'), "IS");
-                                        //get and set the PaymentMethod Value to the field
-                                        if (_ds[0]._paymentMethod_Id) {
-                                            _txtPaymentMethod.val(_ds[0]._paymentMethod_Id).prop("selected", true);
-                                        }
-                                        else {
-                                            _txtPaymentMethod.val(0).prop("selected", true);
+                                        //VA230:Set payment method based on eft checkno and when line is not reconciled
+                                        if (!_reconciledLine && _EftOrManualCheckNo) {
+                                            //Hide payment method whose payment base type is other than check
+                                            $(_txtPaymentMethod[0]).children('option').each(function () { //loop through payment method options
+                                                if ($(this).attr('paymentbasetype') == "S") {
+                                                    $(this).show();
+                                                } else {
+                                                    $(this).hide();
+                                                }
+                                            });
+                                            //get current selected payment method before making change
+                                            var selectedPaymentMethod = _txtPaymentMethod.val();
+                                            //if no payment method seleted
+                                            if (selectedPaymentMethod == "0") {
+                                                //If payment basetype is check of selected record
+                                                if (_PaymentBaseType == "S") {
+                                                    _txtPaymentMethod.val(_ds[0]._paymentMethod_Id).prop("selected", true);
+                                                    _txtPaymentMethod.removeClass("va012-mandatory");
+                                                }
+                                            } else {
+                                                //get current selected payment base type of payment method before making change
+                                                var selectedBaseType = VIS.Utility.Util.getValueOfString($('option:selected', _txtPaymentMethod).attr('paymentbasetype'));
+                                                //If current seleted payment base type is check
+                                                if (selectedBaseType == 'S') {
+                                                     //When current and previous selected payment base type are same then set methodid
+                                                     //If current selected record payment base type is other than check then consider previous selected payment method and do not make any change
+                                                    if (_PaymentBaseType == selectedBaseType) {
+                                                        _txtPaymentMethod.val(_ds[0]._paymentMethod_Id).prop("selected", true);
+                                                        _txtPaymentMethod.removeClass("va012-mandatory");
+                                                    }
+                                                } else { //If payment method selected other than check reset payment field / manual payment method selection
+                                                    _txtPaymentMethod.val(0).prop("selected", true);
+                                                    _txtPaymentMethod.attr("disabled", false);
+                                                    _txtPaymentMethod.addClass("va012-mandatory");
+                                                }
+                                            }
+                                        } else {
+                                            //get and set the PaymentMethod Value to the field
+                                            if (_ds[0]._paymentMethod_Id) {
+                                                _txtPaymentMethod.val(_ds[0]._paymentMethod_Id).prop("selected", true);
+                                            }
+                                            else {
+                                                _txtPaymentMethod.val(0).prop("selected", true);
+                                            }
                                         }
                                         //VA228:Do not execute autocheck functionality if EftCheckNo exists on bank statement line
                                         if (!_EftCheckNo)
@@ -4407,7 +4424,7 @@
                     if (_result._txtPaymentMethod) {
                         //VA230:When record is not reconciled and eft checkno exists
                         if (!_reconciledLine && !_result._autoCheckControlled && _result._txtCheckNum) {
-                            //Hide payment method whose payment base type is other than check
+                            //Hide payment method whose payment base type of payment method is other than check
                             $(_txtPaymentMethod[0]).children('option').each(function () { //loop through options
                                 if ($(this).attr('paymentbasetype') == "S") {
                                     $(this).show();
@@ -4415,10 +4432,12 @@
                                     $(this).hide();
                                 }
                             });
+                            //get current selected payment method before making change
                             var selectedPaymentMethod = _txtPaymentMethod.val();
+                            //if no payment method seleted
                             if (selectedPaymentMethod == "0") {
-                                //If payment basetype is check of selected record
-                                if (_PaymentBaseType == "S") {
+                                //If payment basetype is check of selected record or clicked on edit event of statement line
+                                if (_PaymentBaseType == "S" || _PaymentBaseType == null) {
                                     _txtPaymentMethod.val(_result._txtPaymentMethod).prop("selected", true);
                                     _txtPaymentMethod.removeClass("va012-mandatory");
                                     if (!_result._ctrlPayment) {
@@ -4429,10 +4448,12 @@
                                     }
                                 }
                             } else {
+                                //get current selected payment base type of payment method before making change
                                 var selectedBaseType = VIS.Utility.Util.getValueOfString($('option:selected', _txtPaymentMethod).attr('paymentbasetype'));
-                                //If current seleted payment base type is check
+                                //If current selected payment base type is check
                                 if (selectedBaseType == 'S') {
-                                    //When current seleted and previous payment base type are same
+                                    //When current and previous selected payment base type are same then set methodid
+                                    //If current selected record payment base type is other than check then consider previous selected payment method and do not make any change
                                     if (_PaymentBaseType == selectedBaseType) {
                                         _txtPaymentMethod.val(_result._txtPaymentMethod).prop("selected", true);
                                         _txtPaymentMethod.removeClass("va012-mandatory");
@@ -4443,13 +4464,13 @@
                                             _txtPaymentMethod.attr("disabled", true);
                                         }
                                     }
-                                } else {
+                                } else { //If payment method selected other than check reset payment field / manual payment method selection
                                     _txtPaymentMethod.val(0).prop("selected", true);
                                     _txtPaymentMethod.attr("disabled", false);
                                     _txtPaymentMethod.addClass("va012-mandatory");
                                 }
                             }
-                        } else {
+                        } else {//Reset payment method if no eft checkno present
                             //Show all payment method
                             $(_txtPaymentMethod[0]).find("option").show();
                             _txtPaymentMethod.val(_result._txtPaymentMethod).prop("selected", true);
@@ -4463,7 +4484,7 @@
                         }
                     }
                     else {
-                        //Show all payment method
+                        //Show all payment method in case reconciled line
                         $(_txtPaymentMethod[0]).find("option").show();
                         _txtPaymentMethod.val(0).prop("selected", true);
                         _txtPaymentMethod.attr("disabled", false);
@@ -5373,8 +5394,6 @@
                 newRecordForm.getNewRecordDesign();
                 newRecordForm.getNewRecordControls();
                 newRecordForm.loadCurrency();
-                //VA230:Not in use
-                //newRecordForm.loadPaymentMethod();
                 newRecordForm.loadVoucherMatch();
                 newRecordForm.loadContraType();
                 newRecordForm.loadCashBook();
@@ -5494,7 +5513,6 @@
                         _btnNewRecord.removeClass("vis vis-plus");
                         _btnNewRecord.addClass("fa fa-minus");
                         _btnNewRecord.attr("title", "Collapse");
-                        //newRecordForm.refreshForm();
                     }
                     else {
                         $_formNewRecord.hide()
@@ -5926,13 +5944,7 @@
                     if (VIS.Utility.Util.getValueOfInt(_txtPaymentMethod.val()) > 0) {
                         //Rakesh(VA230):Get auto checkno and payment base type/Addded voucher/match type new parameter
                         var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: _txtPaymentMethod.val(), _InvSchdleList: _scheduleList, voucherMatch: _cmbVoucherMatch.val() });
-                        //VA230:If EFT checkno exists on bank statement line and previous payment basetype is check and does not match with current selected payment method basetype
-                        if (_txtCheckNum.val() != "" && _PaymentBaseType == "S" && _getPayMethodList._paymentBaseType != "S") {
-                            //Reset to previous payment method id
-                            _txtPaymentMethod.val(_PaymentMethodId);
-                            VIS.ADialog.info("VA012_PaymentMethodMismatch1", null, "", "");
-                            return;
-                        }
+                        //VA230:If payment basetype of selected payment method is check
                         if (_getPayMethodList._paymentBaseType == "S") {
                             _divCheckNum.show();
                             //If Eft CheckNo exists give preference to eft checkno

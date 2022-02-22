@@ -1462,16 +1462,17 @@ namespace VA012.Models
             string _DocBaseType = null;
             DataSet _ds = null;
             //VA230:Get checkno when voucher match type selected
-            if (voucherMatch == "V") {
+            if (voucherMatch == "V")
+            {
                 //get Bank Account document record on respective condition
                 sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext FROM 
                             C_BankAccountDoc C_BankAccountDoc INNER JOIN C_BankAccount C_BankAccount ON (C_BankAccount.C_BankAccount_ID = C_BankAccountDoc.C_BankAccount_ID)
-                        Where C_BankAccountDoc.IsActive='Y' 
+                        WHERE C_BankAccountDoc.IsActive='Y' 
                         AND C_BankAccountDoc.PaymentRule='S' 
                         AND C_BankAccount.ChkNoAutoControl = 'Y' 
-                        AND EndChkNumber != (CurrentNext-1)
+                        AND C_BankAccountDoc.EndChkNumber != (C_BankAccountDoc.CurrentNext-1)
                         AND C_BankAccountDoc.VA009_PaymentMethod_ID = " + payMethod + @"
-                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id;
+                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id + " AND C_BankAccountDoc.EndChkNumber != (C_BankAccountDoc.CurrentNext-1) ORDER BY C_BankAccountDoc.Priority ASC";
                 //Used DataSet in place of Execute Scalar to get all values from one query
                 _ds = DB.ExecuteDataset(sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0 && Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BankAccountDoc_ID"]) > 0)
@@ -1503,7 +1504,7 @@ namespace VA012.Models
                 _obj._paymentBaseType = _PaymentBaseType;
                 return _obj;
             }
-            
+
             //get PaymentMethod,BaseType and DocBaseType if PaymentMethod is zero otherwise get CheckNo along with paymentMethod
             sql = @"SELECT dt.DocBaseType,pm.VA009_PaymentBaseType, pay.VA009_PaymentMethod_ID FROM C_Invoice inv
                     INNER JOIN C_InvoicePaySchedule pay ON inv.C_Invoice_ID=pay.C_Invoice_ID
@@ -1534,12 +1535,12 @@ namespace VA012.Models
                 //get Bank Account document record on respective condition
                 sql = @"SELECT C_BankAccountDoc.C_BankAccountDoc_ID, C_BankAccountDoc.CurrentNext FROM 
                             C_BankAccountDoc C_BankAccountDoc INNER JOIN C_BankAccount C_BankAccount ON (C_BankAccount.C_BankAccount_ID = C_BankAccountDoc.C_BankAccount_ID)
-                        Where C_BankAccountDoc.IsActive='Y' 
+                        WHERE C_BankAccountDoc.IsActive='Y' 
                         AND C_BankAccountDoc.PaymentRule='S' 
                         AND C_BankAccount.ChkNoAutoControl = 'Y' 
-                        AND EndChkNumber != (CurrentNext-1)
+                        AND C_BankAccountDoc.EndChkNumber != (C_BankAccountDoc.CurrentNext-1)
                         AND C_BankAccountDoc.VA009_PaymentMethod_ID = " + payMethod + @"
-                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id;
+                        AND C_BankAccountDoc.C_BankAccount_ID=" + bnkAct_Id + " ORDER BY C_BankAccountDoc.Priority ASC";
                 //Used DataSet in place of Execute Scalar to get all values from one query
                 _ds = DB.ExecuteDataset(sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0 && Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BankAccountDoc_ID"]) > 0)
@@ -2380,7 +2381,7 @@ namespace VA012.Models
                             if (string.IsNullOrEmpty(statementDetail._errorMsg))
                             {
                                 statementDetail._txtCheckNum = Util.GetValueOfString(DB.ExecuteScalar(@"SELECT CurrentNext FROM C_BankAccountDoc WHERE IsActive='Y' AND  
-                            C_BankAccount_ID=" + _bankAcct_Id + " AND VA009_PaymentMethod_ID=" + statementDetail._txtPaymentMethod, null, null));
+                            C_BankAccount_ID=" + _bankAcct_Id + " AND VA009_PaymentMethod_ID=" + statementDetail._txtPaymentMethod + " AND EndChkNumber != (CurrentNext-1) ORDER BY Priority ASC", null, null));
                                 statementDetail._autoCheckControlled = true;
                             }
                             else
@@ -4678,9 +4679,9 @@ namespace VA012.Models
                         Where C_BankAccountDoc.IsActive='Y' 
                         AND C_BankAccountDoc.PaymentRule='S' 
                         AND C_BankAccount.ChkNoAutoControl = 'Y' 
-                        AND EndChkNumber != (CurrentNext-1)
+                        AND C_BankAccountDoc.EndChkNumber != (C_BankAccountDoc.CurrentNext-1)
                         AND C_BankAccountDoc.VA009_PaymentMethod_ID = " + _paymentMethod + @"
-                        AND C_BankAccountDoc.C_BankAccount_ID=" + _bankAcct;
+                        AND C_BankAccountDoc.C_BankAccount_ID=" + _bankAcct + " ORDER BY C_BankAccountDoc.Priority ASC";
             //int bankAcctDoc_ID = Util.GetValueOfInt(DB.ExecuteScalar(sql, null, trx));
             //Used DataSet in place of Execute Scalar to get all values from one query
             DataSet _ds = DB.ExecuteDataset(sql, null, trx);
@@ -7060,8 +7061,44 @@ namespace VA012.Models
             }
             return _list;
         }
+        /// <summary>
+        /// Author: VA230
+        /// Get List of Bank Accounts
+        /// </summary>
+        /// <param name="bankId">bank id</param>
+        /// <returns>List of Bank Accounts</returns>
+        public List<BankAccountsList> GetBankAccount(Ctx ctx, int bankId)
+        {
+            List<BankAccountsList> bankList = new List<BankAccountsList>();
+            string _sql = @"SELECT C_BankAccount.C_BANKACCOUNT_ID,C_BankAccount.ACCOUNTNO,C_BankAccount.C_CURRENCY_ID,C.STDPRECISION,C_BankAccount.AD_Org_ID FROM C_BankAccount C_BankAccount 
+                            INNER JOIN C_Currency C ON C.C_Currency_ID = C_BankAccount.C_Currency_ID WHERE C_BankAccount.ISACTIVE = 'Y' AND C_BankAccount.C_BANK_ID =" + bankId;
+            //Added MRole Check
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_BankAccount", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+            DataSet ds = DB.ExecuteDataset(_sql, null, null);
+            if (ds != null && ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    BankAccountsList list = new BankAccountsList();
+                    list.BankAccountId = Util.GetValueOfInt(ds.Tables[0].Rows[i]["C_BANKACCOUNT_ID"]);
+                    list.AccountNo = Util.GetValueOfString(ds.Tables[0].Rows[i]["ACCOUNTNO"]);
+                    list.CurrencyId = Util.GetValueOfInt(ds.Tables[0].Rows[i]["C_CURRENCY_ID"]);
+                    list.StdPrecision = Util.GetValueOfInt(ds.Tables[0].Rows[i]["STDPRECISION"]);
+                    list.OrgId = Util.GetValueOfInt(ds.Tables[0].Rows[i]["AD_Org_ID"]);
+                    bankList.Add(list);
+                }
+            }
+            return bankList;
+        }
     }
-
+    public class BankAccountsList
+    {
+        public int BankAccountId { get; set; }
+        public string AccountNo { get; set; }
+        public int CurrencyId { get; set; }
+        public int StdPrecision { get; set; }
+        public int OrgId { get; set; }
+    }
     public class TaxRate
     {
         public int C_Tax_ID { get; set; }
