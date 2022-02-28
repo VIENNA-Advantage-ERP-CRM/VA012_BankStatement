@@ -4421,7 +4421,7 @@ namespace VA012.Models
                 + " THEN 'Y' "
                 + " ELSE 'N' "
                 + " END AS ISCONVERTED, "
-                + "  INV.DOCUMENTNO AS INVOICENO,BS.C_BANKSTATEMENT_ID,BS.DOCSTATUS,BSL.C_CASHLINE_ID, BSL.TRXNO, BSL.StatementLineDate "
+                + "  INV.DOCUMENTNO AS INVOICENO,BS.C_BANKSTATEMENT_ID,BS.DOCSTATUS,BSL.C_CASHLINE_ID, BSL.TRXNO, BSL.StatementLineDate,NVL(bsl.EftCheckNo,'') AS EftCheckNo "
                + " FROM C_BankStatementLine BSL "
                + " INNER JOIN C_BankStatement BS "
                + " ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID) "
@@ -4532,6 +4532,8 @@ namespace VA012.Models
                         _statement.trxno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["TRXNO"]);
                         //get Statement Line Date from the Statement Line
                         _statement.stmtLineDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[i]["StatementLineDate"]);
+                        //Get eft checkno
+                        _statement.EftCheckNo = Util.GetValueOfString(_ds.Tables[0].Rows[i]["EftCheckNo"]);
                         //if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
                         //{
                         //    MImage _image = new MImage(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]), null);
@@ -5011,7 +5013,8 @@ namespace VA012.Models
                                 _pay.Set_Value("IsOverrideAutoCheck", overrideAutoCheck);
                         }
                         //Set auto CheckNo
-                        string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"select VA009_PAYMENTBASETYPE from VA009_PAYMENTMETHOD where VA009_PAYMENTMETHOD_ID=" + Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"])));
+                        //VA230:Get paymentbasetype based on fromdata paymentmethodid i.e new record that we are creating
+                        string _payBaseType = Util.GetValueOfString(DB.ExecuteScalar(@"select VA009_PAYMENTBASETYPE from VA009_PAYMENTMETHOD where VA009_PAYMENTMETHOD_ID=" + Util.GetValueOfInt(_formData[0]._txtPaymentMethod)));
                         if ("S".Equals(_payBaseType))    // Check
                         {
                             _pay.SetTenderType(X_C_Payment.TENDERTYPE_Check);
@@ -7324,6 +7327,7 @@ namespace VA012.Models
         public int c_cashline_id { get; set; }
         public string trxno { get; set; }
         public DateTime? stmtLineDate { get; internal set; }
+        public string EftCheckNo { get; set; }
     }
     public class ChargeProp
     {

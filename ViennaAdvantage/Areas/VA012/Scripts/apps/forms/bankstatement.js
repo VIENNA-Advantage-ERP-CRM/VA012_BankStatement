@@ -615,32 +615,13 @@
             //Rakesh(VA228):Bind SearchControl valuechanged event
             _BPSearchControl.fireValueChanged = loadFunctions.loadDataOnBPChanged;
             _btnSearchPayment.on(VIS.Events.onTouchStartOrClick, function () {
-                _lstPayments.html("");
-                newRecordForm.scheduleRefresh();
-                newRecordForm.prepayRefresh();
-                newRecordForm.refreshForm();
-                _paymentPageNo = 1;
-                //Used to handle the Scrolling for Transactions
-                _paymentPageCount = 0;
-                _paymentPAGESIZE = 50;
-                _paymentPageSizeInc = 1;
-                storepaymentdata = [];
-                loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                //VA230:Load only middle grid payment/prepay order/invoiceschedule/contra data
+                loadFunctions.loadAndResetPaymentData();
             });
             _txtSearchPayment.keypress(function (e) {
                 if (e.which == 13) {
-
-                    _lstPayments.html("");
-                    newRecordForm.scheduleRefresh();
-                    newRecordForm.prepayRefresh();
-                    newRecordForm.refreshForm();
-                    _paymentPageNo = 1;
-                    //Used to handle the Scrolling for Transactions
-                    _paymentPageCount = 0;
-                    _paymentPAGESIZE = 50;
-                    _paymentPageSizeInc = 1;
-                    storepaymentdata = [];
-                    loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                    //VA230:Load only middle grid payment/prepay order/invoiceschedule/contra data
+                    loadFunctions.loadAndResetPaymentData();
                 }
             });
         };
@@ -669,13 +650,8 @@
                 newRecordForm.scheduleRefresh();
                 newRecordForm.prepayRefresh();
                 newRecordForm.refreshForm();
-                _paymentPageNo = 1;
-                //Used to handle the Scrolling for Transactions
-                _paymentPageCount = 0;
-                _paymentPAGESIZE = 50;
-                _paymentPageSizeInc = 1;
-                storepaymentdata = [];
-                loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                //VA230:Load only middle grid payment/invoiceschedule/contra data
+                loadFunctions.loadAndResetPaymentData();
             },
             loadFormDesign: function () {
 
@@ -2340,8 +2316,8 @@
                                                 var selectedBaseType = VIS.Utility.Util.getValueOfString($('option:selected', _txtPaymentMethod).attr('paymentbasetype'));
                                                 //If current seleted payment base type is check
                                                 if (selectedBaseType == 'S') {
-                                                     //When current and previous selected payment base type are same then set methodid
-                                                     //If current selected record payment base type is other than check then consider previous selected payment method and do not make any change
+                                                    //When current and previous selected payment base type are same then set methodid
+                                                    //If current selected record payment base type is other than check then consider previous selected payment method and do not make any change
                                                     if (_PaymentBaseType == selectedBaseType) {
                                                         _txtPaymentMethod.val(_ds[0]._paymentMethod_Id).prop("selected", true);
                                                         _txtPaymentMethod.removeClass("va012-mandatory");
@@ -2362,7 +2338,7 @@
                                             }
                                         }
                                         //VA228:Do not execute autocheck functionality if EftCheckNo exists on bank statement line
-                                        if (!_EftCheckNo)
+                                        if (!_EftOrManualCheckNo)
                                             //call change event of Payment Method
                                             _txtPaymentMethod.trigger("change");
                                     }
@@ -3085,9 +3061,19 @@
                     }
                 });
                 return _status;
+            },
+            /**VA230:Load and reset mid grid payment data */
+            loadAndResetPaymentData: function () {
+                //VA230:Load only middle grid payment/prepay order/invoiceschedule/contra data
+                _lstPayments.html("");
+                _paymentPageNo = 1;
+                //Used to handle the Scrolling for Transactions
+                _paymentPageCount = 0;
+                _paymentPAGESIZE = 50;
+                _paymentPageSizeInc = 1;
+                storepaymentdata = [];
+                loadFunctions.loadPayments(_cmbBankAccount.val() == null ? 0 : _cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
             }
-
-
         };
         this.vetoablechange = function (evt) {
             if (evt.propertyName == "VA012_txtDifference_" + $self.windowNo + "") {
@@ -3910,8 +3896,8 @@
                                         + '<div class="va012-form-check">'
                                         + '<div class="va012-pay-text">'
                                         + ' <p>' + VIS.Utility.encodeText(data[i].description) + '</p>'
-                                        //+ ' <span>' + VIS.Utility.encodeText(data[i].bpgroup) + '</span>'
-                                        + '<span>' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
+                                        + ' <span title="' + VIS.Msg.getMsg("VA012_CheckNo") + '">' + VIS.Utility.encodeText(data[i].EftCheckNo) + '</span>'
+                                        + '<span title="' + VIS.Msg.getMsg("DocumentNo") + '">' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
                                         + ' </div>'
                                         + '</div>'
                                         + ' <!-- end of form-group -->'
@@ -5021,6 +5007,7 @@
                                 //get the amount and push into scheduleamount list
                                 _scheduleAmount.push(this.options[this.selectedIndex].getAttribute('paymentamount'));
                                 loadPaymentScheduleItems();
+                                setPaymentMethodAndCheckNo();
                                 loadFunctions.setInvoiceAndBPartner(_cmbPaymentSchedule.val(), "IS");
                             }
                             else {
@@ -5031,7 +5018,6 @@
                     }
 
                 });
-
                 function loadPaymentScheduleItems() {
                     var _addItem = "";
                     var paySumAmt = 0;
@@ -5067,14 +5053,19 @@
                     else {
                         setCurrencyandConversionType(null);
                     }
+                }
+                /**
+                 * Author:VA230
+                 * Set payment method and checkno */
+                function setPaymentMethodAndCheckNo() {
                     //set the Payment Method and Check No
                     if (_scheduleList.length > 0) {
-                        //VA230:Addded voucher/match type new parameter
-                        var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: 0, _InvSchdleList: _scheduleList, voucherMatch: _cmbVoucherMatch.val() });
-                        if (_getPayMethodList) {
-                            _txtPaymentMethod.val(_getPayMethodList._paymentMethod_Id).prop("selected", true);
-                            //VA230:Do not execute autocheck functionality if EftCheckNo exists on bank statement line
-                            if (!_EftCheckNo) {
+                        //VA230:Do not execute get autocheck functionality if EftCheckNo exists on bank statement line
+                        if (!_EftOrManualCheckNo) {
+                            //VA230:Addded voucher/match type new parameter
+                            var _getPayMethodList = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetAutoCheckNo", { bnkAct_Id: _cmbBankAccount.val(), _PayMethod: 0, _InvSchdleList: _scheduleList, voucherMatch: _cmbVoucherMatch.val() });
+                            if (_getPayMethodList) {
+                                _txtPaymentMethod.val(_getPayMethodList._paymentMethod_Id).prop("selected", true);
                                 if (_getPayMethodList._checkNo) {
                                     _txtCheckNum.val(_getPayMethodList._checkNo);
                                 }
