@@ -4879,7 +4879,7 @@ namespace VA012.Models
                         _pay.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_INVOICEPAYSCHEDULE_ID"]));
 
                         //Rakesh:Override autocheckno. with eftcheck number if exists on bankstatementline
-                        if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0 && !string.IsNullOrEmpty(eftCheckNo))
+                        if (!string.IsNullOrEmpty(eftCheckNo))
                         {
                             if (_pay.Get_ColumnIndex("IsOverrideAutoCheck") >= 0)
                                 _pay.Set_Value("IsOverrideAutoCheck", overrideAutoCheck);
@@ -5007,7 +5007,7 @@ namespace VA012.Models
                         //_pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
 
                         //VA230:Override autocheckno. with eftcheck number if exists on bankstatementline
-                        if (Util.GetValueOfInt(_formData[0]._bankStatementLineID) > 0 && !string.IsNullOrEmpty(eftCheckNo))
+                        if (!string.IsNullOrEmpty(eftCheckNo))
                         {
                             if (_pay.Get_ColumnIndex("IsOverrideAutoCheck") >= 0)
                                 _pay.Set_Value("IsOverrideAutoCheck", overrideAutoCheck);
