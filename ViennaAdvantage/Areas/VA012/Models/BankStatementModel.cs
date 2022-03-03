@@ -2787,6 +2787,11 @@ namespace VA012.Models
                             }
                             //Clear ConversionType
                             _obj.Set_Value("C_ConversionType_ID", 0);
+                            //VA230:Clear invoice reference
+                            if (_obj.GetC_Invoice_ID() > 0)
+                            {
+                                _obj.SetC_Invoice_ID(0);
+                            }
 
                             _obj.SetVA012_IsMatchingConfirmed(false);
                             if (!_obj.Save())
@@ -6081,15 +6086,15 @@ namespace VA012.Models
                 {
                     return "VA012_BPNotSame";
                 }
-                //not required this conditions
-                //if (_amount < 0 && (_inputDocBaseType == "ARI" || _inputDocBaseType == "APC"))
-                //{
-                //    //return "VA012_SelectAPI_ARC";
-                //}
-                //else if (_amount > 0 && (_inputDocBaseType == "API" || _inputDocBaseType == "ARC"))
-                //{
-                //    //return "VA012_SelectARI_APC";
-                //}
+                //VA230:Match payment type while reconciling reciept/payment with bank statementline
+                if (_amount < 0 && (_inputDocBaseType == "ARI" || _inputDocBaseType == "APC"))
+                {
+                    return "VA012_SelectAPI";
+                }
+                else if (_amount > 0 && (_inputDocBaseType == "API" || _inputDocBaseType == "ARC"))
+                {
+                    return "VA012_SelectARI";
+                }
                 //else if (_amount == 0)
                 //{
                 //    // return "VA012_StatementAmountZero";
