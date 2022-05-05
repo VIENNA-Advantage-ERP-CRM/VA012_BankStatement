@@ -191,10 +191,10 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="ViennaBase">
-      <HintPath>..\..\..\Framework Breakage Dlls\ViennaBase.dll</HintPath>
+      <HintPath>..\..\Framework Breakage Dlls\ViennaBase.dll</HintPath>
     </Reference>
     <Reference Include="VIS">
-      <HintPath>..\..\..\Framework Breakage Dlls\VIS.dll</HintPath>
+      <HintPath>..\..\Framework Breakage Dlls\VIS.dll</HintPath>
     </Reference>
     <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
