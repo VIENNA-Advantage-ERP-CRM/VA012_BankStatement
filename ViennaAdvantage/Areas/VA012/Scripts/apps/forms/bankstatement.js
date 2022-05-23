@@ -1440,7 +1440,7 @@
                 _lstStatement = $root.find("#VA012_lstStatement_" + $self.windowNo);
                 _lstPayments = $root.find("#VA012_lstPayments_" + $self.windowNo);
                 //to handling busyIdicator for paymentList
-                _paymentLists = $root.find("#_paymentLists" + $self.windowNo);
+                _paymentLists = $root.find("#VA012_paymentList_" + $self.windowNo);
                 _secReconciled = $root.find("#VA012_secReconciled_" + $self.windowNo);
                 _secUnreconciled = $root.find("#VA012_secUnreconciled_" + $self.windowNo);
                 // _divVoucher = $root.find("#VA012_divVoucher_" + $self.windowNo);
