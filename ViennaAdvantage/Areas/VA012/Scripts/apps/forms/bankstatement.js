@@ -1440,7 +1440,7 @@
                 _lstStatement = $root.find("#VA012_lstStatement_" + $self.windowNo);
                 _lstPayments = $root.find("#VA012_lstPayments_" + $self.windowNo);
                 //to handling busyIdicator for paymentList
-                _paymentLists = $root.find("#VA012_paymentList_" + $self.windowNo);
+                _paymentLists = $root.find("#_paymentLists" + $self.windowNo);
                 _secReconciled = $root.find("#VA012_secReconciled_" + $self.windowNo);
                 _secUnreconciled = $root.find("#VA012_secUnreconciled_" + $self.windowNo);
                 // _divVoucher = $root.find("#VA012_divVoucher_" + $self.windowNo);
@@ -8068,14 +8068,14 @@
             return $root;
         };
         this.setSize = function () {
-            //_table.height($(".va012-main-container").height());
             // Set Form Design, on refresh with mutiple tabs
             var h = $("#VA012_mainContainer_" + $self.windowNo).height();
             if (h == 0) {
                 h = window.innerHeight - (40 + 43 + 24); // window height - (Header panel - Title Panel - Footer panel)
             }
             _table.height(h);
-
+            loadFunctions.setPaymentListHeight();
+            childDialogs.setStatementListHeight();
         };
         this.disposeComponents = function () {
             $self = null;
@@ -8159,6 +8159,10 @@
 
     bankStatement.prototype.sizeChanged = function (height) {
         _table.height(height);
+    };
+
+    bankStatement.prototype.refresh = function () {
+        this.setSize();
     };
 
     bankStatement.prototype.dispose = function () {
