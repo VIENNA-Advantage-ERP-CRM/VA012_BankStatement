@@ -69,15 +69,14 @@ namespace VA012.Controllers
         /// </summary>
         /// <param name="fields">fields</param>
         /// <returns>ChargeType</returns>
-        public JsonResult GetChargeType(String C_Charge_ID)
+        public JsonResult GetChargeType(String fields)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
-                string sql = @"SELECT DTD001_ChargeType FROM C_Charge WHERE  C_Charge_ID=" + C_Charge_ID;
-                var res = DB.ExecuteScalar(sql).ToString();
-                retJSON = JsonConvert.SerializeObject(res);
+                StatementModel statement = new StatementModel();
+                retJSON = JsonConvert.SerializeObject(statement.GetChargeMethod(ctx, fields));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
