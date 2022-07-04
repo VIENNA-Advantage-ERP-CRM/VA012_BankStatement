@@ -51,11 +51,44 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="BaseLibrary">
+      <HintPath>..\..\..\..\BreakageDLL\BaseLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="CoreLibrary">
+      <HintPath>..\..\..\..\BreakageDLL\CoreLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="DevExpress.Web.v14.2">
       <HintPath>DLL\DevExpress.Web.v14.2.dll</HintPath>
     </Reference>
     <Reference Include="DotNetOpenAuth">
       <HintPath>DLL\DotNetOpenAuth.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis">
+      <HintPath>DLL\Google.Apis.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis.Authentication.OAuth2">
+      <HintPath>DLL\Google.Apis.Authentication.OAuth2.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis.Calendar.v3">
+      <HintPath>DLL\Google.Apis.Calendar.v3.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis.Tasks.v1">
+      <HintPath>DLL\Google.Apis.Tasks.v1.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Authenticator">
+      <HintPath>DLL\Google.Authenticator.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.GData.Client">
+      <HintPath>DLL\Google.GData.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.GData.Contacts">
+      <HintPath>DLL\Google.GData.Contacts.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.GData.Extensions">
+      <HintPath>DLL\Google.GData.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.GData.YouTube">
+      <HintPath>DLL\Google.GData.YouTube.dll</HintPath>
     </Reference>
     <Reference Include="HtmlWebHelper, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -93,6 +126,9 @@
       <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="ModelLibrary">
+      <HintPath>..\..\..\..\BreakageDLL\ModelLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="Mono.Security">
       <HintPath>DLL\Mono.Security.dll</HintPath>
     </Reference>
@@ -190,14 +226,20 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="VAModelAD">
+      <HintPath>..\..\..\..\BreakageDLL\VAModelAD.dll</HintPath>
+    </Reference>
     <Reference Include="ViennaBase">
-      <HintPath>..\..\Framework Breakage Dlls\ViennaBase.dll</HintPath>
+      <HintPath>..\..\..\..\BreakageDLL\ViennaBase.dll</HintPath>
     </Reference>
     <Reference Include="VIS">
-      <HintPath>..\..\Framework Breakage Dlls\VIS.dll</HintPath>
+      <HintPath>..\..\..\..\BreakageDLL\VIS.dll</HintPath>
     </Reference>
     <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
+    </Reference>
+    <Reference Include="XModel">
+      <HintPath>..\..\..\..\BreakageDLL\XModel.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
