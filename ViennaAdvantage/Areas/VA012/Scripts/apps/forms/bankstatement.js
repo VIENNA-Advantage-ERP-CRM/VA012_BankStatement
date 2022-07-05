@@ -7698,7 +7698,7 @@
             refreshForm: function (refreshFields) {
                 $_formNewRecord.attr("data-uid", 0);
                 //when it is statementNo onchange event then it will skipt to call getMaxStatement
-                if (event == undefined || evegnt.currentTarget.id != _btnStatementNo[0].id) {
+                if (event == undefined || event.currentTarget.id != _btnStatementNo[0].id) {
                     loadFunctions.getMaxStatement("LO");
                 }
                 //Statement Date set readonly false
