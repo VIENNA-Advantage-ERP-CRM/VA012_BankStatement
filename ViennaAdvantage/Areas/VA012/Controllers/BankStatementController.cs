@@ -50,7 +50,6 @@ namespace VA012.Controllers
             _className = Util.GetValueOfString(DB.ExecuteScalar(_sql));
 
 
-
             if (_className == null || _className == "" || _className == string.Empty)
             {
                 BankStatementDataImport obj = new BankStatementDataImport();
@@ -335,7 +334,8 @@ namespace VA012.Controllers
             string _sql = "";
             if (_cmbTransactionType == "PY")
             {
-                count = Util.GetValueOfInt(DB.ExecuteScalar("SELECT COUNT(*) FROM AD_ModuleInfo WHERE Prefix='VA034_' AND IsActive='Y'"));
+                //Count of VA034_ module Info
+                count = Env.IsModuleInstalled("VA034_") ? 1 : 0;
                 if (count > 0)
                     _sql = "SELECT C_BPARTNER_ID,C_INVOICE_ID,VA034_DepositSlipNo FROM C_Payment WHERE C_PAYMENT_ID IN(" + _paymentID + ")";
                 else
@@ -359,9 +359,10 @@ namespace VA012.Controllers
                 if (_ds.Tables[0].Rows.Count > 0)
                 {
                     if (count > 0)
-                        _sendBackData = "{\"_bPartnerID\":\"" + _ds.Tables[0].Rows[0]["C_BPARTNER_ID"] + "\",\"_invoiceID\":\"" + _ds.Tables[0].Rows[0]["C_INVOICE_ID"] + "\",\"VA034_DepositSlipNo\":\"" + _ds.Tables[0].Rows[0]["VA034_DepositSlipNo"] + "\"}";
+                        _sendBackData = "{\"_bPartnerID\":\"" + _ds.Tables[0].Rows[0]["C_BPARTNER_ID"] + "\",\"_invoiceID\":\"" + _ds.Tables[0].Rows[0]["C_INVOICE_ID"] + "\",\"VA034_DepositSlipNo\":\"" + _ds.Tables[0].Rows[0]["VA034_DepositSlipNo"] + "\",\"Count\":\"" + count + "\"}";
                     else
-                        _sendBackData = "{\"_bPartnerID\":\"" + _ds.Tables[0].Rows[0]["C_BPARTNER_ID"] + "\",\"_invoiceID\":\"" + _ds.Tables[0].Rows[0]["C_INVOICE_ID"] + "\"}";
+                        _sendBackData = "{\"_bPartnerID\":\"" + _ds.Tables[0].Rows[0]["C_BPARTNER_ID"] + "\",\"_invoiceID\":\"" + _ds.Tables[0].Rows[0]["C_INVOICE_ID"] + "\",\"Count\":\"" + count + "\"}";
+
                 }
                 _ds.Dispose();
             }
@@ -1151,6 +1152,129 @@ namespace VA012.Controllers
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations _model = new StatementOperations();
                 retJSON = JsonConvert.SerializeObject(_model.GetBankAccount(ctx, bankId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Author: VA323
+        /// Get List of Bank Charge
+        /// </summary>
+        /// <returns>List of Bank charge</returns>
+        public JsonResult GetBankCharge()
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetBankCharge(ctx));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Author: VA323
+        /// Get Window for zoom
+        /// </summary>
+        /// <returns>window id</returns>
+        public JsonResult GetWindowforzoom()
+        {
+            string retJSON = "";
+            int window_Id = 0;
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                string sql = @"SELECT ad_window_id FROM ad_window WHERE name = 'Bank Statement'";
+                window_Id = Convert.ToInt32(DB.ExecuteScalar(sql));
+                retJSON = JsonConvert.SerializeObject(window_Id);
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+        /// <summary>
+        /// Author: VA323
+        /// Get Window for zoom
+        /// </summary>
+        /// <param name="_ctrlPayment">_ctrlPayment</param>
+        /// <returns>window id</returns>
+        public JsonResult GetTrxNoforVoucher(int _ctrlPayment)
+        {
+            string retJSON = "";
+            string res = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                string sql = @"select trxno from C_Payment where C_Payment_ID=" + _ctrlPayment;
+                res = DB.ExecuteScalar(sql).ToString();
+                retJSON = JsonConvert.SerializeObject(res);
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get the Statement No
+        /// </summary>
+        /// <param name="_cmbBankAccount">bank Account id</param>
+        /// <returns>List Of Statement No</returns>
+        public JsonResult LoadStatementNo(int _cmbBankAccount)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetStatementNolist(ctx, _cmbBankAccount));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Bank Account Classes
+        /// </summary>
+        /// <param name="_cmbBankAccount">bank Account id</param>
+        /// <returns>List Bank Account Classes</returns>
+        public JsonResult GetBankAccountClasses(int _cmbBankAccount)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.LoadListofStatementclass(ctx, _cmbBankAccount));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Cash Book
+        /// </summary>
+        /// <returns>List of Cashbook</returns>
+        public JsonResult LoadCashbook()
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetCashBook(ctx));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Get Payment Methods
+        /// </summary>
+        /// <param name="AD_Client">AD_Client id</param>
+        /// <param name="AD_Org">AD_Org id</param>
+        /// <returns>List of Payment Method</returns>
+        public JsonResult LoadPaymentMethod(int AD_Client, int AD_Org)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                retJSON = JsonConvert.SerializeObject(_model.GetPaymentMethodList(ctx, AD_Client, AD_Org));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
