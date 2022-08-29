@@ -52,10 +52,10 @@
       <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="BaseLibrary">
-      <HintPath>..\..\..\..\BreakageDLL\BaseLibrary.dll</HintPath>
+      <HintPath>DLL\BaseLibrary.dll</HintPath>
     </Reference>
     <Reference Include="CoreLibrary">
-      <HintPath>..\..\..\..\BreakageDLL\CoreLibrary.dll</HintPath>
+      <HintPath>DLL\CoreLibrary.dll</HintPath>
     </Reference>
     <Reference Include="DevExpress.Web.v14.2">
       <HintPath>DLL\DevExpress.Web.v14.2.dll</HintPath>
@@ -118,6 +118,12 @@
     <Reference Include="KJS, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>DLL\KJS.dll</HintPath>
+    </Reference>
+    <Reference Include="Market">
+      <HintPath>DLL\Market.dll</HintPath>
+    </Reference>
+    <Reference Include="MarketSvc">
+      <HintPath>DLL\MarketSvc.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.6.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
@@ -227,7 +233,10 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="VAModelAD">
-      <HintPath>..\..\..\..\BreakageDLL\VAModelAD.dll</HintPath>
+      <HintPath>DLL\VAModelAD.dll</HintPath>
+    </Reference>
+    <Reference Include="VAWorkflow">
+      <HintPath>DLL\VAWorkflow.dll</HintPath>
     </Reference>
     <Reference Include="ViennaBase">
       <HintPath>..\..\..\..\BreakageDLL\ViennaBase.dll</HintPath>
@@ -235,11 +244,14 @@
     <Reference Include="VIS">
       <HintPath>..\..\..\..\BreakageDLL\VIS.dll</HintPath>
     </Reference>
+    <Reference Include="VISLogic">
+      <HintPath>DLL\VISLogic.dll</HintPath>
+    </Reference>
     <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
     </Reference>
     <Reference Include="XModel">
-      <HintPath>..\..\..\..\BreakageDLL\XModel.dll</HintPath>
+      <HintPath>DLL\XModel.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
