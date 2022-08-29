@@ -35,6 +35,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BaseLibrary">
+      <HintPath>..\..\..\..\BreakageDLL\BaseLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="CoreLibrary">
+      <HintPath>..\..\..\..\BreakageDLL\CoreLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="ModelLibrary">
+      <HintPath>..\..\..\..\BreakageDLL\ModelLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,6 +51,12 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="VAModelAD">
+      <HintPath>..\..\..\..\BreakageDLL\VAModelAD.dll</HintPath>
+    </Reference>
+    <Reference Include="XModel">
+      <HintPath>..\..\..\..\BreakageDLL\XModel.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using CoreLibrary.DataBase;
 using Newtonsoft.Json;
 using VA012.Models;
 using VAdvantage.Utility;
@@ -58,6 +59,24 @@ namespace VA012.Controllers
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementModel statement = new StatementModel();
                 retJSON = JsonConvert.SerializeObject(statement.GetPaymentMethod(ctx, fields));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// GetCharge Type for contra
+        /// Author:Meghraj(VA323)
+        /// </summary>
+        /// <param name="fields">fields</param>
+        /// <returns>ChargeType</returns>
+        public JsonResult GetChargeType(String fields)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementModel statement = new StatementModel();
+                retJSON = JsonConvert.SerializeObject(statement.GetChargeMethod(ctx, fields));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }

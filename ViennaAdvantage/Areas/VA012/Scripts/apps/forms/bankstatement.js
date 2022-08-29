@@ -150,7 +150,8 @@
         var $_ctrlBusinessPartner = null;
         var _bPartnerSelectedVal = null;
         //End Business Partner Control Variables
-
+        //Bank statement window Id for zoom
+        var ad_window_Id = 0;
         //Invoice Control Variables
         var _lookupInvoice = null;
         var $_ctrlInvoice = null;
@@ -1305,7 +1306,6 @@
                         if (data != null && data != "") {
                             data = $.parseJSON($.parseJSON(data));
                             if (_cmbTransactionType == "PY") {
-
                                 if (data._invoiceID > 0) {
                                     $_ctrlInvoice.setValue(data._invoiceID, false, true);
                                 }
@@ -1318,8 +1318,9 @@
                                 else {
                                     $_ctrlBusinessPartner.setValue();
                                 }
-                                var count = VIS.DB.executeScalar("SELECT COUNT(*) FROM AD_ModuleInfo WHERE Prefix='VA034_' AND IsActive='Y'");
-                                if (count == 1) {
+                                //var count = VIS.DB.executeScalar("SELECT COUNT(*) FROM AD_ModuleInfo WHERE Prefix='VA034_' AND IsActive='Y'");
+                                //Get count for AD_ModuleInfo VA034_
+                                if (data.count == 1) {
                                     if (data.VA034_DepositSlipNo != "") {
                                         _txtVoucherNo.val(data.VA034_DepositSlipNo);
                                     }
@@ -3409,42 +3410,49 @@
                 function loadBankAccountClasses() {
 
                     // var _sql = "SELECT VA012_BANKSTATEMENTCLASSNAME as NAME, VA012_BANKSTATEMENTCLASS_ID FROM VA012_BANKSTATEMENTCLASS WHERE C_BANKACCOUNT_ID = " + _cmbBankAccount.val();
-                    var _sql = " SELECT BSC.VA012_BANKSTATEMENTCLASSNAME AS NAME, CONCAT(CONCAT(SC.NAME,'_'),VA012_BANKSTATEMENTCLASS_ID) AS VA012_BANKSTATEMENTCLASS_ID FROM VA012_BankStatementClass BSC INNER JOIN VA012_STATEMENTCLASS SC ON (BSC.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID) WHERE C_BANKACCOUNT_ID = " + _cmbBankAccount.val();
-                    var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountClasses);
+                    //var _sql = " SELECT BSC.VA012_BANKSTATEMENTCLASSNAME AS NAME, CONCAT(CONCAT(SC.NAME,'_'),VA012_BANKSTATEMENTCLASS_ID) AS VA012_BANKSTATEMENTCLASS_ID FROM VA012_BankStatementClass BSC INNER JOIN VA012_STATEMENTCLASS SC ON (BSC.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID) WHERE C_BANKACCOUNT_ID = " + _cmbBankAccount.val();
+                    //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountClasses);
+
+                    VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetBankAccountClasses", { _cmbBankAccount: _cmbBankAccount.val() }, callbackloadBankAccountClasses);
                     function callbackloadBankAccountClasses(_ds) {
                         STAT_cmbBankAccountClassName.html("");
                         STAT_cmbBankAccountClassName.append("<option value=0 ></option>");
                         if (_ds != null) {
-                            for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                                var str = _ds.tables[0].rows[i].cells.va012_bankstatementclass_id;
+                            //for (var i = 0; i < _ds.tables[0].rows.length; i++) {
+                            //    var str = _ds.tables[0].rows[i].cells.va012_bankstatementclass_id;
+                            //    //var id = str.substr(str.indexOf("ImportStatement_") + 16);
+                            //    //STAT_cmbBankAccountClassName.append("<option value=" + VIS.Utility.Util.getValueOfInt(str) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            //    STAT_cmbBankAccountClassName.append("<option value=" + str + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            //}
+                            for (var i = 0; i < _ds.length; i++) {
                                 //var id = str.substr(str.indexOf("ImportStatement_") + 16);
                                 //STAT_cmbBankAccountClassName.append("<option value=" + VIS.Utility.Util.getValueOfInt(str) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
-                                STAT_cmbBankAccountClassName.append("<option value=" + str + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                                STAT_cmbBankAccountClassName.append("<option value=" + _ds[i].Value + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                             }
                         }
-                        _ds.dispose();
-                        _ds = null;
-                        _sql = null;
+                        //_ds.dispose();
+                        //_ds = null;
+                        //_sql = null;
                         STAT_cmbBankAccountClassName.prop('selectedIndex', 0);
                     }
                 };
 
                 function loadBankAccountCharges() {
-                    var _sql = "SELECT C_CHARGE_ID, NAME FROM C_CHARGE WHERE ISACTIVE = 'Y' AND AD_CLIENT_ID = " + VIS.Env.getCtx().getAD_Client_ID() + " AND ROWNUM = 1 ORDER BY NAME  ";
-                    var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountCharges);
+                    //var _sql = "SELECT C_CHARGE_ID, NAME FROM C_CHARGE WHERE ISACTIVE = 'Y' AND AD_CLIENT_ID = " + VIS.Env.getCtx().getAD_Client_ID() + " AND ROWNUM = 1 ORDER BY NAME  ";
+                    //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountCharges);
+                    VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetBankCharge", null, callbackloadBankAccountCharges);
                     function callbackloadBankAccountCharges(_ds) {
                         ////STAT_cmbBankAccountCharges.html("");
                         ////STAT_cmbBankAccountCharges.append("<option value=0 ></option>");
                         if (_ds != null) {
-                            for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                                // STAT_cmbBankAccountCharges.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
-                                Bank_Charge_ID = VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id);
+                            // STAT_cmbBankAccountCharges.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            // Bank_Charge_ID = VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id);
+                            Bank_Charge_ID = VIS.Utility.Util.getValueOfInt(_ds[0].chargeID);
 
-                            }
                         }
-                        _ds.dispose();
-                        _ds = null;
-                        _sql = null;
+                        // _ds.dispose();
+                        //  _ds = null;
+                        //_sql = null;
                         //STAT_cmbBankAccountCharges.prop('selectedIndex', 0);
                     }
                 };
@@ -3815,7 +3823,6 @@
                             data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _statementPageNo: _statementPageNo, _PAGESIZE: _PAGESIZE, _SEARCHREQUEST: _SEARCHREQUEST }),
                             success: function (data) {
                                 if (data != null && data != "") {
-
                                     callbackloadStatement(data);
                                     busyIndicator($(_lstStatement), false, "inherit");
                                 }
@@ -4067,14 +4074,16 @@
 
                     ////
 
-                    var sql = "select ad_window_id from ad_window where name = 'Bank Statement'";
-                    var ad_window_Id = 0;
+                    //var sql = "select ad_window_id from ad_window where name = 'Bank Statement'";
+                    if (ad_window_Id <= 0) {
+                        ad_window_Id = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetWindowforzoom");
+                    }
                     try {
-                        var dr = VIS.DB.executeDataReader(sql);
-                        if (dr.read()) {
-                            ad_window_Id = dr.getInt(0);
-                        }
-                        dr.dispose();
+                        //var dr = VIS.DB.executeDataReader(sql);
+                        //if (dr>0) {
+                        //    ad_window_Id = dr;
+                        //}
+                        //dr.dispose();
                         if (ad_window_Id > 0) {
                             var zoomQuery = new VIS.Query();
                             zoomQuery.addRestriction("C_BankStatement_ID", VIS.Query.prototype.EQUAL, _cbankStatementID);
@@ -4305,7 +4314,8 @@
                     if (_result._ctrlPayment > 0) {
                         $_ctrlPayment.setValue(_result._ctrlPayment, false, true);
                         if (_txtVoucherNo.val() == "") {
-                            var Voucher = VIS.Utility.Util.getValueOfString(VIS.DB.executeScalar("select trxno from C_Payment where C_Payment_ID=" + _result._ctrlPayment));
+                            // var Voucher = VIS.Utility.Util.getValueOfString(VIS.DB.executeScalar("select trxno from C_Payment where C_Payment_ID=" + _result._ctrlPayment));
+                            var Voucher = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetTrxNoforVoucher", { _ctrlPayment: _result._ctrlPayment });
                             _txtVoucherNo.val(Voucher);
                         }
                         _openingFromEdit = false;
@@ -4617,20 +4627,20 @@
 
                     // Change here for only picking statementes which are not completed, closed or Voided
                     // Lokesh Chauhan
-                    var _sql = "Select Cb.C_Bankstatement_Id, CB.NAME,Cb.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BankStatement CB INNER JOIN C_BankStatementLine CBL ON (cbl.C_BANKSTATEMENT_ID = Cb.C_BANKSTATEMENT_ID) Where Cb.Isactive = 'Y' And Cb.Ad_Client_Id = " + VIS.Env.getCtx().getAD_Client_ID() + " And Cb.C_Bankaccount_Id = " + _cmbBankAccount.val() + " And Cb.Docstatus NOT IN  ('CO','CL','VO') GROUP BY CB.C_BANKSTATEMENT_ID,Cb.Docstatus, CB.NAME"
-
-                    var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankStatementNo);
+                    ////var _sql = "Select Cb.C_Bankstatement_Id, CB.NAME,Cb.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BankStatement CB INNER JOIN C_BankStatementLine CBL ON (cbl.C_BANKSTATEMENT_ID = Cb.C_BANKSTATEMENT_ID) Where Cb.Isactive = 'Y' And Cb.Ad_Client_Id = " + VIS.Env.getCtx().getAD_Client_ID() + " And Cb.C_Bankaccount_Id = " + _cmbBankAccount.val() + " And Cb.Docstatus NOT IN  ('CO','CL','VO') GROUP BY CB.C_BANKSTATEMENT_ID,Cb.Docstatus, CB.NAME"
+                   //// var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankStatementNo);
+                    VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadStatementNo", { _cmbBankAccount: _cmbBankAccount.val() }, callbackloadBankStatementNo);
                     function callbackloadBankStatementNo(_ds) {
                         _cmbStatementNo.html("");
                         _cmbStatementNo.append("<option value=0 >-</option>");
                         if (_ds != null) {
-                            for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                                _cmbStatementNo.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_bankstatement_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                            for (var i = 0; i < _ds.length; i++) {
+                                _cmbStatementNo.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                             }
                         }
-                        _ds.dispose();
-                        _ds = null;
-                        _sql = null;
+                        //_ds.dispose();
+                        //_ds = null;
+                        //_sql = null;
                     }
                 };
 
@@ -7142,20 +7152,22 @@
 
             loadPaymentMethod: function () {
 
-                var _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PAYMENTMETHOD WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadPaymentMethod);
+                //var _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PAYMENTMETHOD WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
+                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadPaymentMethod);
+                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadPaymentMethod", { AD_Client: VIS.Env.getCtx().getAD_Client_ID(), AD_Org: VIS.Env.getCtx().getAD_Org_ID() }, callbackloadPaymentMethod);
+
                 function callbackloadPaymentMethod(_ds) {
                     _cmbPaymentMethod.html("");
                     _cmbPaymentMethod.append("<option value=0 ></option>");
 
                     if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbPaymentMethod.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.va009_paymentmethod_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.va009_name) + "</option>");
+                        for (var i = 0; i < _ds.length; i++) {
+                            _cmbPaymentMethod.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                         }
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                    //_ds.dispose();
+                    //_ds = null;
+                    //_sql = null;
                     _cmbPaymentMethod.prop('selectedIndex', 0);
                 }
             },
@@ -7178,19 +7190,20 @@
             loadCashBook: function () {
 
                 // var _sql = "SELECT NAME,C_CashBook_ID FROM C_CashBook WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID() + " AND C_CURRENCY_ID=" + _currencyId;
-                var _sql = "SELECT NAME,C_CashBook_ID FROM C_CashBook WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadCashBook);
+                //var _sql = "SELECT NAME,C_CashBook_ID FROM C_CashBook WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
+                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadCashBook);
+                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadCashbook", null, callbackloadCashBook);
                 function callbackloadCashBook(_ds) {
                     _cmbCashBook.html("");
                     _cmbCashBook.append("<option value=0 ></option>");
                     if (_ds != null) {
-                        for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                            _cmbCashBook.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_cashbook_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
+                        for (var i = 0; i < _ds.length; i++) {
+                            _cmbCashBook.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                         }
                     }
-                    _ds.dispose();
-                    _ds = null;
-                    _sql = null;
+                    //_ds.dispose();
+                    //_ds = null;
+                    //_sql = null;
                     _cmbCashBook.prop('selectedIndex', 0);
                 }
             },
