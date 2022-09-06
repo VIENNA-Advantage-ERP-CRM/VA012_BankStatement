@@ -1077,7 +1077,7 @@
                 divRow10 = $('<div class="row va012-fl-padd" style="width:102%">');
                 divRow10Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCurrency_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Currency") + '<sup id="Ast_Currency' + $self.windowNo + '" style="color: red;">*</sup></label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Currency") + '<sup style="color: red;">*</sup></label>'
                     + '                                      <select tabindex="10" id="VA012_txtCurrency_' + $self.windowNo + '">'
                     + '                                      </select>'
                     + '                                  </div>'
@@ -1086,7 +1086,7 @@
                     + '                              <!-- end of col -->');
                 divRow10Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divConversionType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ConversionType") + '<sup id="Ast_ConversionType_' + $self.windowNo + '" style="color: red;">*</sup></label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ConversionType") + '<sup style="color: red;">*</sup></label>'
                     + '                                      <select tabindex="11" id="VA012_txtConversionType_' + $self.windowNo + '">'
                     + '                                      </select>'
                     + '                                  </div>'
@@ -3198,7 +3198,6 @@
                             }
                         }
                         _txtCurrency.removeClass("va012-mandatory");
-                        $('#Ast_Currency_' + $self.windowNo).hide();
                         _txtCurrency.attr("disabled", false);
                         _txtConversionType.val(result.conversionTypeId).prop('selected', true);
                     }
@@ -3214,11 +3213,9 @@
             else {
                 _txtCurrency.prop('selectedIndex', 0);
                 _txtCurrency.addClass("va012-mandatory");
-                $('#Ast_Currency_' + $self.windowNo).show();
                 _txtCurrency.attr("disabled", false);
                 _txtConversionType.prop('selectedIndex', 0);
                 _txtConversionType.addClass("va012-mandatory");
-                $('#Ast_ConversionType_' + $self.windowNo).show();
             }
         };
 
@@ -4381,7 +4378,6 @@
                             }
                         }
                         _txtCurrency.removeClass("va012-mandatory");
-                        $('#Ast_Currency_' + $self.windowNo).hide();
                         _txtCurrency.attr("disabled", false);
                     }
                     //Incase of Contra also should update the ConversionType if not found ConversionType then the field is mandatory
@@ -5498,7 +5494,6 @@
                     if (_cmbVoucherMatch.val() == "V") {
                         _txtCurrency.val(_currencyId).prop("selected", true);
                         _txtCurrency.removeClass("va012-mandatory");
-                        $('#Ast_Currency_' + $self.windowNo).hide();
                         _txtCurrency.attr("disabled", true);
                     }
                     else {
@@ -5506,7 +5501,6 @@
                         //make it as no selected value
                         _txtCurrency.val(0).prop("selected", true);
                         _txtCurrency.addClass("va012-mandatory");
-                        $('#Ast_Currency_' + $self.windowNo).show();
                         _txtCurrency.attr("disabled", false);
                     }
                 }
@@ -5877,7 +5871,6 @@
                     }
                     else {
                         _cmbDifferenceType.removeClass("va012-mandatory");
-                        $('#Ast_DifferenceType_' + $self.windowNo).hide();
                     }
 
                     loadFunctions.setPaymentListHeight();
@@ -5969,11 +5962,9 @@
                 _txtCurrency.on('change', function () {
                     if (VIS.Utility.Util.getValueOfInt(_txtCurrency.val()) > 0) {
                         _txtCurrency.removeClass("va012-mandatory");
-                        $('#Ast_Currency_' + $self.windowNo).hide();
                     }
                     else {
                         _txtCurrency.addClass("va012-mandatory");
-                        $('#Ast_Currency_' + $self.windowNo).show();
                     }
                 });
 
@@ -6161,7 +6152,6 @@
                     }
                     else {
                         _txtConversionType.addClass("va012-mandatory");
-                        $('#Ast_ConversionType_' + $self.windowNo).show();
                     }
                 });
 
@@ -6792,7 +6782,6 @@
                                 }
                                 else {
                                     _txtDifference.getControl().removeClass('va012-mandatory');
-                                    $('#Ast_Difference_' + $self.windowNo).hide();
                                 }
                                 //disable the Options Except the Charge incase of Payment or Contra if txtDifference is non-zero
                                 _divDifferenceType.find("*").prop("disabled", false);
@@ -6818,7 +6807,6 @@
                                 }
                                 else {
                                     _cmbDifferenceType.removeClass('va012-mandatory');
-                                    $('#Ast_DifferenceType_' + $self.windowNo).hide();
                                 }
                             }
                             else {
@@ -7725,7 +7713,6 @@
                         //add the Mandatory class to CUrrency and Conversion fields
                         _txtCurrency.addClass("va012-mandatory");
                         _txtConversionType.addClass("va012-mandatory");
-                        $('#Ast_ConversionType_' + $self.windowNo).show();
                     }
                     else {
                         busyIndicator($root, false, "absolute");
@@ -7826,7 +7813,6 @@
                 _txtCheckDate.removeClass("va012-mandatory");
                 _EftCheckNo = null, _OverrideAutoCheck = false, _EftOrManualCheckNo = null, _PaymentBaseType = null, _PaymentMethodId = 0;
                 $_ctrlTrxOrg.setValue();
-                $('#Ast_DifferenceType_' + $self.windowNo).hide();
             },
             scheduleRefresh: function () {
                 _scheduleList = [];
@@ -7909,7 +7895,6 @@
                 //add mandatory class to Payment Method field
                 _txtPaymentMethod.addClass("va012-mandatory");
                 _txtCurrency.addClass("va012-mandatory");
-                $('#Ast_Currency_' + $self.windowNo).show();
                 //C_ConversionType_ID
                 _txtConversionType.prop('selectedIndex', 0);
                 //_txtConversionType disabled false 
@@ -8096,7 +8081,6 @@
                 } else {
                     _txtConversionType.val(0);
                     _txtConversionType.addClass('va012-mandatory');
-                    $('#Ast_ConversionType_' + $self.windowNo).show();
                 }
             }
         };
