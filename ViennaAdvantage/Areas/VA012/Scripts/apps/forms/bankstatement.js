@@ -274,7 +274,6 @@
             });
 
             _cmbBank.on('change', function () {
-
                 _cmbBankAccount.val('0');
                 loadFunctions.loadBankAccount();
             });
@@ -836,7 +835,7 @@
                 //  + '                          <div style="padding-left: 7px;padding-right: 7px;">'
                 divRow4Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
                 divRow4Col1TrxAmt = $('<div id="VA012_divTrxAmt_' + $self.windowNo + '" class="va012-form-group va012-form-data">');
-                divRow4Col1Lbl = $('<label>' + VIS.Msg.getMsg("VA012_TrxAmt") + '</label>');
+                divRow4Col1Lbl = $('<label>' + VIS.Msg.getMsg("VA012_TrxAmt") + '<sup style="color: red;">*</sup></label>');
                 _txtTrxAmt = new VIS.Controls.VAmountTextBox("VA012_txtTrxAmt_" + $self.windowNo + "", false, true, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
                 _txtTrxAmt.getControl().addClass('va012-right-align');
                 _txtTrxAmt.setValue((0).toFixed(_stdPrecision));
@@ -850,7 +849,7 @@
 
                 divRow4Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
                 divRow4Col2Diff = $('<div id="VA012_divDifference_' + $self.windowNo + '" class="va012-form-group va012-form-data">');
-                divRow4Col2DiffLbl = $('<label>' + VIS.Msg.getMsg("VA012_Difference") + '</label>');
+                divRow4Col2DiffLbl = $('<label>' + VIS.Msg.getMsg("VA012_Difference") + '<sup id="Ast_Difference_' + $self.windowNo + '" style="color: red;">*</sup></label>');
                 _txtDifference = new VIS.Controls.VAmountTextBox("VA012_txtDifference_" + $self.windowNo + "", false, true, true, 50, 100, VIS.DisplayType.Amount, VIS.Msg.getMsg("Amount"));
                 _txtDifference.getControl().addClass('va012-right-align');
                 _txtDifference.setValue(0);
@@ -866,7 +865,7 @@
                 //+ '                              <!-- end of col -->');
                 divRow4Col3 = $('<div class="col-md-4 col-sm-4 va012-padd-0">');
                 divRow4Col3DiffType = $('<div id="VA012_divDifferenceType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_DifferenceType") + '</label>'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_DifferenceType") + '<sup id="Ast_DifferenceType_' + $self.windowNo + '" style="color: red;">*</sup></label>'
                     + '                                  <select tabindex="9" id="VA012_cmbDifferenceType_' + $self.windowNo + '">'
                     + '                                  </select>'
                     + '                              </div>'
@@ -886,7 +885,7 @@
                     // + '                          <div id="VA012_divContra_' + $self.windowNo + '" style="padding-left: 7px;padding-right: 7px;">'
                     + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divContraType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ContraType") + '</label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ContraType") + '<sup id="Ast_ContraType_' + $self.windowNo + '" style="color: red;">*</sup></label></label>'
                     + '                                      <select tabindex="10" id="VA012_cmbContraType_' + $self.windowNo + '">'
                     + '                                      </select>'
                     + '                                  </div>'
@@ -901,7 +900,7 @@
                     + '                                  </div>'
 
                     + '                                  <div id="VA012_divCtrlCashLine_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CashJournalLine") + '</label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CashJournalLine") + '<sup id="Ast_CashJournalLine_' + $self.windowNo + '" style="color: red;">*</sup></label>'
                     + '                                      <div id="VA012_ctrlCashLine_' + $self.windowNo + '" ></div>'
                     + '                                  </div>'
 
@@ -937,7 +936,7 @@
                 //  + '                          <div id="VA012_divVoucher_' + $self.windowNo + '" style=" padding-left: 7px;padding-right: 7px;">'
                 divRow6Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCharge_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Charge") + '</label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Charge") + '<sup class="astric_' + $self.windowNo + '" style="color: red;">*</sup></label>'
                     + '                                      <div style=" position: relative; float: left; width: 100%; ">'
                     + '                                      <input tabindex="10" chargeid="" type="text" id="VA012_txtCharge_' + $self.windowNo + '" style=" width: 100%; ">'
                     + '                                      <img id="VA012_btnCharge_' + $self.windowNo + '" class="VA012-img-combo" alt="">'
@@ -950,7 +949,7 @@
                     + '                              <!-- end of col -->');
                 divRow6Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divTaxRate_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_TaxRate") + '</label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_TaxRate") + '<sup class="astric_' + $self.windowNo + '" style="color: red;">*</sup></label>'
                     + '                                      <select tabindex="11" id="VA012_cmbTaxRate_' + $self.windowNo + '">'
                     + '                                      </select>'
                     + '                                  </div>'
@@ -1078,7 +1077,7 @@
                 divRow10 = $('<div class="row va012-fl-padd" style="width:102%">');
                 divRow10Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCurrency_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Currency") + '</label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_Currency") + '<sup style="color: red;">*</sup></label>'
                     + '                                      <select tabindex="10" id="VA012_txtCurrency_' + $self.windowNo + '">'
                     + '                                      </select>'
                     + '                                  </div>'
@@ -1087,7 +1086,7 @@
                     + '                              <!-- end of col -->');
                 divRow10Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divConversionType_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ConversionType") + '</label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_ConversionType") + '<sup style="color: red;">*</sup></label>'
                     + '                                      <select tabindex="11" id="VA012_txtConversionType_' + $self.windowNo + '">'
                     + '                                      </select>'
                     + '                                  </div>'
@@ -1097,7 +1096,7 @@
                 // Added new fields Payment Method and CheckNo and CheckDate 
                 divRow10Col3 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divPaymentMethod_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_PaymentMethod") + '</label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_PaymentMethod") + '<sup style="color: red;">*</sup></label>'
                     + '                                      <select tabindex="16" id="VA012_txtPaymentMethod_' + $self.windowNo + '">'
                     + '                                      </select>'
                     + '                                  </div>'
@@ -1109,7 +1108,7 @@
                 divRow11 = $('<div class="row va012-fl-padd" style="width:102%">');
                 divRow11Col1 = $('<div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                                  <div id="VA012_divCheckNum_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CheckNo") + '</label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CheckNo") + '<sup style="color: red;">*</sup></label>'
                     + '                                      <input tabindex="17" id="VA012_txtCheckNum_' + $self.windowNo + '" type="text">'
                     + '                                  </div>'
                     + '                                  <!-- end of form-group -->'
@@ -1117,7 +1116,7 @@
                     + '                              <!-- end of col -->');
                 divRow11Col2 = $('<div class="col-md-4 col-sm-4 va012-padd-1">'
                     + '                                  <div id="VA012_divCheckDate_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CheckDate") + '</label>'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_CheckDate") + '<sup style="color: red;">*</sup></label>'
                     + '                                      <input tabindex="18" id="VA012_txtCheckDate_' + $self.windowNo + '" type="date" max="9999-12-31">'
                     + '                                  </div>'
                     + '                                  <!-- end of form-group -->'
@@ -1231,7 +1230,7 @@
                 divformWrap.append(divRow1).append(divRow2).append(divRow10).append(divRow11).append(divRow3).append(divRow4).append(divRow5).append(divRow6).append(divRow7).append(divRow8).append(divRow9);
 
                 //Rakesh(VA228):BP Lookup query based on client and orgazination
-                var bpValidation = "C_BPartner.IsActive='Y' AND C_BPartner.IsSummary ='N' AND C_BPartner.AD_Org_ID IN(0,@AD_Org_ID@) AND C_BPartner.AD_Client_ID = " + VIS.context.getAD_Client_ID();
+                var bpValidation = "C_BPartner.IsActive='Y' AND C_BPartner.IsSummary ='N' AND C_BPartner.AD_Org_ID IN(0,@BankAccount_Org_ID@) AND C_BPartner.AD_Client_ID = " + VIS.context.getAD_Client_ID();
                 var BPartnerLookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 3499, VIS.DisplayType.Search, "C_BPartner_ID", 0, false, bpValidation);
                 _BPSearchControl = new VIS.Controls.VTextBoxButton("C_BPartner_ID", true, false, true, VIS.DisplayType.Search, BPartnerLookUp);
 
@@ -4225,9 +4224,11 @@
                         //get the Amount in standard format
                         if (_result._txtDifference < 0) {//if the value is zero not need to field as mandatory
                             _txtDifference.getControl().addClass('va012-mandatory');
+                            $('#Ast_Difference_' + $self.windowNo).show();
                         }
                         else {
                             _txtDifference.getControl().removeClass('va012-mandatory');
+                            $('#Ast_Difference_' + $self.windowNo).hide();
                         }
                         if (_cmbVoucherMatch.val() == "C") {
                             _cmbVoucherMatch.trigger('change');
@@ -4628,7 +4629,7 @@
                     // Change here for only picking statementes which are not completed, closed or Voided
                     // Lokesh Chauhan
                     ////var _sql = "Select Cb.C_Bankstatement_Id, CB.NAME,Cb.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BankStatement CB INNER JOIN C_BankStatementLine CBL ON (cbl.C_BANKSTATEMENT_ID = Cb.C_BANKSTATEMENT_ID) Where Cb.Isactive = 'Y' And Cb.Ad_Client_Id = " + VIS.Env.getCtx().getAD_Client_ID() + " And Cb.C_Bankaccount_Id = " + _cmbBankAccount.val() + " And Cb.Docstatus NOT IN  ('CO','CL','VO') GROUP BY CB.C_BANKSTATEMENT_ID,Cb.Docstatus, CB.NAME"
-                   //// var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankStatementNo);
+                    //// var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankStatementNo);
                     VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadStatementNo", { _cmbBankAccount: _cmbBankAccount.val() }, callbackloadBankStatementNo);
                     function callbackloadBankStatementNo(_ds) {
                         _cmbStatementNo.html("");
@@ -5639,6 +5640,11 @@
                             _cmbTaxRate.prop('selectedIndex', 0);
                             _txtTaxAmount.setValue(0);
                         }
+                        _cmbContraType.removeClass("va012-mandatory");
+                        $('.astric_' + $self.windowNo).hide();
+                        $('#Ast_ContraType_' + $self.windowNo).hide();
+                        $('#Ast_DifferenceType_' + $self.windowNo).hide();
+                        $('#Ast_Difference_' + $self.windowNo).hide();
                         //set or load Currency
                         //setCurrencyVal();
                         //// _divMatch.find("*").prop("disabled", false);
@@ -5718,6 +5724,11 @@
                         _divCtrlBusinessPartner.hide();
                         _divPrepayOrder.hide();
                         _divPaymentSchedule.hide();
+                        _cmbContraType.removeClass("va012-mandatory");
+                        $('.astric_' + $self.windowNo).show();
+                        $('#Ast_ContraType_' + $self.windowNo).hide();
+                        $_ctrlCashLine.getControl().removeClass("va012-mandatory");
+                        $('#Ast_CashJournalLine_' + $self.windowNo).hide();
                         //set or load Currency
                         //setCurrencyVal();
 
@@ -5793,12 +5804,16 @@
                         }
                         _cmbTaxRate.removeClass("va012-mandatory");
                         _txtCharge.removeClass("va012-mandatory");
+                        $('.astric_' + $self.windowNo).hide();
+                        $('#Ast_ContraType_' + $self.windowNo).show();
+
                         //set or load Currency 
                         //setCurrencyVal();//not required here
                     }
                     //remove the mandatory class
                     //_cmbTaxRate.removeClass("va012-mandatory");
                     //_txtCharge.removeClass("va012-mandatory");
+
                     //VA230:Hide trx org div
                     _divTrxOrg.hide();
                     _divTrxOrg.find("*").prop("disabled", true);
@@ -5825,6 +5840,7 @@
                         if (_cmbTaxRate.val() == 0) {
                             _cmbTaxRate.addClass("va012-mandatory");
                         }
+                        $('.astric_' + $self.windowNo).show();
                     }
                     //added if _cmbVoucherMatch as Contra then it re-arrange the fields
                     else if (_cmbVoucherMatch.val() == "M" || _cmbVoucherMatch.val() == "C") {
@@ -5851,6 +5867,7 @@
                     //added condtion into existing must have Difference Amt
                     if (_cmbDifferenceType.val() <= 0 && convertAmtCulture(_txtDifference.getControl().val()) != 0) {
                         _cmbDifferenceType.addClass("va012-mandatory");
+                        $('#Ast_DifferenceType_' + $self.windowNo).show();
                     }
                     else {
                         _cmbDifferenceType.removeClass("va012-mandatory");
@@ -5871,14 +5888,22 @@
                     if (_cmbContraType.val() == "CB") {
                         _divCashBook.find("*").prop("disabled", false);
                         _divCheckNo.find("*").prop("disabled", false);
+                        $('.astric_' + $self.windowNo).hide();
+                        //_ctrlCashLine.addClass("va012-mandatory");
+                        $_ctrlCashLine.getControl().addClass("va012-mandatory");
+                        $('#Ast_CashJournalLine_' + $self.windowNo).show();
                         //_divCashBook.show();
                         // _divCheckNo.show();
+
                     }
                     else {
                         _cmbCashBook.prop('selectedIndex', 0);
                         _txtCheckNo.val("");
                         _divCashBook.find("*").prop("disabled", true);
                         _divCheckNo.find("*").prop("disabled", true);
+                        $('.astric_' + $self.windowNo).hide();
+                        $_ctrlCashLine.getControl().removeClass("va012-mandatory");
+                        $('#Ast_CashJournalLine_' + $self.windowNo).hide();
                         //_divCashBook.hide();
                         // _divCheckNo.hide();
                     }
@@ -5888,8 +5913,7 @@
 
                         _divCtrlCashLine.find("*").prop("disabled", true);
                         _divCtrlCashLine.hide();
-
-
+                        $('.astric_' + $self.windowNo).show();
                         _divVoucherNo.show();
                         _divCharge.show();
                         _divTaxRate.show();
@@ -5901,6 +5925,8 @@
                         //should be mandatory
                         _txtCharge.addClass("va012-mandatory");
                         _cmbTaxRate.addClass("va012-mandatory");
+                        $_ctrlCashLine.getControl().removeClass("va012-mandatory");
+                        $('#Ast_CashJournalLine_' + $self.windowNo).hide();
                     }
                     else if (_cmbVoucherMatch.val() == "C") {
                         _divCtrlCashLine.show();
@@ -5913,8 +5939,10 @@
                             _divTaxRate.find("*").prop("disabled", true);
                             _divTaxAmount.find("*").prop("disabled", true);
                             _divCharge.hide();
-                            _divTaxRate.hide();
+                            _divTaxRate.hide(); 
                             _divTaxAmount.hide();
+                            _txtCharge.removeClass("va012-mandatory");
+                            _cmbTaxRate.removeClass("va012-mandatory");
                         }
                         _divTaxAmount.hide();
                     }
@@ -6750,6 +6778,7 @@
                             if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) != 0) {
                                 if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtDifference.getControl().val())) < 0) {
                                     _txtDifference.getControl().addClass('va012-mandatory');//color change
+                                    $('#Ast_Difference_' + $self.windowNo).show();
                                 }
                                 else {
                                     _txtDifference.getControl().removeClass('va012-mandatory');
@@ -6774,6 +6803,7 @@
                                 //changed != to <= to check null also
                                 if (_cmbDifferenceType.val() <= 0) {
                                     _cmbDifferenceType.addClass('va012-mandatory');
+                                    $('#Ast_DifferenceType_' + $self.windowNo).show();
                                 }
                                 else {
                                     _cmbDifferenceType.removeClass('va012-mandatory');
@@ -6786,6 +6816,7 @@
                                 //call on change event after reset the value to arrange the fields accordingly
                                 _cmbDifferenceType.trigger('change');
                                 _cmbDifferenceType.removeClass('va012-mandatory');
+                                $('#Ast_DifferenceType_' + $self.windowNo).hide();
                             }
                         }
                         //get the Amount in standard format
@@ -7725,6 +7756,12 @@
                 _cmbDifferenceType.prop('selectedIndex', 0);
                 //remove the Mandatory class
                 _cmbDifferenceType.removeClass('va012-mandatory');
+                _txtDifference.getControl().removeClass('va012-mandatory');
+                $('#Ast_DifferenceType_' + $self.windowNo).hide();
+                $('#Ast_Difference_' + $self.windowNo).hide();
+                $('#Ast_CashJournalLine_' + $self.windowNo).hide();
+                $_ctrlCashLine.getControl().removeClass("va012-mandatory");
+
                 _txtDescription.val("");
                 _txtVoucherNo.val("");
                 _cmbCharge.prop('selectedIndex', 0);
@@ -7758,6 +7795,7 @@
                 this.setNewFormDefaultConversionType();
                 //add mandatory class to Payment Method field
                 _txtPaymentMethod.attr("disabled", false);
+                $('.astric_' + $self.windowNo).hide();
                 _txtPaymentMethod.addClass("va012-mandatory");
                 //Load Payment Methods
                 this.loadPaymentMethods();
@@ -7819,6 +7857,7 @@
                 _cmbDifferenceType.prop('selectedIndex', 0);
                 //remove the Mandatory class
                 _cmbDifferenceType.removeClass('va012-mandatory');
+                $('#Ast_DifferenceType_' + $self.windowNo).hide();
                 _txtDescription.val("");
                 _txtVoucherNo.val("");
                 _cmbCharge.prop('selectedIndex', 0);
@@ -7993,7 +8032,8 @@
                     if (conversionTypeId != 0) {
                         _txtConversionType.val(conversionTypeId);
                         _txtConversionType.removeClass("va012-mandatory");
-                    } else {
+                    }
+                    else {
                         _txtConversionType.val(0);
                         _txtConversionType.addClass('va012-mandatory');
                     }
