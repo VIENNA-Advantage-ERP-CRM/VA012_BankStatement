@@ -5717,8 +5717,13 @@
                         _divPaymentSchedule.find("*").prop("disabled", true);
                         _btnPaymentSchedule.css('pointer-events', 'none');
                         divRow4Col1TrxAmt.hide();
+                        _txtTrxAmt.setValue(0);
                         _divDifference.hide();
+                        _txtDifference.setValue(0);
+                        _txtDifference.getControl().removeClass('va012-mandatory');
                         _divDifferenceType.hide();
+                        _divDifferenceType.find("*").prop("disabled", true);
+                        _cmbDifferenceType.removeClass("va012-mandatory");
                         _divCtrlPayment.hide();
                         _divCtrlInvoice.hide();
                         _divCtrlBusinessPartner.hide();
@@ -5939,7 +5944,7 @@
                             _divTaxRate.find("*").prop("disabled", true);
                             _divTaxAmount.find("*").prop("disabled", true);
                             _divCharge.hide();
-                            _divTaxRate.hide(); 
+                            _divTaxRate.hide();
                             _divTaxAmount.hide();
                             _txtCharge.removeClass("va012-mandatory");
                             _cmbTaxRate.removeClass("va012-mandatory");
@@ -6324,10 +6329,6 @@
                         return;
                     }
 
-                    if (_formData[0]["_txtAmount"] == null || _formData[0]["_txtAmount"] == "" || _formData[0]["_txtAmount"] == "0" || _formData[0]["_txtAmount"] == "0.00") {
-                        VIS.ADialog.info("VA012_PleaseEnterAmount", null, "", "");
-                        return;
-                    }
                     //PaymentMethod is mandatory if transaction is not contra
                     //VA230:cashline contra check changed and transaction type not equal contra check applied_cmbVoucherMatch
                     if (VIS.Utility.Util.getValueOfInt(_formData[0]["_txtPaymentMethod"]) <= 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlCashLine"]) <= 0 && _formData[0]["_cmbVoucherMatch"] != "C") {
@@ -6361,6 +6362,21 @@
                         (_formData[0]["_cmbCharge"] == null || _formData[0]["_cmbCharge"] == "" || _formData[0]["_cmbCharge"] == "0")
                     ) {
                         VIS.ADialog.info("VA012_PleaseSelectAnyOne", null, "", "");
+                        return;
+                    }
+
+                    if (_formData[0]["_cmbVoucherMatch"] == "M" &&
+                        (_formData[0]["_ctrlInvoice"] == null || _formData[0]["_ctrlInvoice"] == "" || _formData[0]["_ctrlInvoice"] == "0") &&
+                        (_formData[0]["_ctrlPayment"] == null || _formData[0]["_ctrlPayment"] == "" || _formData[0]["_ctrlPayment"] == "0") &&
+                        (_formData[0]["_scheduleList"] == null || _formData[0]["_scheduleList"] == "") &&
+                        (_formData[0]["_ctrlOrder"] == null || _formData[0]["_ctrlOrder"] == "" || _formData[0]["_ctrlOrder"] == "0") &&
+                        (_formData[0]["_cmbCharge"] == null || _formData[0]["_cmbCharge"] == "" || _formData[0]["_cmbCharge"] == "0")) {
+                        VIS.ADialog.info("VA012_PleaseSelectAnyOne", null, "", "");
+                        return;
+                    }
+
+                    if (_formData[0]["_txtAmount"] == null || _formData[0]["_txtAmount"] == "" || _formData[0]["_txtAmount"] == "0" || _formData[0]["_txtAmount"] == "0.00") {
+                        VIS.ADialog.info("VA012_PleaseEnterAmount", null, "", "");
                         return;
                     }
 
@@ -6784,7 +6800,14 @@
                                     _txtDifference.getControl().removeClass('va012-mandatory');
                                 }
                                 //disable the Options Except the Charge incase of Payment or Contra if txtDifference is non-zero
-                                _divDifferenceType.find("*").prop("disabled", false);
+                                if (convertAmtCulture(_txtTrxAmt.getControl().val()) == 0) {
+                                    //Disable and clear difference type when transaction amount = 0
+                                    _divDifferenceType.find("*").prop("disabled", true);
+                                    _cmbDifferenceType.val("0");
+                                }
+                                else {
+                                    _divDifferenceType.find("*").prop("disabled", false);
+                                }
                                 //check StatementLine Id has a value or not incase of match drag the transaction into Unconciled Line
                                 //applied one more condition to set readonly options according to the Statement amount and Transaction amounts in case of drag into unconciled line
                                 if ((_scheduleList.length == 0 || (_scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) < Math.abs(convertAmtCulture(_txtAmount.getControl().val()))))
@@ -6801,7 +6824,7 @@
                                 }
                                 //considered _cmbDifferenceType value not zero then remove mandatory class
                                 //changed != to <= to check null also
-                                if (_cmbDifferenceType.val() <= 0) {
+                                if (_cmbDifferenceType.val() <= 0 && convertAmtCulture(_txtTrxAmt.getControl().val()) != 0) {
                                     _cmbDifferenceType.addClass('va012-mandatory');
                                     $('#Ast_DifferenceType_' + $self.windowNo).show();
                                 }
