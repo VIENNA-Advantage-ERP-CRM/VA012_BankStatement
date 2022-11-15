@@ -121,7 +121,8 @@
     <Reference Include="VAModelAD">
       <HintPath>..\ViennaAdvantageWeb\DLL\VAModelAD.dll</HintPath>
     </Reference>
-    <Reference Include="VIS">
+    <Reference Include="VIS, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ViennaAdvantageWeb\DLL\VIS.dll</HintPath>
     </Reference>
     <Reference Include="VISLogic">
