@@ -161,7 +161,6 @@ namespace VA012.Models
                 _C_BankAccount_ID = _bankaccount;
                 string AccountNo = "";
                 string BankAccountType = "";
-                int AD_Org_ID = 0;
                 //VIS317 
                 //devops 1644 
                 string _sql1 = @"SELECT AccountNo,BankAccountType, AD_Org_ID FROM C_BankAccount WHERE C_BankAccount_ID=" + _C_BankAccount_ID;
@@ -170,7 +169,7 @@ namespace VA012.Models
                 {
                     AccountNo = Util.GetValueOfString(_dat.Tables[0].Rows[0]["AccountNo"]);
                     BankAccountType = Util.GetValueOfString(_dat.Tables[0].Rows[0]["BankAccountType"]);
-                    AD_Org_ID = Util.GetValueOfInt(_dat.Tables[0].Rows[0]["AD_Org_ID"]);
+                    _AD_Org_ID = Util.GetValueOfInt(_dat.Tables[0].Rows[0]["AD_Org_ID"]);
                 }
                 int _stementID = 0;
                 _Filenames.Append(FileName + ",");
