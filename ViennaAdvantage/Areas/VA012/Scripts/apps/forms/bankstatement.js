@@ -278,7 +278,7 @@
                 loadFunctions.loadBankAccount();
             });
             _cmbBankAccount.on('change', function () {
-
+                VIS.Env.getCtx().setContext($self.windowNo, "BankAccount_ID", _cmbBankAccount.val());
                 //called loadPayment to update the data based on BankAccount
                 newRecordForm.loadPayment();
                 //newRecordForm.loadCurrency();
@@ -7345,9 +7345,11 @@
                 if (_ctrlPayment != undefined && _ctrlPayment != null) {
                     _ctrlPayment.empty();
                 }
-                //if back account is null then it's take only DocStustus
-                var status = _cmbBankAccount.val() != null ? "DocStatus IN ('CO','CL') AND C_BankAccount_ID = " + _cmbBankAccount.val() : "DocStatus IN ('CO','CL')";
-                _lookupPayment = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Payment_ID", 0, false, status);
+                //if bank account is null then it's take only DocStustus
+                //VIS_0045: DevOps Task ID: 1843 -> Not to show Reconciled payment
+                var status = VIS.Utility.Util.getValueOfInt(_cmbBankAccount.val()) != 0 ? "C_Payment.DocStatus IN ('CO','CL') AND C_Payment.IsReconciled = 'N' AND C_Payment.C_BankAccount_ID = @BankAccount_ID@" 
+                    : "C_Payment.DocStatus IN ('CO','CL') AND C_Payment.IsReconciled = 'N' ";
+                _lookupPayment = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 0, VIS.DisplayType.Search, "C_Payment_ID", 0, false, status);
                 $_ctrlPayment = new VIS.Controls.VTextBoxButton("C_Payment_ID", false, false, true, VIS.DisplayType.Search, _lookupPayment);
                 $_ctrlPayment.getControl().addClass("va012-input-size-2");
                 $_ctrlPayment.getControl().attr("tabindex", "10");
@@ -7425,7 +7427,7 @@
                     + " WHERE DT.DOCSUBTYPESO         ='PR' "
                     + "  AND ORD.DOCSTATUS             ='WP' "
                     + "  AND ORD.ISACTIVE              ='Y' "
-                    + "  AND PM.VA009_PAYMENTBASETYPE! ='B')";
+                    + "  AND PM.VA009_PAYMENTBASETYPE !='B')";
                 _lookupOrder = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Order_ID", 0, false, _orderWhere);
                 $_ctrlOrder = new VIS.Controls.VTextBoxButton("C_Order_ID", false, false, true, VIS.DisplayType.Search, _lookupOrder);
                 $_ctrlOrder.getControl().addClass("va012-input-size-2");
