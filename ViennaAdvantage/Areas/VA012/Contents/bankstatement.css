@@ -62,7 +62,7 @@ body {
 .va012-main-container {
     position: absolute;
     height: 100%;
-    background: white;
+    background: rgba(var(--v-c-common), 1);
 }
 
 .va012-left-part {
@@ -86,19 +86,20 @@ body {
 
 /*To set background color for mandatory field*/
 .va012-mandatory {
-    background-color: rgb(255, 182, 193) !important;
+    border-color: rgb(236,63,63) !important;
 }
-
-    .va012-left-title > h4 {
-        color: #fff;
-        font-size: 14px;
-        margin: 0;
-        /*float: right;*/
-        padding-top: 15px;
-        padding-bottom: 8px;
-        padding-left: 8px;
-        padding-right: 8px;
-    }
+.va012-btn-blue label {
+    margin-bottom: 0;
+}
+.va012-left-title > h4 {
+    color: #fff;
+    font-size: 1rem;
+    margin: 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
 
     .va012-left-title > img:hover {
         cursor: pointer;
@@ -126,7 +127,7 @@ body {
     }
 
     .va012-left-data > select, .va012-left-data > input {
-        border: 1px solid #fff;
+        border: 1px solid rgba(var(--v-c-common), 1);
         /*
             background-color: transparent;
             color: #fff;
@@ -224,11 +225,15 @@ body {
 }
 
 .VA012-img-combo {
-    content: url("../Images/select.png");
+    /*content: url("../Images/select.png");*/
     position: absolute;
     right: 5px;
     top: 13px;
     cursor: pointer;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid rgba(var(--v-c-on-secondary), 1);
+    display: inline-block;
 }
 
 .va012-form-wrap {
@@ -307,13 +312,20 @@ input.va012-input-size-2 {
 {
      width: 54% !important;
 }*/
-.va012-info-icon {
+.va012-info-icon,
+.va012-edit-icon {
     float: right;
     width: 31px;
     height: 31px;
-    background: url(../Images/info.png);
+    background: rgba(var(--v-c-on-secondary), .2);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    text-decoration: none !important;
 }
+
 
 .va012-inout-icon {
     float: left;
@@ -332,13 +344,6 @@ input.va012-input-size-2 {
         border: 1px solid rgba(var(--v-c-primary), 1);
     }
 
-.va012-edit-icon {
-    float: right;
-    width: 31px;
-    height: 31px;
-    background: url(../Images/edit.png);
-    cursor: pointer;
-}
 
 .va012-add-icon2 {
     margin-right: 5px;
@@ -656,7 +661,7 @@ span.va012-font-red {
     float: left;
     width: 31px;
     height: 31px;
-    background: #eee;
+    background: rgba(var(--v-c-on-secondary),.2);
     border: 1px solid rgba(var(--v-c-on-secondary),.2);
     color: rgba(var(--v-c-on-secondary),.7);
     text-align: center;
@@ -777,13 +782,11 @@ span.va012-font-red {
     position: relative;
 }
 
-    .va012-popform-data > label {
-        width: 100%;
-        font-weight: normal;
-        /*color: #535353;*/
-        /*font-size: 14px;*/
-        margin-bottom: 5px;
-    }
+.va012-popform-data > label {
+    width: 100%;
+    font-weight: normal;
+    margin-bottom: 2px;
+}
 
     .va012-popform-data > input[type="text"], .va012-popform-data > select, .va012-popform-data > input[type="date"] {
         border: 1px solid rgba(var(--v-c-on-secondary),.2);
@@ -914,7 +917,7 @@ span.va012-font-red {
     width: 400px;
     border: 2px dotted #1aa0ed;
     z-index: 999999;
-    background-color: #FFF;
+    background-color: rgba(var(--v-c-common), 1);
 }
 
 .va012-dropping {
@@ -936,9 +939,9 @@ overflow: hidden;*/
     position: absolute;
     /*width: 280px;*/
     padding: 0px 5px;
-    background-color: #fbfbfb;
-    border: 3px solid #777;
-    box-shadow: 0 2px 10px rgba(var(--v-c-on-secondary),.7);
+    background-color: rgba(var(--v-c-secondary), 1);
+    border: 3px solid rgba(var(--v-c-on-secondary), .2);
+    box-shadow: 0 2px 10px rgba(var(--v-c-on-secondary), .2);
     border-radius: 4px;
     text-align: left;
 }

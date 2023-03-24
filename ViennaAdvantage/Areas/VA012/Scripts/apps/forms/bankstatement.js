@@ -664,7 +664,7 @@
                     + '              <div class="va012-left-title">'
                     + '                  <h4>'
                     //+ '                      <img id="VA012_btnHide_' + $self.windowNo + '" src="Areas/VA012/Images/lines.png" alt="lines" style = "cursor: pointer;" ></h4>'
-                    + '    <i id="VA012_btnHide_' + $self.windowNo + '" class="fa fa-bars" alt="lines" style="cursor: pointer;background: rgba(var(--v-c-primary),1);"></i> </h4>'
+                    + '    <i id="VA012_btnHide_' + $self.windowNo + '" class="fa fa-bars" alt="lines" style="cursor: pointer;"></i> </h4>'
                     + '              </div>'
                     + '              <div class="va012-left-content">'
                     + '                  <div class="va012-left-data">'
@@ -762,7 +762,7 @@
                 _txtAmount.setValue(0);
                 _txtAmount.getControl().addClass('va012-input-size-amt va012-right-align va012-txtamount');
                 //$('<input tabindex="7" autofocus  value="0.00" id="VA012_txtAmount_' + $self.windowNo + '" type="number" class="va012-input-size-amt va012-right-align va012-txtamount">'
-                row2Col2btnIcon = $('<a id="VA012_btnAmount_' + $self.windowNo + '" class="va012-info-icon"></a>');
+                row2Col2btnIcon = $('<a id="VA012_btnAmount_' + $self.windowNo + '" class="va012-info-icon"><i class="fa fa-info"></i></a>');
                 //+ '                              </div>'
                 //+ '                              <!-- end of form-group -->'
                 //+ '                          </div>'
@@ -1010,7 +1010,7 @@
                     + '                              <div id="VA012_divPaymentSchedule_' + $self.windowNo + '" class="va012-form-data" >'
                     + '                              <label>' + VIS.Msg.getMsg("VA012_PaymentSchedules") + '</label>'
                     + '                              <input disabled id="VA012_txtPaymentSchedule_' + $self.windowNo + '" type="text" class="va012-input-size">'
-                    + '                              <a tabindex="13"  id="VA012_btnPaymentSchedule_' + $self.windowNo + '" class="va012-edit-icon"></a>'
+                    + '                              <a tabindex="13"  id="VA012_btnPaymentSchedule_' + $self.windowNo + '" class="va012-edit-icon"><i class="vis vis-pencil"></i></a>'
                     + '                              </div>'
                     + '                              <!-- end of form-data -->'
                     + '                          </div>'
