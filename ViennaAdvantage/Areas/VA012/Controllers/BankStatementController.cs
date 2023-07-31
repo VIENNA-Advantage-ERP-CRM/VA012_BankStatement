@@ -1177,15 +1177,16 @@ namespace VA012.Controllers
         /// Author: VA323
         /// Get Window for zoom
         /// </summary>
+        /// <param name="WindowName">Zoom for window</param>
         /// <returns>window id</returns>
-        public JsonResult GetWindowforzoom()
+        public JsonResult GetWindowforzoom(string WindowName)
         {
             string retJSON = "";
             int window_Id = 0;
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
-                string sql = @"SELECT ad_window_id FROM ad_window WHERE name = 'Bank Statement'";
+                string sql = @"SELECT AD_Window_ID FROM AD_Window WHERE Name ='" + WindowName + "'";  //VIS_427 Handeled Query
                 window_Id =Convert.ToInt32( DB.ExecuteScalar(sql));
                 retJSON = JsonConvert.SerializeObject(window_Id);
             }

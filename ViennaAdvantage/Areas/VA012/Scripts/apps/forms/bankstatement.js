@@ -643,6 +643,12 @@
             }
             return txtValue;
         }
+
+       /*VIS_427 Created Function for Zoom*/
+        var zoomToWindow = function ( windowName) {
+           var window_Id = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "VA012/BankStatement/GetWindowforzoom", { "WindowName": windowName }, null);
+            return window_Id;
+        }
         //Load All Functions
         var loadFunctions = {
             loadDataOnBPChanged: function () {
@@ -4075,7 +4081,8 @@
 
                     //var sql = "select ad_window_id from ad_window where name = 'Bank Statement'";
                     if (ad_window_Id <= 0) {
-                        ad_window_Id = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetWindowforzoom");
+                        // ad_window_Id = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetWindowforzoom");
+                        ad_window_Id = zoomToWindow("Bank Statement");
                     }
                     try {
                         //var dr = VIS.DB.executeDataReader(sql);
@@ -7429,7 +7436,7 @@
                     + "  AND ORD.ISACTIVE              ='Y' "
                     + "  AND PM.VA009_PAYMENTBASETYPE !='B')";
                 _lookupOrder = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Order_ID", 0, false, _orderWhere);
-                $_ctrlOrder = new VIS.Controls.VTextBoxButton("C_Order_ID", false, false, true, VIS.DisplayType.Search, _lookupOrder);
+                $_ctrlOrder = new VIS.Controls.VTextBoxButton("C_Order_ID", false, false, true, VIS.DisplayType.Search, _lookupOrder, zoomToWindow("Sales Order")); //VIS_427 Devops TaskId 1662 called zoom for sales order
                 $_ctrlOrder.getControl().addClass("va012-input-size-2");
                 $_ctrlOrder.getControl().attr("tabindex", "13");
                 _ctrlOrder.append($_ctrlOrder.getControl());
@@ -7592,7 +7599,7 @@
             loadTrxOrg: function () {
                 var orgValidation = "AD_Org.IsActive='Y' AND AD_Org.IsSummary ='N' AND (AD_Org.IsCostCenter='Y' OR AD_Org.IsProfitCenter='Y') AND CAST(AD_Org.LegalEntityOrg AS int) IN(0,@BankAccount_Org_ID@) AND AD_Org.AD_Client_ID = " + VIS.context.getAD_Client_ID();
                 var lookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 0, VIS.DisplayType.Search, "AD_Org_ID", 0, false, orgValidation);
-                $_ctrlTrxOrg = new VIS.Controls.VTextBoxButton("AD_Org_ID", false, false, true, VIS.DisplayType.Search, lookUp);
+                $_ctrlTrxOrg = new VIS.Controls.VTextBoxButton("AD_Org_ID", false, false, true, VIS.DisplayType.Search, lookUp, zoomToWindow("Organization Units")); //VIS_427 Devops TaskId 1655 called zoom for Organization unit window
                 $_ctrlTrxOrg.getControl().addClass("va012-input-size-2");
                 $_ctrlTrxOrg.getControl().attr("tabindex", "13");
                 _ctrlTrxOrg.append($_ctrlTrxOrg.getControl());
