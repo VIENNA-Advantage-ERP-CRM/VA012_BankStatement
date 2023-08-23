@@ -1564,7 +1564,7 @@
             },
             /**VA230:Get Bank Account detail like Currency,precision based on bank selected */
             loadBankAccount: function () {
-                $.ajax({
+                    $.ajax({
                     url: VIS.Application.contextUrl + "BankStatement/GetBankAccount",
                     type: "GET",
                     datatype: "json",
@@ -4498,13 +4498,20 @@
                         _txtCheckDate.removeClass("va012-mandatory");
                         if (!_reconciledLine && !_result._autoCheckControlled) {
                             _EftCheckDate = _txtCheckDate.val();
+                            /*VIS_427 BugId 1445 Disabled the Check Date when EFT Effective date field
+                            on Statement line tab have value*/
+                            _txtCheckDate.attr("disabled", true);
                         } else {
                             _EftCheckDate = null;
+                            _txtCheckDate.attr("disabled", false);
                         }
                     } else {
                         _EftCheckDate = null;
                         _txtCheckDate.val(_result._txtCheckDate);
                         _txtCheckDate.addClass("va012-mandatory");
+                        /*VIS_427 BugId 1445 Disabled the Check Date when EFT Effective date field
+                            on Statement line tab does not have value*/
+                        _txtCheckDate.attr("disabled", false);
                     }
                     _txtCheckNum.val(_result._txtCheckNum);
                     //Rakesh:If cheque number exists on bank statement line for selected bank assigned as discussed with amit & ashish
