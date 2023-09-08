@@ -151,7 +151,7 @@
         var _bPartnerSelectedVal = null;
         //End Business Partner Control Variables
         //Bank statement window Id for zoom
-        var ad_window_Id = 0;
+        var BankStatementWindow_ID = 0; //VIS_427 Added Variable to get Window id of Bank Statement
         //Invoice Control Variables
         var _lookupInvoice = null;
         var $_ctrlInvoice = null;
@@ -255,6 +255,8 @@
             }
         };
         function InitializeEvents() {
+            /*VIS_427 fetching the window id for Bank Statement window*/
+            BankStatementWindow_ID = zoomToWindow("Bank Statement"); 
 
             _btnHide.on(VIS.Events.onTouchStartOrClick, function (e) {
                 e.stopPropagation();
@@ -642,6 +644,12 @@
                 }
             }
             return txtValue;
+        }
+
+       /*VIS_427 Created Function for Zoom*/
+        var zoomToWindow = function ( windowName) {
+           var window_Id = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "VA012/BankStatement/GetWindowforzoom", { "WindowName": windowName }, null);
+            return window_Id;
         }
         //Load All Functions
         var loadFunctions = {
@@ -1556,7 +1564,7 @@
             },
             /**VA230:Get Bank Account detail like Currency,precision based on bank selected */
             loadBankAccount: function () {
-                $.ajax({
+                    $.ajax({
                     url: VIS.Application.contextUrl + "BankStatement/GetBankAccount",
                     type: "GET",
                     datatype: "json",
@@ -3926,7 +3934,7 @@
                                         + ' <div class="col-md-1 col-sm-1 va012-padd-0">'
                                         + '<div class="va012-form-check">'
                                         + '<div class="va012-pay-text">'
-                                        + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit" title=' + VIS.Msg.getMsg("EditRecord") + '></span> <span data-uid="' + data[i].c_bankstatement_id + '" class="glyphicon glyphicon-zoom-in" title=' + VIS.Msg.getMsg("ZoomToRecord") + '></span> </p>'
+                                        + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit" title=' + VIS.Msg.getMsg("EditRecord") + '></span> <span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-zoom-in" title=' + VIS.Msg.getMsg("ZoomToRecord") + '></span> </p>'
                                         + ' </div>'
                                         + '</div>'
                                         + ' <!-- end of form-group -->'
@@ -3971,7 +3979,7 @@
                                         + ' <div class="col-md-1 col-sm-1 va012-padd-0">'
                                         + '<div class="va012-form-check">'
                                         + '<div class="va012-pay-text">'
-                                        + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit"></span> <span data-uid="' + data[i].c_bankstatement_id + '" class="glyphicon glyphicon-zoom-in"></span> </p>'
+                                        + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit"></span> <span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-zoom-in"></span> </p>'
                                         + ' </div>'
                                         + '</div>'
                                         + ' <!-- end of form-group -->'
@@ -4067,28 +4075,26 @@
             openStatement: function (e) {
                 var target = $(e.target);
 
-                var _cbankStatementID = 0;
+                var _cbankStatementLineID = 0;
                 if (target.hasClass('glyphicon glyphicon-zoom-in')) {
-                    _cbankStatementID = target.data("uid");
+                    _cbankStatementLineID = target.data("uid");
 
                     ////
 
                     //var sql = "select ad_window_id from ad_window where name = 'Bank Statement'";
-                    if (ad_window_Id <= 0) {
-                        ad_window_Id = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetWindowforzoom");
-                    }
                     try {
                         //var dr = VIS.DB.executeDataReader(sql);
                         //if (dr>0) {
                         //    ad_window_Id = dr;
                         //}
                         //dr.dispose();
-                        if (ad_window_Id > 0) {
+                        if (BankStatementWindow_ID > 0) {
                             var zoomQuery = new VIS.Query();
-                            zoomQuery.addRestriction("C_BankStatement_ID", VIS.Query.prototype.EQUAL, _cbankStatementID);
+                            //VIS_427 Handled zoom for Bank Statement Line
+                            zoomQuery.addRestriction("C_BankStatementLine_ID", VIS.Query.prototype.EQUAL, _cbankStatementLineID);
                             zoomQuery.setRecordCount(1);
-                            VIS.viewManager.startWindow(ad_window_Id, zoomQuery);
-                        }
+                            VIS.viewManager.startWindow(BankStatementWindow_ID, zoomQuery);
+                       }
                     }
                     catch (e) {
                         console.log(e);
@@ -4096,7 +4102,7 @@
 
                     /////
 
-                    _cbankStatementID = 0;
+                    _cbankStatementLineID = 0;
                 }
             },
             selectedStatementLinesList: function (e) {
@@ -4492,13 +4498,20 @@
                         _txtCheckDate.removeClass("va012-mandatory");
                         if (!_reconciledLine && !_result._autoCheckControlled) {
                             _EftCheckDate = _txtCheckDate.val();
+                            /*VIS_427 BugId 1445 Disabled the Check Date when EFT Effective date field
+                            on Statement line tab have value*/
+                            _txtCheckDate.attr("disabled", true);
                         } else {
                             _EftCheckDate = null;
+                            _txtCheckDate.attr("disabled", false);
                         }
                     } else {
                         _EftCheckDate = null;
                         _txtCheckDate.val(_result._txtCheckDate);
                         _txtCheckDate.addClass("va012-mandatory");
+                        /*VIS_427 BugId 1445 Disabled the Check Date when EFT Effective date field
+                            on Statement line tab does not have value*/
+                        _txtCheckDate.attr("disabled", false);
                     }
                     _txtCheckNum.val(_result._txtCheckNum);
                     //Rakesh:If cheque number exists on bank statement line for selected bank assigned as discussed with amit & ashish
@@ -7429,7 +7442,7 @@
                     + "  AND ORD.ISACTIVE              ='Y' "
                     + "  AND PM.VA009_PAYMENTBASETYPE !='B')";
                 _lookupOrder = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Order_ID", 0, false, _orderWhere);
-                $_ctrlOrder = new VIS.Controls.VTextBoxButton("C_Order_ID", false, false, true, VIS.DisplayType.Search, _lookupOrder);
+                $_ctrlOrder = new VIS.Controls.VTextBoxButton("C_Order_ID", false, false, true, VIS.DisplayType.Search, _lookupOrder, zoomToWindow("Sales Order")); //VIS_427 Devops TaskId 1662 called zoom for sales order
                 $_ctrlOrder.getControl().addClass("va012-input-size-2");
                 $_ctrlOrder.getControl().attr("tabindex", "13");
                 _ctrlOrder.append($_ctrlOrder.getControl());
@@ -7592,7 +7605,7 @@
             loadTrxOrg: function () {
                 var orgValidation = "AD_Org.IsActive='Y' AND AD_Org.IsSummary ='N' AND (AD_Org.IsCostCenter='Y' OR AD_Org.IsProfitCenter='Y') AND CAST(AD_Org.LegalEntityOrg AS int) IN(0,@BankAccount_Org_ID@) AND AD_Org.AD_Client_ID = " + VIS.context.getAD_Client_ID();
                 var lookUp = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 0, VIS.DisplayType.Search, "AD_Org_ID", 0, false, orgValidation);
-                $_ctrlTrxOrg = new VIS.Controls.VTextBoxButton("AD_Org_ID", false, false, true, VIS.DisplayType.Search, lookUp);
+                $_ctrlTrxOrg = new VIS.Controls.VTextBoxButton("AD_Org_ID", false, false, true, VIS.DisplayType.Search, lookUp, zoomToWindow("Organization Units")); //VIS_427 Devops TaskId 1655 called zoom for Organization unit window
                 $_ctrlTrxOrg.getControl().addClass("va012-input-size-2");
                 $_ctrlTrxOrg.getControl().attr("tabindex", "13");
                 _ctrlTrxOrg.append($_ctrlTrxOrg.getControl());
@@ -8215,7 +8228,7 @@
             ad_Column = null;
             _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
             _EftCheckNo = null, _divTrxOrg = null, _ctrlTrxOrg = null, $_ctrlTrxOrg = null, _OverrideAutoCheck = false, _EftOrManualCheckNo = null, _EftCheckDate = null;
-            _PaymentBaseType = null, _PaymentMethodId = 0;
+            _PaymentBaseType = null, _PaymentMethodId = 0; BankStatementWindow_ID = 0;
         };
         function busyIndicator(_obj, _isShow, _position) {
             $BusyIndicator = $("<div class='vis-apanel-busy va012-busy-bank-statement'>");
