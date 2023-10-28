@@ -3249,6 +3249,10 @@
                 else if (_convAmt.contains(",")) {
                     _convAmt = format.GetConvertedNumber(_convAmt, dotFormatter).toString();
                 }
+                //VIS_427 27/10/2023 BugId 2671: handled amount issue for Different culture 
+                else {
+                    _convAmt = format.GetConvertedNumber(_convAmt, dotFormatter).toString();
+                }
                 //_convAmt have value then return _convAmt else return val
                 val = _convAmt != "" ? _convAmt : val;
             }
@@ -4809,6 +4813,8 @@
 
 
                                             _statementlineslist = [];
+                                            //VIS_427 27/10/2023 BugId 2672: Cleared array so that payments don't repeat
+                                            storepaymentdata = [];
                                             _lstStatement.html("");
                                             _statementPageNo = 1;
                                             childDialogs.loadStatement(_statementID);
