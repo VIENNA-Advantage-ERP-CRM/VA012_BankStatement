@@ -3246,7 +3246,9 @@
                     _convAmt = (-1 * format.GetConvertedNumber(_convAmt, dotFormatter)).toString();
                 }
                 //_convAmt is positive value then this condition will execute
-                else if (_convAmt.contains(",")) {
+                /*VIS_427 27/10/2023 BugId 2671: Identified and commented condtition so that it executes
+                Value for comma and without comma seperator */
+                else /*if (_convAmt.contains(","))*/ {
                     _convAmt = format.GetConvertedNumber(_convAmt, dotFormatter).toString();
                 }
                 //_convAmt have value then return _convAmt else return val
@@ -4809,6 +4811,8 @@
 
 
                                             _statementlineslist = [];
+                                            //VIS_427 27/10/2023 BugId 2672: Cleared array so that payments don't repeat
+                                            storepaymentdata = [];
                                             _lstStatement.html("");
                                             _statementPageNo = 1;
                                             childDialogs.loadStatement(_statementID);
