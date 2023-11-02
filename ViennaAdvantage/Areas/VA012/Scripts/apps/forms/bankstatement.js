@@ -256,7 +256,7 @@
         };
         function InitializeEvents() {
             /*VIS_427 fetching the window id for Bank Statement window*/
-            BankStatementWindow_ID = zoomToWindow("Bank Statement"); 
+            BankStatementWindow_ID = zoomToWindow("Bank Statement");
 
             _btnHide.on(VIS.Events.onTouchStartOrClick, function (e) {
                 e.stopPropagation();
@@ -646,9 +646,9 @@
             return txtValue;
         }
 
-       /*VIS_427 Created Function for Zoom*/
-        var zoomToWindow = function ( windowName) {
-           var window_Id = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "VA012/BankStatement/GetWindowforzoom", { "WindowName": windowName }, null);
+        /*VIS_427 Created Function for Zoom*/
+        var zoomToWindow = function (windowName) {
+            var window_Id = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "VA012/BankStatement/GetWindowforzoom", { "WindowName": windowName }, null);
             return window_Id;
         }
         //Load All Functions
@@ -1564,7 +1564,7 @@
             },
             /**VA230:Get Bank Account detail like Currency,precision based on bank selected */
             loadBankAccount: function () {
-                    $.ajax({
+                $.ajax({
                     url: VIS.Application.contextUrl + "BankStatement/GetBankAccount",
                     type: "GET",
                     datatype: "json",
@@ -3151,12 +3151,25 @@
                 columns: [
                     { field: "_trxDate", caption: "Tran. Date", sortable: false, size: '80px', display: false },
                     { field: "_trxNo", caption: 'Auth Code/ Trx no.', sortable: false, size: '30%', hidden: false },
-                    { field: "_salesAmt", caption: 'Trx Amount', sortable: false, size: '15%', hidden: false, style: 'text-align: right' },
-                    { field: "_netAmt", caption: 'Statement Amount', sortable: false, size: '15%', hidden: false, style: 'text-align: right' },
+                    //VIS_427 02/11/2023 BugId: 2748 Handled amount field according to culture
+                    {
+                        field: "_salesAmt", caption: 'Trx Amount', sortable: false, size: '15%', hidden: false, style: 'text-align: right', render: function (record) {
+                            return parseFloat(record["_salesAmt"]).toLocaleString(window.navigator.language, { minimumFractionDigits: record["_StdPrecision"], maximumFractionDigits: record["_StdPrecision"] });
+                        }
+                    },
+                    {
+                        field: "_netAmt", caption: 'Statement Amount', sortable: false, size: '15%', hidden: false, style: 'text-align: right', render: function (record) {
+                            return parseFloat(record["_netAmt"]).toLocaleString(window.navigator.language, { minimumFractionDigits: record["_StdPrecision"], maximumFractionDigits: record["_StdPrecision"] });
+                        }
+                    },
                     { field: "_difference", caption: 'Difference', sortable: false, size: '15%', hidden: false, style: 'text-align: right' },
                     { field: "_chargeType", caption: 'Charge Type', sortable: false, size: '80px', display: true },
                     { field: "_taxRate", caption: 'Tax Rate', sortable: false, size: '80px', display: true },
-                    { field: "_taxAmt", caption: 'Tax Amt', sortable: false, size: '15%', hidden: false, style: 'text-align: right' },
+                    {
+                        field: "_taxAmt", caption: 'Tax Amt', sortable: false, size: '15%', hidden: false, style: 'text-align: right', render: function (record) {
+                            return parseFloat(record["_taxAmt"]).toLocaleString(window.navigator.language, { minimumFractionDigits: record["_StdPrecision"], maximumFractionDigits: record["_StdPrecision"] });
+                        }
+                    },
                     //{ field: "Pay_ID", caption: 'Payment ID', sortable: false, size: '80px', display: true },
                     //{ field: "Statement_ID", caption: 'Statement ID', sortable: false, size: '80px', display: true }       
                 ],
@@ -4096,7 +4109,7 @@
                             zoomQuery.addRestriction("C_BankStatementLine_ID", VIS.Query.prototype.EQUAL, _cbankStatementLineID);
                             zoomQuery.setRecordCount(1);
                             VIS.viewManager.startWindow(BankStatementWindow_ID, zoomQuery);
-                       }
+                        }
                     }
                     catch (e) {
                         console.log(e);
@@ -7364,7 +7377,7 @@
                 }
                 //if bank account is null then it's take only DocStustus
                 //VIS_0045: DevOps Task ID: 1843 -> Not to show Reconciled payment
-                var status = VIS.Utility.Util.getValueOfInt(_cmbBankAccount.val()) != 0 ? "C_Payment.DocStatus IN ('CO','CL') AND C_Payment.IsReconciled = 'N' AND C_Payment.C_BankAccount_ID = @BankAccount_ID@" 
+                var status = VIS.Utility.Util.getValueOfInt(_cmbBankAccount.val()) != 0 ? "C_Payment.DocStatus IN ('CO','CL') AND C_Payment.IsReconciled = 'N' AND C_Payment.C_BankAccount_ID = @BankAccount_ID@"
                     : "C_Payment.DocStatus IN ('CO','CL') AND C_Payment.IsReconciled = 'N' ";
                 _lookupPayment = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 0, VIS.DisplayType.Search, "C_Payment_ID", 0, false, status);
                 $_ctrlPayment = new VIS.Controls.VTextBoxButton("C_Payment_ID", false, false, true, VIS.DisplayType.Search, _lookupPayment);

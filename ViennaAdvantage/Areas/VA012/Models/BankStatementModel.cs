@@ -7113,10 +7113,10 @@ namespace VA012.Models
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
-                    ChargeProp obj = new ChargeProp();
-                    obj.chargeID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_CHARGE_ID"]);
-                    obj.name = Util.GetValueOfString(_ds.Tables[0].Rows[0]["Name"]);
-                    _list.Add(obj);
+                ChargeProp obj = new ChargeProp();
+                obj.chargeID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_CHARGE_ID"]);
+                obj.name = Util.GetValueOfString(_ds.Tables[0].Rows[0]["Name"]);
+                _list.Add(obj);
             }
             return _list;
         }
@@ -7126,13 +7126,13 @@ namespace VA012.Models
         /// </summary>
         /// <param name="ctx">Context</param>
         /// <returns>List Of Statement number</returns>
-        public List<MatchBase> GetStatementNolist(Ctx ctx,int _cmbBankAccount)
+        public List<MatchBase> GetStatementNolist(Ctx ctx, int _cmbBankAccount)
         {
             List<MatchBase> _list = new List<MatchBase>();
             MatchBase obj = null;
 
             string _sql = "SELECT C_BankStatement.C_Bankstatement_Id, C_BankStatement.NAME,C_BankStatement.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BankStatement C_BankStatement INNER JOIN C_BankStatementLine CBL ON (cbl.C_BANKSTATEMENT_ID = C_BankStatement.C_BANKSTATEMENT_ID) WHERE C_BankStatement.Isactive = 'Y' AND C_BankStatement.Ad_Client_Id = " + ctx.GetAD_Client_ID() + " AND C_BankStatement.C_Bankaccount_Id = " + _cmbBankAccount + " AND C_BankStatement.Docstatus NOT IN  ('CO','CL','VO') GROUP BY C_BankStatement.C_BANKSTATEMENT_ID,C_BankStatement.Docstatus, C_BankStatement.NAME";
-           //_sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_BankStatement", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+            //_sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_BankStatement", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
 
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
@@ -7173,7 +7173,7 @@ namespace VA012.Models
                 }
             }
             return _list;
-        } 
+        }
         /// <summary>
         /// Get the cash book data
         /// </summary>
@@ -7207,7 +7207,7 @@ namespace VA012.Models
         /// <param name="AD_Client_ID">AD_Client_ID</param>
         /// <param name="AD_Org_ID">AD_Org_ID</param>
         /// <returns>List of cash book</returns>
-        public List<MatchBase> GetPaymentMethodList(Ctx ctx,int AD_Client_ID,int AD_Org_ID)
+        public List<MatchBase> GetPaymentMethodList(Ctx ctx, int AD_Client_ID, int AD_Org_ID)
         {
             List<MatchBase> _list = new List<MatchBase>();
             MatchBase obj = null;
@@ -7229,254 +7229,256 @@ namespace VA012.Models
         }
 
     }
-        public class BankAccountsList
-        {
-            public int BankAccountId { get; set; }
-            public string AccountNo { get; set; }
-            public int CurrencyId { get; set; }
-            public int StdPrecision { get; set; }
-            public int OrgId { get; set; }
-        }
-        public class TaxRate
-        {
-            public int C_Tax_ID { get; set; }
-            public string Name { get; set; }
-        }
+    public class BankAccountsList
+    {
+        public int BankAccountId { get; set; }
+        public string AccountNo { get; set; }
+        public int CurrencyId { get; set; }
+        public int StdPrecision { get; set; }
+        public int OrgId { get; set; }
+    }
+    public class TaxRate
+    {
+        public int C_Tax_ID { get; set; }
+        public string Name { get; set; }
+    }
 
-        public class ConcileStatement
-        {
-            public string basecurrency { get; internal set; }
-            public decimal reconciled { get; internal set; }
-            public decimal unreconciled { get; internal set; }
-        }
+    public class ConcileStatement
+    {
+        public string basecurrency { get; internal set; }
+        public decimal reconciled { get; internal set; }
+        public decimal unreconciled { get; internal set; }
+    }
 
-        public class InvoicePaySchedule
-        {
-            public string DueAmt { get; internal set; }
-            public DateTime? DueDate { get; internal set; }
-            public int c_invoicepayschedule_id { get; internal set; }
-            public decimal DueAmount { get; internal set; }
-            public decimal Amount { get; internal set; }
-            public int _paymentMethod_Id { get; internal set; }
-        }
+    public class InvoicePaySchedule
+    {
+        public string DueAmt { get; internal set; }
+        public DateTime? DueDate { get; internal set; }
+        public int c_invoicepayschedule_id { get; internal set; }
+        public decimal DueAmount { get; internal set; }
+        public decimal Amount { get; internal set; }
+        public int _paymentMethod_Id { get; internal set; }
+    }
 
-        public class MatchBase
-        {
-            public string Value { get; set; }
-            public string Name { get; set; }
-        }
-        public class PrepayResponse
-        {
-            public decimal _amount { get; set; }
-            public string _status { get; set; }
-            public int _conversionType_Id { get; set; }
-            public int _currency_Id { get; set; }
-            public int _paymentMethod_Id { get; set; }
-        }
-        public class ContraResponse
-        {
-            public decimal _amount { get; set; }
-            public string _status { get; set; }
-            public int _currency_Id { get; set; }
-            public int _conversionType_Id { get; internal set; }
-        }
-        public class PaymentResponse
-        {
-            public decimal _amount { get; set; }
-            public decimal _trxamount { get; set; }
-            public string _status { get; set; }
-            public int _currency_Id { get; set; }
-            public int _conversionType_Id { get; set; }
-            public int _paymentMethod_Id { get; set; }
-            public DateTime? _checkDate { get; set; }
-            public string _checkNo { get; set; }
-            public string _paymentBaseType { get; set; }
-        }
+    public class MatchBase
+    {
+        public string Value { get; set; }
+        public string Name { get; set; }
+    }
+    public class PrepayResponse
+    {
+        public decimal _amount { get; set; }
+        public string _status { get; set; }
+        public int _conversionType_Id { get; set; }
+        public int _currency_Id { get; set; }
+        public int _paymentMethod_Id { get; set; }
+    }
+    public class ContraResponse
+    {
+        public decimal _amount { get; set; }
+        public string _status { get; set; }
+        public int _currency_Id { get; set; }
+        public int _conversionType_Id { get; internal set; }
+    }
+    public class PaymentResponse
+    {
+        public decimal _amount { get; set; }
+        public decimal _trxamount { get; set; }
+        public string _status { get; set; }
+        public int _currency_Id { get; set; }
+        public int _conversionType_Id { get; set; }
+        public int _paymentMethod_Id { get; set; }
+        public DateTime? _checkDate { get; set; }
+        public string _checkNo { get; set; }
+        public string _paymentBaseType { get; set; }
+    }
 
-        public class ProcessResponse
-        {
-            public string _statementUnmatchedLines { get; set; }
-            public string _statementNotProcessed { get; set; }
-            public string _statementProcessed { get; set; }
-            public string _error { get; set; }
-            public string _status { get; set; }
+    public class ProcessResponse
+    {
+        public string _statementUnmatchedLines { get; set; }
+        public string _statementNotProcessed { get; set; }
+        public string _statementProcessed { get; set; }
+        public string _error { get; set; }
+        public string _status { get; set; }
 
-        }
-        public class MatchResponse
-        {
-            public string _paymentNo { get; set; }
-            public string _statementNo { get; set; }
-            public string _statementLine { get; set; }
-            public string _error { get; set; }
-            public string _warning { get; set; }
-            public string _paymentOrCash { get; set; }
+    }
+    public class MatchResponse
+    {
+        public string _paymentNo { get; set; }
+        public string _statementNo { get; set; }
+        public string _statementLine { get; set; }
+        public string _error { get; set; }
+        public string _warning { get; set; }
+        public string _paymentOrCash { get; set; }
 
-        }
+    }
 
-        public class MatchStatementGridResponse
-        {
+    public class MatchStatementGridResponse
+    {
 
-            public string _paymentNo { get; set; }
-            public string _statementNo { get; set; }
-            public string _statementLine { get; set; }
-            public string _error { get; set; }
-            public string _warning { get; set; }
-            public string _paymentOrCash { get; set; }
+        public string _paymentNo { get; set; }
+        public string _statementNo { get; set; }
+        public string _statementLine { get; set; }
+        public string _error { get; set; }
+        public string _warning { get; set; }
+        public string _paymentOrCash { get; set; }
 
-            public string _trxDate { get; set; }
-            public string _trxNo { get; set; }
-            public string _salesAmt { get; set; }
-            public string _netAmt { get; set; }
-            public string _difference { get; set; }
-            public string _taxAmt { get; set; }
-            public string _chargeType { get; set; }
-            public string _taxRate { get; set; }
-        }
+        public string _trxDate { get; set; }
+        public string _trxNo { get; set; }
+        public string _salesAmt { get; set; }
+        public string _netAmt { get; set; }
+        public string _difference { get; set; }
+        public string _taxAmt { get; set; }
+        public string _chargeType { get; set; }
+        public string _taxRate { get; set; }
+        //VIS_427 02/11/2023 BugId: 2748 declared variable
+        public int _StdPrecision { get; set; }
+    }
 
-        public class UnMatchResponse
-        {
-            public string _statementOk { get; set; }
-            public string _statementNo { get; set; }
-            public string _statementNoNotUpdate { get; set; }
-            public string _error { get; set; }
-            public string _status { get; set; }
+    public class UnMatchResponse
+    {
+        public string _statementOk { get; set; }
+        public string _statementNo { get; set; }
+        public string _statementNoNotUpdate { get; set; }
+        public string _error { get; set; }
+        public string _status { get; set; }
 
-        }
-        /// <summary>
-        /// Bank Statement Operations Properties.
-        /// </summary>
-        public class StatementProp
-        {
-            //pratap
-            public string _scheduleAmount { get; set; }
-            //
+    }
+    /// <summary>
+    /// Bank Statement Operations Properties.
+    /// </summary>
+    public class StatementProp
+    {
+        //pratap
+        public string _scheduleAmount { get; set; }
+        //
 
-            public string _scheduleList { get; set; }
-            public string _cmbTransactionType { get; set; }
-            public string _txtCharge { get; set; }
-            public string _txtStatementNo { get; set; }
-            public int _txtStatementPage { get; set; }
-            public int _txtStatementLine { get; set; }
-            public DateTime? _dtStatementDate { get; set; }
-            public int _cmbPaymentMethod { get; set; }
-            public string _cmbVoucherMatch { get; set; }
-            public decimal _txtAmount { get; set; }
-            public decimal _txtTrxAmt { get; set; }
-            public string _txtDescription { get; set; }
-            public string _txtVoucherNo { get; set; }
-            public int _cmbCharge { get; set; }
-            public int _cmbTaxRate { get; set; }
-            public decimal _txtTaxAmount { get; set; }
-            public int _ctrlPayment { get; set; }
-            public int _ctrlOrder { get; set; }
-            public string _ctrlInvoice { get; set; }
-            public int _ctrlCashLine { get; set; }
-            public int _ctrlBusinessPartner { get; set; }
-            public bool _chkUseNextTime { get; set; }
-            public int _cmbBank { get; set; }
-            public int _cmbBankAccount { get; set; }
-            public int _cmbCurrency { get; set; }
-            public int _bankStatementLineID { get; set; }
+        public string _scheduleList { get; set; }
+        public string _cmbTransactionType { get; set; }
+        public string _txtCharge { get; set; }
+        public string _txtStatementNo { get; set; }
+        public int _txtStatementPage { get; set; }
+        public int _txtStatementLine { get; set; }
+        public DateTime? _dtStatementDate { get; set; }
+        public int _cmbPaymentMethod { get; set; }
+        public string _cmbVoucherMatch { get; set; }
+        public decimal _txtAmount { get; set; }
+        public decimal _txtTrxAmt { get; set; }
+        public string _txtDescription { get; set; }
+        public string _txtVoucherNo { get; set; }
+        public int _cmbCharge { get; set; }
+        public int _cmbTaxRate { get; set; }
+        public decimal _txtTaxAmount { get; set; }
+        public int _ctrlPayment { get; set; }
+        public int _ctrlOrder { get; set; }
+        public string _ctrlInvoice { get; set; }
+        public int _ctrlCashLine { get; set; }
+        public int _ctrlBusinessPartner { get; set; }
+        public bool _chkUseNextTime { get; set; }
+        public int _cmbBank { get; set; }
+        public int _cmbBankAccount { get; set; }
+        public int _cmbCurrency { get; set; }
+        public int _bankStatementLineID { get; set; }
 
-            public string _cmbContraType { get; set; }
-            public int _cmbCashBook { get; set; }
-            public string _cmbTransferType { get; set; }
-            public string _txtCheckNo { get; set; }
+        public string _cmbContraType { get; set; }
+        public int _cmbCashBook { get; set; }
+        public string _cmbTransferType { get; set; }
+        public string _txtCheckNo { get; set; }
 
-            public string _cmbDifferenceType { get; set; }
-            public decimal _txtDifference { get; set; }
-            public string _trxno { get; set; }
-            public int _bankAcctOrg_ID { get; internal set; }
-            public decimal _surChargeAmt { get; set; }
-            public int _txtCurrency { get; set; }
-            public int _txtConversionType { get; set; }
-            public bool _reconciled { get; internal set; }
-            public int _txtPaymentMethod { get; set; }
-            public DateTime? _txtCheckDate { get; set; }
-            public string _errorMsg { get; set; }
-            public string _txtCheckNum { get; set; }
-            public bool _isAutoCheck { get; set; }
-            public int _ctrlTrxOrg { get; set; }
-            public bool _autoCheckControlled { get; set; }
-            public string _EftOrManualCheckNo { get; set; }
-            public bool _OverrideAutoCheck { get; set; }
+        public string _cmbDifferenceType { get; set; }
+        public decimal _txtDifference { get; set; }
+        public string _trxno { get; set; }
+        public int _bankAcctOrg_ID { get; internal set; }
+        public decimal _surChargeAmt { get; set; }
+        public int _txtCurrency { get; set; }
+        public int _txtConversionType { get; set; }
+        public bool _reconciled { get; internal set; }
+        public int _txtPaymentMethod { get; set; }
+        public DateTime? _txtCheckDate { get; set; }
+        public string _errorMsg { get; set; }
+        public string _txtCheckNum { get; set; }
+        public bool _isAutoCheck { get; set; }
+        public int _ctrlTrxOrg { get; set; }
+        public bool _autoCheckControlled { get; set; }
+        public string _EftOrManualCheckNo { get; set; }
+        public bool _OverrideAutoCheck { get; set; }
 
-            // public List<GetScheduleProp> _getSchedules { get; set; }
-        }
-        public class PaymentProp
-        {
-            //pratap
-            public string paymenttype { get; set; }
-            // end pratap
-            public int c_bankstatementline_id { get; set; }
-            public int c_payment_id { get; set; }
-            public string currency { get; set; }
-            public string paymentno { get; set; }
-            public int c_bpartner_id { get; set; }
-            public string businesspartner { get; set; }
-            public decimal paymentamount { get; set; }
-            public string bpgroup { get; set; }
-            public string binarydata { get; set; }
-            public string imageurl { get; set; }
-            public string ad_image_id { get; set; }
-            public string basecurrency { get; set; }
-            public decimal convertedamount { get; set; }
-            public string isconverted { get; set; }
-            public string depositslipno { get; set; }
-            public string authcode { get; set; }
-            // added new prop docStatus // Lokesh 6/6/2019
-            public string docstatus { get; set; }
+        // public List<GetScheduleProp> _getSchedules { get; set; }
+    }
+    public class PaymentProp
+    {
+        //pratap
+        public string paymenttype { get; set; }
+        // end pratap
+        public int c_bankstatementline_id { get; set; }
+        public int c_payment_id { get; set; }
+        public string currency { get; set; }
+        public string paymentno { get; set; }
+        public int c_bpartner_id { get; set; }
+        public string businesspartner { get; set; }
+        public decimal paymentamount { get; set; }
+        public string bpgroup { get; set; }
+        public string binarydata { get; set; }
+        public string imageurl { get; set; }
+        public string ad_image_id { get; set; }
+        public string basecurrency { get; set; }
+        public decimal convertedamount { get; set; }
+        public string isconverted { get; set; }
+        public string depositslipno { get; set; }
+        public string authcode { get; set; }
+        // added new prop docStatus // Lokesh 6/6/2019
+        public string docstatus { get; set; }
 
-            public string PaymentMethod { get; set; }
-            public DateTime? DateAcct { get; set; }
-            public DateTime? DueDate { get; internal set; }
-            public string DueAmt { get; internal set; }
-            public int PaymentMethodId { get; set; }
-            public string PaymentBaseType { get; set; }
-        }
-        public class StatementLineProp
-        {
-            public int page { get; set; }
-            public int line { get; set; }
-            public string invoiceno { get; set; }
-            public bool usenexttime { get; set; }
+        public string PaymentMethod { get; set; }
+        public DateTime? DateAcct { get; set; }
+        public DateTime? DueDate { get; internal set; }
+        public string DueAmt { get; internal set; }
+        public int PaymentMethodId { get; set; }
+        public string PaymentBaseType { get; set; }
+    }
+    public class StatementLineProp
+    {
+        public int page { get; set; }
+        public int line { get; set; }
+        public string invoiceno { get; set; }
+        public bool usenexttime { get; set; }
 
-            public decimal STMTAMT { get; set; }
-            public int c_charge_id { get; set; }
-            public int c_payment_id { get; set; }
-            public int c_bankstatementline_id { get; set; }
-            public int c_bankstatement_id { get; set; }
-            public string currency { get; set; }
-            public decimal trxamount { get; set; }
-            public string statementno { get; set; }
-            public string bpgroup { get; set; }
-            public int c_bpartner_id { get; set; }
-            public string description { get; set; }
-            public string binarydata { get; set; }
-            public string imageurl { get; set; }
-            public string ad_image_id { get; set; }
-            public string basecurrency { get; set; }
-            public decimal convertedamount { get; set; }
-            public string isconverted { get; set; }
-            public string docstatus { get; set; }
-            public int c_cashline_id { get; set; }
-            public string trxno { get; set; }
-            public DateTime? stmtLineDate { get; internal set; }
-            public string EftCheckNo { get; set; }
-        }
-        public class ChargeProp
-        {
-            public int chargeID { get; set; }
-            public string name { get; set; }
-            public string PaymentBaseType { get; set; }
-        }
-        //public class GetScheduleProp
-        //{
-        //    public string uid { get; set; }
-        //    public string paymentdata { get; set; }
-        //    // _scheduleList //uid
-        //    //    _scheduleDataList //paymentdata
-        //    //   _scheduleAmount 
-        //}
-    
+        public decimal STMTAMT { get; set; }
+        public int c_charge_id { get; set; }
+        public int c_payment_id { get; set; }
+        public int c_bankstatementline_id { get; set; }
+        public int c_bankstatement_id { get; set; }
+        public string currency { get; set; }
+        public decimal trxamount { get; set; }
+        public string statementno { get; set; }
+        public string bpgroup { get; set; }
+        public int c_bpartner_id { get; set; }
+        public string description { get; set; }
+        public string binarydata { get; set; }
+        public string imageurl { get; set; }
+        public string ad_image_id { get; set; }
+        public string basecurrency { get; set; }
+        public decimal convertedamount { get; set; }
+        public string isconverted { get; set; }
+        public string docstatus { get; set; }
+        public int c_cashline_id { get; set; }
+        public string trxno { get; set; }
+        public DateTime? stmtLineDate { get; internal set; }
+        public string EftCheckNo { get; set; }
+    }
+    public class ChargeProp
+    {
+        public int chargeID { get; set; }
+        public string name { get; set; }
+        public string PaymentBaseType { get; set; }
+    }
+    //public class GetScheduleProp
+    //{
+    //    public string uid { get; set; }
+    //    public string paymentdata { get; set; }
+    //    // _scheduleList //uid
+    //    //    _scheduleDataList //paymentdata
+    //    //   _scheduleAmount 
+    //}
+
 }
