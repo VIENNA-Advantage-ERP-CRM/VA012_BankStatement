@@ -2116,8 +2116,8 @@ namespace VA012.Models
              WHEN (BSL.C_PAYMENT_ID IS NOT NULL OR BSL.C_CHARGE_ID IS NOT NULL OR BSL.C_CASHLINE_ID IS NOT NULL) 
              THEN ( 
              CASE 
-             WHEN ( BSL.C_CURRENCY_ID! =BCURR.C_CURRENCY_ID) 
-             THEN BSL.StmtAmt*( 
+             WHEN ( BSL.C_CURRENCY_ID != BCURR.C_CURRENCY_ID) 
+             THEN BSL.StmtAmt * ( 
               CASE 
              WHEN CCR.MULTIPLYRATE IS NOT NULL 
              THEN CCR.MULTIPLYRATE 
@@ -2131,8 +2131,8 @@ namespace VA012.Models
              WHEN (BSL.C_PAYMENT_ID IS NULL AND BSL.C_CHARGE_ID IS NULL AND  BSL.C_CASHLINE_ID IS NULL) 
              THEN ( 
              CASE 
-             WHEN ( BSL.C_CURRENCY_ID! = BCURR.C_CURRENCY_ID) 
-             THEN BSL.StmtAmt*( 
+             WHEN ( BSL.C_CURRENCY_ID != BCURR.C_CURRENCY_ID) 
+             THEN BSL.StmtAmt * ( 
              CASE  
               WHEN CCR.MULTIPLYRATE IS NOT NULL 
              THEN CCR.MULTIPLYRATE 
@@ -2147,25 +2147,24 @@ namespace VA012.Models
               LEFT JOIN C_BPartner BP
               ON (BSL.C_BPARTNER_ID=BP.C_BPARTNER_ID)
               LEFT JOIN C_Currency CURR 
-              ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID) 
-             
+              ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID)             
              INNER JOIN AD_ClientInfo CINFO  
-             ON (CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID) 
+             ON (CINFO.AD_CLIENT_ID = BSL.AD_CLIENT_ID) 
              INNER JOIN C_AcctSchema AC 
-             ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID)
+             ON (AC.C_ACCTSCHEMA_ID = CINFO.C_ACCTSCHEMA1_ID)
              LEFT JOIN C_Currency BCURR
-             ON (" + currencyID + @" =BCURR.C_CURRENCY_ID)
+             ON (" + currencyID + @" = BCURR.C_CURRENCY_ID)
              LEFT JOIN C_Conversion_Rate CCR 
-             ON ((CCR.C_CURRENCY_ID   =BSL.C_CURRENCY_ID) 
+             ON ((CCR.C_CURRENCY_ID   = BSL.C_CURRENCY_ID) 
              AND CCR.ISACTIVE ='Y' 
              AND (CCR.C_CURRENCY_TO_ID=" + currencyID + @") AND (CCR.AD_CLIENT_ID =BSL.AD_CLIENT_ID)
              AND (CCR.AD_ORG_ID IN (BSL.AD_ORG_ID,0))
              AND (SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO))
              
              LEFT JOIN C_Conversion_Rate CCR1
-             ON ((CCR1.C_CURRENCY_ID   =" + currencyID + @") AND (CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID)
-             AND (CCR1.ISACTIVE        ='Y')
-             AND (CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID )
+             ON ((CCR1.C_CURRENCY_ID   = " + currencyID + @") AND (CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID)
+             AND (CCR1.ISACTIVE        = 'Y')
+             AND (CCR1.AD_CLIENT_ID    = BSL.AD_CLIENT_ID )
              AND (CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0))
              AND (SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)) 
              WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + cmbBankAccount + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
