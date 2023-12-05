@@ -4016,7 +4016,7 @@ namespace VA012.Models
                             INNER JOIN C_DocType DT
                             ON (DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID)
                             WHERE  pay.VA009_IsPaid='N'
-                            AND PAY.ISACTIVE='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B'
+                            AND PAY.ISACTIVE='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE != 'B'
                             AND PAY.C_InvoicePaySchedule_ID NOT IN (
                             SELECT CASE WHEN C_Payment.C_Payment_ID != COALESCE(C_PaymentAllocate.C_Payment_ID,0) 
                             THEN COALESCE(C_Payment.C_InvoicePaySchedule_ID,0)  ELSE COALESCE(C_PaymentAllocate.C_InvoicePaySchedule_ID,0) END 
@@ -4092,7 +4092,7 @@ namespace VA012.Models
             }
             else if (_transactionType == "PO")
             {
-            /*VIS_427 05/12/2023 Bugid:3179 When user is creating the Payment with the reference of invoice and Payment is drafted
+            /*VIS_427 05/12/2023 Bugid:3179 When user is creating the Payment with the reference of order and Payment is drafted
             then handled Query to restrict those refrences to not visible on Bank statement form*/
                 _sql = @" SELECT PAY.C_order_id AS C_PAYMENT_ID,
                           CURR.ISO_CODE       AS CURRENCY,
@@ -4129,7 +4129,7 @@ namespace VA012.Models
                         ON (PM.VA009_PAYMENTMETHOD_ID=PAY.VA009_PAYMENTMETHOD_ID)
                         WHERE dt.DocSubTypeSO='PR'
                         AND PAY.DOCSTATUS='WP'
-                        AND PAY.ISACTIVE='Y' AND PM.VA009_PAYMENTBASETYPE!='B'
+                        AND PAY.ISACTIVE='Y' AND PM.VA009_PAYMENTBASETYPE != 'B'
                         AND PAY.C_Order_ID NOT IN (SELECT COALESCE(C_Order_ID,0) 
                         FROM C_Payment WHERE DocStatus NOT IN ('CO', 'CL' ,'RE','VO'))";
                 if (bankOrg_ID != 0)
