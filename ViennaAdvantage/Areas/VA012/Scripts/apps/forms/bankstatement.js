@@ -596,7 +596,8 @@
                     _statementDate.addClass("va012-mandatory");
                 }
                 else {
-                    if (new Date(_statementDate.val()) > new Date()) {
+                    //VIS_427 15/12/2023 BugId 3332 Handled date issue when user select statement date on form
+                    if (Globalize.format(new Date(_statementDate.val()), "yyyy-MM-dd") > Globalize.format(new Date(), "yyyy-MM-dd")) {
                         // not required the VIS.Msg.getMsg() function
                         VIS.ADialog.info("VA012_StatementDateToday", null, "", "");
                         _statementDate.val("");
