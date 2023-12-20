@@ -1350,14 +1350,16 @@ namespace VA012.Models
             {
                 #region Statement Lines
                 _sql.Clear();
+                //VIS_427 02/11/2023 BugId:2750 Handled Query So that statement having amount with more than two decimal value can also be matched
                 _sql.Append(@"SELECT BSL.C_BANKSTATEMENTLINE_ID,
+							  CURR.StdPrecision,
                               BS.NAME  AS STATEMENTNO,
                               BSL.LINE AS STATEMENTLINENO,
                               BSL.C_BPARTNER_ID,
                               CASE
                                 When ROUND(BSL.TRXAMT,NVL(CURR.STDPRECISION,2)) = 0
                                 THEN '0.00'
-                                ELSE To_Char(ROUND(BSL.TRXAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00')
+                                ELSE To_Char(ROUND(BSL.TRXAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00000')
                               END  AS PAYMENTAMOUNT,                               
                               UPPER(BSL.EFTCHECKNO)  AS CHECKNO,
                               BSL.C_CHARGE_ID,
@@ -1370,25 +1372,25 @@ namespace VA012.Models
                               CASE
                                 When ROUND(BSL.TRXAMT,NVL(CURR.STDPRECISION,2)) = 0
                                 THEN '0.00'
-                                ELSE To_Char(ROUND(BSL.TRXAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00')
+                                ELSE To_Char(ROUND(BSL.TRXAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00000')
                               END  AS TRXAMT, 
 
                               CASE
                                 When ROUND(BSL.TAXAMT,NVL(CURR.STDPRECISION,2)) = 0
                                 THEN '0.00'
-                                ELSE   To_Char(ROUND(BSL.TAXAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00')
+                                ELSE   To_Char(ROUND(BSL.TAXAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00000')
                               END  AS TAXAMOUNT, 
 
                               CASE
                                 When ROUND(BSL.STMTAMT,NVL(CURR.STDPRECISION,2)) = 0
                                 THEN '0.00'
-                                ELSE To_Char(ROUND(BSL.STMTAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00')
+                                ELSE To_Char(ROUND(BSL.STMTAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00000')
                               END  AS NETAMOUNT, 
 
                               CASE
                                 When ROUND(BSL.CHARGEAMT,NVL(CURR.STDPRECISION,2)) = 0
                                 THEN '0.00'
-                                ELSE To_Char(ROUND(BSL.CHARGEAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00')
+                                ELSE To_Char(ROUND(BSL.CHARGEAMT,NVL(CURR.STDPRECISION,2)),'FM99999999999.00000')
                               END  AS CHARGEAMOUNT,    
                                                                                                                   
                               TRUNC(BSL.STATEMENTLINEDATE) AS TRANSACTIONDATE,
@@ -1802,6 +1804,8 @@ namespace VA012.Models
                                 _objResponse._statementNo = Util.GetValueOfString(_dsStatements.Tables[0].Rows[i]["STATEMENTNO"]);
                                 _objResponse._statementLine = Util.GetValueOfString(_dsStatements.Tables[0].Rows[i]["STATEMENTLINENO"]);
                                 _objResponse._paymentNo = Util.GetValueOfString(_dsPayments.Tables[0].Rows[0]["PAYMENTNO"]);
+                                //VIS_427 02/11/2023 BugId: 2748 Stored value of precision so that amount can be rounded 
+                                _objResponse._StdPrecision= Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["StdPrecision"]);
                                 _objResponse._paymentOrCash = "P";
 
                                 DateTime date = Convert.ToDateTime(_dsStatements.Tables[0].Rows[i]["TRANSACTIONDATE"]);
@@ -1977,6 +1981,8 @@ namespace VA012.Models
                                         _objResponse._statementNo = Util.GetValueOfString(_dsStatements.Tables[0].Rows[i]["STATEMENTNO"]);
                                         _objResponse._statementLine = Util.GetValueOfString(_dsStatements.Tables[0].Rows[i]["STATEMENTLINENO"]);
                                         _objResponse._paymentNo = Util.GetValueOfString(_dsPayments.Tables[0].Rows[0]["PAYMENTNO"]);
+                                        //VIS_427 02/11/2023 BugId: 2748 Stored value of precision so that amount can be rounded 
+                                        _objResponse._StdPrecision = Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["StdPrecision"]);
                                         _objResponse._paymentOrCash = "P";
 
                                         DateTime date = Convert.ToDateTime(_dsStatements.Tables[0].Rows[i]["TRANSACTIONDATE"]);

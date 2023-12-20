@@ -98,7 +98,7 @@ namespace VA012.Models
             string[] paramValue = fields.Split(',');
             //Assign parameter value
             int Charge_ID = Util.GetValueOfInt(paramValue[0].ToString());
-            return Util.GetValueOfString(DB.ExecuteScalar("SELECT DTD001_ChargeType FROM C_Charge WHERE  C_Charge_ID=" + Charge_ID, null, null));
+            return Util.GetValueOfString(DB.ExecuteScalar("SELECT DTD001_ChargeType FROM C_Charge WHERE  C_Charge_ID="+ Charge_ID, null, null));
         }
 
     }

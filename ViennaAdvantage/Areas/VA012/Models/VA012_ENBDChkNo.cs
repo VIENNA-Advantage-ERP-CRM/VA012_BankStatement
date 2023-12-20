@@ -31,6 +31,7 @@ namespace VA012.Models
         #region Variables
         //Variable declaration
         int _AD_Org_ID = 0;
+        string _AccountNumber = "";
         int _C_BankAccount_ID = 0;
         //int Count = 0;
         int _c_bpartner_id = 0;
@@ -237,9 +238,11 @@ namespace VA012.Models
                                         }
                                         if (i == 1)
                                         {
+
                                             _IBAN = Util.GetValueOfString(dt.Rows[i][0]);
                                             _IBAN = _IBAN.Substring(_IBAN.LastIndexOf(':') + 1).Trim();
                                         }
+
                                         continue;
                                     }
                                     #region Header
