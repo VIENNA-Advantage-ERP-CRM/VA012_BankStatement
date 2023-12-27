@@ -31,6 +31,7 @@ namespace VA012.Models
         #region Variables
         //Variable declaration
         int _AD_Org_ID = 0;
+        string _AccountNumber = "";
         int _C_BankAccount_ID = 0;
         //int Count = 0;
         int _c_bpartner_id = 0;
@@ -67,6 +68,7 @@ namespace VA012.Models
             VA012.Models.StatementResponse _obj = new VA012.Models.StatementResponse();
             string _branchName = "";
             string _IBAN = "";
+            string _AccountNum = "";
             //string abc = "";
             //string _datasetvalues = "";
             try
@@ -158,8 +160,18 @@ namespace VA012.Models
                 //}
                 //_AD_Org_ID = Util.GetValueOfInt(ctx.GetAD_Org_ID());
                 _C_BankAccount_ID = _bankaccount;
-                _AD_Org_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BankAccount_ID=" + _C_BankAccount_ID));
-                string _accountType = Util.GetValueOfString(DB.ExecuteScalar("Select BankAccountType from C_BankAccount Where C_BankAccount_ID=" + _C_BankAccount_ID));
+                string AccountNo = "";
+                string BankAccountType = "";
+                //VIS317 
+                //devops 1644 
+                string _sql1 = @"SELECT AccountNo,BankAccountType, AD_Org_ID FROM C_BankAccount WHERE C_BankAccount_ID=" + _C_BankAccount_ID;
+                DataSet _dat = DB.ExecuteDataset(_sql1, null, null);
+                if (_dat != null && _dat.Tables[0].Rows.Count > 0)
+                {
+                    AccountNo = Util.GetValueOfString(_dat.Tables[0].Rows[0]["AccountNo"]);
+                    BankAccountType = Util.GetValueOfString(_dat.Tables[0].Rows[0]["BankAccountType"]);
+                    _AD_Org_ID = Util.GetValueOfInt(_dat.Tables[0].Rows[0]["AD_Org_ID"]);
+                }
                 int _stementID = 0;
                 _Filenames.Append(FileName + ",");
                 if (_Filenames.ToString() != "")
@@ -207,15 +219,30 @@ namespace VA012.Models
                                 }
                                 _branchName = "";
                                 _IBAN = "";
+                                _AccountNum = "";
                                 for (int i = 0; i < dt.Rows.Count; i++)
                                 {
                                     if (i <= 2)
                                     {
+                                        //Devops 1644 When import the bank statement with diffrent account which is not matched with excelsheet bankAccount
+                                        //System will give the message Statement with Different Bank Account.Can't Import. 
+                                        if (i == 0)
+                                        {
+                                            _AccountNum = Util.GetValueOfString(dt.Rows[i][0]);
+                                            _AccountNum = _AccountNum.Substring(_AccountNum.LastIndexOf(':') + 1).Trim();
+                                            if (AccountNo != _AccountNum)
+                                            {
+                                                _obj._error = "VA012_DiffAccountNumber";
+                                                return _obj;
+                                            }
+                                        }
                                         if (i == 1)
                                         {
+
                                             _IBAN = Util.GetValueOfString(dt.Rows[i][0]);
                                             _IBAN = _IBAN.Substring(_IBAN.LastIndexOf(':') + 1).Trim();
                                         }
+
                                         continue;
                                     }
                                     #region Header

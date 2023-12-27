@@ -15,7 +15,8 @@
             mTab.setValue("VA012_IsContra", false);
         }
         else {
-            var _contra = Util.getValueOfString(VIS.DB.executeScalar("SELECT DTD001_ChargeType FROM C_Charge WHERE  C_Charge_ID=" + value.toString()));
+            //var _contra = Util.getValueOfString(VIS.DB.executeScalar("SELECT DTD001_ChargeType FROM C_Charge WHERE  C_Charge_ID=" + value.toString()));
+            var _contra = VIS.dataContext.getJSONRecord("VA012/Statement/GetChargeType", Util.getValueOfInt(value));
             if (_contra == "CON") {
                 mTab.setValue("VA012_IsContra", true);
             }
