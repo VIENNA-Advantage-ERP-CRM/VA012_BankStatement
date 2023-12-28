@@ -7816,6 +7816,9 @@
                     _dtStatementDate.val(Globalize.format(new Date(stateDate), "yyyy-MM-dd"));
                 }
                 else {
+                    //VIS_427 Bug id 3332 28/12/2023 handled to set today's date if statement date is not present
+                     now = new Date();
+                    _today = now.getFullYear() + "-" + (("0" + (now.getMonth() + 1)).slice(-2)) + "-" + (("0" + now.getDate()).slice(-2));
                     _dtStatementDate.val(_today);
                 }
                 //_cmbPaymentMethod.prop('selectedIndex', 0);
@@ -7920,6 +7923,9 @@
                     _dtStatementDate.val(Globalize.format(new Date(stateDate), "yyyy-MM-dd"));
                 }
                 else {
+                    //VIS_427 Bug id 3332 28/12/2023 handled to set today's date if statement date is not present
+                     now = new Date();
+                    _today = now.getFullYear() + "-" + (("0" + (now.getMonth() + 1)).slice(-2)) + "-" + (("0" + now.getDate()).slice(-2));
                     _dtStatementDate.val(_today);
                 }
                 //_cmbPaymentMethod.prop('selectedIndex', 0);
