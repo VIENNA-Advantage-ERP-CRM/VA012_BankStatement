@@ -61,5 +61,23 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// GetCharge Type for contra
+        /// Author:Meghraj(VA323)
+        /// </summary>
+        /// <param name="fields">fields</param>
+        /// <returns>ChargeType</returns>
+        public JsonResult GetChargeType(String fields)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementModel statement = new StatementModel();
+                retJSON = JsonConvert.SerializeObject(statement.GetChargeMethod(ctx, fields));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
     }
 }

@@ -2116,8 +2116,8 @@ namespace VA012.Models
              WHEN (BSL.C_PAYMENT_ID IS NOT NULL OR BSL.C_CHARGE_ID IS NOT NULL OR BSL.C_CASHLINE_ID IS NOT NULL) 
              THEN ( 
              CASE 
-             WHEN ( BSL.C_CURRENCY_ID! =BCURR.C_CURRENCY_ID) 
-             THEN BSL.StmtAmt*( 
+             WHEN ( BSL.C_CURRENCY_ID != BCURR.C_CURRENCY_ID) 
+             THEN BSL.StmtAmt * ( 
               CASE 
              WHEN CCR.MULTIPLYRATE IS NOT NULL 
              THEN CCR.MULTIPLYRATE 
@@ -2131,8 +2131,8 @@ namespace VA012.Models
              WHEN (BSL.C_PAYMENT_ID IS NULL AND BSL.C_CHARGE_ID IS NULL AND  BSL.C_CASHLINE_ID IS NULL) 
              THEN ( 
              CASE 
-             WHEN ( BSL.C_CURRENCY_ID! = BCURR.C_CURRENCY_ID) 
-             THEN BSL.StmtAmt*( 
+             WHEN ( BSL.C_CURRENCY_ID != BCURR.C_CURRENCY_ID) 
+             THEN BSL.StmtAmt * ( 
              CASE  
               WHEN CCR.MULTIPLYRATE IS NOT NULL 
              THEN CCR.MULTIPLYRATE 
@@ -2150,22 +2150,22 @@ namespace VA012.Models
               ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID) 
              
              INNER JOIN AD_ClientInfo CINFO  
-             ON (CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID) 
+             ON (CINFO.AD_CLIENT_ID = BSL.AD_CLIENT_ID)  
              INNER JOIN C_AcctSchema AC 
-             ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID)
+             ON (AC.C_ACCTSCHEMA_ID = CINFO.C_ACCTSCHEMA1_ID)
              LEFT JOIN C_Currency BCURR
-             ON (" + currencyID + @" =BCURR.C_CURRENCY_ID)
+             ON (" + currencyID + @" = BCURR.C_CURRENCY_ID)
              LEFT JOIN C_Conversion_Rate CCR 
-             ON ((CCR.C_CURRENCY_ID   =BSL.C_CURRENCY_ID) 
+             ON ((CCR.C_CURRENCY_ID   = BSL.C_CURRENCY_ID) 
              AND CCR.ISACTIVE ='Y' 
              AND (CCR.C_CURRENCY_TO_ID=" + currencyID + @") AND (CCR.AD_CLIENT_ID =BSL.AD_CLIENT_ID)
              AND (CCR.AD_ORG_ID IN (BSL.AD_ORG_ID,0))
              AND (SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO))
              
              LEFT JOIN C_Conversion_Rate CCR1
-             ON ((CCR1.C_CURRENCY_ID   =" + currencyID + @") AND (CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID)
-             AND (CCR1.ISACTIVE        ='Y')
-             AND (CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID )
+             ON ((CCR1.C_CURRENCY_ID   = " + currencyID + @") AND (CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID)
+             AND (CCR1.ISACTIVE        = 'Y')
+             AND (CCR1.AD_CLIENT_ID    = BSL.AD_CLIENT_ID )
              AND (CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0))
              AND (SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)) 
              WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + cmbBankAccount + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
@@ -3955,6 +3955,8 @@ namespace VA012.Models
             }
             else if (_transactionType == "IS")
             {
+            /*VIS_427 05/12/2023 Bugid:3179 When user is creating the Payment with the reference of invoice and Payment is drafted
+            then handled Query to restrict those refrences to not visible on Bank statement form*/
                 _sql = @" SELECT 
                               PAY.C_INVOICEPAYSCHEDULE_id AS C_PAYMENT_ID,
                               CURR.ISO_CODE               AS CURRENCY,
@@ -4014,7 +4016,13 @@ namespace VA012.Models
                             INNER JOIN C_DocType DT
                             ON (DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID)
                             WHERE  pay.VA009_IsPaid='N'
-                            AND PAY.ISACTIVE='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE!='B'";
+                            AND PAY.ISACTIVE='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE != 'B'
+                            AND PAY.C_InvoicePaySchedule_ID NOT IN (
+                            SELECT CASE WHEN C_Payment.C_Payment_ID != COALESCE(C_PaymentAllocate.C_Payment_ID,0) 
+                            THEN COALESCE(C_Payment.C_InvoicePaySchedule_ID,0)  ELSE COALESCE(C_PaymentAllocate.C_InvoicePaySchedule_ID,0) END 
+                            FROM C_Payment LEFT JOIN C_PaymentAllocate ON (C_PaymentAllocate.C_Payment_ID = C_Payment.C_Payment_ID) 
+                            WHERE C_Payment.DocStatus NOT IN ('CO', 'CL' ,'RE','VO')) 
+                            AND PAY.VA009_ExecutionStatus NOT IN ('Y','J')";
 
                 if (bankOrg_ID != 0)
                 {
@@ -4084,6 +4092,8 @@ namespace VA012.Models
             }
             else if (_transactionType == "PO")
             {
+            /*VIS_427 05/12/2023 Bugid:3179 When user is creating the Payment with the reference of order and Payment is drafted
+            then handled Query to restrict those refrences to not visible on Bank statement form*/
                 _sql = @" SELECT PAY.C_order_id AS C_PAYMENT_ID,
                           CURR.ISO_CODE       AS CURRENCY,
                           PAY.DOCUMENTNO      AS PAYMENTNO,
@@ -4119,7 +4129,9 @@ namespace VA012.Models
                         ON (PM.VA009_PAYMENTMETHOD_ID=PAY.VA009_PAYMENTMETHOD_ID)
                         WHERE dt.DocSubTypeSO='PR'
                         AND PAY.DOCSTATUS='WP'
-                        AND PAY.ISACTIVE='Y' AND PM.VA009_PAYMENTBASETYPE!='B'";
+                        AND PAY.ISACTIVE='Y' AND PM.VA009_PAYMENTBASETYPE != 'B'
+                        AND PAY.C_Order_ID NOT IN (SELECT COALESCE(C_Order_ID,0) 
+                        FROM C_Payment WHERE DocStatus NOT IN ('CO', 'CL' ,'RE','VO'))";
                 if (bankOrg_ID != 0)
                 {
                     _sql += " AND PAY.AD_ORG_ID=" + bankOrg_ID;
@@ -7098,6 +7110,136 @@ namespace VA012.Models
             }
             return bankList;
         }
+
+        /// <summary>
+        /// Author: VA323
+        /// Get List of Bank Charge
+        /// </summary>
+        /// <returns>List of Bank charge</returns>
+        public List<ChargeProp> GetBankCharge(Ctx ctx)
+        {
+            List<ChargeProp> _list = new List<ChargeProp>();
+            string _sql = "SELECT C_CHARGE_ID, NAME FROM C_CHARGE WHERE ISACTIVE = 'Y' AND AD_CLIENT_ID = " + ctx.GetAD_Client_ID() + " AND ROWNUM = 1 ORDER BY NAME ";
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Charge", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                ChargeProp obj = new ChargeProp();
+                obj.chargeID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_CHARGE_ID"]);
+                obj.name = Util.GetValueOfString(_ds.Tables[0].Rows[0]["Name"]);
+                _list.Add(obj);
+            }
+            return _list;
+        }
+
+        /// <summary>
+        /// Get the list of Statement number
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>List Of Statement number</returns>
+        public List<MatchBase> GetStatementNolist(Ctx ctx, int _cmbBankAccount)
+        {
+            List<MatchBase> _list = new List<MatchBase>();
+            MatchBase obj = null;
+
+            string _sql = "SELECT C_BankStatement.C_Bankstatement_Id, C_BankStatement.NAME,C_BankStatement.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BankStatement C_BankStatement INNER JOIN C_BankStatementLine CBL ON (cbl.C_BANKSTATEMENT_ID = C_BankStatement.C_BANKSTATEMENT_ID) WHERE C_BankStatement.Isactive = 'Y' AND C_BankStatement.Ad_Client_Id = " + ctx.GetAD_Client_ID() + " AND C_BankStatement.C_Bankaccount_Id = " + _cmbBankAccount + " AND C_BankStatement.Docstatus NOT IN  ('CO','CL','VO') GROUP BY C_BankStatement.C_BANKSTATEMENT_ID,C_BankStatement.Docstatus, C_BankStatement.NAME";
+            //_sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_BankStatement", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                {
+                    obj = new MatchBase();
+                    obj.Value = Util.GetValueOfString(_ds.Tables[0].Rows[i]["C_Bankstatement_Id"]);
+                    obj.Name = Util.GetValueOfString(_ds.Tables[0].Rows[i]["NAME"]);
+                    _list.Add(obj);
+                }
+            }
+            return _list;
+        }
+
+        /// <summary>
+        /// Get the Charge Data
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="bankAcct">C_BankAccount_ID</param>
+        /// <returns>List of Charge Data</returns>
+        public List<MatchBase> LoadListofStatementclass(Ctx ctx, int bankAcct)
+        {
+            List<MatchBase> _list = new List<MatchBase>();
+            MatchBase obj = null;
+            //--  Get Statement classes name        
+            string _sql = "SELECT VA012_BankStatementClass.VA012_BANKSTATEMENTCLASSNAME AS NAME, CONCAT(CONCAT(SC.NAME,'_'),VA012_BANKSTATEMENTCLASS_ID) AS VA012_BANKSTATEMENTCLASS_ID FROM VA012_BankStatementClass VA012_BankStatementClass INNER JOIN VA012_STATEMENTCLASS SC ON (VA012_BankStatementClass.VA012_STATEMENTCLASS_ID=SC.VA012_STATEMENTCLASS_ID) WHERE C_BANKACCOUNT_ID =" + bankAcct;
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "VA012_BankStatementClass", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                {
+                    obj = new MatchBase();
+                    obj.Value = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA012_BANKSTATEMENTCLASS_ID"]);
+                    obj.Name = Util.GetValueOfString(_ds.Tables[0].Rows[i]["NAME"]);
+                    _list.Add(obj);
+                }
+            }
+            return _list;
+        }
+        /// <summary>
+        /// Get the cash book data
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>List of cash book</returns>
+        public List<MatchBase> GetCashBook(Ctx ctx)
+        {
+            List<MatchBase> _list = new List<MatchBase>();
+            MatchBase obj = null;
+            //--  Get Statement classes name        
+            string _sql = "SELECT NAME,C_CashBook_ID FROM C_CashBook WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID();
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_CashBook", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                {
+                    obj = new MatchBase();
+                    obj.Value = Util.GetValueOfString(_ds.Tables[0].Rows[i]["C_CashBook_ID"]);
+                    obj.Name = Util.GetValueOfString(_ds.Tables[0].Rows[i]["NAME"]);
+                    _list.Add(obj);
+                }
+            }
+            return _list;
+        }
+
+        /// <summary>
+        /// Get the list of Payment Method
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <param name="AD_Client_ID">AD_Client_ID</param>
+        /// <param name="AD_Org_ID">AD_Org_ID</param>
+        /// <returns>List of cash book</returns>
+        public List<MatchBase> GetPaymentMethodList(Ctx ctx, int AD_Client_ID, int AD_Org_ID)
+        {
+            List<MatchBase> _list = new List<MatchBase>();
+            MatchBase obj = null;
+            //--  Get Payment Method Names       
+            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID FROM VA009_PAYMENTMETHOD WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + AD_Client_ID + " AND AD_ORG_ID=" + AD_Org_ID;
+            _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "VA009_PAYMENTMETHOD", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+            DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+            if (_ds != null && _ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
+                {
+                    obj = new MatchBase();
+                    obj.Value = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA009_PAYMENTMETHOD_ID"]);
+                    obj.Name = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA009_NAME"]);
+                    _list.Add(obj);
+                }
+            }
+            return _list;
+        }
+
     }
     public class BankAccountsList
     {
@@ -7201,8 +7343,10 @@ namespace VA012.Models
         public string _taxAmt { get; set; }
         public string _chargeType { get; set; }
         public string _taxRate { get; set; }
-    }
-
+		//VIS_427 02/11/2023 BugId: 2748 declared variable
+        public int _StdPrecision { get; set; }
+	}
+	
     public class UnMatchResponse
     {
         public string _statementOk { get; set; }
