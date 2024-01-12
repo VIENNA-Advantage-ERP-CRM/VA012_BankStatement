@@ -35,7 +35,7 @@ namespace VA012.Models
         StringBuilder query = null, _Filenames = new StringBuilder();
         string _Extension = string.Empty, _FileLocation = string.Empty;
         #endregion
-        public StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate)
+        public StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate,bool IsStatementDateAsAccountDate)
         {
             StatementResponse _obj = new StatementResponse();
 
@@ -273,7 +273,15 @@ namespace VA012.Models
                                         _BnkStmtLine.SetLine(lineno);
                                         lineno = lineno + 10;
                                         _BnkStmtLine.SetStatementLineDate(Convert.ToDateTime(dt.Rows[i][1]));// Set Transaction Date
-                                        _BnkStmtLine.SetDateAcct(Convert.ToDateTime(dt.Rows[i][1]));// Set Transaction Date
+                                        //VIS_427 DevopsId:4207 12/01/2024 If checkbox is true then the account date will be same as header statement date
+                                        if (IsStatementDateAsAccountDate)
+                                        {
+                                            _BnkStmtLine.SetDateAcct(_BnkStatm.GetStatementDate());
+                                        }
+                                        else
+                                        {
+                                            _BnkStmtLine.SetDateAcct(Convert.ToDateTime(dt.Rows[i][1]));// Set Transaction Date
+                                        }
                                         _BnkStmtLine.SetValutaDate(Convert.ToDateTime(dt.Rows[i][1]));// Set Transaction Date
                                         _BnkStmtLine.SetReferenceNo(Convert.ToString(dt.Rows[i][3]));// Set Transaction Remarks
                                         _BnkStmtLine.SetDescription(Convert.ToString(dt.Rows[i][2]));// Set Transaction Purticular
@@ -394,7 +402,15 @@ namespace VA012.Models
                                         _BnkStmtLine.SetLine(lineno);
                                         lineno = lineno + 10;
                                         _BnkStmtLine.SetStatementLineDate(Convert.ToDateTime(dt.Rows[i][1]));// Set Transaction Date
-                                        _BnkStmtLine.SetDateAcct(Convert.ToDateTime(dt.Rows[i][1]));// Set Transaction Date
+                                        //VIS_427 DevopsId:4207 12/01/2024 If checkbox is true then the account date will be same as header statement date
+                                        if (IsStatementDateAsAccountDate)
+                                        {
+                                            _BnkStmtLine.SetDateAcct(statementDate);
+                                        }
+                                        else
+                                        {
+                                            _BnkStmtLine.SetDateAcct(Convert.ToDateTime(dt.Rows[i][1]));// Set Transaction Date
+                                        }
                                         _BnkStmtLine.SetValutaDate(Convert.ToDateTime(dt.Rows[i][1]));// Set Transaction Date
                                         _BnkStmtLine.SetReferenceNo(Convert.ToString(dt.Rows[i][3]));// Set Transaction Remarks
                                         _BnkStmtLine.SetDescription(Convert.ToString(dt.Rows[i][2]));// Set Transaction Purticular

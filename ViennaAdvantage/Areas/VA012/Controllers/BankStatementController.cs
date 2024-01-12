@@ -33,8 +33,9 @@ namespace VA012.Controllers
         /// <param name="_statementClassName">Statement Class Name</param>
         /// <param name="_statementCharges">Statement charges</param>
         /// <param name="statementDate">Statement Date</param>
+        /// <param name="IsStatementDateAsAccountDate">Statement Date As Account Date</param>
         /// <returns>class Object that returns C_BankStatement_ID or Error Message in the JSON format</returns>
-        public JsonResult ImportStatement(string _path, string _filename, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementClassName, string _statementCharges, DateTime? statementDate)
+        public JsonResult ImportStatement(string _path, string _filename, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementClassName, string _statementCharges, DateTime? statementDate, bool IsStatementDateAsAccountDate)
         {
             Ctx ctx = Session["ctx"] as Ctx;
             string _className = "";
@@ -53,11 +54,11 @@ namespace VA012.Controllers
             if (_className == null || _className == "" || _className == string.Empty)
             {
                 BankStatementDataImport obj = new BankStatementDataImport();
-                return Json(obj.ImportStatement(ctx, _filename, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate), JsonRequestBehavior.AllowGet);
+                return Json(obj.ImportStatement(ctx, _filename, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate, IsStatementDateAsAccountDate), JsonRequestBehavior.AllowGet);
             }
             else
             {
-                return Json(ExecuteClass(_className, ctx, _filename, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate), JsonRequestBehavior.AllowGet);
+                return Json(ExecuteClass(_className, ctx, _filename, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate, IsStatementDateAsAccountDate), JsonRequestBehavior.AllowGet);
 
             }
 
@@ -75,8 +76,9 @@ namespace VA012.Controllers
         /// <param name="_statementno">Statement Name</param>
         /// <param name="_statementCharges">Statement Charges</param>
         /// <param name="statementDate">Statement Date</param>
+        /// <param name="IsStatementDateAsAccountDate">Statement Date As Account Date</param>
         /// <returns>class Object that returns C_BankStatement_ID or Error Message</returns>
-        private static StatementResponse ExecuteClass(string _className, Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate)
+        private static StatementResponse ExecuteClass(string _className, Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate,bool IsStatementDateAsAccountDate)
         {
             StatementResponse _obj = new StatementResponse();
             MethodInfo methodInfo = null;
@@ -113,7 +115,7 @@ namespace VA012.Controllers
                         //_className is Equal to VA012_ENBDChkNo then pass the extra parameter statementDate in obj object array
                         if (_className.Equals("VA012.Models.VA012_ENBDChkNo"))
                         {
-                            obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate };
+                            obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate, IsStatementDateAsAccountDate };
                         }
                         else
                         {
