@@ -1583,7 +1583,8 @@
                     _cmbBankAccount.append("<option value=0 ></option>");
                     if (data != null) {
                         for (var i = 0; i < data.length; i++) {
-                            _cmbBankAccount.append("<option orgid=" + VIS.Utility.Util.getValueOfInt(data[i].OrgId) + " stdprecision=" + VIS.Utility.Util.getValueOfInt(data[i].StdPrecision) + " currencyid=" + VIS.Utility.Util.getValueOfInt(data[i].CurrencyId) + " value=" + VIS.Utility.Util.getValueOfInt(data[i].BankAccountId) + ">" + VIS.Utility.encodeText(data[i].AccountNo) + "</option>");
+                            //VIS_427 DevOpsID:4207 Added value of bank Account Type in attribute
+                            _cmbBankAccount.append("<option orgid=" + VIS.Utility.Util.getValueOfInt(data[i].OrgId) + " stdprecision=" + VIS.Utility.Util.getValueOfInt(data[i].StdPrecision) + " currencyid=" + VIS.Utility.Util.getValueOfInt(data[i].CurrencyId) + " value=" + VIS.Utility.Util.getValueOfInt(data[i].BankAccountId) + " accounttype=" + VIS.Utility.Util.getValueOfString(data[i].AccountType) + ">" + VIS.Utility.encodeText(data[i].AccountNo) + "</option>");
                         }
                     }
                     _cmbBankAccount.prop('selectedIndex', 0);
@@ -3296,9 +3297,11 @@
                 var STAT_cmbBankAccountClassName = null;
                 //variable declaration  
                 var STAT_statementDate = null;
-
+                var STAT_Checked = null;
                 var STAT_cmbBankAccountCharges = null;
                 var Bank_Charge_ID = null;
+                //VIS_427 DevOpsID:4207 12/01/2024 fetched value of bank Account Type
+                var accounttype = _cmbBankAccount.children()[_cmbBankAccount[0].selectedIndex].getAttribute('accounttype');
 
 
                 var STAT_txtStatementNo = null;
@@ -3357,6 +3360,14 @@
                     + "<label for='file-input' class='va012-file-label'>" + VIS.Msg.getMsg("VA012_Browse") + "</label>"
                     + "<input id='VA012_ctrlLoadFile_" + $self.windowNo + "' type='file' accept='.csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'/>"
                     + "</div></div>"
+
+                    /*VIS_427 DevOpsID:4207 12/01/2024 Added HTML for checkbox labeled as Statement Date As Account Date
+                     which will be only visible if Bank Account Type is D(Credit Card) */
+                    + "<div class='VA012-checkbox-div " + accounttype + "'>"
+                    + " <input type='checkbox' value='checked' id='VA012_CheckBox_" + $self.windowNo + "'>"
+                    + "<label class='VA012-StatementDateAsAccountDate'>"+ VIS.Msg.getMsg("VA012_StatementDateAsAccountDate") +"</label>"
+                    + "</div>"
+
                     + "</div>";
 
                 $statement.append(_statement);
@@ -3366,7 +3377,7 @@
                 STAT_loadBankAccount();
                 loadBankAccountClasses();
                 //set statement date parameter whcih was already selected on header
-                STAT_statementDate.val(Globalize.format(new Date(_statementDate.val()), "yyyy-MM-dd"));
+                STAT_statementDate.val(Globalize.format(_statementDate.val(), "yyyy-MM-dd"));
 
 
                 loadBankAccountCharges();
@@ -3384,8 +3395,8 @@
                     STAT_cmbBankAccountClassName = $statement.find("#VA012_STAT_cmbBankAccountClassName_" + $self.windowNo);
                     //get control from dialog design
                     STAT_statementDate = $statement.find("#VA012_STAT_statementDate_" + $self.windowNo);
-
-
+                    //VIS_427 DevOpsID:4207 12/01/2024 Initialised control of checkbox
+                    STAT_Checked = $statement.find("#VA012_CheckBox_" + $self.windowNo)
                     //// STAT_cmbBankAccountCharges = $statement.find("#VA012_STAT_cmbBankAccountCharges_" + $self.windowNo);
 
                     STAT_txtStatementNo = $statement.find("#VA012_STAT_txtStatementNo_" + $self.windowNo);
@@ -3553,6 +3564,8 @@
                                 var _bankaccount = STAT_cmbBankAccount.val();
                                 var _statementno = STAT_txtStatementNo.val();
                                 var $_statement = $statement;
+                                //VIS_427 DevOpsID: 4207 12 / 01 /2024 get the value of checkbox i.e. whether true/false
+                                var _IsStatementDateAsAccountDate = STAT_Checked.is(':checked');
                                 var _statementClassName = STAT_cmbBankAccountClassName.val();
 
                                 var _statementCharges = Bank_Charge_ID;// STAT_cmbBankAccountCharges.val();
@@ -3568,7 +3581,7 @@
                                         datatype: "json",
                                         contentType: "application/json; charset=utf-8",
                                         async: false,
-                                        data: ({ _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno, _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: STAT_statementDate.val() }),
+                                        data: ({ _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno, _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: STAT_statementDate.val(), IsStatementDateAsAccountDate: _IsStatementDateAsAccountDate }),
                                         success: function (result) {
 
 

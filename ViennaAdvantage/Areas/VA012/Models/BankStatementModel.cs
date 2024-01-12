@@ -7089,7 +7089,8 @@ namespace VA012.Models
         public List<BankAccountsList> GetBankAccount(Ctx ctx, int bankId)
         {
             List<BankAccountsList> bankList = new List<BankAccountsList>();
-            string _sql = @"SELECT C_BankAccount.C_BANKACCOUNT_ID,C_BankAccount.ACCOUNTNO,C_BankAccount.C_CURRENCY_ID,C.STDPRECISION,C_BankAccount.AD_Org_ID FROM C_BankAccount C_BankAccount 
+            //VIS_427 DevopsId:4207 12/01/2024 Handled Query to get Bank Account Type
+            string _sql = @"SELECT C_BankAccount.C_BANKACCOUNT_ID,C_BankAccount.ACCOUNTNO,C_BankAccount.C_CURRENCY_ID,C.STDPRECISION,C_BankAccount.AD_Org_ID,C_BankAccount.BankAccountType FROM C_BankAccount C_BankAccount 
                             INNER JOIN C_Currency C ON(C.C_Currency_ID = C_BankAccount.C_Currency_ID) WHERE C_BankAccount.ISACTIVE = 'Y' AND C_BankAccount.C_BANK_ID =" + bankId;
             //Added MRole Check
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_BankAccount", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
@@ -7104,6 +7105,7 @@ namespace VA012.Models
                     list.CurrencyId = Util.GetValueOfInt(ds.Tables[0].Rows[i]["C_CURRENCY_ID"]);
                     list.StdPrecision = Util.GetValueOfInt(ds.Tables[0].Rows[i]["STDPRECISION"]);
                     list.OrgId = Util.GetValueOfInt(ds.Tables[0].Rows[i]["AD_Org_ID"]);
+                    list.AccountType = Util.GetValueOfString(ds.Tables[0].Rows[i]["BankAccountType"]);
                     bankList.Add(list);
                 }
             }
@@ -7247,6 +7249,8 @@ namespace VA012.Models
         public int CurrencyId { get; set; }
         public int StdPrecision { get; set; }
         public int OrgId { get; set; }
+        //VIS_427 DevopsId:4207 12/01/2024 intialised property to get/set accounttype
+        public string AccountType { get; set; }
     }
     public class TaxRate
     {
