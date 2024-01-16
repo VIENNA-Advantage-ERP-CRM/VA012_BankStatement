@@ -971,3 +971,12 @@ overflow: hidden;*/
     float:right !important;
     cursor:pointer;
 }
+.VA012-checkbox-div{
+    display: none;
+}
+.VA012-checkbox-div.D {
+    display: block;
+}
+.VA012-StatementDateAsAccountDate{
+    font-weight:normal
+}

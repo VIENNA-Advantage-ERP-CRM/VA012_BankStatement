@@ -396,6 +396,7 @@
             _btnUnmatch.on(VIS.Events.onTouchStartOrClick, function () {
 
                 if (_statementLinesList.length > 0) {
+                    busyIndicator($root, true, "absolute");
                     $.ajax({
                         type: 'POST',
                         url: VIS.Application.contextUrl + "VA012/BankStatement/UnmatchStatement",
@@ -439,10 +440,14 @@
                                 newRecordForm.prepayRefresh();
                                 _paymentPageNo = 1;
                                 loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                                busyIndicator($root, false, "absolute");
                             }
 
                         },
-                        error: function (data) { VIS.ADialog.info(data, null, "", ""); }
+                        error: function (data) {
+                            busyIndicator($root, false, "absolute");
+                            VIS.ADialog.info(data, null, "", "");
+                        }
                     });
                 }
                 else {
@@ -462,6 +467,7 @@
                 }
                 //if (_statementLinesList.length > 0) {
                 else {
+                    busyIndicator($root, true, "absolute");
                     $.ajax({
                         type: 'POST',
                         url: VIS.Application.contextUrl + "VA012/BankStatement/ProcessStatement",
@@ -502,10 +508,14 @@
                                 newRecordForm.prepayRefresh();
                                 _paymentPageNo = 1;
                                 loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                                busyIndicator($root, false, "absolute");
                             }
 
                         },
-                        error: function (data) { VIS.ADialog.info(data, null, "", ""); }
+                        error: function (data) {
+                            busyIndicator($root, false, "absolute");
+                            VIS.ADialog.info(data, null, "", "");
+                        }
                     });
                 }
                 //else {
@@ -516,47 +526,56 @@
             ///Delete
             _btnDelete.on(VIS.Events.onTouchStartOrClick, function () {
                 if (_statementLinesList.length > 0 || parseInt($_formNewRecord.attr("data-uid")) > 0) {
-                    if (VIS.ADialog.ask(VIS.Msg.getMsg("VA012_WantToDelete"))) {
-                        $.ajax({
-                            type: 'POST',
-                            url: VIS.Application.contextUrl + "VA012/BankStatement/DeleteStatement",
-                            contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify({ _statementLinesList: _statementLinesList.toString(), _statementLineID: $_formNewRecord.attr("data-uid") }),
-                            success: function (data) {
-                                if (data != null && data != "") {
-                                    data = $.parseJSON(data);
-                                    if (data[0]._status == "Success") {
-                                        if (data[0]._statementProcessed != null) {
-                                            VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsDeleted"), null, "", "");
+                    VIS.ADialog.confirm("VA012_WantToDelete", true, "", "Confirm", function (result) {
+                        if (!result) {
+                            return;
+                        }
+                        else {
+                            busyIndicator($root, true, "absolute");
+                            $.ajax({
+                                type: 'POST',
+                                url: VIS.Application.contextUrl + "VA012/BankStatement/DeleteStatement",
+                                contentType: "application/json; charset=utf-8",
+                                data: JSON.stringify({ _statementLinesList: _statementLinesList.toString(), _statementLineID: $_formNewRecord.attr("data-uid") }),
+                                success: function (data) {
+                                    if (data != null && data != "") {
+                                        data = $.parseJSON(data);
+                                        if (data[0]._status == "Success") {
+                                            if (data[0]._statementProcessed != null) {
+                                                VIS.ADialog.info(data[0]._statementProcessed + " " + VIS.Msg.getMsg("VA012_StatementsDeleted"), null, "", "");
+                                            }
                                         }
-                                    }
-                                    if (data[0]._statementNotProcessed != null) {
-                                        VIS.ADialog.info(data[0]._statementNotProcessed + " " + VIS.Msg.getMsg("VA012_StatementsNotDeleted"), null, "", "");
-                                    }
-                                    if (data[0]._error != null) {
-                                        VIS.ADialog.info(data[0]._error, null, "", "");
+                                        if (data[0]._statementNotProcessed != null) {
+                                            VIS.ADialog.info(data[0]._statementNotProcessed + " " + VIS.Msg.getMsg("VA012_StatementsNotDeleted"), null, "", "");
+                                        }
+                                        if (data[0]._error != null) {
+                                            VIS.ADialog.info(data[0]._error, null, "", "");
+                                        }
+
+                                        newRecordForm.scheduleRefresh();
+                                        newRecordForm.prepayRefresh();
+                                        newRecordForm.refreshForm();
+                                        _statementLinesList = [];
+                                        storepaymentdata = [];
+                                        _lstStatement.html("");
+                                        _statementPageNo = 1;
+                                        childDialogs.loadStatement(_statementID);
+                                        _lstPayments.html("");
+                                        newRecordForm.scheduleRefresh();
+                                        newRecordForm.prepayRefresh();
+                                        _paymentPageNo = 1;
+                                        loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                                        busyIndicator($root, false, "absolute");
                                     }
 
-                                    newRecordForm.scheduleRefresh();
-                                    newRecordForm.prepayRefresh();
-                                    newRecordForm.refreshForm();
-                                    _statementLinesList = [];
-                                    storepaymentdata = [];
-                                    _lstStatement.html("");
-                                    _statementPageNo = 1;
-                                    childDialogs.loadStatement(_statementID);
-                                    _lstPayments.html("");
-                                    newRecordForm.scheduleRefresh();
-                                    newRecordForm.prepayRefresh();
-                                    _paymentPageNo = 1;
-                                    loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                                },
+                                error: function (data) {
+                                    busyIndicator($root, false, "absolute");
+                                    VIS.ADialog.info(data, null, "", "");
                                 }
-
-                            },
-                            error: function (data) { VIS.ADialog.info(data, null, "", ""); }
-                        });
-
-                    }
+                            });
+                        }
+                    });
                 }
                 else {
                     // not required the VIS.Msg.getMsg() function
@@ -1499,18 +1518,6 @@
             },
             getBaseCurrency: function () {
 
-                //var _sql = " SELECT BCURR.ISO_CODE AS BASECURRENCY "
-                //+ " FROM AD_CLIENTINFO CINFO "
-                //+ " INNER JOIN C_ACCTSCHEMA AC "
-                //+ " ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID "
-                //+ " LEFT JOIN C_CURRENCY BCURR "
-                //+ " ON AC.C_CURRENCY_ID      =BCURR.C_CURRENCY_ID "
-                //+ " WHERE CINFO.AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID();
-                //var baseCurr = VIS.DB.executeScalar(_sql.toString());
-                //if (baseCurr != "" || baseCurr != null) {
-                //    _clientBaseCurrency = baseCurr;
-                //}
-
                 $.ajax({
                     url: VIS.Application.contextUrl + "BankStatement/GetBaseCurrency",
                     type: "GET",
@@ -1583,7 +1590,8 @@
                     _cmbBankAccount.append("<option value=0 ></option>");
                     if (data != null) {
                         for (var i = 0; i < data.length; i++) {
-                            _cmbBankAccount.append("<option orgid=" + VIS.Utility.Util.getValueOfInt(data[i].OrgId) + " stdprecision=" + VIS.Utility.Util.getValueOfInt(data[i].StdPrecision) + " currencyid=" + VIS.Utility.Util.getValueOfInt(data[i].CurrencyId) + " value=" + VIS.Utility.Util.getValueOfInt(data[i].BankAccountId) + ">" + VIS.Utility.encodeText(data[i].AccountNo) + "</option>");
+                            //VIS_427 DevOpsID:4207 Added value of bank Account Type in attribute
+                            _cmbBankAccount.append("<option orgid=" + VIS.Utility.Util.getValueOfInt(data[i].OrgId) + " stdprecision=" + VIS.Utility.Util.getValueOfInt(data[i].StdPrecision) + " currencyid=" + VIS.Utility.Util.getValueOfInt(data[i].CurrencyId) + " value=" + VIS.Utility.Util.getValueOfInt(data[i].BankAccountId) + " accounttype=" + VIS.Utility.Util.getValueOfString(data[i].AccountType) + ">" + VIS.Utility.encodeText(data[i].AccountNo) + "</option>");
                         }
                     }
                     _cmbBankAccount.prop('selectedIndex', 0);
@@ -3296,9 +3304,11 @@
                 var STAT_cmbBankAccountClassName = null;
                 //variable declaration  
                 var STAT_statementDate = null;
-
+                var STAT_Checked = null;
                 var STAT_cmbBankAccountCharges = null;
                 var Bank_Charge_ID = null;
+                //VIS_427 DevOpsID:4207 12/01/2024 fetched value of bank Account Type
+                var accounttype = _cmbBankAccount.children()[_cmbBankAccount[0].selectedIndex].getAttribute('accounttype');
 
 
                 var STAT_txtStatementNo = null;
@@ -3357,6 +3367,14 @@
                     + "<label for='file-input' class='va012-file-label'>" + VIS.Msg.getMsg("VA012_Browse") + "</label>"
                     + "<input id='VA012_ctrlLoadFile_" + $self.windowNo + "' type='file' accept='.csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'/>"
                     + "</div></div>"
+
+                    /*VIS_427 DevOpsID:4207 12/01/2024 Added HTML for checkbox labeled as Statement Date As Account Date
+                     which will be only visible if Bank Account Type is D(Credit Card) */
+                    + "<div class='VA012-checkbox-div " + accounttype + "'>"
+                    + " <input type='checkbox' value='checked' id='VA012_CheckBox_" + $self.windowNo + "'>"
+                    + "<label class='VA012-StatementDateAsAccountDate'>"+ VIS.Msg.getMsg("VA012_StatementDateAsAccountDate") +"</label>"
+                    + "</div>"
+
                     + "</div>";
 
                 $statement.append(_statement);
@@ -3366,7 +3384,7 @@
                 STAT_loadBankAccount();
                 loadBankAccountClasses();
                 //set statement date parameter whcih was already selected on header
-                STAT_statementDate.val(Globalize.format(new Date(_statementDate.val()), "yyyy-MM-dd"));
+                STAT_statementDate.val(Globalize.format(_statementDate.val(), "yyyy-MM-dd"));
 
 
                 loadBankAccountCharges();
@@ -3384,8 +3402,8 @@
                     STAT_cmbBankAccountClassName = $statement.find("#VA012_STAT_cmbBankAccountClassName_" + $self.windowNo);
                     //get control from dialog design
                     STAT_statementDate = $statement.find("#VA012_STAT_statementDate_" + $self.windowNo);
-
-
+                    //VIS_427 DevOpsID:4207 12/01/2024 Initialised control of checkbox
+                    STAT_Checked = $statement.find("#VA012_CheckBox_" + $self.windowNo)
                     //// STAT_cmbBankAccountCharges = $statement.find("#VA012_STAT_cmbBankAccountCharges_" + $self.windowNo);
 
                     STAT_txtStatementNo = $statement.find("#VA012_STAT_txtStatementNo_" + $self.windowNo);
@@ -3461,22 +3479,12 @@
                 };
 
                 function loadBankAccountCharges() {
-                    //var _sql = "SELECT C_CHARGE_ID, NAME FROM C_CHARGE WHERE ISACTIVE = 'Y' AND AD_CLIENT_ID = " + VIS.Env.getCtx().getAD_Client_ID() + " AND ROWNUM = 1 ORDER BY NAME  ";
-                    //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountCharges);
                     VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetBankCharge", null, callbackloadBankAccountCharges);
                     function callbackloadBankAccountCharges(_ds) {
-                        ////STAT_cmbBankAccountCharges.html("");
-                        ////STAT_cmbBankAccountCharges.append("<option value=0 ></option>");
                         if (_ds != null) {
-                            // STAT_cmbBankAccountCharges.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
-                            // Bank_Charge_ID = VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id);
                             Bank_Charge_ID = VIS.Utility.Util.getValueOfInt(_ds[0].chargeID);
 
                         }
-                        // _ds.dispose();
-                        //  _ds = null;
-                        //_sql = null;
-                        //STAT_cmbBankAccountCharges.prop('selectedIndex', 0);
                     }
                 };
 
@@ -3553,6 +3561,8 @@
                                 var _bankaccount = STAT_cmbBankAccount.val();
                                 var _statementno = STAT_txtStatementNo.val();
                                 var $_statement = $statement;
+                                //VIS_427 DevOpsID: 4207 12 / 01 /2024 get the value of checkbox i.e. whether true/false
+                                var _IsStatementDateAsAccountDate = STAT_Checked.is(':checked');
                                 var _statementClassName = STAT_cmbBankAccountClassName.val();
 
                                 var _statementCharges = Bank_Charge_ID;// STAT_cmbBankAccountCharges.val();
@@ -3568,7 +3578,7 @@
                                         datatype: "json",
                                         contentType: "application/json; charset=utf-8",
                                         async: false,
-                                        data: ({ _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno, _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: STAT_statementDate.val() }),
+                                        data: ({ _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno, _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: STAT_statementDate.val(), IsStatementDateAsAccountDate: _IsStatementDateAsAccountDate }),
                                         success: function (result) {
 
 
@@ -3696,99 +3706,11 @@
                 //_secUnreconciled.html("");
                 //_secReconciled.html("");
 
-                //var _sqlCon = "SELECT NVL(ROUND(SUM( "
-                //    + " CASE "
-                //    + " WHEN (BSL.C_PAYMENT_ID IS NOT NULL OR BSL.C_CHARGE_ID IS NOT NULL OR BSL.C_CASHLINE_ID IS NOT NULL) "
-                //    + " THEN ( "
-                //    + " CASE "
-                //    + " WHEN ( BSL.C_CURRENCY_ID! =BCURR.C_CURRENCY_ID) "
-                //    + " THEN BSL.StmtAmt*( "
-                //    + "  CASE "
-                //    + " WHEN CCR.MULTIPLYRATE IS NOT NULL "
-                //    + " THEN CCR.MULTIPLYRATE "
-                //    + "  ELSE CCR1.DIVIDERATE "
-                //    + "  END) "
-                //    + " ELSE BSL.StmtAmt "
-                //    + " END) "
-                //    + " END),NVL(CURR.StdPrecision,2)),0) AS RECONCILED, "
-                //    + " NVL(ROUND(SUM( "
-                //    + " CASE "
-                //    + " WHEN (BSL.C_PAYMENT_ID IS NULL AND BSL.C_CHARGE_ID IS NULL AND  BSL.C_CASHLINE_ID IS NULL) "
-                //    + " THEN ( "
-                //    + " CASE "
-                //    + " WHEN ( BSL.C_CURRENCY_ID! = BCURR.C_CURRENCY_ID) "
-                //    + " THEN BSL.StmtAmt*( "
-                //    + " CASE  "
-                //    + "  WHEN CCR.MULTIPLYRATE IS NOT NULL "
-                //    + " THEN CCR.MULTIPLYRATE "
-                //    + "  ELSE CCR1.DIVIDERATE "
-                //    + "  END) "
-                //    + " ELSE BSL.StmtAmt "
-                //    + " END) "
-                //    + " END),NVL(CURR.StdPrecision,2)),0) AS UNRECONCILED,BCURR.ISO_CODE AS BASECURRENCY "
-                //    + "  FROM C_BANKSTATEMENT BS"
-                //    + "   INNER JOIN C_BANKSTATEMENTLINE BSL"
-                //    + "  ON BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID"
-                //    + "  LEFT JOIN C_BPARTNER BP"
-                //    + "  ON BSL.C_BPARTNER_ID     =BP.C_BPARTNER_ID"
-
-
-
-
-
-                //    ///
-                //    + "  LEFT JOIN C_CURRENCY CURR "
-                //    + "  ON BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID "
-
-                //    + " INNER JOIN AD_CLIENTINFO CINFO  "
-                //    + " ON CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID  "
-                //    + " INNER JOIN C_ACCTSCHEMA AC  "
-                //    + " ON AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID  "
-                //    + " LEFT JOIN C_CURRENCY BCURR  "
-                //    + " ON " + _currencyId + " =BCURR.C_CURRENCY_ID  "
-                //    + " LEFT JOIN C_CONVERSION_RATE CCR  "
-                //    + " ON (CCR.C_CURRENCY_ID   =BSL.C_CURRENCY_ID  "
-                //    + " AND CCR.ISACTIVE        ='Y'  "
-                //    + " AND CCR.C_CURRENCY_TO_ID=" + _currencyId
-                //    + " AND CCR.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
-                //    + " AND CCR.AD_ORG_ID      IN (BSL.AD_ORG_ID,0) "
-                //    + " AND SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO)  "
-
-
-                //    + " LEFT JOIN C_CONVERSION_RATE CCR1 "
-                //    + " ON (CCR1.C_CURRENCY_ID   =" + _currencyId
-                //    + " AND CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID "
-                //    + " AND CCR1.ISACTIVE        ='Y' "
-                //    + " AND CCR1.AD_CLIENT_ID    =BSL.AD_CLIENT_ID "
-                //    + " AND CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0) "
-                //    + " AND SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO) "
-
-                //    ////
-
-
-                //    + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount.val() + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID();
-
-                //if (VIS.Env.getCtx().getAD_Org_ID() != 0) {
-                //    _sqlCon += " AND BS.AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                //}
-
-                //if (_SEARCHREQUEST) {
-
-                //    _sqlCon += " AND (UPPER(BP.NAME) LIKE UPPER('%" + _txtSearch.val() + "%')"
-                //        + " OR UPPER(BSL.DESCRIPTION) LIKE UPPER('%" + _txtSearch.val() + "%')"
-                //        + " OR UPPER(BS.NAME) LIKE UPPER('%" + _txtSearch.val() + "%')"
-                //        + " OR UPPER(BSL.StmtAmt) LIKE UPPER('%" + _txtSearch.val() + "%')"
-                //        + " OR UPPER(BSL.TRXNO) LIKE UPPER('%" + _txtSearch.val() + "%')"
-                //        + " OR UPPER(BSL.TrxAmt) LIKE UPPER('%" + _txtSearch.val() + "%'))";
-                //}
-                //_sqlCon += " GROUP BY BCURR.ISO_CODE ,NVL(CURR.StdPrecision,2)";
-
                 //Rakesh(VA228):Load ReConciled and UnConciledStatements when bank is selected
                 if (_cmbBankAccount.val() > 0) {
                     busyIndicator($(_lstStatement), true, "inherit");
 
                     window.setTimeout(function () {
-                        //var _dsCon = VIS.DB.executeDataSet(_sqlCon.toString(), null, callbackloadConUncon);
                         $.ajax({
                             url: VIS.Application.contextUrl + "BankStatement/LoadConciledOrUnConciledStatements",
                             type: "GET",
@@ -3798,10 +3720,8 @@
                             data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _currencyID: _currencyId != null ? _currencyId : 0, _searchRequest: _SEARCHREQUEST }),
                             success: function (data) {
                                 var _dsCon = $.parseJSON(data);
-                                //if (_dsCon != null && _dsCon != "") {
                                 callbackloadConUncon(_dsCon);
                                 busyIndicator($(_lstStatement), false, "inherit");
-                                //}
                             },
                             error: function () {
                                 busyIndicator($(_lstStatement), false, "inherit");
@@ -3816,10 +3736,6 @@
                             _secReconciled.html("");
                             _secReconciled.append("<p>" + VIS.Msg.getMsg("VA012_Reconciled") + "</p><p style='margin-top: 4px;'>" + VIS.Msg.getMsg("VA012_Unreconciled") + "</p>")
                             _secUnreconciled.append("<span style='padding-bottom: 2px;' class='va012-amount va012-font-green'><span class='va012-base-curr'>" + _dsCon[0].basecurrency + "</span> " + parseFloat(_dsCon[0].reconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span><span style='padding-bottom: 2px;' class='va012-amount va012-font-red'> <span class='va012-base-curr'>" + _dsCon[0].basecurrency + "</span> " + parseFloat(_dsCon[0].unreconciled).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + "</span>");
-                            //_dsCon.dispose();
-                            //_dsCon = null;
-                            //_sqlCon = null;
-
                         }
                         else {
                             _secUnreconciled.html("");
@@ -3856,7 +3772,6 @@
                         })
                     }, 2);
 
-                    //VIS.DB.executeDataSetPaging(_sql.toString(), _statementPageNo, _PAGESIZE, null, callbackloadStatement);
                     function callbackloadStatement(data) {
                         data = $.parseJSON(data);
                         var _StatementsHTML = "";
@@ -4095,15 +4010,7 @@
                 if (target.hasClass('glyphicon glyphicon-zoom-in')) {
                     _cbankStatementLineID = target.data("uid");
 
-                    ////
-
-                    //var sql = "select ad_window_id from ad_window where name = 'Bank Statement'";
                     try {
-                        //var dr = VIS.DB.executeDataReader(sql);
-                        //if (dr>0) {
-                        //    ad_window_Id = dr;
-                        //}
-                        //dr.dispose();
                         if (BankStatementWindow_ID > 0) {
                             var zoomQuery = new VIS.Query();
                             //VIS_427 Handled zoom for Bank Statement Line
@@ -4115,8 +4022,6 @@
                     catch (e) {
                         console.log(e);
                     }
-
-                    /////
 
                     _cbankStatementLineID = 0;
                 }
@@ -4327,17 +4232,12 @@
                             if (_result._ctrlPayment == 0) {
                                 _result._ctrlPayment = $_ctrlPayment.value;
                             }
-                            //if (_txtVoucherNo.val() == "") {
-                            //    var Voucher = VIS.Utility.Util.getValueOfString(VIS.DB.executeScalar("select trxno from C_Payment where C_Payment_ID=" + $_ctrlPayment.value));
-                            //    _txtVoucherNo.val(Voucher);
-                            //}
                         }
                     }
 
                     if (_result._ctrlPayment > 0) {
                         $_ctrlPayment.setValue(_result._ctrlPayment, false, true);
                         if (_txtVoucherNo.val() == "") {
-                            // var Voucher = VIS.Utility.Util.getValueOfString(VIS.DB.executeScalar("select trxno from C_Payment where C_Payment_ID=" + _result._ctrlPayment));
                             var Voucher = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetTrxNoforVoucher", { _ctrlPayment: _result._ctrlPayment });
                             _txtVoucherNo.val(Voucher);
                         }
@@ -4635,30 +4535,10 @@
 
                 loadTaxRate();
 
-                //function loadBankAccountCharges() {
-                //    var _sql = "SELECT C_CHARGE_ID, NAME FROM C_CHARGE WHERE DTD001_ChargeType = 'BNK' AND ISACTIVE = 'Y' AND AD_CLIENT_ID = " + VIS.Env.getCtx().getAD_Client_ID() + " ORDER BY NAME  ";
-                //    var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankAccountCharges);
-                //    function callbackloadBankAccountCharges(_ds) {
-                //        _cmbChargeType.html("");
-                //        _cmbChargeType.append("<option value=0 >-</option>");
-                //        if (_ds != null) {
-                //            for (var i = 0; i < _ds.tables[0].rows.length; i++) {
-                //                _cmbChargeType.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
-                //            }
-                //        }
-                //        _ds.dispose();
-                //        _ds = null;
-                //        _sql = null;
-                //        _cmbChargeType.prop('selectedIndex', 0);
-                //    }
-                //};
-
                 function loadBankStatementNo() {
 
                     // Change here for only picking statementes which are not completed, closed or Voided
                     // Lokesh Chauhan
-                    ////var _sql = "Select Cb.C_Bankstatement_Id, CB.NAME,Cb.Docstatus, COUNT(VA012_ISMATCHINGCONFIRMED) FROM C_BankStatement CB INNER JOIN C_BankStatementLine CBL ON (cbl.C_BANKSTATEMENT_ID = Cb.C_BANKSTATEMENT_ID) Where Cb.Isactive = 'Y' And Cb.Ad_Client_Id = " + VIS.Env.getCtx().getAD_Client_ID() + " And Cb.C_Bankaccount_Id = " + _cmbBankAccount.val() + " And Cb.Docstatus NOT IN  ('CO','CL','VO') GROUP BY CB.C_BANKSTATEMENT_ID,Cb.Docstatus, CB.NAME"
-                    //// var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadBankStatementNo);
                     VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadStatementNo", { _cmbBankAccount: _cmbBankAccount.val() }, callbackloadBankStatementNo);
                     function callbackloadBankStatementNo(_ds) {
                         _cmbStatementNo.html("");
@@ -4668,17 +4548,11 @@
                                 _cmbStatementNo.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                             }
                         }
-                        //_ds.dispose();
-                        //_ds = null;
-                        //_sql = null;
                     }
                 };
 
                 function loadTaxRate() {
                     //Select Taxes which is not Surcharge and having no Parent Tax
-                    //var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
-                    //_sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
-                    //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadloadTaxRate);
                     VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadTaxRate", null, callbackloadloadTaxRate);
                     function callbackloadloadTaxRate(_ds) {
                         _cmbTaxRate.html("");
@@ -4688,9 +4562,6 @@
                                 _cmbTaxRate.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].C_Tax_ID) + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                             }
                         }
-                        //_ds.dispose();
-                        //_ds = null;
-                        //_sql = null;
                     }
                 };
                 //  var $POP_lookCharge = null;
@@ -5276,22 +5147,6 @@
                 };
                 function loadPaymentSchedule() {
 
-                    //var _sql = "SELECT BP.NAME as businesspartner,PAY.C_INVOICEPAYSCHEDULE_ID, "
-                    //    + " PAY.DOCUMENTNO AS NAME "
-                    //    + " FROM C_INVOICEPAYSCHEDULE PAY "
-                    //    + " INNER JOIN C_INVOICE INV "
-                    //    + " ON PAY.C_INVOICE_ID=INV.C_INVOICE_ID "
-                    //    + " INNER JOIN C_BPARTNER BP "
-                    //    + " ON BP.C_BPARTNER_ID=INV.C_BPARTNER_ID "
-                    //    + " INNER JOIN VA009_PAYMENTMETHOD PM "
-                    //    + " ON (PM.VA009_PAYMENTMETHOD_ID =PAY.VA009_PAYMENTMETHOD_ID ) "
-                    //    + " INNER JOIN C_DOCTYPE DT "
-                    //    + " ON DT.C_DOCTYPE_ID            =INV.C_DOCTYPE_ID "
-                    //    + " WHERE PAY.VA009_ISPAID        ='N' "
-                    //    + " AND PAY.ISACTIVE              ='Y' "
-                    //    + " AND INV.DOCSTATUS            IN ('CO','CL') "
-                    //    + " AND PM.VA009_PAYMENTBASETYPE! ='B'"
-                    //    + " AND PAY.C_INVOICE_ID=" + _psInvoiceSelectedVal;
                     //used ajax call to get InvoicePaySchedules for selected Invoice
                     $.ajax({
                         url: VIS.Application.contextUrl + "BankStatement/GetInvPaySchedule",
@@ -5305,7 +5160,6 @@
                         }
                     });
 
-                    //VIS.DB.executeDataSet(_sql.toString(), null, callbackPaymentSchedule);
                     function callbackPaymentSchedule(_ds) {
                         _cmbPaymentSchedule.html("");
                         _cmbPaymentSchedule.append("<option value=0 ></option>");
@@ -5316,13 +5170,9 @@
                                     VIS.ADialog.info("VA012_ConversionRateNotFound", null, " " + VIS.Msg.getMsg("VA012_InvoiceSchedule") + ": " + VIS.Utility.Util.getValueOfString(_ds[i].c_invoicepayschedule_id), "");
                                     return;
                                 }
-                                //_cmbPaymentSchedule.append("<option paymentdata='" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "/" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.businesspartner) + "' value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_invoicepayschedule_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
                                 _cmbPaymentSchedule.append("<option paymentamount=" + _ds[i].DueAmount + " paymentdata='" + VIS.Utility.encodeText(new Date(_ds[i].DueDate).toLocaleDateString()) + "_" + VIS.Utility.encodeText(_ds[i].DueAmt) + "' value=" + VIS.Utility.Util.getValueOfInt(_ds[i].c_invoicepayschedule_id) + ">" + VIS.Utility.encodeText(new Date(_ds[i].DueDate).toLocaleDateString() + "_" + _ds[i].DueAmt) + "</option>");
                             }
                         }
-                        //_ds.dispose();
-                        //_ds = null;
-                        //_sql = null;
                         _cmbPaymentSchedule.prop('selectedIndex', 0);
 
                     };
@@ -6583,51 +6433,6 @@
 
                     }
 
-
-                    //// Inserting New Record
-                    //if (_formData[0]._bankStatementLineID <= 0) {
-                    //    var _sql = " SELECT TBSL.C_BANKSTATEMENTLINE_ID, "
-                    //    + " TBSL.VA012_STATEMENTNO, "
-                    //    + " TBSL.VA012_PAGE,  "
-                    //    + " TBSL.LINE "
-                    //    + " FROM VA012_TEMPSTATEMENT tbsl "
-                    //    + " WHERE TBSL.AMOUNT=" + _formData[0]._txtAmount
-                    //    + " AND TBSL.C_CHARGE_ID=" + _formData[0]._cmbCharge
-                    //    + " AND TBSL.C_TAX_ID=" + _formData[0]._cmbTaxRate
-                    //    //+ " AND TBSL.C_CURRENCY_ID=" + _formData[0]._cmbCurrency
-                    //    + " AND TBSL.C_CURRENCY_ID=" + _currencyId
-                    //    + " AND TBSL.STATEMENTDATE BETWEEN TBSL.STATEMENTDATE-30 AND TBSL.STATEMENTDATE";
-                    //    VIS.DB.executeDataSet(_sql, null, checkExisting);
-                    //    function checkExisting(_dsIn) {
-                    //          
-                    //        _chkSave = 1;
-                    //        if (_dsIn != null) {
-                    //            if (_dsIn.tables[0].rows.length > 0) {
-
-                    //                if (VIS.ADialog.ask(VIS.Msg.getMsg("VA012_SimilarStatementExist") + ":" + _dsIn.tables[0].rows[0].cells.va012_statementno + "/" + _dsIn.tables[0].rows[0].cells.va012_page + "/" + _dsIn.tables[0].rows[0].cells.line)) {
-                    //                    _chkSave = 0;
-                    //                    newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
-                    //                }
-                    //                else {
-                    //                    _chkSave = 0;
-                    //                    return;
-                    //                }
-                    //                //return VIS.Msg.getMsg("VA012_SimilarStatementExist") + ":" + _dsIn.tables[0].rows[0].cells.va012_statementno + "/" + _dsIn.tables[0].rows[0].cells.va012_page + "/" + _dsIn.tables[0].rows[0].cells.line;
-                    //            }
-                    //            else {
-                    //                if (_chkSave == 1) {
-                    //                    newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
-                    //                }
-                    //            }
-                    //        }
-                    //    }
-
-                    //}
-                    //    //Edit Existing  Record
-                    //else {
-                    //    newRecordForm.insertNewRecord(_formData, newRecordForm.afterInsertion);
-                    //}
-
                 });
                 //_btnCreatePayment.on(VIS.Events.onTouchStartOrClick, function () {
                 //      
@@ -7274,9 +7079,6 @@
             },
             loadCashBook: function () {
 
-                // var _sql = "SELECT NAME,C_CashBook_ID FROM C_CashBook WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID() + " AND C_CURRENCY_ID=" + _currencyId;
-                //var _sql = "SELECT NAME,C_CashBook_ID FROM C_CashBook WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadCashBook);
                 VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadCashbook", null, callbackloadCashBook);
                 function callbackloadCashBook(_ds) {
                     _cmbCashBook.html("");
@@ -7286,9 +7088,6 @@
                             _cmbCashBook.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds[i].Value) + ">" + VIS.Utility.encodeText(_ds[i].Name) + "</option>");
                         }
                     }
-                    //_ds.dispose();
-                    //_ds = null;
-                    //_sql = null;
                     _cmbCashBook.prop('selectedIndex', 0);
                 }
             },
@@ -7328,33 +7127,20 @@
 
             loadCharge: function () {
                 //Not in Use
-                //var _sql = "SELECT NAME,C_CHARGE_ID,DTD001_ChargeType FROM C_Charge WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
                 VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetChargeData", { voucherType: _cmbVoucherMatch.val() != null ? _cmbVoucherMatch.val() : "", bankAcct: _cmbBankAccount.val() != null ? _cmbBankAccount.val() : 0 }, callbackloadCharge);
-                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadCharge);
                 function callbackloadCharge(_ds) {
                     _cmbCharge.html("");
                     _cmbCharge.append("<option value=0 ></option>");
                     if (_ds != null) {
                         for (var i = 0; i < _ds.length; i++) {
-                            //_cmbCharge.append("<option value=" + VIS.Utility.Util.getValueOfInt(_ds.tables[0].rows[i].cells.c_charge_id) + ">" + VIS.Utility.encodeText(_ds.tables[0].rows[i].cells.name) + "</option>");
                             _cmbCharge.append("<option value=" + _ds[i].chargeID + ">" + VIS.Utility.encodeText(_ds[i].name) + "</option>");
                         }
                     }
-                    //_ds.dispose();
-                    //_ds = null;
-                    //_sql = null;
                     _cmbCharge.prop('selectedIndex', 0);
                 }
             },
             loadTaxRate: function () {
 
-                //var _sql = "SELECT NAME,C_TAX_ID FROM C_TAX WHERE ISACTIVE='Y'  AND AD_CLIENT_ID=" + VIS.Env.getCtx().getAD_Client_ID() + " AND AD_ORG_ID=" + VIS.Env.getCtx().getAD_Org_ID();
-                //var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y' AND EXPORT_ID IS NOT NULL";
-                //Select Taxes which is not Surcharge and having no Parent Tax
-                //var _sql = "SELECT Name,C_Tax_ID FROM C_Tax WHERE IsActive='Y'AND IsSurcharge='N' AND NVL(Parent_Tax_ID, 0)=0";
-                ////debugger;
-                //_sql = VIS.MRole.getDefault().addAccessSQL(_sql, "C_Tax", true, false);
-                //var _ds = VIS.DB.executeDataSet(_sql.toString(), null, callbackloadTaxRate);
                 VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/LoadTaxRate", null, callbackloadTaxRate);
                 function callbackloadTaxRate(_ds) {
                     _cmbTaxRate.html("");
@@ -7365,9 +7151,6 @@
                         }
 
                     }
-                    //_ds.dispose();
-                    //_ds = null;
-                    //_sql = null;
                     _cmbTaxRate.prop('selectedIndex', 0);
                 }
             },
@@ -7796,8 +7579,8 @@
                     _dtStatementDate.val(Globalize.format(new Date(stateDate), "yyyy-MM-dd"));
                 }
                 else {
-                     //VIS_427 Bug id 3332 28/12/2023 handled to set today's date if statement date is not present
-                     now = new Date();
+                    //VIS_427 Bug id 3332 28/12/2023 handled to set today's date if statement date is not present
+                    now = new Date();
                     _today = now.getFullYear() + "-" + (("0" + (now.getMonth() + 1)).slice(-2)) + "-" + (("0" + now.getDate()).slice(-2));
                     _dtStatementDate.val(_today);
                 }
@@ -7902,8 +7685,8 @@
                     _dtStatementDate.val(Globalize.format(new Date(stateDate), "yyyy-MM-dd"));
                 }
                 else {
-                     //VIS_427 Bug id 3332 28/12/2023 handled to set today's date if statement date is not present
-                     now = new Date();
+                    //VIS_427 Bug id 3332 28/12/2023 handled to set today's date if statement date is not present
+                    now = new Date();
                     _today = now.getFullYear() + "-" + (("0" + (now.getMonth() + 1)).slice(-2)) + "-" + (("0" + now.getDate()).slice(-2));
                     _dtStatementDate.val(_today);
                 }

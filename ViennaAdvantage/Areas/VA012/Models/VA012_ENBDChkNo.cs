@@ -62,8 +62,9 @@ namespace VA012.Models
         /// <param name="_statementno"></param>
         /// <param name="_statementCharges"></param>
         /// <param name="statementDate">Statement Date</param>
+        /// <param name="IsStatementDateAsAccountDate">Statement Date As Account Date</param>
         /// <returns>StatementResponse Object</returns>
-        public VA012.Models.StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate)
+        public VA012.Models.StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate,bool IsStatementDateAsAccountDate)
         {
             VA012.Models.StatementResponse _obj = new VA012.Models.StatementResponse();
             string _branchName = "";
@@ -314,7 +315,16 @@ namespace VA012.Models
                                             _BnkStmtLine.SetLine(lineno);
                                             lineno = lineno + 10;
                                             _BnkStmtLine.SetStatementLineDate(DateTime.Parse(_date));// Set Transaction Date
-                                            _BnkStmtLine.SetDateAcct(DateTime.Parse(_date));// Set Transaction Date
+                                            //VIS_427 DevopsId:4207 12/01/2024 If checkbox is true then the account date will be same as header statement date
+                                            if (IsStatementDateAsAccountDate)
+                                            {
+                                                _BnkStmtLine.SetDateAcct(_BnkStatm.GetStatementDate());
+                                            }
+                                            else
+                                            {
+                                                _BnkStmtLine.SetDateAcct(DateTime.Parse(_date));
+                                            }
+                                              // Set Transaction Date
                                             _BnkStmtLine.SetValutaDate(DateTime.Parse(_date));// Set Transaction Date
                                             _BnkStmtLine.SetReferenceNo(_IBAN);// Set Transaction Remarks
                                             _BnkStmtLine.SetDescription(Util.GetValueOfString(dt.Rows[i][1]));// Set Transaction Purticular
