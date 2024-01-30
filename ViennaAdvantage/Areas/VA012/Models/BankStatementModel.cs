@@ -1175,7 +1175,7 @@ namespace VA012.Models
                         else
                         {
                             _bankStatementLine.SetTaxAmt(Decimal.Negate(Math.Abs(Util.GetValueOfDecimal(convertedSurchargeAmount["TaxAmt"]))));
-                            _bankStatementLine.Set_Value("SurchargeAmt", Decimal.Negate(Util.GetValueOfDecimal(convertedSurchargeAmount["SurchargeAmt"])));
+                            _bankStatementLine.Set_Value("SurchargeAmt", Decimal.Negate(Math.Abs(Util.GetValueOfDecimal(convertedSurchargeAmount["SurchargeAmt"]))));
                         }
                     }
                     else
@@ -1188,7 +1188,7 @@ namespace VA012.Models
                         else
                         {
                             _bankStatementLine.SetTaxAmt(Decimal.Negate(Math.Abs(Util.GetValueOfDecimal(_formData[0]._txtTaxAmount))));
-                            _bankStatementLine.Set_Value("SurchargeAmt", Decimal.Negate(Util.GetValueOfDecimal(_formData[0]._surChargeAmt)));
+                            _bankStatementLine.Set_Value("SurchargeAmt", Decimal.Negate(Math.Abs(Util.GetValueOfDecimal(_formData[0]._surChargeAmt))));
                         }
                     }
                 }
