@@ -576,7 +576,7 @@ namespace VA012.Models
         /// <param name="ctx">Context</param>
         /// <param name="_formData">List of StatementProp class properties</param>
         /// <returns>Success or Error Message (string type)</returns>
-        public string InsertData(Ctx ctx, List<StatementProp> _formData)
+        public string InsertData(Ctx ctx, List<StatementProp> _formData,int stdprecision)
         {
             int _existingStatementID = 0;
             int _existingAccountID = 0;
@@ -588,6 +588,7 @@ namespace VA012.Models
             DataSet _ds = new DataSet();
             string _qryStmt = "";
             string eftCheckNo = string.Empty;
+            Decimal _convertedtxtAmt = 0;
 
             //Using transaction to handle the Exception while Saving the data
             Trx trx = Trx.GetTrx(Trx.CreateTrxName("STrx"));
@@ -1108,7 +1109,25 @@ namespace VA012.Models
                 }
                 else
                 {
-                    _bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
+                    //VAI066 Devops ID 4783 While user will select voucher or contra and currency is not equal then it will convert currency 
+                    if(_formData[0]._cmbCurrency != _formData[0]._txtCurrency &&
+                        (Util.GetValueOfString(_formData[0]._cmbVoucherMatch).Equals("V") 
+                        || Util.GetValueOfString(_formData[0]._cmbVoucherMatch).Equals("C"))) {
+                        _convertedtxtAmt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_formData[0]._txtAmount), _formData[0]._txtCurrency, _formData[0]._cmbCurrency, _formData[0]._dtStatementDate, _formData[0]._txtConversionType, ctx.GetAD_Client_ID(), _formData[0]._bankAcctOrg_ID);
+                        if(_convertedtxtAmt != 0)
+                        {
+                            _bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_convertedtxtAmt));
+                        }
+                        else
+                        {
+                            //Used to gave error message if currency conversion not found
+                            return currConversionNotFound(ctx, _formData[0]._cmbCurrency, _formData[0]._txtCurrency, _formData[0]._txtConversionType);
+                        }
+                    }
+                    else
+                    {
+                        _bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
+                    }
                     //Used string.Equal() method
                     if (Util.GetValueOfString(_formData[0]._cmbVoucherMatch).Equals("C") && Util.GetValueOfString(_formData[0]._cmbContraType).Equals("CB"))
                     {
@@ -1142,15 +1161,35 @@ namespace VA012.Models
                     {
                         _bankStatementLine.SetC_Tax_ID(_formData[0]._cmbTaxRate);
                     }
-                    if (_bankStatementLine.GetChargeAmt() > 0)
+                    //VAI066 Devops Id 4783 Calculate tax according to Buisnness partner is null
+                    if (_formData[0]._cmbCurrency != _formData[0]._txtCurrency &&
+                        (Util.GetValueOfString(_formData[0]._cmbVoucherMatch).Equals("V")
+                        || Util.GetValueOfString(_formData[0]._cmbVoucherMatch).Equals("C")))
                     {
-                        _bankStatementLine.SetTaxAmt(Math.Abs(_formData[0]._txtTaxAmount));
-                        _bankStatementLine.Set_Value("SurchargeAmt", Math.Abs(_formData[0]._surChargeAmt));
+                        Dictionary<String, object> convertedSurchargeAmount = CalculateSurcharge(ctx, _formData[0]._cmbTaxRate, _convertedtxtAmt, stdprecision);
+                        if (_bankStatementLine.GetChargeAmt() > 0)
+                        {
+                            _bankStatementLine.SetTaxAmt(Math.Abs(Util.GetValueOfDecimal(convertedSurchargeAmount["TaxAmt"])));
+                            _bankStatementLine.Set_Value("SurchargeAmt", Math.Abs(Util.GetValueOfDecimal(convertedSurchargeAmount["SurchargeAmt"])));
+                        }
+                        else
+                        {
+                            _bankStatementLine.SetTaxAmt(Decimal.Negate(Math.Abs(Util.GetValueOfDecimal(convertedSurchargeAmount["TaxAmt"]))));
+                            _bankStatementLine.Set_Value("SurchargeAmt", Decimal.Negate(Util.GetValueOfDecimal(convertedSurchargeAmount["SurchargeAmt"])));
+                        }
                     }
                     else
                     {
-                        _bankStatementLine.SetTaxAmt(Decimal.Negate(Math.Abs(_formData[0]._txtTaxAmount)));
-                        _bankStatementLine.Set_Value("SurchargeAmt", Decimal.Negate(Math.Abs(_formData[0]._surChargeAmt)));
+                        if (_bankStatementLine.GetChargeAmt() > 0)
+                        {
+                            _bankStatementLine.SetTaxAmt(Math.Abs(Util.GetValueOfDecimal(_formData[0]._txtTaxAmount)));
+                            _bankStatementLine.Set_Value("SurchargeAmt", Math.Abs(Util.GetValueOfDecimal(_formData[0]._surChargeAmt)));
+                        }
+                        else
+                        {
+                            _bankStatementLine.SetTaxAmt(Decimal.Negate(Math.Abs(Util.GetValueOfDecimal(_formData[0]._txtTaxAmount))));
+                            _bankStatementLine.Set_Value("SurchargeAmt", Decimal.Negate(Util.GetValueOfDecimal(_formData[0]._surChargeAmt)));
+                        }
                     }
                 }
                 else
@@ -7239,6 +7278,31 @@ namespace VA012.Models
                 }
             }
             return _list;
+        }
+        /// <summary>
+        /// This function is related to currency conversion not found message.
+        /// </summary>
+        /// <param name="ctx">It will give the context that needed for message</param>
+        /// <param name="currencyFromID">This will give the currency From Id that is from Id</param>
+        /// <param name="currencyToID">This will give the Currency to id that is bank id</param>
+        /// <param name="conversionTypeID">This will give the conversion type ID from form</param>
+        /// <author>VAI066 Devops Id 4783</author>
+        /// <returns>It will return the Message as a string</returns>
+        public string currConversionNotFound(Ctx ctx,int currencyFromID, int currencyToID, int conversionTypeID)
+        {
+            String sql = $@"SELECT C_Currency_ID AS ID, Iso_Code AS CODE, NULL AS Name
+                                            FROM C_Currency
+                                            WHERE C_Currency_ID IN({currencyFromID}, {currencyToID})
+                                            UNION ALL
+                                            SELECT NULL AS ID, NULL AS CODE, name AS Name
+                                            FROM C_ConversionType
+                                            WHERE C_ConversionType_ID = {conversionTypeID}
+                                            ORDER BY ID, CODE, Name ";
+            DataSet ds = DB.ExecuteDataset(sql, null, null);
+            String _status = Msg.GetMsg(ctx, "NoConversion") + Util.GetValueOfString(ds.Tables[0].Rows[1]["CODE"])
+                + Msg.GetMsg(ctx, "ToBankCurrency") + Util.GetValueOfString(ds.Tables[0].Rows[0]["CODE"])
+                + " - " + Msg.GetMsg(ctx, "ConversionType") + Util.GetValueOfString(ds.Tables[0].Rows[2]["NAME"]);
+            return _status;
         }
 
     }

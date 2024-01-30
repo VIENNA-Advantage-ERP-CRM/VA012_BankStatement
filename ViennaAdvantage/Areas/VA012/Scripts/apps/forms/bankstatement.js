@@ -3218,7 +3218,9 @@
                 });
                 function callSetCurrency(result) {
                     if (result.currencyId != 0 && _scheduleList != null) {
-                        _txtCurrency.val(result.currencyId).prop('selected', true);
+                        //VAI066 Devops Id 4783 while user drag the invoice schedule then it will change currency according to bank
+                        var bankCurrencyId = _cmbBankAccount.children()[_cmbBankAccount[0].selectedIndex].getAttribute('currencyid');
+                        _txtCurrency.val(bankCurrencyId).prop('selected', true);
                         for (var i = 0; _txtCurrency[0].length > i; i++) {
                             if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == result.currencyId || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
                                 $(_txtCurrency[0][i]).show();
@@ -7507,12 +7509,14 @@
                 _formData.push(formData);
                 return _formData;
             },
+            //VAI066 Devops Id 4783 Standard precision passes while we insert data
             insertNewRecord: function (_formData, callback) {
+                var stdprecision = _cmbBankAccount.children()[_cmbBankAccount[0].selectedIndex].getAttribute('stdprecision');
                 $.ajax({
                     type: 'POST',
                     url: VIS.Application.contextUrl + "VA012/BankStatement/InsertData",
                     contentType: "application/json; charset=utf-8",
-                    data: JSON.stringify({ _formData: _formData }),
+                    data: JSON.stringify({ _formData: _formData, stdprecision: stdprecision }),
                     success: function (data) { callback(data); },
                     error: function (data) { VIS.ADialog.info(data, null, "", ""); }
                 });
