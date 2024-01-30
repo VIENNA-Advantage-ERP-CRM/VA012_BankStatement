@@ -165,14 +165,20 @@ namespace VA012.Controllers
             //    return Msg.GetMsg(ctx, "VA012_MethdnotFound");
             //}
         }
-        public JsonResult InsertData(List<StatementProp> _formData)
+        /// <summary>
+        /// This function is used to insert data in banking journal from ban statement form
+        /// </summary>
+        /// <param name="_formData">This takse the data from form</param>
+        /// <param name="stdprecision">Standard precision according to bank</param>
+        /// <returns> This will return success or if currency not found than aive error message</returns>
+        public JsonResult InsertData(List<StatementProp> _formData, int stdprecision)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.InsertData(ctx, _formData));
+                retJSON = JsonConvert.SerializeObject(obj.InsertData(ctx, _formData, stdprecision));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
