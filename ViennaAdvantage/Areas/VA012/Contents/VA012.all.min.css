@@ -1,4 +1,4 @@
-﻿/*Version 2.0.1.0*/
+﻿/*Version 2.1.1.0*/
 
 body {
     margin: 0;
@@ -977,4 +977,16 @@ overflow: hidden;*/
 .va012-search-icon-right {
     float: right !important;
     cursor: pointer;
+}
+
+.VA012-checkbox-div {
+    display: none;
+}
+
+    .VA012-checkbox-div.D {
+        display: block;
+    }
+
+.VA012-StatementDateAsAccountDate {
+    font-weight: normal
 }
