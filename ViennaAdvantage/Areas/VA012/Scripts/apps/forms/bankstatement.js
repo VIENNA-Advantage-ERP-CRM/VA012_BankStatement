@@ -2850,9 +2850,10 @@
                                 }
                                 //Set Currency and Conversion Type
                                 if (result._currency_Id != 0 && VIS.Utility.Util.getValueOfString($_ctrlOrder.value) != null) {
-                                    _txtCurrency.val(result._currency_Id).prop('selected', true);
+                                    //VAI066 Devops Id 4783 while user drag the prepay order then it will change currency according to bank
+                                    _txtCurrency.val(_currencyId).prop('selected', true);
                                     for (var i = 0; _txtCurrency[0].length > i; i++) {
-                                        if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == result._currency_Id || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                                        if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
                                             $(_txtCurrency[0][i]).show();
                                         }
                                         else {
@@ -3219,10 +3220,9 @@
                 function callSetCurrency(result) {
                     if (result.currencyId != 0 && _scheduleList != null) {
                         //VAI066 Devops Id 4783 while user drag the invoice schedule then it will change currency according to bank
-                        var bankCurrencyId = _cmbBankAccount.children()[_cmbBankAccount[0].selectedIndex].getAttribute('currencyid');
-                        _txtCurrency.val(bankCurrencyId).prop('selected', true);
+                        _txtCurrency.val(_currencyId).prop('selected', true);
                         for (var i = 0; _txtCurrency[0].length > i; i++) {
-                            if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == result.currencyId || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                            if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
                                 $(_txtCurrency[0][i]).show();
                             }
                             else {
@@ -4292,9 +4292,10 @@
                     // when drag transaction on to the Line then it will return the Currency and ConversionType
                     // then set the values on the fields
                     if (_result._txtCurrency != 0) {
-                        _txtCurrency.val(_result._txtCurrency).prop('selected', true);
+                        //VAI066 Devops ID 4783 when user drag transaction on to the Line then the currency will change according to bank currency
+                        _txtCurrency.val(_currencyId).prop('selected', true);
                         for (var i = 0; _txtCurrency[0].length > i; i++) {
-                            if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _result._txtCurrency || VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
+                            if (VIS.Utility.Util.getValueOfInt(_txtCurrency[0][i].value) == _currencyId) {
                                 $(_txtCurrency[0][i]).show();
                             }
                             else {
