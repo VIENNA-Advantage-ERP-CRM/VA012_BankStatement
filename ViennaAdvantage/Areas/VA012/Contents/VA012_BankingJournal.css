@@ -1,0 +1,3003 @@
+﻿.VA012_root {
+    height: 100%;
+    width: 100%;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+.btn:focus,
+button:focus {
+    box-shadow: none;
+}
+
+/** {
+    outline: none;
+}*/
+.VA012_paramMainDiv {
+    /*background-color: #fcfcfc;*/
+    height: 100%;
+}
+.VA012-paramdiv {
+    margin-bottom: 5px;
+}
+.VA012-controls{
+    padding:2px;
+}
+.VA012-labels {
+    top: 0px !important;
+}
+
+.VA012-labels,
+.VA012-StatementDateAsAccountDate {
+    /*padding-left: 1.2em !important;*/
+    left: 15px !important;
+}
+
+.va012-form-data {
+    width: 100%;
+    float: left;
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.VA012-leftTreeNode,
+.VA012-leftTreeNode a,
+.VA012-leftTreeNode a span,
+.VA012-folderBox,
+.VA012-folderInfo,
+.VA012-folderFoot,
+.VA012-folderStatusDoc,
+.VA012-driveTblFirstCol,
+.VA012-driveDownloadBtn {
+    display: flex;
+}
+
+    .VA012-leftTreeNode,
+    .VA012-leftTreeNode a,
+    .VA012-leftTreeNode a span,
+    .VA012-folderInfo,
+    .VA012-folderFoot,
+    .VA012-driveTblFirstCol,
+    .VA012-driveDownloadBtn {
+        align-items: center;
+    }
+
+        .VA012-leftSideHeader,
+        .VA012-leftTreeNode a,
+        .VA012-leftTreeNode a span,
+        .VA012-folderFoot {
+            justify-content: space-between;
+        }
+
+            .VA012-headerWrap h6,
+            .VA012-leftSideSearch input,
+            .VA012-leftSideTree,
+            .VA012-leftTreeNode a,
+            .VA012-leftTreeNode a span,
+            .VA012-mainContentSection,
+            .VA012-breadCrumbWrap,
+            .VA012-folderInfo,
+            .VA012-contentFolderText,
+            .VA012-activityUser {
+                flex: 1;
+            }
+
+.VA012-folderBox {
+    flex-direction: column;
+}
+
+.VA012-headerWrap,
+.VA012-leftSideHeader,
+.VA012-leftTreeNode a > i,
+/*.VA012-selectedTreeNode span,*/
+.VA012-ListViewIco,
+.VA012-contentFilesWrap .VA012-contentFolderText h6,
+.VA012-rightFileInfoBox .VA012-folderFoot i,
+.VA012-detailFileMeta > i,
+.VA012-detailFileMeta label i,
+.VA012-detailFileMeta p i,
+.VA012-detailFileMeta .card-header,
+.VA012-detailFileMeta .btn-link,
+.VA012-detailFileMeta .btn-link:hover,
+.VA012-headerWrap .dropdown i,
+.VA012-headerWrap .dropdown button {
+    color: rgba(var(--v-c-primary), 1);
+}
+
+    .VA012-headerWrap .dropdown i {
+        vertical-align: middle;
+    }
+
+    .VA012-headerWrap .dropdown button {
+        font-size: .90rem;
+    }
+
+.VA012-outerWrap {
+    width: 100vw;
+    height: calc(100vh - 66px);
+    background-color: white;
+}
+
+.VA012-headerWrap {
+    width: 100%;
+    border-bottom: 2px solid rgba(var(--v-c-primary), 1);
+    padding: 0 .625rem;
+}
+
+    .VA012-headerWrap h6 {
+        margin: 0;
+    }
+
+.VA012-closeIcon {
+    background: transparent;
+    border: none;
+}
+
+.VA012-searchWrap {
+    margin: .3rem 1rem .3rem 0;
+    border: 1px solid transparent;
+    background: rgba(var(--v-c-on-secondary), .05);
+}
+
+    .VA012-searchWrap:focus-within {
+        border-color: rgba(var(--v-c-primary), 1);
+    }
+
+    .VA012-searchWrap input:focus {
+        box-shadow: none;
+    }
+
+    .VA012-searchWrap .input-group-text {
+        border: none;
+        height: 32px;
+    }
+
+    .VA012-searchWrap .input-group > i:last-child {
+        padding-left: .625rem;
+    }
+
+    .VA012-searchWrap .input-group > i {
+        color: rgba(var(--v-c-on-secondary), .6);
+        cursor: pointer;
+    }
+
+.VA012-headIconsWrap {
+    height: 100%;
+    margin-right: .5rem;
+}
+
+    .VA012-headIconsWrap i {
+        cursor: pointer;
+        padding: .5rem;
+        font-size: 1.2rem;
+        margin-right: .2rem;
+    }
+
+.VA012-contentWrap {
+    width: 100%;
+    height: calc(100% - 44px);
+}
+
+.VA012-leftSecWrap {
+    background: rgba(var(--v-c-on-secondary), .01);
+    height: 100%;
+    width: 300px;
+    position: relative;
+    border-right: 1px solid rgba(var(--v-c-primary), 1);
+}
+
+.VA012-leftSideHeader {
+    border-bottom: 1px solid rgba(var(--v-c-primary), 1);
+    padding: .5rem .625rem;
+    min-height: 40px;
+}
+
+.VA012-leftSideIcons i {
+    padding-left: 1rem;
+}
+
+.VA012-leftSideHeader i.fa {
+    font-size: 1.2rem;
+}
+
+.VA012-leftSideContent {
+    padding: .625rem 0 0 .625rem;
+    height: calc(100% - 40px);
+}
+
+.VA012-leftSideSearch {
+    background: rgba(var(--v-c-on-secondary), .05);
+    border-radius: 1rem;
+    padding: .2rem .625rem;
+    font-size: .875rem;
+    margin-right: .625rem;
+}
+
+    .VA012-leftSideSearch input {
+        border: none;
+        background: transparent;
+        height: 26px;
+    }
+
+    .VA012-leftSideSearch i {
+        color: rgba(var(--v-c-on-secondary), .7);
+    }
+
+.VA012-leftSideTreeUl {
+    height: 100%;
+    overflow: auto;
+    margin: 0 !important;
+    padding: 0;
+}
+
+.VA012-leftTreeNode a > i {
+    font-size: 1.2rem;
+}
+
+.VA012-leftTreeNode a {
+    color: inherit;
+    font-size: .875rem;
+}
+
+.VA012-leftTreeNode {
+    padding: .3rem 0;
+}
+
+    .VA012-leftTreeNode a span i {
+        font-size: .7rem;
+        transition: -webkit-transform .2s ease-in-out;
+    }
+
+.VA012-leftSideSubTreeUl {
+    padding-left: 1rem;
+}
+
+.VA012-leftTreeNode div.btn {
+    background: transparent;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.VA012-leftTreeNode a span {
+    padding-left: .5rem;
+    word-break: break-word;
+}
+
+.VA012-selectedTreeNode span i {
+    color: rgba(var(--v-c-on-secondary), 1);
+    transform: rotate(90deg);
+}
+
+.VA012-leftTreeNode:not(.VA012-selectedTreeNode) + .VA012-leftSideSubTreeUl {
+    display: none;
+}
+
+.VA012-leftSideTree {
+    height: calc(100% - 50px);
+    /* overflow: auto; */
+    margin-top: .325rem;
+}
+
+.VA012-mainContentSection {
+    padding: .3rem 0;
+    height: 100%;
+    width: calc(100% - 620px);
+}
+
+.VA012-contentHeadSec,
+.VA012-contentHeadInnWrap h5 {
+    padding: 0 .938rem;
+}
+
+.VA012-breadCrumbList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
+    overflow-x: auto;
+    margin-bottom: 0 !important;
+    min-height: 34px;
+    align-items: center;
+}
+
+    .VA012-breadCrumbList:hover {
+        overflow-x: overlay;
+    }
+
+.VA012-breadCrumbFolAction {
+    display: inline-block;
+    height: auto;
+    position: absolute;
+    margin-left: 3px;
+}
+
+.VA012-breadCrumFolActionDiv {
+    padding: 0 10px;
+    vertical-align: bottom;
+}
+
+.VA012-bc-List-item {
+    padding: 0 .5rem 0 0;
+    border-radius: .25rem;
+}
+
+.VA012-bc-List-item, .VA012-driveDataWrap h5 {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+    .VA012-bc-List-item:hover {
+        background: rgba(var(--v-c-on-secondary), .03);
+    }
+
+    .VA012-bc-List-item a {
+        color: inherit;
+    }
+
+    .VA012-bc-List-item:not(:nth-last-child(2)):after {
+        position: relative;
+        content: '\e909';
+        font-family: 'vis-fonts';
+        font-size: .8rem;
+        padding-left: .5rem;
+    }
+
+    .VA012-bc-List-item:last-child:after {
+        position: relative;
+        content: '';
+        font-family: 'vis-fonts';
+        font-size: .8rem;
+        padding-left: .5rem;
+    }
+
+.VA012-headSrotingWrap {
+    font-size: .875rem;
+    cursor: pointer;
+    /*border-left: 1px solid rgba(var(--v-c-on-secondary), .3);*/
+}
+
+select.VA012_DriveSorting,
+select.VA012_DriveSorting:focus {
+    border: none;
+}
+
+.VA012-ListViewIco {
+    font-size: 1.5rem;
+    cursor: pointer;
+    /*display:none;*/
+}
+
+.VA012-driveHeadWrap {
+    padding: 0 0 .7rem;
+    border-bottom: 1px solid rgba(var(--v-c-on-secondary), .1);
+}
+
+.VA012-headSrotingWrap span {
+    cursor: pointer;
+}
+
+.VA012-headSrotingWrap .dropdown-menu {
+    right: -20px;
+    left: auto !important;
+}
+
+.VA012-headSrotingWrap .dropdown-menu {
+    padding-top: 0;
+}
+
+.VA012-contentHeadInnWrap {
+    padding: 0 0 .3rem;
+    border-bottom: 1px solid rgba(var(--v-c-on-secondary), .1);
+    /*justify-content: space-between;*/
+}
+
+.VA012-bodyContainer {
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    border: 2px solid transparent;
+}
+
+.VA012-driveDataWraps {
+    padding-top: .625rem;
+}
+
+.VA012-contentFilesWrap {
+    padding-top: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.VA012-contentFolders {
+    flex: 1;
+}
+
+.VA012-contentDataWrap {
+    padding: .625rem 0 0 .938rem;
+}
+
+    .VA012-contentDataWrap h5 {
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+
+.VA012-folderBox {
+    border: 1px solid rgba(var(--v-c-on-secondary), .1);
+    /* padding: .6rem 0 .3rem .3rem; */
+    border-radius: .25rem;
+    margin-bottom: 1rem;
+}
+
+.VA012-folderInfo {
+    padding: .3rem 0 .3rem .3rem;
+    position: relative;
+}
+
+    .VA012-folderInfo > i {
+        font-size: 1.7rem;
+        color: rgba(var(--v-c-primary), 1);
+        padding-right: .8rem;
+        cursor: pointer;
+        padding-left: .5rem;
+    }
+
+.VA012-contentFolderText h6 {
+    font-weight: 500;
+    margin: 0;
+    font-size: .875rem;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    cursor: pointer;
+    word-break: break-all;
+    line-height: 1.1rem;
+}
+
+.VA012-moreOptions button {
+    background: transparent;
+}
+
+.VA012-folderFoot {
+    padding: .5rem .75rem;
+    /*background: rgba(var(--v-c-on-secondary), .01);*/
+    width: 100%;
+    /*border-top: 1px solid rgba(var(--v-c-on-secondary), .1);*/
+}
+
+.VA012-foldertopfoot {
+    padding: 0.3rem 0;
+}
+
+    .VA012-foldertopfoot i {
+        font-size: 1.2rem !important;
+        padding: 0 0.6rem !important;
+    }
+
+.VA012-folderStatusDoc, .opacPoint7 {
+    opacity: .7;
+}
+
+.VA012-folderFoot span {
+    font-size: .75rem;
+}
+
+.VA012-folderStatusDoc i {
+    /*padding-left: .5rem;*/
+    /*margin-left: 15px;*/
+    /*margin-right: 11px;*/
+}
+
+.VA012-folderStatusDoc input[type="checkbox"] {
+    height: 19px !important;
+    width: 19px !important;
+    margin-left: 0 !important;
+}
+
+    .VA012-folderStatusDoc input[type="checkbox"]:not(:checked) {
+        border-color: rgba(var(--v-c-on-secondary), .3);
+    }
+
+    .VA012-folderStatusDoc input[type="checkbox"]:checked:before {
+        width: 7px;
+        height: 12px;
+        border-width: 0 3px 3px 0;
+    }
+
+.VA012-globalDoc {
+    position: relative;
+    font-size: .97rem;
+}
+
+    .VA012-globalDoc:after {
+        position: absolute;
+        content: "\f058";
+        font-family: FontAwesome;
+        font-size: .7rem;
+        right: -2px;
+        bottom: -2px;
+        border: 1px solid #fff;
+        border-radius: 100%;
+        background: #fff;
+        width: 10px;
+        height: 12px;
+        display: flex;
+        align-items: center;
+    }
+
+.VA012-lockIco:after {
+    content: "\f023";
+}
+
+.VA012-checkoutByMe,
+.VA012-greenTick:after,
+.VA012-signGreenStatus {
+    color: #15B735;
+}
+
+.VA012-checkoutByOther,
+.VA012-redTick:after {
+    color: #F62A2A;
+}
+
+.VA012-scrollSpyWrp a {
+    color: inherit;
+    font-size: .875rem;
+}
+
+.VA012-sortArrow {
+    width: 25px;
+    height: 25px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: inherit;
+    background: rgba(var(--v-c-on-secondary), .2);
+}
+
+    .VA012-sortArrow:hover {
+        background: rgba(var(--v-c-on-secondary), .1);
+    }
+
+.VA012-contentWrap .dropdown-menu {
+    margin: 0;
+    padding: 0;
+}
+
+.VA012-contentWrap .dropdown-item:first-child {
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+}
+
+.VA012-contentWrap .dropdown-item:last-child {
+    border-bottom-left-radius: .25rem;
+    border-bottom-right-radius: .25rem;
+}
+
+.VA012-contentWrap .dropdown-item.active,
+.VA012-contentWrap .dropdown-item:active {
+    background: rgba(var(--v-c-primary), 1);
+}
+
+.VA012-leftSideHeader i {
+    cursor: pointer;
+}
+
+.VA012-rightSecWrap {
+    width: 320px;
+    color: rgba(var(--v-c-on-secondary), 1);
+    position: relative;
+    display: none;
+}
+
+    .VA012-rightSecWrap .nav-link {
+        color: rgba(var(--v-c-on-secondary), 1);
+        border: none;
+        border-right: 1px solid rgba(var(--v-c-on-secondary), .2);
+        font-size: .875rem;
+        border-radius: 0;
+        border-bottom: 4px solid transparent;
+        text-align: center;
+    }
+
+
+        .VA012-rightSecWrap .nav-link.active {
+            color: rgba(var(--v-c-primary), 1);
+            border-top: none;
+            border-left: none;
+            /*border-bottom: 4px solid;*/
+            border-radius: 0;
+        }
+
+    .VA012-rightSecWrap li:last-child .nav-link {
+        border-right: none;
+    }
+
+.VA012-rightTopFlag {
+    background: rgba(var(--v-c-primary), 1);
+    color: rgba(var(--v-c-on-primary), 1);
+    font-size: .75rem;
+    padding: .3rem .625rem;
+}
+
+.VA012-rightContentSec {
+    padding: .625rem .625rem 0;
+    height: calc(100% - 70px);
+    overflow: auto;
+}
+
+.VA012-rightSecWrap .tab-content {
+    height: calc(100% - 43px);
+}
+
+.VA012-rightSecWrap .tab-pane {
+    height: 100%;
+}
+
+.VA012-rightFileDetail {
+    min-height: 140px;
+}
+
+    .VA012-rightFileDetail i {
+        font-size: 2.2rem;
+        color: rgba(var(--v-c-primary), 1);
+    }
+
+.VA012-rightFileInfoBox .VA012-contentFolderText {
+    padding-left: .625rem;
+    font-size: .75rem;
+    margin-left: .3rem;
+}
+
+.VA012-rightDetailField label {
+    margin: 0;
+    font-weight: 600;
+    padding-right: .3rem;
+}
+
+.VA012-rightDetailField p {
+    margin: 0;
+}
+
+.VA012-rightDetailField {
+    margin-bottom: .2rem;
+}
+
+.VA012-rightFileDetail small {
+    padding-top: .5rem;
+}
+
+.VA012-rightFileDetail .VA012-contentFolderText {
+    height: 100%;
+}
+
+.VA012-rightFileInfoBox .VA012-folderFoot i {
+    padding: 0 .75rem;
+    cursor: pointer;
+}
+
+.VA012-rightFileInfoBox {
+    background: rgba(var(--v-c-on-secondary), .02);
+}
+
+    .VA012-rightFileInfoBox .VA012-folderFoot {
+        border-top: none;
+        /*background: rgba(var(--v-c-on-secondary), .03);*/
+        font-size: 1.1rem;
+    }
+
+.VA012-contentWrap .vis-doc-word {
+    color: #0069a8 !important;
+}
+
+.VA012-contentWrap .vis-doc-pp {
+    color: #C94222 !important;
+}
+
+.VA012-contentWrap .vis-doc-excel {
+    color: #1C6C40 !important;
+}
+
+.VA012-contentWrap .vis-doc-pdf {
+    color: #EC0F02 !important;
+}
+
+.VA012-contentWrap .vis-doc-blank,
+.VA012-contentWrap .vis-doc-img {
+    color: rgba(var(--v-c-primary), 1) !important;
+}
+
+.VA012-contentWrap .vis-doc-text {
+    color: #a9abae !important;
+}
+
+.VA012-detailFileMeta > i {
+    font-size: .875rem;
+    cursor: pointer;
+}
+
+.VA012-detailFileMeta label i {
+    margin-left: .5rem;
+}
+
+.VA012-detailFileMeta {
+    font-size: .875rem;
+    margin-bottom: .75rem;
+}
+
+    .VA012-detailFileMeta > label {
+        font-weight: 600;
+        margin-bottom: .2rem;
+    }
+
+    .VA012-detailFileMeta h6,
+    .VA012-detailFileMeta p {
+        margin: 0;
+        word-break: break-word;
+    }
+
+    .VA012-detailFileMeta input {
+        width: 100%;
+    }
+
+.VA012-metaSave {
+    background: rgba(var(--v-c-primary), 1);
+    color: rgba(var(--v-c-on-primary), 1);
+    width: 100%;
+    font-size: .875rem;
+}
+
+    .VA012-metaSave:hover {
+        color: rgba(var(--v-c-on-primary), 1);
+    }
+
+.VA012-linkFolderList i {
+    margin-right: .2rem;
+}
+
+.VA012-linkFolderList p {
+    margin-bottom: .5rem;
+    white-space: break-spaces;
+    word-wrap: break-word;
+}
+
+.VA012-detailFileMeta .card-header {
+    padding: 0;
+    background-color: rgba(var(--v-c-on-secondary), .05);
+}
+
+    .VA012-detailFileMeta .card-header h6 {
+        flex: 1;
+        padding-left: .625rem;
+        font-size: .875rem;
+        padding-top: .2rem;
+        padding-bottom: .2rem;
+        overflow: hidden;
+        -webkit-line-clamp: 2;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        word-break: break-all;
+    }
+
+.VA012-relatedLinkIcons i {
+    padding-left: .6rem;
+}
+
+.VA012-detailFileMeta .btn-link {
+    text-decoration: none;
+}
+
+.VA012-detailFileMeta .card-body {
+    padding: .3rem 0;
+}
+
+.VA012-relatedLinkIcons {
+    font-size: 1rem;
+}
+
+    .VA012-relatedLinkIcons i {
+        cursor: pointer;
+    }
+
+.VA012-signInfoWrap {
+    padding: .5rem .8rem;
+    max-height: 230px;
+    overflow-y: auto;
+}
+
+.VA012-signInfo {
+    background: rgba(var(--v-c-on-secondary), .04);
+    padding: .625rem;
+    font-size: .75rem;
+    border-bottom: 1px solid rgba(var(--v-c-on-secondary), .1);
+}
+
+    .VA012-signInfo:first-child {
+        border-top-left-radius: .25rem;
+        border-top-right-radius: .25rem;
+    }
+
+    .VA012-signInfo:last-child {
+        border-bottom-left-radius: .25rem;
+        border-bottom-right-radius: .25rem;
+        border-bottom: none;
+    }
+
+    .VA012-signInfo span {
+        font-weight: 600;
+    }
+
+.VA012-signStatus {
+    font-size: 2rem;
+}
+
+.VA012-signText {
+    padding-right: .5rem;
+}
+
+.VA012-approvedFlag {
+    background: rgba(var(--v-c-primary), 1);
+    color: rgba(var(--v-c-on-primary), 1);
+    border-radius: .2rem;
+    padding: .2rem .5rem;
+    font-size: .75rem;
+    margin-left: .75rem;
+}
+
+.VA012-historyText {
+    padding: 0 .4rem;
+    font-size: .75rem;
+    display: inline-block;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed rgba(var(--v-c-primary), 1);
+}
+
+.VA012-revisionWrap {
+    height: 40px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+    .VA012-revisionWrap i, .VA012-revisionWrap a {
+        padding: .5rem .2rem;
+        cursor: pointer;
+    }
+
+.VA012-revisionList {
+    margin: 0 .5rem !important;
+    padding: 0;
+}
+
+    .VA012-revisionList a {
+        padding: .2rem;
+        width: 30px;
+        height: 30px;
+        background: rgba(var(--v-c-on-secondary), .1);
+        margin-left: .3rem;
+        display: flex;
+        justify-content: center;
+        font-size: .875rem;
+        align-items: center;
+        color: rgba(var(--v-c-on-secondary), .8);
+    }
+
+.VA012-revisionActive {
+    background: rgba(var(--v-c-primary), 1) !important;
+    color: rgba(var(--v-c-on-primary), 1) !important;
+}
+
+.VA012-searchWrap .input-group-text i {
+    color: rgba(var(--v-c-on-primary), 1);
+}
+
+.VA012-activityOuterWrap {
+    height: 100%;
+    overflow: auto;
+    padding: .625rem;
+}
+
+.VA012-activityWrap {
+    border: 1px solid rgba(var(--v-c-on-secondary), .1);
+    border-radius: .25rem;
+    padding: .5rem;
+    margin-bottom: .625rem;
+}
+
+.VA012-profileIcon {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    background: rgba(var(--v-c-on-secondary), .5);
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-style: normal;
+}
+
+.VA012-activityUserInfo small {
+    font-size: .65rem;
+    text-align: center;
+}
+
+.VA012-activityUserInfo h6 {
+    font-size: .875rem;
+    font-weight: 600;
+}
+
+.VA012-activityUser span {
+    font-size: .75rem;
+}
+
+.VA012-activityRevision {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--v-c-primary), 1);
+    color: rgba(var(--v-c-on-primary), 1);
+    padding: 0 .3rem;
+    border-bottom-right-radius: .25rem;
+    border-top-left-radius: .25rem;
+    font-size: .75rem;
+}
+
+.VA012-contentWrap .dropdown-item {
+    font-size: .875rem;
+    color: rgba(var(--v-c-on-secondary), 1);
+    display: flex;
+    align-items: center;
+    padding: .4rem 0.5rem;
+}
+
+.VA012-contentWrap .dropdown:hover {
+    background: rgba(var(--v-c-on-secondary), .1);
+    border-radius: .25rem;
+}
+
+.VA012-contentWrap .dropdown-item i {
+    font-size: 1.1rem;
+}
+
+    .VA012-contentWrap .dropdown-item i.vis-copy-folder {
+        font-size: 1rem;
+    }
+
+.VA012-VA012-listView table thead tr:first-child {
+    border: none;
+}
+
+.VA012-listView {
+    width: 100%;
+    /* padding: 0 .625rem; */
+    padding-right: 1rem;
+    height: 100%;
+}
+
+    .VA012-listView thead tr {
+        border: 1px solid rgba(var(--v-c-on-secondary), .1);
+        border-radius: .25rem;
+        /*background: rgba(var(--v-c-on-secondary), .05);*/
+    }
+
+    .VA012-listView thead th:hover {
+        color: #000000c2;
+    }
+
+    .VA012-listView th {
+        font-size: .8rem;
+        border-top: none;
+        /*border-bottom: 2px solid rgba(var(--v-c-on-secondary), .1) !important;*/
+        border-bottom: none !important;
+    }
+
+        .VA012-listView th i {
+            cursor: pointer;
+        }
+
+    .VA012-listView table {
+        border-collapse: separate;
+        border-spacing: 0; /*border-spacing: 0 10px;*/
+        /* margin-top: -10px; */
+        margin: 0;
+        margin-top: 5px;
+        color: inherit;
+    }
+
+    .VA012-listView td {
+        /*border-bottom: 1px solid rgba(var(--v-c-on-secondary), .1);*/
+        border-bottom: none;
+        padding: 0 .2rem; /*padding: .75rem .75rem .4rem;*/
+        border-top: 1px solid rgba(var(--v-c-on-secondary), .1);
+        vertical-align: middle;
+        height: 54px;
+    }
+
+        .VA012-listView td:first-child {
+            border: 1px solid rgba(var(--v-c-on-secondary), .1);
+            /*border-top-left-radius: .25rem;
+            border-bottom-left-radius: .25rem;*/
+            border-right: none;
+            /*padding-top: .6rem;*/
+            border-bottom: none;
+        }
+
+    .VA012-listView tr:last-child td {
+        border-bottom: 1px solid rgba(var(--v-c-on-secondary), .1);
+    }
+
+    .VA012-listView td:last-child {
+        border: 1px solid rgba(var(--v-c-on-secondary), .1);
+        /*border-bottom-right-radius: .25rem;
+            border-top-right-radius: .25rem;*/
+        border-left: none;
+        /*padding-top: 0.3rem;*/
+        border-bottom: none;
+    }
+
+.VA012-driveTblFirstCol i {
+    font-size: 1.5rem;
+}
+
+.VA012-driveTblFirstCol > i {
+    cursor: pointer;
+}
+
+.VA012-driveTblCol p {
+    font-size: .875rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.VA012-driveTblCol p {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.VA012-driveDownloadBtn {
+    font-size: 1rem;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    justify-content: flex-end;
+    padding-right: 15px;
+}
+
+.VA012-driveTblCol {
+    padding-left: 1rem;
+}
+
+.VA012-rightSecClose {
+    position: absolute;
+    right: 0;
+    background: #fff;
+    padding: .5rem;
+    width: 30px;
+    height: 39px;
+    align-items: center;
+    cursor: pointer;
+    color: rgba(var(--v-c-primary), 1);
+    /*border-bottom: 3.5px solid;*/
+}
+
+.VA012-driveList-item:not(:last-child):after {
+    position: relative;
+    content: '\e909';
+    font-family: 'vis-fonts';
+    font-size: .8rem;
+    padding-left: .5rem;
+    padding-right: .5rem;
+}
+
+.VA012-leftSideSearch input[type="text"] {
+    border: none;
+}
+
+.VA012-leftSideSearch:focus-within {
+    border: 1px solid rgba(var(--v-c-primary), .2);
+}
+
+.VA012-searchWrap .vis-ad-w-p-tb-advsrch {
+    background-color: rgba(var(--v-c-primary), 1);
+}
+
+.VA012-detailFileMeta .input-group-text {
+    background-color: rgba(var(--v-c-on-secondary), .08);
+}
+
+.VA012-scrollSpyWrp .btn-light, .VA012-scrollSpyWrp .btn-light:not(.disabled):active {
+    background-color: rgba(var(--v-c-on-secondary), .1);
+    border: none;
+    color: rgba(var(--v-c-on-secondary), 1);
+}
+
+.VA012-contentHeadSec .dropdown {
+    /*padding: .25rem .5rem;*/
+}
+
+.VA012-righttabs .nav-item {
+    flex: 1;
+}
+
+.VA012-rightSecWrap .nav-link:hover {
+    /*border-color: rgba(var(--v-c-on-secondary), .2);*/
+}
+
+.VA012-contentWrap .dropdown .btn {
+    color: inherit;
+}
+
+/* Added by me*/
+.VA012-righttabs {
+    margin-bottom: 0 !important;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    margin-right: 29px;
+    height: 39px;
+    border: none;
+}
+
+span.VA012-selected {
+    color: rgba(var(--v-c-primary), 1);
+}
+
+.VA012-Busy {
+    width: 100%;
+    float: left;
+    height: 100%;
+    overflow: hidden;
+    top: 0;
+    left: 0;
+    padding-left: 5px;
+    background: white;
+    z-index: 9999;
+    background-color: gray;
+    opacity: 0.4;
+    position: absolute;
+}
+
+.VA012-breadCrumbWrap {
+    /*max-width: 64%;*/
+    display: inline-flex;
+    /*max-width: calc(100% - 193px);*/
+}
+
+
+/* empty record*/
+.VA012-emptyFolderWrap {
+    display: flex;
+    margin: auto;
+    width: 100%;
+    height: calc(100% - 30px);
+    align-items: center;
+    justify-content: center;
+}
+
+.VA012-driveBodyContainer {
+    height: 100%;
+    overflow: auto;
+}
+
+.VA012-driveEmptyFolder {
+    width: 300px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--v-c-on-secondary), .03);
+    border-radius: 50%;
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+    /*margin:0 auto;*/
+}
+
+    .VA012-driveEmptyFolder img {
+        width: 100px;
+        opacity: .3;
+    }
+
+    .VA012-driveEmptyFolder h5 {
+        margin-top: 1.5rem;
+        font-size: 1rem;
+    }
+
+    .VA012-driveEmptyFolder small {
+        color: rgba(var(--v-c-on-secondary), .8);
+    }
+
+/* empty record*/
+
+.VA012_DriveSorting, .VA012-drivedocsortarrowmain {
+    display: none !important;
+}
+
+.VA012-headtable {
+    position: fixed;
+    top: 117px;
+    display: none;
+    background: white;
+    border-spacing: 0 !important;
+    width: calc(100% - 350px);
+}
+
+.btn-link i {
+    cursor: pointer;
+}
+
+.VA012-togglefolderpanel1 {
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-right: 15px;
+    margin-top: 3px;
+}
+
+.VA012-metadocnametxt {
+    display: none;
+}
+
+.VA012-folactions button {
+    padding-left: 0;
+}
+
+.VA012-folderopicondiv, .VA012-folderdocopicondiv {
+    display: inline-flex;
+    /*align-items: flex-start;*/
+}
+
+.VA012-listView table thead th {
+    width: 15%;
+    font-size: .9rem;
+    color: rgba(var(--v-c-on-secondary), .9);
+    font-weight: 600;
+}
+
+    .VA012-listView table thead th:first-child {
+        width: 25%;
+    }
+
+    .VA012-listView table thead th:last-child {
+        width: 5%;
+    }
+
+.VA012-scrollSpyWrp .btn-sm:not(.disabled) {
+    background-color: rgba(var(--v-c-on-secondary), .08);
+}
+
+.VA012-doclistico {
+    font-size: 1.2rem !important;
+}
+
+.VA012-rightSecWrap .VA012-rightSecHeadTitle .nav-link:hover {
+    border-color: rgba(var(--v-c-primary), 1);
+}
+
+.VA012-filetype {
+    position: absolute;
+    z-index: 999;
+    line-height: 0;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    top: 0px;
+    -ms-filter: 'alpha(opacity=0)';
+    opacity: 0;
+    left: 0;
+    vertical-align: middle;
+    height: 30px;
+}
+
+.noborder {
+    border: none !important;
+}
+
+.VA012-selectedrow {
+    background: rgba(var(--v-c-primary), .05);
+    border-color: rgba(var(--v-c-primary), .5);
+}
+
+.VA012-selectedBtn {
+    background: rgba(var(--v-c-primary), 1) !important;
+    color: rgba(var(--v-c-on-primary), 1) !important;
+}
+
+.VA012-documentcheckbox {
+    margin-right: 10px !important;
+    margin-top: 0 !important;
+    margin-left: 6px !important;
+    width: 15px !important;
+    height: 15px !important;
+    min-width: 15px !important;
+    min-height: 15px !important;
+}
+
+.VA012-statusicon {
+    margin-right: 10px;
+}
+
+.VA012-checkoutbyownico {
+    padding: .2rem;
+    font-size: .75rem !important;
+}
+
+.VA012-listView th:not(:first-child) {
+    padding: .75rem .3rem;
+}
+
+.VA012-sortArrowTH {
+    cursor: pointer;
+}
+
+    .VA012-sortArrowTH a {
+        display: none;
+    }
+
+
+/*Action panel*/
+
+.VA012-actionPanel {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.VA012-actionPanelHead {
+    border-bottom: 3px solid;
+    color: rgba(var(--v-c-primary), 1);
+}
+
+    .VA012-actionPanelHead h6 {
+        padding: .5rem .625rem;
+    }
+
+    .VA012-actionPanelHead i {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        min-width: 35px;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+.VA012-actionsPanelListWrap {
+    padding: .625rem;
+    height: calc(100% - 40px);
+    overflow: auto;
+}
+
+    .VA012-actionsPanelListWrap li {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        background: rgba(var(--v-c-primary), .08);
+        margin-bottom: .5rem;
+        border-radius: .3rem;
+        padding: .625rem 1rem;
+        color: rgba(var(--v-c-primary), 1);
+        cursor: pointer;
+        position: relative;
+    }
+
+        .VA012-actionsPanelListWrap li p {
+            margin: 0;
+            padding-left: 1rem;
+            height: 100%;
+            width: 100%
+        }
+
+        .VA012-actionsPanelListWrap li i {
+            font-size: 1.2rem;
+        }
+
+        .VA012-actionsPanelListWrap li:hover > :not(.VA012-multiselectlidisable),
+        .VA012-actionsPanelListWrap li.VA012-selectedAction {
+            background: rgba(var(--v-c-on-secondary), .05);
+            color: rgba(var(--v-c-on-secondary), 1);
+        }
+
+.VA012-metadocname1 {
+    font-size: 1.2rem;
+    text-align: left;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+    color: rgba(var(--v-c-primary), 1);
+}
+
+.VA012-foldertext {
+    display: flex;
+    align-items: center;
+    padding-bottom: .625rem;
+}
+
+.VA012-foldertextname {
+    padding-right: .5rem;
+}
+
+.VA012-foldertextnamechk {
+    display: flex;
+}
+
+    .VA012-foldertextnamechk input {
+        margin-right: 8px !important;
+    }
+
+input.VA012-nofocus:focus {
+    border: none !important;
+}
+
+.VA012-docInfoHead {
+    background: rgba(var(--v-c-on-secondary), .03);
+    padding-left: 5px;
+    display: flex;
+}
+
+.VA012-docpreviewimg {
+    max-width: 100%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(var(--v-c-on-secondary), .1);
+}
+
+.VA012-multiselectlidisable {
+    width: calc(100% - 1rem);
+    height: 100%;
+    position: absolute;
+    z-index: 99;
+    visibility: hidden;
+    cursor: not-allowed;
+}
+
+.VA012-newFolderIco {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 25px;
+    background: rgba(var(--v-c-primary), 1);
+    color: rgba(var(--v-c-on-primary), 1);
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 15%);
+    cursor: pointer;
+    font-size: .85rem;
+    margin-bottom: 4px;
+}
+
+.VA012-breadCrumbList::-webkit-scrollbar {
+    height: 4px;
+}
+
+.VA012-docFileIco {
+    position: absolute;
+    color: #fff;
+    background: #0098f7;
+    left: 0;
+    top: 0;
+    font-size: .875rem;
+    padding: 0 .5rem;
+    border-bottom-right-radius: .3rem;
+}
+
+.VA012-folSort {
+    margin-left: auto;
+    margin-right: 15px;
+}
+
+.VA012-dropIcon {
+    width: 30px;
+}
+
+    .VA012-dropIcon:hover {
+        background-color: #eee;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+select.VA012-noborder,
+select.select.VA012-noborder:focus {
+    border: none;
+}
+
+.VA012-dropfol {
+    border: 2px solid transparent;
+}
+
+.VA012-dropPopupWrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    max-width: 300px;
+}
+
+    .VA012-dropPopupWrap strong {
+        white-space: break-spaces;
+        word-wrap: break-word;
+    }
+
+.VA012-cloudIconWrap i {
+    font-size: 3rem;
+    color: #fff;
+    filter: drop-shadow(0px 0px 10px rgb(0 0 0 /10%));
+    position: relative;
+    z-index: 1;
+}
+
+.VA012-cloudIconWrap {
+    position: relative;
+    animation: bouncingCloud 0.5s;
+    animation-direction: alternate;
+    animation-timing-function: cubic-bezier(.5, 0.05, 1, .5);
+    animation-iteration-count: infinite;
+}
+
+    .VA012-cloudIconWrap:after {
+        position: absolute;
+        content: '';
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        background: rgba(var(--v-c-primary), 1);
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        z-index: 0;
+    }
+
+.VA012-dropPopupContentWrap {
+    text-align: center;
+    background: rgba(var(--v-c-primary), 1);
+    color: rgba(var(--v-c-on-primary), 1);
+    padding: .75rem 1rem;
+    border-radius: .3rem;
+    margin-top: .8rem;
+    box-shadow: 0 0 10px rgb(0 0 0 / 10%);
+}
+
+.VA012-dropFolderInfo i {
+    font-size: 1.2rem;
+}
+
+.VA012-dropFolderInfo h6 {
+    display: inline;
+}
+
+@keyframes bouncingCloud {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+
+    to {
+        transform: translate3d(0, 10px, 0);
+    }
+}
+
+.VA012-uploaddocmsg {
+    color: rgba(var(--v-c-on-secondary), 1);
+    font-size: .650rem;
+    font-weight: 600;
+    text-align: right;
+    font-style: italic;
+}
+
+.VA012-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+    /* To show the lines on right and left sides of the text */
+    .VA012-divider::after,
+    .VA012-divider::before {
+        content: "";
+        border-bottom: 1px solid black;
+        flex: 1;
+    }
+
+    /* Space on left and right sides of text */
+    .VA012-divider:not(:empty)::before {
+        margin-right: 0.25em;
+    }
+
+    .VA012-divider:not(:empty)::after {
+        margin-left: 0.25em;
+    }
+
+.VA012-usertagsto, .VA012-usertagscc, .VA012-usertagsbcc {
+    margin-bottom: 2px;
+}
+
+.VA012-useremaillabel {
+    display: table;
+    padding: 0.2em 0.6em 0.3em;
+    font-size: 10px;
+    line-height: 1.1rem;
+    color: rgba(var(--v-c-on-primary), 1);
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25em;
+    background-color: rgba(var(--v-c-primary), 1);
+    margin-right: 2px;
+    margin-bottom: 2px;
+    cursor: pointer;
+    /*font-size: 10px;
+    color: rgba(var(--v-c-on-primary), 1);
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25em;
+    background-color: rgba(var(--v-c-primary), 1);
+    margin-bottom: 2px;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    cursor: pointer;
+    word-break: break-all;
+    line-height: 1.1rem;*/
+}
+
+    .VA012-useremaillabel [data-role="remove"]:after {
+        content: "x";
+        padding: 0px 2px;
+    }
+
+    .VA012-useremaillabel [data-role="remove"] {
+        margin-left: 8px;
+        cursor: pointer;
+    }
+
+    .VA012-useremaillabel:first-child {
+        margin-top: 20px;
+    }
+
+/* For Email QR*/
+/*
+============ PLEASE READ THIS CAREFULLY ============
+
+1. Don't add framework.css file into your project.
+2. Ignore fonts folder and vis-fonts.css its already in our base
+*/
+
+.VA012-emailFormOuterWrap {
+    height: calc(100% - 38px);
+}
+
+    .VA012-emailFormOuterWrap button:focus {
+        outline: none;
+    }
+
+.VA012-emailRecipientDetail {
+    min-width: 350px;
+    border-right: 1px solid rgba(var(--v-c-on-secondary), .2);
+    padding: .625rem 0;
+    overflow-y: scroll;
+}
+
+.VA012-emailToField span:not(.VA012-useremaillabel) {
+    pointer-events: none;
+}
+
+.VA012-emailToField:focus-within span:not(.VA012-useremaillabel, [data-role="remove"]) {
+    color: rgba(var(--v-c-primary), 1);
+}
+
+.VA012-emailToField:focus-within span:not(.VA012-useremaillabel, [data-role="remove"]),
+.VA012-emailToField input:not(:placeholder-shown) ~ span:not(.VA012-useremaillabel) {
+    top: -4px;
+    font-size: .75rem;
+}
+
+.VA012-emailToField input {
+    border: none;
+    border-bottom: 1px solid rgba(var(--v-c-on-secondary), .2);
+    width: 100%;
+    min-height: 40px;
+    color: inherit;
+    padding-top: 20px !important;
+    padding-left: 0px !important;
+}
+
+.VA012-emailToCcSection input:focus {
+    border: none !important;
+    border-bottom: 1px solid rgba(var(--v-c-on-secondary), .2) !important;
+}
+
+.VA012-emailCcButtons {
+    color: rgba(var(--v-c-primary), 1);
+}
+
+    .VA012-emailCcButtons span {
+        padding: .2rem .2rem 0;
+    }
+
+    .VA012-emailCcButtons button {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: .875rem;
+        color: inherit;
+    }
+
+.VA012-emailReceiverFilterFields {
+    padding: 0 .625rem 0;
+    /*height: calc(100% - 40px);*/
+    overflow: auto;
+}
+
+    .VA012-emailReceiverFilterFields select {
+        color: inherit;
+        padding-left: 10px;
+    }
+
+.VA012-emailReceiverFilter {
+    flex: 1;
+    height: calc(100% - 70px);
+}
+
+    .VA012-emailReceiverFilter ul {
+        display: inline-flex;
+    }
+
+    .VA012-emailReceiverFilter .VA012-emailusericon {
+        float: right;
+        clear: right;
+    }
+
+        .VA012-emailReceiverFilter .VA012-emailusericon a {
+            background: rgba(var(--v-c-secondary), .5);
+            color: rgba(var(--v-c-on-secondary), 1);
+            border-radius: 0.3rem !important;
+            padding-left: 11px;
+            padding-right: 11px;
+        }
+
+            .VA012-emailReceiverFilter .VA012-emailusericon a i {
+                vertical-align: middle;
+                font-size: 1.2rem;
+            }
+
+    .VA012-emailToCcSection,
+    .VA012-emailReceiverFilter .nav-tabs {
+        padding: 0 .625rem;
+    }
+
+    .VA012-emailReceiverFilter .nav-link.active {
+        background: rgba(var(--v-c-primary), 1);
+        color: rgba(var(--v-c-on-primary), 1);
+    }
+
+    .VA012-emailReceiverFilter .nav-link {
+        background: rgba(var(--v-c-on-secondary), 1);
+        color: rgba(var(--v-c-on-primary), 1);
+        font-size: .75rem;
+        border: none;
+        border-radius: .3rem;
+    }
+
+    .VA012-emailReceiverFilter .nav-item {
+        margin-bottom: 0;
+        margin-right: 1px;
+    }
+
+        .VA012-emailReceiverFilter .nav-item:first-child .nav-link {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .VA012-emailReceiverFilter .nav-item:last-child .nav-link {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .VA012-emailReceiverFilter .nav-item:not(:first-child):not(:last-child) .nav-link {
+            border-radius: 0;
+        }
+
+.VA012-emailReceiverFilterFields .vis-fp-custcolumns {
+    padding: 0;
+    border: 0;
+}
+
+.vis-fp-custcolumns .card-body {
+    padding: 10px;
+}
+
+.VA012-locationFieldsWrap .card-link,
+.VA012-emailResponseSettings a.collapsed i {
+    transform: rotate(180deg);
+    transition: .5s all;
+}
+
+.VA012-locationFieldsWrap .collapsed .card-link {
+    transform: rotate(0deg);
+}
+
+.VA012-locationFieldsWrap .card-header {
+    cursor: pointer;
+}
+
+.VA012-emailAttachmentSec {
+    min-width: 300px;
+    padding: .625rem 0;
+    border-left: 1px solid rgba(var(--v-c-on-secondary), .2);
+    /*transition: .5s all;*/
+    overflow-y: auto;
+}
+
+.VA012-emailAttachTitle {
+    color: rgba(var(--v-c-primary), 1);
+    border-bottom: 1px solid;
+    margin: 0 0.625rem;
+}
+
+.VA012-emailAttachmentWrap {
+    height: calc(100% - 45px);
+    overflow: auto;
+    padding: .625rem .625rem 0 .625rem;
+}
+
+.VA012-emailAttachIcon {
+    font-size: 2rem;
+}
+
+.VA012-emailAttachmentBox {
+    border: 1px solid rgba(var(--v-c-on-secondary), .2);
+    border-radius: .3rem;
+}
+
+.VA012-emailAttachFileInfo p {
+    line-height: 1.3;
+    font-size: .875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.VA012-emailAttachFileInfo small {
+    font-size: .75rem;
+}
+
+.VA012-emailAttachOptions input {
+    width: 15px;
+    height: 15px;
+}
+
+    .VA012-emailAttachOptions input[type="checkbox"]:checked:before {
+        width: 5px;
+        height: 9px;
+    }
+
+.VA012-emailToField,
+.VA012-emailAttachTitle {
+    min-height: 41px;
+}
+
+.VA012-emailAttachInfoWrap,
+.VA012-emailAttachFileInfo {
+    width: calc(100% - 32px);
+}
+
+.VA012-emailAttachmentBox:not(:last-child) {
+    margin-bottom: .5rem;
+}
+
+.VA012-emailSubjectWrap {
+    border-bottom: 1px solid rgba(var(--v-c-on-secondary), .2);
+}
+
+.VA012-emailMainSection {
+    padding: .625rem;
+    width: 100%;
+}
+
+.VA012-emailSubjectWrap i {
+    color: rgba(var(--v-c-primary), 1);
+}
+
+.VA012-emailResponseSettings {
+    margin-top: 10px;
+}
+
+    .VA012-emailResponseSettings .card-header {
+        padding: 0;
+        border: none;
+    }
+
+    .VA012-emailResponseSettings a,
+    .VA012-emailResponseSettings a:hover {
+        cursor: pointer;
+        color: rgba(var(--v-c-primary), 1);
+        border-bottom: 1px solid;
+    }
+
+        .VA012-emailResponseSettings a,
+        .VA012-emailResponseSettings a:hover,
+        .VA012-emailResponseSettings a:focus {
+            box-shadow: none;
+        }
+
+    .VA012-emailResponseSettings span,
+    .VA012-respondFieldWrap {
+        font-size: .875rem;
+    }
+
+        .VA012-respondFieldWrap input[type="radio"] {
+            //margin-right: 8px;
+            //margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .VA012-respondFieldWrap label {
+            font-weight: normal;
+            vertical-align: middle;
+        }
+
+        .VA012-emailResponseSettings span i {
+            font-size: 1.2rem;
+        }
+
+.VA012-emailFilePathBrowse {
+    cursor: pointer;
+    min-height: 60px;
+    top: -27px;
+    opacity: 0;
+}
+
+.VA012-emailAttachmentBrowseWrap {
+    /*overflow: hidden;*/
+}
+
+.VA012-emailTextArea {
+    height: calc(100% - 60px);
+}
+
+.VA012-cussearchkeyres {
+    font-size: .75rem;
+    color: rgba(var(--v-c-primary), 1);
+    font-weight: 600;
+    border: 1px solid rgba(var(--v-c-primary), 1);
+    padding: 5px;
+    margin-bottom: 15px;
+}
+
+.VA012-qrtomaildiv {
+    word-break: break-all;
+}
+
+    .VA012-qrtomaildiv .VA012-qrtoheading:first-child {
+        margin-top: 0px;
+    }
+
+.VA012-zipdiv {
+    color: red;
+    font-size: .700rem;
+    font-weight: 600;
+    font-style: italic;
+}
+
+.VA012-qrtoheading {
+    margin: 10px;
+    font-weight: 600;
+    color: rgba(var(--v-c-primary), 1);
+    padding: 5px;
+    word-break: break-word;
+    font-size: .900rem;
+    border-bottom: 1px solid rgba(var(--v-c-primary), 1);
+}
+
+.VA012-qrtomails {
+    padding: 0 .5rem;
+    word-break: break-all;
+    font-size: .875rem;
+}
+
+.VA012-qrtomailsinfo {
+    padding: 0 0 0 2rem;
+    margin-bottom: 7px;
+    font-size: .800rem;
+}
+
+.VA012-qrtomailsinfonouser {
+    position: absolute;
+    top: 50%;
+    margin-top: -50px;
+    width: calc(100% - 20px);
+    height: 100px;
+    padding: 10px;
+    text-align-last: center;
+}
+
+    .VA012-qrtomailsinfonouser i {
+        font-size: 3rem;
+    }
+
+.VA012-emailProspectFields label {
+    font-size: 12px;
+}
+
+.VA012-emailProspectFields input[type="checkbox"] {
+    margin-left: 0px;
+}
+
+.VA012-font12 {
+    font-size: 12px;
+}
+
+.VA012-cursor:hover {
+    cursor: pointer;
+}
+
+/* DMS Copy folder CSS */
+
+.VA012-copyFolderContainer {
+    display: flex;
+}
+
+    .VA012-copyFolderContainer .VA012-leftSideTreeCopy {
+        height: 425px;
+        overflow: auto;
+        margin-top: .325rem;
+    }
+
+.VA012-leftSideTreeCopyUL {
+    flex: 1;
+}
+
+.VA012-copyFolderLeft {
+    position: relative;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(var(--v-c-on-secondary), .2);
+    width: 300px;
+}
+
+.VA012-leftSideTitle {
+    position: absolute;
+    background-color: #fff;
+    top: -11px;
+    left: 10px;
+    padding: 2px 4px;
+    font-size: .75rem;
+}
+
+.VA012-copyFolderRight {
+    flex: 1;
+}
+
+.VA012-font-size-md {
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.VA012-changeSecTabs {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .25rem;
+    position: relative;
+    min-width: 60px;
+    height: 28px;
+    padding: 0 .625rem;
+    border: 1px solid rgba(var(--v-c-on-secondary), .2);
+}
+
+    .VA012-changeSecTabs label,
+    .VA012-changeSecTabs input {
+        display: flex;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+    }
+
+        .VA012-changeSecTabs input[type="radio"] {
+            opacity: 0.011;
+            z-index: 100;
+        }
+
+    .VA012-changeSecTabs label {
+        cursor: pointer;
+        z-index: 90;
+        line-height: 1.8em;
+        font-size: .8rem;
+        color: rgba(var(--v-c-on-secondary), 1);
+        border: rgba(var(--v-c-on-secondary), .2);
+    }
+
+
+    .VA012-changeSecTabs input[type="radio"]:checked + label {
+        background: rgba(var(--v-c-primary), 1);
+        color: rgba(var(--v-c-on-primary), 1);
+        border: rgba(var(--v-c-primary), 1);
+    }
+
+    .VA012-changeSecTabs:first-child label,
+    .VA012-changeSecTabs:first-child {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .VA012-changeSecTabs:last-child label,
+    .VA012-changeSecTabs:last-child {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+.VA012-copyFolderRightSectionTwo {
+    height: 20rem;
+    overflow: auto;
+    margin-top: .325rem;
+    background-color: #f0f0f0;
+    flex: 1;
+}
+
+.VA012-popup-footBtns .ui-button {
+    padding: .2rem 1rem !important;
+    border-radius: .25rem;
+    margin-left: .8rem;
+}
+
+.VA012-CreateStructure {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+@media (max-width: 999px) {
+    .VA012-copyFolderContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .VA012RightSectionOne .vis-input-wrap {
+        width: 100% !important;
+    }
+}
+
+@media (min-width: 767px) {
+    .VA012-respondFieldWrap {
+        width: calc(100% / 3);
+    }
+
+    .VA012-emailAttchmentSliderIcon {
+        background: rgba(var(--v-c-secondary), 1);
+        width: 10px;
+        border-radius: 1rem;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.5rem;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+        left: 0px;
+    }
+
+    .VA012-emailAttchmentCount {
+        font-size: .75rem;
+        background: rgba(var(--v-c-primary), 1);
+        color: rgba(var(--v-c-on-primary), 1);
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        right: -4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        top: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    .VA012-emailFormOuterWrap {
+        overflow: auto;
+        height: 100%;
+    }
+
+    /*copy folder structure*/
+    .VA012-copyFolderWrapper {
+        height: 100vh;
+        padding-top: 1rem;
+    }
+
+    .VA012-copyFolderContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .VA012RightSectionOne {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+
+    .VA012-copyFolderRightSectionTwo {
+        margin-top: 1rem;
+    }
+
+    .VA012-SuffPref {
+        margin: 0 !important;
+    }
+
+    .VA012-advancedSearch-data {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        align-items: flex-start !important;
+    }
+
+    .vis-pull-right button:first-child {
+        margin-left: 0;
+    }
+}
+
+.VA012-activity-icon {
+    display: flex;
+    height: 40px;
+    width: 40px;
+    border: 3px solid rgba(var(--v-c-primary),1);
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-style: normal;
+}
+
+    .VA012-activity-icon i {
+        color: rgba(var(--v-c-primary),1);
+    }
+
+.VA012-activity-box {
+    display: flex;
+    justify-content: center;
+}
+
+.VA012-activity-head {
+    align-items: center;
+}
+
+.VA012-act-timeline {
+    min-height: 40px;
+    width: 3px;
+    background-color: rgba(var(--v-c-primary),1);
+}
+
+.VA012-lefthead {
+    font-size: 14px;
+    font-weight: 600;
+    height: 2.1rem;
+    width: 7.938rem;
+    padding-right: 0.2rem;
+    text-align: right;
+}
+
+    .VA012-lefthead p {
+        font-size: .6rem;
+        margin-bottom: 0.3rem;
+    }
+
+.VA012-righthead {
+    font-size: 14px;
+    font-weight: 600;
+    height: 2.1rem;
+    width: 7.938rem;
+    padding-left: 0.2rem;
+    text-align: left;
+}
+
+    .VA012-righthead p {
+        font-size: .6rem;
+        margin-bottom: 0.3rem;
+    }
+
+.VA012-leftinfo {
+    text-align: right;
+    width: 145px;
+    padding-left: 0.2rem;
+    padding-right: 1.3rem;
+    padding-top: 0.2rem;
+    font-size: .75rem;
+}
+
+.VA012-rightinfo {
+    width: 145px;
+    padding-left: 1.3rem;
+    padding-top: 0.2rem;
+    font-size: .75rem;
+}
+
+    .VA012-leftinfo label, .VA012-rightinfo label {
+        font-weight: 600;
+    }
+
+.VA012-act-content {
+    word-wrap: break-word;
+}
+
+.VA012-vbadge-list {
+    position: absolute;
+    background: rgba(var(--v-c-primary),1);
+    color: #fff;
+    top: 0;
+    left: 0;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-bottom-right-radius: 3px;
+}
+
+.VA012-vbadge-grid {
+    position: absolute;
+    background: rgba(var(--v-c-primary),1);
+    color: #fff;
+    bottom: 0;
+    right: 0;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-bottom-right-radius: 3px;
+    border-top-left-radius: 3px;
+}
+
+.VA012-dropdownbrc {
+    top: 30px !important;
+}
+
+/*widget*/
+
+.VA012-bank-panel {
+    background-color: rgba(var(--v-c-primary), .1);
+    /*border-radius: 0.5rem;*/
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    /*justify-content: space-between;*/
+    /*border: 1px solid #e3e3e3;*/
+    height: 100%;
+    position: relative;
+}
+
+.VA012-panel-heading {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+    .VA012-panel-heading h6 {
+        font-weight: 600;
+        margin: 0;
+        font-size: 1.1vw;
+    }
+
+    .VA012-panel-heading .fa {
+        color: #338CCF;
+        font-size: 1.375rem;
+        cursor: pointer;
+    }
+
+.VA012-subHeading {
+    color: #63849F;
+    font-size: 0.875rem;
+}
+
+.VA012-upload-col, .VA012-files-label {
+    height: 100%;
+}
+
+    .VA012-upload-col .VA012-input-file-field + .VA012-files-label {
+        border: 1px dashed #bbbbbb;
+        position: relative;
+        width: 100%;
+        border-radius: 0.25rem;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        padding: 1.25rem 0;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .VA012-upload-col .VA012-input-file-field {
+        width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        position: absolute;
+        z-index: -1;
+    }
+
+.VA012-labelTxt {
+    color: rgba(var(--v-c-on-secondary), .5);
+    font-size: 0.975em;
+    text-align: center;
+}
+
+    .VA012-labelTxt .VA012-browse-link {
+        cursor: pointer;
+        text-decoration: underline;
+        color: rgba(var(--v-c-primary),1);
+    }
+
+    .VA012-labelTxt .VA012-fileSize {
+        display: block;
+    }
+
+.VA012-files-label {
+    justify-content: center;
+}
+
+    .VA012-files-label .vis-uploaddocument {
+        font-size: 1.875em;
+        color: rgba(var(--v-c-on-secondary), .5);
+        margin-bottom: 0.5em;
+    }
+
+.VA012-shadow {
+    box-shadow: 6px 6px 7px rgba(var(--v-c-on-secondary), .2);
+    padding: 1.4em;
+    height: calc(100% - 3.6em);
+}
+
+.VA012-file-listing {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    /*height: calc(100% - 17.5rem);*/
+    overflow: auto;
+}
+
+.VA012-links {
+    display: flex;
+    width: 100%;
+    align-items: end;
+    justify-content: space-between;
+}
+
+    .VA012-links span {
+        font-size: .75rem;
+    }
+
+.VA012-scan-folder {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
+
+    .VA012-scan-folder a {
+        font-size: 0.875em;
+        color: rgba(var(--v-c-primary), 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .VA012-scan-folder .vis, .VA012-scan-folder .fa {
+        font-size: 1.4em;
+    }
+
+.VA012-fader-div {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(var(--v-c-common), .8);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.VA012-loader-container p, .VA012-success-msg p {
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 30px;
+    color: rgba(var(--v-c-on-common), 1);
+}
+
+    .VA012-loader-container p span, .VA012-success-msg p span {
+        display: block;
+        font-size: 1rem;
+    }
+
+.VA012-success-msg {
+    background-color: rgba(var(--v-c-common), 1);
+    box-shadow: 0 3px 8px #cccccc;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+    .VA012-success-msg p {
+        font-size: 0.875rem;
+        margin: 14px 0 0 0;
+    }
+
+    .VA012-success-msg i {
+        font-size: 60px;
+        color: #54B948;
+    }
+
+    .VA012-success-msg .vis-cross {
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+        font-size: 1.2rem;
+        color: rgba(var(--v-c-primary), 1);
+        cursor: pointer;
+    }
+
+.VA012-nextPrev-link {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.625rem;
+}
+
+    .VA012-nextPrev-link a {
+        font-size: 0.8125rem;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        text-decoration: none;
+    }
+
+    .VA012-nextPrev-link .vis {
+        font-size: 0.875rem;
+    }
+
+.VA012-wdloader {
+    height: 50px;
+    aspect-ratio: 2.5;
+    --_g: no-repeat radial-gradient(farthest-side,#0098f7 90%,#0000);
+    background: var(--_g), var(--_g), var(--_g), var(--_g);
+    background-size: 20% 50%;
+    animation: l43 1s infinite linear;
+}
+
+@keyframes l43 {
+    0% {
+        background-position: calc(0*100%/3) 50%,calc(1*100%/3) 50%,calc(2*100%/3) 50%,calc(3*100%/3) 50%
+    }
+
+    16.67% {
+        background-position: calc(0*100%/3) 0,calc(1*100%/3) 50%,calc(2*100%/3) 50%,calc(3*100%/3) 50%
+    }
+
+    33.33% {
+        background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0,calc(2*100%/3) 50%,calc(3*100%/3) 50%
+    }
+
+    50% {
+        background-position: calc(0*100%/3) 50%,calc(1*100%/3) 100%,calc(2*100%/3) 0,calc(3*100%/3) 50%
+    }
+
+    66.67% {
+        background-position: calc(0*100%/3) 50%,calc(1*100%/3) 50%,calc(2*100%/3) 100%,calc(3*100%/3) 0
+    }
+
+    83.33% {
+        background-position: calc(0*100%/3) 50%,calc(1*100%/3) 50%,calc(2*100%/3) 50%,calc(3*100%/3) 100%
+    }
+
+    100% {
+        background-position: calc(0*100%/3) 50%,calc(1*100%/3) 50%,calc(2*100%/3) 50%,calc(3*100%/3) 50%
+    }
+}
+
+.VA012-folderContainer {
+    background-color: rgba(var(--v-c-common), 1);
+    box-shadow: 0 3px 8px #cccccc;
+    width: 100%;
+    height: 100%;
+    /*display: flex;
+    align-items: center;
+    justify-content: center;*/
+    position: relative;
+}
+
+    .VA012-folderContainer h6 {
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0;
+        height: 10%;
+    }
+
+.VA012-folTreeArea {
+    height: 72%;
+    width: 100%;
+    overflow: auto;
+    padding-right: .3rem;
+    /*padding-top: .5rem;*/
+}
+
+.VA012-folTreeFooter {
+    /*height: 14%;*/
+    /*width: 100%;*/
+    margin-top: 2%;
+    display: flex;
+    gap: 2%;
+    justify-content: center;
+}
+
+    .VA012-folTreeFooter input {
+        height: 100%;
+        width: 50%;
+    }
+
+.VA012-widgetContentArea .vis-scandoc, .VA012-folder-link .fa-folder-open, .VA012-window-link .vis-upload-history {
+    color: rgba(var(--v-c-primary), 1);
+    cursor: pointer;
+}
+
+.VA012-widgetContentArea .vis-scandoc {
+    font-size: 1.25em;
+}
+
+.VA012-WidgetContainer {
+    color: rgba(var(--v-c-on-secondary), 1);
+}
+
+.VA012-folderFader {
+    padding: 5%;
+}
+
+.VA012-files-box {
+    display: flex;
+    align-items: center;
+    border: 1px solid #CBCBCB;
+    background-color: rgba(var(--v-c-secondary),.4);
+    border-radius: .30rem;
+    color: #183553;
+    padding: 0.75rem;
+    gap: 0.375rem;
+    justify-content: space-between;
+}
+
+.VA012-icon-gap {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.875rem;
+}
+
+    .VA012-icon-gap .VA012-file-detail {
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .VA012-icon-gap .vis {
+        font-size: 1.875rem;
+    }
+
+.VA012-file-detail h6 {
+    margin: 0 0 0.125rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #2A2F35;
+}
+
+.VA012-file-detail span {
+    font-size: 0.75rem;
+    color: #A8A8A8;
+}
+
+.VA012-wdframe {
+    width: 100%;
+    height: calc(100% - 40px);
+}
+
+.VA012-wdpaneldiv {
+    height: 100%;
+}
+
+/* Doc list in widget */
+
+.VA012-uploadeddoc {
+    width: 100%;
+}
+
+.VA012-doc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background-color: rgba(var(--v-c-readonly), 1);
+    padding: 5px 10px;
+    font-size: 0.8rem;
+}
+
+    .VA012-doc-header h1 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+        .VA012-doc-header h1 span {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .VA012-doc-header h1 .fa, .VA012-doc-header h1 .vis {
+            font-size: 1rem;
+            color: rgba(var(--v-c-primary), 1);
+            margin-left: 4px;
+            cursor: pointer;
+        }
+
+    /*.VA012-wd-lastupdated select {*/
+    /*width: 118px;*/
+    /*font-size: .875rem;*/
+    /*color: rgba(var(--v-c-primary), 1);*/
+    /*border: 0;
+    outline: 0;
+    background-color: transparent;
+}*/
+
+    /* for panel header */
+
+    .VA012-doc-header .VA012-headerctrl span {
+        /*border: 1px solid #000;
+    border-radius: 50%;
+    padding: 0px 3px;*/
+    }
+
+    .VA012-doc-header .VA012-headerctrl .fa, .VA012-doc-header .VA012-headerctrl .vis {
+        /*font-size: 1rem;*/
+        color: rgba(var(--v-c-primary), 1);
+        cursor: pointer;
+    }
+
+.VA012-wd-lastupdated select {
+    border: 0;
+    outline: 0;
+    background-color: transparent;
+}
+
+.VA012-wd-lastupdated i {
+    font-size: 0.875rem;
+    color: rgba(var(--v-c-primary), 1);
+    cursor: pointer;
+}
+
+.VA012-docList {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+    overflow-y: auto;
+    max-height: 290px;
+}
+
+    .VA012-docList.wdpaneldiv {
+        max-height: calc(100% - 40px);
+    }
+
+.VA012-doclit-box {
+    border: 1px solid rgba(var(--v-c-secondary), 1);
+    border-radius: 6px;
+    padding: 6px 10px;
+    transition: all ease .3s;
+    position: relative;
+}
+
+    .VA012-doclit-box:hover, .VA012-doclit-box.active {
+        background-color: rgba(var(--v-c-primary), .1);
+    }
+
+        .VA012-doclit-box:hover .VA012-docUploadDetail .fa, .VA012-doclit-box:hover .VA012-docUploadDetail .vis, .VA012-doclit-box:hover .VA012-docUploadDetail img {
+            visibility: visible;
+        }
+
+.VA012-fileico-w-name {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    align-items: center;
+}
+
+    .VA012-fileico-w-name .fa, .VA012-fileico-w-name .vis {
+        font-size: 1.8rem;
+        color: #ff0000;
+    }
+
+.VA012-docFilename {
+    padding-right: 20px;
+}
+
+    .VA012-docFilename h6 {
+        font-size: .75rem;
+        font-weight: 600;
+        margin: 0 0 2px 0;
+        overflow: hidden;
+        -webkit-line-clamp: 1;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        cursor: pointer;
+        word-break: break-all;
+    }
+
+.VA012-fileID {
+    font-size: 0.5rem;
+}
+
+.VA012-docUploadDetail {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+.VA012-upload-date, .VA012-ownerName {
+    font-size: 0.6rem;
+}
+
+.VA012-docUploadDetail .fa, .VA012-docUploadDetail .vis {
+    font-size: 1rem;
+    display: inline-flex;
+    /*transform: rotate(82deg);*/
+    color: rgba(var(--v-c-primary), 1);
+    visibility: hidden;
+    cursor: pointer;
+}
+
+.VA012-docUploadDetail img {
+    visibility: hidden;
+    cursor: pointer;
+    width: 22px;
+}
+
+.VA012-docUploadDetail .vis {
+    transform: none;
+}
+
+.VA012-docUploadDetail a {
+    font-size: 0.75rem;
+}
+
+.VA012-wdframe {
+    /*width: 39em;*/
+}
+
+.VA012-wd-docsearch input {
+    height: 25px;
+}
+
+.VA012-wd-searchWrap {
+    /*margin: .3rem 1rem .3rem 0;*/
+    border: 1px solid transparent;
+    background: rgba(var(--v-c-on-secondary), .05);
+}
+
+    .VA012-wd-searchWrap:focus-within {
+        border-color: rgba(var(--v-c-primary), 1);
+    }
+
+    .VA012-wd-searchWrap input:focus {
+        box-shadow: none;
+    }
+
+    .VA012-wd-searchWrap .input-group-text {
+        border: none;
+        height: 32px;
+    }
+
+        .VA012-wd-searchWrap .input-group-text i {
+            color: rgba(var(--v-c-on-primary), 1);
+        }
+
+    .VA012-wd-searchWrap .input-group > i:last-child {
+        padding-left: .625rem;
+    }
+
+    .VA012-wd-searchWrap .input-group > i {
+        color: rgba(var(--v-c-on-secondary), .6);
+        cursor: pointer;
+    }
+
+    .VA012-wd-searchWrap.vis-ad-w-p-tb-search {
+        height: 30px;
+        /*width: 130px;*/
+    }
+
+        .VA012-wd-searchWrap.vis-ad-w-p-tb-search.VA012-wd-searchWrapPanel {
+            height: 20px;
+            width: 130px;
+        }
+
+    .VA012-wd-searchWrap .vis-ad-w-p-tb-advsrch {
+        background-color: rgba(var(--v-c-primary), 1);
+    }
+
+.VA012-lastupdated {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.VA012-zoomBtnWrp span {
+    font-size: .75rem;
+    min-width: 30px;
+    text-align: center;
+}
+
+.VA012-zoomBtnWrp {
+    gap: .2rem;
+}
+
+.VA012-ZoomIO {
+    border: 1px solid rgba(var(--v-c-primary), 1);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+    .VA012-ZoomIO .VA012-scrOneFilterIcon {
+        font-size: .875rem;
+    }
+
+.VA012-wd-helpButton {
+    font-size: .775rem;
+}
+
+.VA012-CircleOuter {
+    border: 1px solid #000;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+    .VA012-CircleOuter i {
+        font-size: .775rem;
+        padding-top: 2px;
+        /*color: rgba(var(--v-c-primary), 1);*/
+    }
+
+.VA012-waitmsg {
+    font-size: .7rem;
+}

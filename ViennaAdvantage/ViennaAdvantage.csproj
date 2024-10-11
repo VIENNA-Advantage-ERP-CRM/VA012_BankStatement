@@ -156,6 +156,7 @@
     <Content Include="Areas\VA012\Images\split.png" />
     <Content Include="Areas\VA012\Images\tick.png" />
     <Content Include="Areas\VA012\Scripts\apps\forms\bankstatement.js" />
+    <Content Include="Areas\VA012\Scripts\apps\forms\VA012_BankingJournal.js" />
     <Content Include="Areas\VA012\Scripts\model\callouts.js" />
     <Content Include="Areas\VA012\Scripts\uploadexcel.js" />
     <Content Include="Areas\VA012\Scripts\VA012.all.min.js" />
