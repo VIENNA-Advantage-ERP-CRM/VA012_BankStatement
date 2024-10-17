@@ -1,4 +1,5 @@
-﻿/* Minification failed. Returning unminified contents.
+﻿/*Version 2.0.9.3*/
+/* Minification failed. Returning unminified contents.
 (74,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-secondary'
 (76,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
 (83,27): run-time error CSS1039: Token not allowed after unary operator: '-v-c-secondary'
@@ -61,7 +62,6 @@
 (941,38): run-time error CSS1039: Token not allowed after unary operator: '-v-c-on-secondary'
 (952,22): run-time error CSS1039: Token not allowed after unary operator: '-v-c-primary'
  */
-
 body {
     margin: 0;
     padding: 0;
@@ -204,7 +204,6 @@ body {
     /*.va012-left-data > select > option {
             background-color: #575757;
         }*/
-
     .va012-left-data a {
         color: #fff;
         font-size: 15px;
@@ -217,7 +216,6 @@ body {
         font-size: 16px;
         margin-bottom: 0;
     }
-
 
 .va012-main-content-wrap {
     float: left;
@@ -241,8 +239,6 @@ body {
     height: 100%;
     padding: 0 10px;
 }
-
-
 
 .va012-icons-wrap {
     float: right;
@@ -278,7 +274,6 @@ body {
     cursor: pointer;
 }
 
-
 .va012-delete {
     content: url("../Images/del.png");
 }
@@ -302,13 +297,9 @@ body {
     color: rgba(var(--v-c-on-secondary), 1)
 }
 
-
-
 .va012-form-data {
     margin-bottom: 10px;
 }
-
-
 
     .va012-form-data > label {
         width: 100%;
@@ -326,7 +317,6 @@ body {
 .va012-right-align {
     text-align: right;
 }
-
 
 input.va012-input-size {
     width: calc(100% - 32px);
@@ -366,7 +356,6 @@ input.va012-input-size-2 {
     justify-content: center;
     font-size: 1rem;
 }
-
 
 /*.va012-txtamount
 {
@@ -532,12 +521,10 @@ input.va012-input-size-2 {
     border-left: 1px solid white;
     border-radius: 20px;
 }*/
-
 /*.va012-payment-content::-moz-scrollbar-track {    
     border-left: 1px solid white;
     border-radius: 20px;
 }*/
-
 /*.va012-payment-content::-webkit-scrollbar-thumb {
         background-color: rgba(var(--v-c-primary), 1);
         border-radius: 25px;
@@ -555,7 +542,6 @@ input.va012-input-size-2 {
     .va012-payment-content::-moz-scrollbar-thumb:hover {
         background-color: rgba(var(--v-c-primary), 1);
     }*/
-
 .va012-payment-wrap {
     /*border-bottom: 1px solid K#CCC;*/
     /*padding: 10px 0px;*/
@@ -586,7 +572,6 @@ input.va012-input-size-2 {
 /*.va012-width-30 > select > option {
         background-color: #616364;
     }*/
-
 .va012-mid-data-wrap {
     padding: 5px;
     border-bottom: 1px solid rgba(var(--v-c-on-secondary),.2);
@@ -602,7 +587,6 @@ input.va012-input-size-2 {
     margin-bottom: 2px;
     width:15%
 }*/
-
 .va012-mid-data-wrap-img-no-drag {
     padding: 5px;
     float: left;
@@ -617,9 +601,6 @@ input.va012-input-size-2 {
     border-bottom: 2px solid rgba(var(--v-c-primary), 1);
     background: rgba(var(--v-c-secondary), 1);
 }
-
-
-
 
 .va012-width-30 {
     width: 30%;
@@ -731,8 +712,6 @@ span.va012-font-red {
         line-height: 28px;
     }
 
-
-
 .va012-color-gray {
     color: rgba(var(--v-c-on-secondary),.7) !important;
 }
@@ -818,17 +797,14 @@ span.va012-font-red {
     .va012-frm-btn {
         padding: 6px 7px;
     }
+
     /*.va012-txtamount
     {
         width:31% !important;
     }*/
 }
 
-
 /*popup css*/
-
-
-
 .va012-popform-content {
     float: left;
     width: 100%;
@@ -920,7 +896,6 @@ span.va012-font-red {
     margin-top: 10px;
 }
 
-
 .va012-active {
     background: rgba(var(--v-c-primary), 1);
     border-radius: 0px;
@@ -942,8 +917,8 @@ span.va012-font-red {
     .va012-disabled input, .va012-disabled select {
         background-color: rgba(var(--v-c-on-secondary),.2);
     }
-/*------------------------*/
 
+/*------------------------*/
 .va012-matchingbaselist {
     /*width: 25%;*/
     /*float: left;*/
@@ -953,7 +928,6 @@ span.va012-font-red {
     /*margin-bottom: 10px;*/
     /*padding: 10px;*/
 }
-
 
 .va012-remove-icon {
     /*float: left;
@@ -993,9 +967,7 @@ span.va012-font-red {
 /*white-space: nowrap;
 text-overflow: ellipsis;
 overflow: hidden;*/
-
 /*  Hidden popup*/
-
 .va012-div-tooltip {
     display: none;
     position: absolute;
@@ -1012,14 +984,12 @@ overflow: hidden;*/
     display: flex;
 }
 
-.va012-mid-data-wrap-img-no-drag i,
-.va012-form-data i.vis-chatimgwrap {
+.va012-mid-data-wrap-img-no-drag i, .va012-form-data i.vis-chatimgwrap {
     font-size: 1.5rem;
     color: rgba(var(--v-c-primary), 1);
 }
 
-.va012-headersearchfilter,
-.va012-searchfilter {
+.va012-headersearchfilter, .va012-searchfilter {
     display: inline-block;
 }
 
@@ -1028,10 +998,10 @@ overflow: hidden;*/
     flex: 1;
     align-items: center;
 }
+
 /*.VA012-search-wrap {
     min-width: 250px;
 }*/
-
 .VA012-search-wrap input {
     flex: 1;
 }
@@ -1039,4 +1009,16 @@ overflow: hidden;*/
 .va012-search-icon-right {
     float: right !important;
     cursor: pointer;
+}
+
+.VA012-checkbox-div {
+    display: none;
+}
+
+    .VA012-checkbox-div.D {
+        display: block;
+    }
+
+.VA012-StatementDateAsAccountDate {
+    font-weight: normal
 }
