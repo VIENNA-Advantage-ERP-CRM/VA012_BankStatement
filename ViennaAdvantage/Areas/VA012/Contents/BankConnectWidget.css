@@ -1,0 +1,135 @@
+﻿body {
+}
+
+.VA012_bankCnt-NewBtn {
+    background: white;
+    color: rgba(var(--v-c-primary));
+    border-radius: 11px;
+    border-color: rgba(var(--v-c-primary));
+    width: 100%;
+    font-size: 18px;
+    margin: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.VA012_bankCnt-container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.VA012_bankCnt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #f5f7fa;
+    border-radius: 10px;
+}
+
+    .VA012_bankCnt-header h2 {
+        margin: 0;
+        font-size: 1.5em;
+    }
+
+    .VA012_bankCnt-header button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+.VA012_bankCnt-banks-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.VA012_bankCnt-bank-card {
+    display: flex;
+    align-items: center;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    height:60px;
+}
+
+    .VA012_bankCnt-bank-card img {
+        width: 30px;
+        height: auto;
+        margin-right: 10px;
+    }
+
+.VA012-bankCnt-selection {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 15px;
+    width:70%;
+}
+
+.VA012-bankCnt-bnkselected {
+    background-color: antiquewhite;
+    border: 2px solid red;
+}
+
+
+/*.vis-add-row {
+    clear: both;
+    display: block;
+    padding: 10px
+}
+
+    .vis-add-row button {
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        margin: 0 15px 6px 6px;
+        min-height: 40px;
+        padding: 0 12px;
+        width: auto
+    }
+
+    .vis-add-row a, .vis-add-row button, .vis-add-row label {
+        align-items: center;
+        display: flex;
+        float: left;
+        gap: 8px;
+        justify-content: center;
+        overflow: hidden
+    }
+
+    .vis-add-row a, .vis-add-row label {
+        margin: 0 15px 0 6px;
+        padding: 0 5px
+    }
+
+    .vis-add-row a {
+        cursor: pointer
+    }
+
+    .vis-add-row span {
+        align-items: center;
+        cursor: pointer;
+        display: flex;
+        float: left;
+        gap: 5px;
+        justify-content: center;
+        margin: 0 6px 6px;
+        min-height: 15px;
+        overflow: hidden;
+        padding: 5px
+    }
+
+    .vis-add-row label.default {
+        color: rgba(var(--v-c-on-secondary),1)
+    }*/

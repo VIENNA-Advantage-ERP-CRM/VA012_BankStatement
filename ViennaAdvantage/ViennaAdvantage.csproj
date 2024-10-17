@@ -48,11 +48,13 @@
     <Reference Include="Antlr3.Runtime">
       <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="BaseLibrary">
-      <HintPath>..\..\..\..\BreakageDLL\BaseLibrary.dll</HintPath>
+    <Reference Include="BaseLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ViennaAdvantageWeb\DLL\BaseLibrary.dll</HintPath>
     </Reference>
-    <Reference Include="CoreLibrary">
-      <HintPath>..\..\..\..\BreakageDLL\CoreLibrary.dll</HintPath>
+    <Reference Include="CoreLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ViennaAdvantageWeb\DLL\CoreLibrary.dll</HintPath>
     </Reference>
     <Reference Include="Interop.Excel">
       <HintPath>..\ViennaAdvantageWeb\DLL\Interop.Excel.dll</HintPath>
@@ -118,8 +120,9 @@
     <Reference Include="System.Web.Services" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="VAModelAD">
-      <HintPath>..\..\..\..\BreakageDLL\VAModelAD.dll</HintPath>
+    <Reference Include="VAModelAD, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ViennaAdvantageWeb\DLL\VAModelAD.dll</HintPath>
     </Reference>
     <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
@@ -135,6 +138,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Areas\VA012\Contents\BankConnectWidget.css" />
     <Content Include="Areas\VA012\Contents\bankstatement.css" />
     <Content Include="Areas\VA012\Contents\VA012.all.min.css" />
     <Content Include="Areas\VA012\Images\batch-white.png" />
@@ -156,6 +160,8 @@
     <Content Include="Areas\VA012\Images\split.png" />
     <Content Include="Areas\VA012\Images\tick.png" />
     <Content Include="Areas\VA012\Scripts\apps\forms\bankstatement.js" />
+    <Content Include="Areas\VA012\Scripts\apps\forms\VA012_BankingJournal.js" />
+    <Content Include="Areas\VA012\Scripts\apps\forms\VA012_BankConnectWidget.js" />
     <Content Include="Areas\VA012\Scripts\model\callouts.js" />
     <Content Include="Areas\VA012\Scripts\uploadexcel.js" />
     <Content Include="Areas\VA012\Scripts\VA012.all.min.js" />
@@ -186,6 +192,7 @@
     <Compile Include="Areas\VA012\Controllers\BankStatementController.cs" />
     <Compile Include="Areas\VA012\Controllers\StatementController.cs" />
     <Compile Include="Areas\VA012\Controllers\UploadExcelController.cs" />
+    <Compile Include="Areas\VA012\Controllers\WidgetController.cs" />
     <Compile Include="Areas\VA012\Models\BankStatementModel.cs" />
     <Compile Include="Areas\VA012\Models\CreatePaymentFromStatement.cs" />
     <Compile Include="Areas\VA012\Models\DataTable.cs" />

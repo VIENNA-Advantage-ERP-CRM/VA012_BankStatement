@@ -64,7 +64,7 @@ namespace VA012.Models
         /// <param name="statementDate">Statement Date</param>
         /// <param name="IsStatementDateAsAccountDate">Statement Date As Account Date</param>
         /// <returns>StatementResponse Object</returns>
-        public VA012.Models.StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate,bool IsStatementDateAsAccountDate)
+        public VA012.Models.StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate, bool IsStatementDateAsAccountDate)
         {
             VA012.Models.StatementResponse _obj = new VA012.Models.StatementResponse();
             string _branchName = "";
@@ -163,7 +163,7 @@ namespace VA012.Models
                 _C_BankAccount_ID = _bankaccount;
                 string AccountNo = "";
                 string BankAccountType = "";
-                
+
                 //VIS317 
                 //devops 1644 
                 string _sql1 = @"SELECT AccountNo,BankAccountType, AD_Org_ID FROM C_BankAccount WHERE C_BankAccount_ID=" + _C_BankAccount_ID;
@@ -244,7 +244,7 @@ namespace VA012.Models
                                             _IBAN = Util.GetValueOfString(dt.Rows[i][0]);
                                             _IBAN = _IBAN.Substring(_IBAN.LastIndexOf(':') + 1).Trim();
                                         }
-                                       
+
                                         continue;
                                     }
                                     #region Header
@@ -281,7 +281,10 @@ namespace VA012.Models
                                                 _stementID = _BnkStatm.Get_ID();
                                         }
                                         else
+                                        {
                                             _BnkStatm = new MBankStatement(ctx, _existingStatementID, null);
+                                            _stementID = _existingStatementID;
+                                        }
                                     }
                                     #endregion
                                     #region Rest All Other Entries Which Contains Data
@@ -324,7 +327,7 @@ namespace VA012.Models
                                             {
                                                 _BnkStmtLine.SetDateAcct(DateTime.Parse(_date));
                                             }
-                                              // Set Transaction Date
+                                            // Set Transaction Date
                                             _BnkStmtLine.SetValutaDate(DateTime.Parse(_date));// Set Transaction Date
                                             _BnkStmtLine.SetReferenceNo(_IBAN);// Set Transaction Remarks
                                             _BnkStmtLine.SetDescription(Util.GetValueOfString(dt.Rows[i][1]));// Set Transaction Purticular
