@@ -138,8 +138,8 @@
                     // Create a new File with the original content
                     const myFile = new File([blob], files[0].name,
                         { type: files[0].type, lastModified: files[0].lastModified });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(myFile);
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(myFile);
                     ctrl[0].files = dataTransfer.files;
                     _selectedFiles = files;
                     if (files.length > 0) {
@@ -147,7 +147,7 @@
                     }
                 };
                 // Read the original file as an ArrayBuffer
-                reader.readAsArrayBuffer(originalFile);      
+                reader.readAsArrayBuffer(originalFile);
             });
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).off('change');
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).on('change', function (e) {
@@ -164,13 +164,12 @@
                     //load parameter div
                     loadParam();
                 }
-                else
-                {
+                else {
                     //show parameter div
                     paramDiv.show();
                     paramFooter.show();
                 }
-              //  hide drag files div
+                //  hide drag files div
                 dragDiv.hide();
             });
         }
@@ -182,7 +181,7 @@
             var allowedExtensions = ".xlsx,.xls,.csv";
             var extNotAllowed = false;
             var invalidExtensions = [];
-            var isExceded=null;
+            var isExceded = null;
             var excededfileNames = null;
             // Looping over all files and add it to FormData object
             for (var i = 0; i < files.length; i++) {
@@ -340,6 +339,7 @@
                 }
 
                 if (_cmbBankAccountClasses.val() == null || _cmbBankAccountClasses.val() == "" || _cmbBankAccountClasses.val() == "0") {
+                    $bsyDiv.hide();
                     VIS.ADialog.info("VA012_PleaseSelectClassFirst", null, "", "");
                     return false;
                 }
@@ -374,49 +374,45 @@
                             var _IsStatementDateAsAccountDate = isChecked.is(':checked');
                             var _statementClassName = _cmbBankAccountClasses.val();
                             var _statementCharges = Bank_Charge_ID;
-                            //$bsyDiv.show();
-                            window.setTimeout(function () {
-                                $.ajax({
-                                    url: VIS.Application.contextUrl + "BankStatement/ImportStatement",
-                                    type: "GET",
-                                    datatype: "json",
-                                    contentType: "application/json; charset=utf-8",
-                                    async: false,
-                                    data: ({
-                                        _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno,
-                                        _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: _statementDate.val(),
-                                        IsStatementDateAsAccountDate: _IsStatementDateAsAccountDate
-                                    }),
-                                    success: function (result) {
-                                        _statementID = result._statementID;
-                                        if (_statementID != null && _statementID != "") {
-                                            $bsyDiv.hide();
-                                            resetControls();
-                                            paramDiv.hide();
-                                            paramFooter.hide();
-                                            dragDiv.show();
-                                            dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
-                                            fileNameLabel.text('');
-                                            dropContainer.preventDefault();
-                                            VIS.ADialog.info("VA012_StatementUploadDone", null, "", "");
-                                            return true;
-                                        }
-                                        else {
-                                            if (result._error != null && result._error != "") {
-                                                $bsyDiv.hide();
-                                                VIS.ADialog.info(result._error, null, "", "");
-                                                return false;
-                                            }
-                                        }
-                                    },
-                                    error: function () {
+                            $.ajax({
+                                url: VIS.Application.contextUrl + "BankStatement/ImportStatement",
+                                type: "GET",
+                                datatype: "json",
+                                contentType: "application/json; charset=utf-8",
+                                async: true,
+                                data: ({
+                                    _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno,
+                                    _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: _statementDate.val(),
+                                    IsStatementDateAsAccountDate: _IsStatementDateAsAccountDate
+                                }),
+                                success: function (result) {
+                                    _statementID = result._statementID;
+                                    if (_statementID != null && _statementID != "") {
                                         $bsyDiv.hide();
-                                        return VIS.ADialog.info("error", null, "", "");
-                                        VIS.ADialog.info("VA012_ErrorWhileUploadExcel", null, "", "");
-                                        return false;
+                                        resetControls();
+                                        paramDiv.hide();
+                                        paramFooter.hide();
+                                        dragDiv.show();
+                                        dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
+                                        fileNameLabel.text('');
+                                        VIS.ADialog.info("VA012_StatementUploadDone", null, "", "");
+                                        return true;
                                     }
-                                })
-                           }, 1000);
+                                    else {
+                                        if (result._error != null && result._error != "") {
+                                            $bsyDiv.hide();
+                                            VIS.ADialog.info(result._error, null, "", "");
+                                            return false;
+                                        }
+                                    }
+                                },
+                                error: function () {
+                                    $bsyDiv.hide();
+                                    return VIS.ADialog.info("error", null, "", "");
+                                    VIS.ADialog.info("VA012_ErrorWhileUploadExcel", null, "", "");
+                                    return false;
+                                }
+                            })
                         }
                     }
                     else {
@@ -428,7 +424,7 @@
             });
         };
         //reset parameters and show and hide drag and parameter div
-        function resetControls(){
+        function resetControls() {
             _cmbBank.prop('selectedIndex', 0);
             _cmbBankAccount.prop('selectedIndex', 0);
             _cmbBankAccountClasses.prop('selectedIndex', 0);
@@ -565,7 +561,6 @@
             dragDiv.show();
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
             fileNameLabel.text("");
-            dropContainer.preventDefault();
             this.initialize();
         };
         this.disposeComponents = function () {
