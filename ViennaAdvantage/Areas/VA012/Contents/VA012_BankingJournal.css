@@ -28,12 +28,12 @@ button:focus {
 }
 
 .VA012-CancelBtn {
-    border-radius: 1em;
+    border-radius: 1em !important;
     font-size: 0.9em;
 }
 
 .VA012-UploadBtn {
-    border-radius: 1em;
+    border-radius: 1em !important;
     font-size: 0.9em;
 }
 

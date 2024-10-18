@@ -229,7 +229,7 @@
                     }
                     else {
                         //If param div already in DOM then reset the controls values
-                        resetControls();
+                       // resetControls();
                         paramDiv.show();
                         paramFooter.show();
                     }
@@ -290,8 +290,8 @@
                 + '</div>'
                 + '</div>'
                 + '<div class="VA012-paramFooterDiv" id="VA012-paramFooterDiv_' + widgetID + '">'
-                + '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Back') + '" class="btn ui-button ui-corner-all ui-widget VA012-CancelBtn" style="border-radius: 1em;">'
-                + '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Upload') + '" class="btn ui-button ui-corner-all ui-widget VA012-UploadBtn" style="border-radius: 1em;">'
+                + '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Back') + '" class="btn ui-button ui-corner-all VA012-CancelBtn">'
+                + '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Upload') + '" class="btn ui-button ui-corner-all VA012-UploadBtn">'
                 + '</div>'
                 + '</div>');
             dropContainer.append($loadParaDiv);
@@ -561,6 +561,7 @@
             dragDiv.show();
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
             fileNameLabel.text("");
+            nxtBtn.attr("disabled", true);
             this.initialize();
         };
         this.disposeComponents = function () {
