@@ -17,6 +17,7 @@
         var widgetID = null;
         var dropContainer = null;
         var uploadFile = null;
+        var uploadImg = null;
         var cancelBtn = null;
         var uploadBtn = null;
         var nxtBtn = null;
@@ -24,6 +25,7 @@
         var paramDiv = null;
         var paramFooter = null;
         var fileNameLabel = null;
+        var openDMSBtn = null;
         var $bsyDiv = null;
         var _cmbBank = null;
         var _cmbBankAccount = null;
@@ -78,7 +80,7 @@
                 '<input id="VA012-uploadFile_' + widgetID + '" class="VA012-input-file-field VA012-uploadFileWidget_' + widgetID
                 + '" type="file" accept=".csv, .xls, .xlsx">' +
                 '<label for="VA012-uploadFile_' + widgetID + '" class="VA012-files-label">' +
-                '<i class="fa fa-cloud-upload" style="color:rgba(var(--v-c-primary), 1);font-size: 4em;" aria-hidden="true"></i>' +
+                '<i class="fa fa-cloud-upload VA012-uploadImg" id="VA012-uploadImg_' + widgetID + '" style="" aria-hidden="true"></i>' +
                 '<div class="VA012-labelTxt">' + VIS.Msg.getMsg('VA012_DragFiles') + '<span class="VA012-browse-link">'
                 + VIS.Msg.getMsg('VA012_Browse') + '</span>' +
                 '<span class="VA012-FileNamelbl VA012-fileSize" id="VA012-FileNamelbl_' + widgetID + '"></span></div>' +
@@ -88,8 +90,8 @@
                 '<div class="VA012-links">' +
                 '<div class="VA012-DMS-folder">' +
                 '<div class="VA012-folder-link text-center" style="display:none">' +
-                '<i class="fa fa-folder-open VA012-wgOpenDMS_' + widgetID + '" aria-hidden="true"></i>' +
-                '<a class="VA012-wgOpenDMS_' + widgetID + '" href="javascript:void(0)">' + VIS.Msg.getMsg('VA012_OpenDMS') + '</a>' +
+                '<i id="VA012-OpenDMSIcon_' + widgetID + '" class="fa fa-folder-open VA012-OpenDMS" aria-hidden="true"></i>' +
+                '<a class="VA012-OpenDMS_' + widgetID + '" href="javascript:void(0)">' + VIS.Msg.getMsg('VA012_OpenDMS') + '</a>' +
                 '</div>' +
                 '<div class="VA012-folder-link text-center">' +
                 '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Next') +
@@ -100,9 +102,11 @@
                 '</div>' +
                 '</div>');
             uploadFile = dropContainer.find('#VA012-uploadFile_' + widgetID);
+            uploadImg = dropContainer.find('#VA012-uploadImg_' + widgetID);
             nxtBtn = dropContainer.find('#VA012_NextBtn_' + widgetID);
             selectedFileName = dropContainer.find('#VA012-selectedFileName_' + widgetID);
             fileNameLabel = dropContainer.find('#VA012-FileNamelbl_' + widgetID);
+            openDMSBtn = dropContainer.find('#VA012-OpenDMSIcon_' + widgetID);
             if (_selectedFiles == null) {
                 nxtBtn.attr("disabled", true);
             }
@@ -110,6 +114,15 @@
                 nxtBtn.attr("disabled", false);
                 nxtBtn.css("opacity", 1);
             }
+            /*var modulePrefix = VIS.dataContext.getJSONRecord("ModulePrefix/GetModulePrefix", "VADMS_");
+            if (modulePrefix == null)
+            {
+                openDMSBtn.css("display", "none");
+            }
+            else
+            {
+                openDMSBtn.css("display", "block");
+            }*/
             Events();
         };
         function Events() {
@@ -149,7 +162,6 @@
                 // Read the original file as an ArrayBuffer
                 reader.readAsArrayBuffer(originalFile);
             });
-            dropContainer.find('.VA012-uploadFileWidget_' + widgetID).off('change');
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).on('change', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
@@ -172,6 +184,19 @@
                 //  hide drag files div
                 dragDiv.hide();
             });
+            /*openDMSBtn.on('click', function (e) {
+                    $.ajax({
+                        url: VIS.Application.contextUrl + 'VADMS/Document/GetFormID?FromName=' + VADMS.Common.DMS_FORM,
+                        async: true,
+                        type: "POST",
+                        //dataType: "json",
+                    }).done(function (res) {
+                        if (res && res.result != '') {
+                            // Open form
+                            VIS.viewManager.startForm(res.result);
+                        }
+                    });
+            });*/
         }
         /**
          * Uploading files to the DMS
