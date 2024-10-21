@@ -28,13 +28,17 @@ button:focus {
 }
 
 .VA012-CancelBtn {
-    border-radius: 1em;
+    border-radius: 1em !important;
     font-size: 0.9em;
 }
 
 .VA012-UploadBtn {
-    border-radius: 1em;
+    border-radius: 1em !important;
     font-size: 0.9em;
+}
+.VA012-uploadImg {
+    color: rgba(var(--v-c-primary), 1);
+    font-size: 4em;
 }
 
 .VA012-headerPanelLbl {
