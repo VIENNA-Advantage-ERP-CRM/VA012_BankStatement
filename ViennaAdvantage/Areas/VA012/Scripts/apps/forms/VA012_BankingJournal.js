@@ -13,7 +13,7 @@
         this.windowNo = 0;
         this.widgetInfo = null;
         var $self = this;
-        var $root = null;
+        var $root = $("<div id='WidMainRoot_" + widgetID + "' class='VA012_root'></div>");
         var widgetID = null;
         var dropContainer = null;
         var uploadFile = null;
@@ -40,11 +40,35 @@
         var _selectedFiles = null;
         var _result = null;
         var Bank_Charge_ID = null;
+        var folTreeArea = null;
+        var folTreeUpload = null;
+        var folTreeSelect = null;
+        var folTreeCancel = null;
+        var folderFader = null;
+        var strFolderIds = "";
+        var isDMS = false;
+        VA012.Common =
+        {
+            IPadWidth: 1024,
+            MimWidth: 1000,
+            None_Access: 10,
+            R_Access: 20,
+            RW_Access: 30,
+            RWD_Access: 40,
+            Full_Access: 99,
+            //Document Variables
+            XLS: '.xls',
+            XLSX: '.xlsx',
+            CSV: '.csv',
+            // ASC DESC
+            UpdatedAsc: 'UA',
+            UpdatedDesc: 'UD'
+        };
         // init log class
         this.log = VIS.Logging.VLogger.getVLogger('BankJournalWidget');
         //Privilized function
         this.getRoot = function () {
-            $root = $("<div id='WidMainRoot_" + widgetID + "' class='VA012_root'></div>");
+            // $root = $("<div id='WidMainRoot_" + widgetID + "' class='VA012_root'></div>");
             $root.append(dropContainer);
             dragDiv = $root.find('.VA012-widgetContentArea');
             createBusyIndicator();
@@ -66,14 +90,24 @@
         this.initialize = function () {
             widgetID = this.widgetInfo.AD_UserHomeWidgetID;
             if (widgetID == 0) {
-                widgetID = $self.windowNo;
+                widgetID = $widgetID;
             }
             Design();
         };
         //Create design
         function Design() {
             dropContainer = $('<div class="VA012-bank-panel VA012-WidgetContainer">' +
-                '<div class="VA012-panel-heading"><h6 class="VA012-headerPanelLbl">' + VIS.Msg.getMsg('VA012_BankingJournal') + '</h6></div>' +
+                '<div class="VA012-panel-heading"><h6 class="VA012-headerPanelLbl">' + VIS.Msg.getMsg('VA012_BankingJournal') + '</h6></div>' +'<div class="VA012-fader-div VA012-folderFader d-none" id="VA012-folderFader_' + widgetID + '">' +
+                '<div class="p-2 VA012-folderContainer VA012-folderContainer_' + widgetID + '">' +
+                '<h6>' + VIS.Msg.getMsg('VA012_SelectFolder') + '</h6>' +
+                '<div class="VA012-folTreeArea" id="VA012-folTreeArea_' + widgetID + '">' +
+                '</div>' +
+                '<div class="VA012-folTreeFooter">' +
+                '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Back') + '" class="btn ui-button ui-corner-all ui-widget VA012-treeCancelBtn" id="VA012-treeCancelBtn_' + widgetID + '">' +
+                '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Next') + '" disabled class="btn ui-button ui-corner-all ui-widget VA012-treeUploadBtn" id="VA012-treeUploadBtn_' + widgetID + '">' +                
+                '</div > ' +
+                '</div>' +
+                '</div>' +
                 '<div class="VA012-widgetContentArea">' +
                 '<div class="VA012-shadow bg-white">' +
                 '<div class="VA012-upload-col">' +
@@ -89,7 +123,7 @@
                 '</div>' +
                 '<div class="VA012-links">' +
                 '<div class="VA012-DMS-folder">' +
-                '<div class="VA012-folder-link text-center" style="display:none">' +
+                '<div class="VA012-folder-link text-center">' +
                 '<i id="VA012-OpenDMSIcon_' + widgetID + '" class="fa fa-folder-open VA012-OpenDMS" aria-hidden="true"></i>' +
                 '<a class="VA012-OpenDMS_' + widgetID + '" href="javascript:void(0)">' + VIS.Msg.getMsg('VA012_OpenDMS') + '</a>' +
                 '</div>' +
@@ -107,6 +141,11 @@
             selectedFileName = dropContainer.find('#VA012-selectedFileName_' + widgetID);
             fileNameLabel = dropContainer.find('#VA012-FileNamelbl_' + widgetID);
             openDMSBtn = dropContainer.find('#VA012-OpenDMSIcon_' + widgetID);
+            folTreeArea = dropContainer.find('#VA012-folTreeArea_' + widgetID);
+            folderFader = dropContainer.find('#VA012-folderFader_' + widgetID);
+            folTreeUpload = dropContainer.find('#VA012-treeUploadBtn_' + widgetID);
+            folTreeSelect = dropContainer.find('#VA012-treeSelectBtn_' + widgetID);
+            folTreeCancel = dropContainer.find('#VA012-treeCancelBtn_' + widgetID);
             if (_selectedFiles == null) {
                 nxtBtn.attr("disabled", true);
             }
@@ -114,15 +153,13 @@
                 nxtBtn.attr("disabled", false);
                 nxtBtn.css("opacity", 1);
             }
-            /*var modulePrefix = VIS.dataContext.getJSONRecord("ModulePrefix/GetModulePrefix", "VADMS_");
-            if (modulePrefix == null)
-            {
+            var modulePrefix = VIS.dataContext.getJSONRecord("ModulePrefix/GetModulePrefix", "VA012_");
+            if (modulePrefix == null) {
                 openDMSBtn.css("display", "none");
             }
-            else
-            {
+            else {
                 openDMSBtn.css("display", "block");
-            }*/
+            }
             Events();
         };
         function Events() {
@@ -135,6 +172,7 @@
             dropContainer.on('drop', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
+                isDMS = false;
                 files = e.originalEvent.dataTransfer.files;
                 var ctrl = $(dropContainer.find('.VA012-uploadFileWidget_' + widgetID)[0]);
                 const originalFile = files[0]; // Assuming files[0] is the original Excel file
@@ -162,9 +200,13 @@
                 // Read the original file as an ArrayBuffer
                 reader.readAsArrayBuffer(originalFile);
             });
+            dropContainer.find('.VA012-uploadFileWidget_' + widgetID).on('click', function (e) {
+                this.value = null;
+            });
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).on('change', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
+                isDMS = false;
                 var files = e.target.files;
                 _selectedFiles = files;
                 if (files.length > 0) {
@@ -184,19 +226,26 @@
                 //  hide drag files div
                 dragDiv.hide();
             });
-            /*openDMSBtn.on('click', function (e) {
-                    $.ajax({
-                        url: VIS.Application.contextUrl + 'VADMS/Document/GetFormID?FromName=' + VADMS.Common.DMS_FORM,
-                        async: true,
-                        type: "POST",
-                        //dataType: "json",
-                    }).done(function (res) {
-                        if (res && res.result != '') {
-                            // Open form
-                            VIS.viewManager.startForm(res.result);
-                        }
-                    });
-            });*/
+            openDMSBtn.on('click', function (e) {
+                // Loading effect
+                // loadingFader.find('p').html('').append(VIS.Msg.getMsg('VA012_PleaseWait') + '<span>' + VIS.Msg.getMsg('VA012_LoadingFolders') + '</span>');
+                $bsyDiv.show();
+                // loadingFader.removeClass('d-none');
+                // Show folder tree
+                folderFader.removeClass('d-none');
+                var folStruct = WidgetFolderTreeStruct();
+                //loadingFader.addClass('d-none');
+                $bsyDiv.hide();
+
+            });
+            // Cancel Button Folder
+            folTreeCancel.on('click', function (e) {
+                folderFader.addClass('d-none');
+                strFolderIds = "";
+                dragDiv.show();
+                $bsyDiv.hide();
+            });
+
         }
         /**
          * Uploading files to the DMS
@@ -246,6 +295,7 @@
                 }
                 if (files.length > 0) {
                     fileNameLabel.text(filename + "" + fileExt);
+                    fileNameLabel.val(filename + "" + fileExt);
                     var file = obj;
                     _result = $.parseJSON(VA012.UploadExcel(file, null, null));
                     if (paramDiv == null) {
@@ -254,7 +304,7 @@
                     }
                     else {
                         //If param div already in DOM then reset the controls values
-                       // resetControls();
+                        // resetControls();
                         paramDiv.show();
                         paramFooter.show();
                     }
@@ -345,9 +395,15 @@
             cancelBtn.on('click', function (e) {
                 paramDiv.hide();
                 paramFooter.hide();
-                dragDiv.show();
                 nxtBtn.attr("disabled", false);
                 nxtBtn.css("opacity", 1);
+                strFolderIds = "";
+                if (!isDMS) {
+                    dragDiv.show();
+                }
+                else {
+                    folderFader.removeClass('d-none');
+                }
             });
             uploadBtn.on('click', function (e) {
                 $bsyDiv.show();
@@ -379,72 +435,73 @@
                     return false;
                 }
                 //Bank Statement From File Path Scheduled
-                if (_selectedFiles.length > 0) {
-                    if (_result != null) {
-                        if (_result._filename == null || _result._filename == "" || _result._path == null || _result._path == "") {
-                            $bsyDiv.hide();
-                            VIS.ADialog.info("VA012_ErrorInGettingFile", null, "", "");
-                            return;
-                        }
-                        else if (_result._error != null && _result._error != "") {
-                            $bsyDiv.hide();
-                            VIS.ADialog.info(_result._error, null, "", "");
-                            return;
-                        }
-                        else {
-                            var _path = _result._path;
-                            var _filename = _result._filename;
-                            var _bankaccount = _cmbBankAccount.val();
-                            var _statementno = _statementName.val();
-                            var _IsStatementDateAsAccountDate = isChecked.is(':checked');
-                            var _statementClassName = _cmbBankAccountClasses.val();
-                            var _statementCharges = Bank_Charge_ID;
-                            $.ajax({
-                                url: VIS.Application.contextUrl + "BankStatement/ImportStatement",
-                                type: "GET",
-                                datatype: "json",
-                                contentType: "application/json; charset=utf-8",
-                                async: true,
-                                data: ({
-                                    _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno,
-                                    _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: _statementDate.val(),
-                                    IsStatementDateAsAccountDate: _IsStatementDateAsAccountDate
-                                }),
-                                success: function (result) {
-                                    _statementID = result._statementID;
-                                    if (_statementID != null && _statementID != "") {
-                                        $bsyDiv.hide();
-                                        resetControls();
-                                        paramDiv.hide();
-                                        paramFooter.hide();
-                                        dragDiv.show();
-                                        dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
-                                        fileNameLabel.text('');
-                                        VIS.ADialog.info("VA012_StatementUploadDone", null, "", "");
-                                        return true;
-                                    }
-                                    else {
-                                        if (result._error != null && result._error != "") {
-                                            $bsyDiv.hide();
-                                            VIS.ADialog.info(result._error, null, "", "");
-                                            return false;
-                                        }
-                                    }
-                                },
-                                error: function () {
-                                    $bsyDiv.hide();
-                                    return VIS.ADialog.info("error", null, "", "");
-                                    VIS.ADialog.info("VA012_ErrorWhileUploadExcel", null, "", "");
-                                    return false;
-                                }
-                            })
-                        }
-                    }
-                    else {
+                if (_result != null) {
+                    if (_result._filename == null || _result._filename == "" || _result._path == null || _result._path == "") {
                         $bsyDiv.hide();
                         VIS.ADialog.info("VA012_ErrorInGettingFile", null, "", "");
                         return;
                     }
+                    else if (_result._error != null && _result._error != "") {
+                        $bsyDiv.hide();
+                        VIS.ADialog.info(_result._error, null, "", "");
+                        return;
+                    }
+                    else {
+                        var _path = _result._path;
+                        var _filename = _result._filename;
+                        var _bankaccount = _cmbBankAccount.val();
+                        var _statementno = _statementName.val();
+                        var _IsStatementDateAsAccountDate = isChecked.is(':checked');
+                        var _statementClassName = _cmbBankAccountClasses.val();
+                        var _statementCharges = Bank_Charge_ID;
+                        $.ajax({
+                            url: VIS.Application.contextUrl + "BankStatement/ImportStatement",
+                            type: "GET",
+                            datatype: "json",
+                            contentType: "application/json; charset=utf-8",
+                            async: true,
+                            data: ({
+                                _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno,
+                                _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: _statementDate.val(),
+                                IsStatementDateAsAccountDate: _IsStatementDateAsAccountDate
+                            }),
+                            success: function (result) {
+                                _statementID = result._statementID;
+                                if (_statementID != null && _statementID != "") {
+                                    $bsyDiv.hide();
+                                    resetControls();
+                                    paramDiv.hide();
+                                    paramFooter.hide();
+                                    dragDiv.show();
+                                    dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
+                                    fileNameLabel.text('');
+                                    nxtBtn.attr("disabled", true);
+                                    isDMS = false;
+                                    strFolderIds = "";
+                                    VIS.ADialog.info("VA012_StatementUploadDone", null, "", "");
+                                    return true;
+                                }
+                                else {
+                                    if (result._error != null && result._error != "") {
+                                        $bsyDiv.hide();
+                                        VIS.ADialog.info(result._error, null, "", "");
+                                        return false;
+                                    }
+                                }
+                            },
+                            error: function () {
+                                $bsyDiv.hide();
+                                return VIS.ADialog.info("error", null, "", "");
+                                VIS.ADialog.info("VA012_ErrorWhileUploadExcel", null, "", "");
+                                return false;
+                            }
+                        })
+                    }
+                }
+                else {
+                    $bsyDiv.hide();
+                    VIS.ADialog.info("VA012_ErrorInGettingFile", null, "", "");
+                    return;
                 }
             });
         };
@@ -577,6 +634,373 @@
                 _cmbBankAccountClasses.prop('selectedIndex', 0);
             }
         };
+        // Creating folder tree ul
+        function WidgetFolderTreeStruct() {
+            var folderArrayRes = null;
+            $.ajax({
+                url: VIS.Application.contextUrl + "VA012_BankJournalWidget/GetFolders",
+                type: "GET",
+                async: false,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                data: ({
+                    UserID: VIS.context.getAD_User_ID(),
+                    roleID: VIS.context.getAD_Role_ID(),
+                    clientID: VIS.context.getAD_Client_ID(),
+                    orgID: VIS.context.getAD_Org_ID(),
+                    orderBy: 'NA'
+                }),
+                success: function (data) {
+                    if (data != null && data != "") {
+                        folderArrayRes = JSON.parse(data);
+                        if (folderArrayRes.length > 0) {
+                            var $folderUl = $('<ul id="folderUL_' + widgetID + '" class="list-unstyled w-100"></ul>');
+                            strFolderIds = "";
+                            var arrayFolder = [];
+                            var folderImage = '';
+                            var folderName = "";
+                            var folderPath = "";
+                            var initialCharacter = "";
+                            var folderIds = "";
+                            var strFolderIds = "";
+                            for (var i = 0; i < folderArrayRes.length; i++) {
+                                arrayFolder = [];
+                                folderPath = "";
+                                folderName = folderArrayRes[i].FolderName;
+                                if (folderArrayRes[i].FolderName.length > 25) {
+                                    folderName = folderArrayRes[i].FolderName.substring(0, 25) + "...";
+                                }
+                                if (strFolderIds.contains(folderArrayRes[i].FolderID)) {
+                                    continue;
+                                }
+                                var $folderLI = null;
+                                if (folderArrayRes[i].ParentFolderID == 0) {
+
+                                    if (folderArrayRes[i].FolderType == 1 || folderArrayRes[i].FolderType == 2 || folderArrayRes[i].FolderType == 5 || folderArrayRes[i].FolderType == 6 || folderArrayRes[i].FolderType == 7 || folderArrayRes[i].FolderType == 8) {
+                                    }
+                                    else {
+                                        if (folderArrayRes[i].PublicAccess > 10) {
+                                            folderImage = "<i class='vis vis-folder-globe'></i>";
+                                        }
+                                        else if (folderArrayRes[i].Sharecount > 2 || folderArrayRes[i].RoleSharecount > 0) {
+                                            folderImage = "<i class='vis vis-folder-share'></i>";
+                                        }
+                                        else {
+                                            folderImage = "<i class='fa fa-folder-o'></i>";
+                                        }
+
+                                        $folderLI = $(
+                                            '<li id="' + folderArrayRes[i].FolderID + '" folderName="' + VIS.Utility.encodeText(folderArrayRes[i].FolderName) + '" parentID="' + folderArrayRes[i].ParentFolderID + '" useraccess="' + folderArrayRes[i].UserAccessOnFolder + '" roleaccess="' + folderArrayRes[i].RoleAccessOnFolder + '" createdBy="' + folderArrayRes[i].CreateUser + '" inputType="' + folderArrayRes[i].InputType + '" folType="' + folderArrayRes[i].FolderType + '" IsSubscribe="' + folderArrayRes[i].IsSubscribedFolder + '" InitialCharacter="' + initialCharacter.toUpperCase() + '">' +
+                                            '<div class="VA012-leftTreeNode" title="' + folderArrayRes[i].FolderName + '">' +
+                                            '<a id="a_' + folderArrayRes[i].FolderID + '" href="javascript:void(0);" val="' + VIS.Utility.encodeText(folderArrayRes[i].FolderPath) + '">' +
+                                            folderImage +
+                                            '<span>' + VIS.Utility.encodeText(folderName) + '</span>' +
+                                            '</a>' +
+                                            '</div>' +
+                                            '</li>');
+                                    }
+
+                                    arrayFolder.push({ row: folderArrayRes[i], root: $folderLI });
+                                    strFolderIds += folderArrayRes[i].FolderID + ",";
+                                    folderPath = folderArrayRes[i].FolderName;
+                                    WidgetRecursiveFolder(arrayFolder, folderArrayRes, 20, folderPath);
+                                    $folderUl.append($folderLI);
+                                }
+                            }
+                            $folderUl.on('click', 'li a', function (e) {
+                                $bsyDiv.show();
+                                e.stopPropagation();
+                                var folRow = $(this).closest('li');
+                                var currentTarget = $(e.currentTarget);
+                                $.ajax({
+                                    url: VIS.Application.contextUrl + "VA012_BankJournalWidget/CheckFolderAccess",
+                                    type: "GET",
+                                    async: false,
+                                    dataType: "json",
+                                    contentType: "application/json; charset=utf-8",
+                                    data: ({
+                                        folderID: folRow.attr('id')
+                                    }),
+                                    success: function (data) {
+                                        if (data != null && data != "") {
+                                            if (data == VA012.Common.Full_Access || data == VA012.Common.RWD_Access || data == VA012.Common.RW_Access) {
+                                                $('#folderUL_' + widgetID).find(".VA012-selected").removeClass('VA012-selected');
+                                                $('#folderUL_' + widgetID).find(".VA012-selectedTreeNode").css('background-color', 'inherit');
+                                                folRow.find("div").eq(0).find('a span').addClass('VA012-selected');
+                                                if (!folRow.find("div").eq(0).hasClass('VA012-selectedTreeNode')) {
+                                                    folRow.find("div").eq(0).addClass('VA012-selectedTreeNode').css('background-color', 'rgba(var(--v-c-primary), .1)');
+                                                }
+                                                else if (folRow.find("div").eq(0).hasClass('VA012-selectedTreeNode')) {
+                                                    folRow.find("div").eq(0).addClass('VA012-selectedTreeNode').css('background-color', 'rgba(var(--v-c-primary), .1)');
+                                                }
+                                                else if (folRow.children("ul").length > 0) {
+                                                    folRow.find("div").eq(0).removeClass("VA012-selectedTreeNode");
+                                                }
+                                                //folTreeUpload.removeAttr('disabled');
+                                                //folTreeSelect.removeAttr('disabled');
+                                                var orderByColumn = [];
+                                                orderByColumn.push('Updated');
+                                                _scrollpage = 1;
+                                                _searchDocName = '';
+                                                $bsyDiv.hide();
+                                                var result = LoadLinkedDocuments(orderByColumn, VA012.Common.UpdatedDesc, _scrollpage, false,
+                                                    folRow.attr('id'),
+                                                    folTreeArea.find('#' + folRow.attr('id'))
+                                                );
+                                                $bsyDiv.hide();
+                                            }
+                                            else {
+                                                $bsyDiv.hide();
+                                                VIS.ADialog.info('VA012_ReqWPermOnFol');
+                                            }
+                                        }
+                                    },
+                                    error: function (errorThrown) {
+                                        $bsyDiv.hide();
+                                        VIS.ADialog.error(errorThrown.statusText);
+                                        return false;
+                                    }
+                                });
+
+                            });
+                            folTreeArea.html('').append($folderUl);
+                            return $folderUl;
+                        }
+                        else {
+                            VIS.ADialog.info('VA012_NoFolderFound');
+                            return VIS.Msg.getMsg('VA012_NoFolderFound');
+                        }
+                    }
+                },
+                error: function (errorThrown) {
+                    $bsyDiv.hide();
+                    VIS.ADialog.error(errorThrown.statusText);
+                    return false;
+                }
+            });
+
+        };
+        /**
+         * Creating recursive child folders
+         * @param {any} row
+         * @param {any} data
+         * @param {any} padding
+         * @param {any} folderPath
+         */
+        function WidgetRecursiveFolder(row, data, padding, folderPath) {
+            var $innerLI = null;
+            var ArrayFolder = [];
+            var image = "";
+            var folderName = "";
+            var initialCharacter = "";
+            for (var j = 0; j < row.length; j++) {
+
+                $innerLI = null;
+                var $innerUl = $('<ul class="list-unstyled VA012-leftSideSubTreeUl {"></ul>');
+
+                for (var i = 0; i < data.length; i++) {
+
+                    if (data[i].FolderName.length > 25) {
+                        folderName = data[i].FolderName.substring(0, 25) + "...";
+                    }
+                    else {
+                        folderName = data[i].FolderName;
+                    }
+
+                    initialCharacter = (folderName.substring(0, 1)).trim();
+
+                    if (data[i].ParentFolderID == row[j].row.FolderID) {
+
+                        if (strFolderIds.contains(data[i].FolderID)) {
+                            continue;
+                        }
+                        if (data[i].PublicAccess > 10) {
+                            image = "<i class='vis vis-folder-globe'></i>";
+                        }
+                        else if (data[i].Sharecount > 2 || data[i].RoleSharecount > 0) {
+                            image = "<i class='vis vis-folder-share'></i>";
+                        }
+                        else {
+                            image = "<i class='fa fa-folder-o'></i>";
+                        }
+
+                        $innerLI = $(
+                            '<li id="' + data[i].FolderID + '" folderName="' + VIS.Utility.encodeText(data[i].FolderName) + '" parentID="' + data[i].ParentFolderID + '" useraccess="' + data[i].UserAccessOnFolder + '" roleaccess="' + data[i].RoleAccessOnFolder + '" createdBy="' + data[i].CreateUser + '" inputType="' + data[i].InputType + '" folType="' + data[i].FolderType + '" IsSubscribe="' + data[i].IsSubscribedFolder + '" InitialCharacter="' + VIS.Utility.encodeText(initialCharacter.toUpperCase()) + '">' +
+                            '<div class="VA012-leftTreeNode" title="' + VIS.Utility.encodeText(data[i].FolderPath) + '">' +
+                            '<a id=a_"' + data[i].FolderID + '" href="javascript:void(0);">' +
+                            image +
+                            '<span>' + VIS.Utility.encodeText(data[i].FolderName) + '</span>' +
+                            '</a>' +
+                            '</div>' +
+                            '</li>');
+
+                        ArrayFolder.push({ row: data[i], root: $innerLI });
+                        strFolderIds += data[i].FolderID + ",";
+                        folderPath += "\\" + data[i].FolderName;
+                        $innerUl.append($innerLI);
+
+                    }
+                }
+
+                if ($innerLI != null) {
+                    row[j].root.append($innerUl);
+                    if (row[j].root.find('a span i').length <= 0) {
+                        $(row[j].root.find('a span')[0]).append('<i class="vis vis-arrow-right"></i>');
+                    }
+                }
+                else if (row[j].row.HasChild > 0) {
+                    row[j].root.find('a span').append('<i class="vis vis-arrow-right"></i>');
+                }
+            }
+            if (ArrayFolder.length > 0) {
+                WidgetRecursiveFolder(ArrayFolder, data, padding + 10, folderPath);
+            }
+        }
+        // Load documents for current record from database
+        function LoadLinkedDocuments(orderByColumn, orderBy, pageNo, fromSort, folderID, currentFolder) {
+            $bsyDiv.show();
+            var files = folTreeArea.find("[data-parentfolderid= '" + folderID + "']");
+            var folRow = null;
+            if (files.length > 0) {
+                files.remove();
+            }
+            var _pageSize = 50;
+            var parameter = [];
+            parameter.push(folderID);
+            parameter.push(1);
+            parameter.push("");
+            parameter.push(0);
+            parameter.push(0); //self.recordID
+            parameter.push(false);
+            parameter.push(false);
+            parameter.push(false);
+            parameter.push("0");
+            parameter.push(_pageSize);
+            parameter.push(0); //self.tableID
+            parameter.push("UD");
+            var url = VIS.Application.contextUrl + "VA012_BankJournalWidget/GetDocument";
+            var documentData = VA012.ControllerRequestAjaxParameter1(url, parameter);
+            if (documentData !== null) {
+                documentData = documentData[0].LstDocument;
+                if (documentData != null && documentData.length > 0) {
+                    // Show list of documents
+                    for (var i = 0; i < documentData.length; i++) {                        
+                        var DocumentID = documentData[i].DocumentID;
+                        var DocumentName = documentData[i].DocumentName;
+                        var FileType = documentData[i].FileType;                        
+                        var FolderID = documentData[i].FolderID;
+                        var VersionNo = documentData[i].VersionNo;
+                        var docExtClass = 'vis-doc-blank';
+                        var docExtColor = 'rgba(var(--v-c-primary), 1)';
+                        if (FileType == VA012.Common.XLS || FileType == VA012.Common.XLSX || FileType == VA012.Common.CSV) {
+                            docExtClass = 'vis-doc-excel';
+                            docExtColor = '#39b54a';
+                            var $docLI = $(
+                                '<li class="VA012-docTreeNode" data-documentid="' + DocumentID + '" data-versionNo="' + VersionNo +
+                                '" data-parentfolderid="' + folderID + '" id="VA012-doclistingpanel_' + DocumentID + '">' +
+                                '<div class="VA012-leftTreeNode">' +
+                                '<a id="a_' + documentData[i].FolderID + '" href="javascript:void(0);" val="' + VIS.Utility.encodeText(documentData[i].DocumentName) + '">' +
+                                //folderImage +
+                                '<i class="vis ' + docExtClass + '" aria-hidden="true" style="color:' + docExtColor + '"></i>' +
+                                '<span class="VA012-documentName" id="VA012_documentName_' + DocumentID + '">' + VIS.Utility.encodeText(documentData[i].DocumentName)
+                                + '' + VIS.Utility.encodeText(documentData[i].FileType) + '</span>' +
+                                '</a>' +
+                                '</div>' +
+                                '</li>');
+                            $docLI.insertAfter(currentFolder);
+                        }
+                    };
+                    $bsyDiv.hide();
+                    folTreeArea.find(".VA012-docTreeNode").on('click', function (e) {
+                        e.stopPropagation();
+                        folTreeUpload.removeAttr('disabled');
+                        folRow = $(this).closest('li');
+                        $('#folderUL_' + widgetID).find(".VA012-selected").removeClass('VA012-selected');
+                        $('#folderUL_' + widgetID).find(".VA012-selectedTreeNode").css('background-color', 'inherit');
+                        folTreeArea.find("#VA012-doclistingpanel_" + folRow.data('documentid')).find(".VA012-selected").removeClass('VA012-selected');
+                        folTreeArea.find("#VA012-doclistingpanel_" + folRow.data('documentid')).find(".VA012-selectedTreeNode").css('background-color', 'inherit');
+                        folRow.find("div").eq(0).find('a i span').addClass('VA012-selected');
+                        if (!folRow.find("div").eq(0).hasClass('VA012-selectedTreeNode')) {
+                            folRow.find("div").eq(0).addClass('VA012-selectedTreeNode').css('background-color', 'rgba(var(--v-c-primary), .1)');
+                        }
+                        else if (folRow.find("div").eq(0).hasClass('VA012-selectedTreeNode')) {
+                            folRow.find("div").eq(0).addClass('VA012-selectedTreeNode').css('background-color', 'rgba(var(--v-c-primary), .1)');
+                        }
+                        else if (folRow.children("ul").length > 0) {
+                            folRow.find("div").eq(0).removeClass("VA012-selectedTreeNode");
+                        }
+
+
+                    });
+                    folTreeUpload.on('click', function (e) {
+                        e.stopPropagation();
+                        $.ajax({
+                            url: VIS.Application.contextUrl + "VA012_BankJournalWidget/GetMetaData",
+                            type: "GET",
+                            async: false,
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: ({
+                                documentID: folRow.data('documentid')
+                            }),
+                            success: function (data) {
+                                if (data != null && data != "") {
+                                    _result = JSON.parse(data);
+                                    folderFader.addClass('d-none');
+                                    isDMS = true;
+                                    if (paramDiv == null) {
+                                        dragDiv.hide();
+                                        //load parameter div
+                                        loadParam();
+                                    }
+                                    else {
+                                        dragDiv.hide();
+                                        //show parameter div
+                                        paramDiv.show();
+                                        paramFooter.show();
+                                    }
+                                }
+                            },
+                            error: function (errorThrown) {
+                                $bsyDiv.hide();
+                                VIS.ADialog.error(errorThrown.statusText);
+                                return false;
+                            }
+                        });
+
+                    });
+                };
+            };
+        };
+        /**
+       *  This function to call controller HTTPPOST action With parameter 
+       *  @param url
+       *  @param param
+       *  @return dbResult
+   */
+        VA012.ControllerRequestAjaxParameter1 = function (url, param) {
+            var dbResult = null;
+            var parameter = param;
+            $.ajax({
+                type: "POST",
+                async: false,
+                url: url,
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(parameter),
+                success: function (data) {
+                    if (data != null) {
+                        dbResult = JSON.parse(data);
+                    }
+                }, error: function (errorThrown) {
+                    if (errorThrown.statusText != 'OK' && errorThrown.statusText != 'parsererror') {
+                        alert(errorThrown.statusText);
+                    }
+                }
+            });
+            return dbResult;
+        };
+
         /*this function is used to refresh design and data of widget*/
         this.refreshWidget = function () {
             $bsyDiv.hide();
@@ -585,9 +1009,10 @@
             paramFooter.hide();
             dragDiv.show();
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
-            fileNameLabel.text("");
+            fileNameLabel.text('');
+            fileNameLabel.val('');
             nxtBtn.attr("disabled", true);
-            this.initialize();
+            //this.initialize();
         };
         this.disposeComponents = function () {
             $self = null;
@@ -627,7 +1052,14 @@
             _currencyId = null;
             _result = null;
             Bank_Charge_ID = null;
-            fileNameLabel.text("");
+            fileNameLabel.text('');
+            folTreeArea = null;
+            folTreeUpload = null;
+            folTreeCancel = null;
+            // loadingFader = null;
+            folderFader = null;
+            strFolderIds = "";
+
             _cmbBank.off('click');
             _cmbBankAccount.off('click');
             _cmbBankAccountClasses.off('click');
@@ -635,6 +1067,9 @@
             cancelBtn.off('click');
             uploadBtn.off('click');
             nxtBtn.off('click');
+            openDMSBtn.off('click');
+            folTreeCancel.off('click');
+            folTreeUpload.off('click');
         };
     };
     // Must Implement with same parameter
