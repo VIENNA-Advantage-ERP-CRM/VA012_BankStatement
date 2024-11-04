@@ -59,7 +59,7 @@ a:hover {
 }
 
 .VA012-labels {
-    background: #e1f0fa !important;
+    /*background: #e1f0fa !important;*/
 }
 
 .vis-input-wrap .VA012-nameLbl {
@@ -75,7 +75,10 @@ a:hover {
     left: 15px !important;
     padding-top: 0.5em !important;
 }
-
+.VA012-arrow-right {
+    padding: 0.2em;
+    font-size: 0.8em;
+}
 .VA012-select {
     background-color: rgba(var(--v-c-on-primary), .1) !important;
     /*    background-image: linear-gradient(45deg, transparent 50%, rgba(var(--v-c-primary), 1) 50%),

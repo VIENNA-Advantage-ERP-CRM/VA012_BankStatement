@@ -11,11 +11,10 @@ namespace VA012.Models
 {
     public class VA012_BankingJournalWidgetModel
     {
-        [NonSerialized]
-        protected static VLogger log = null;
-        private static Assembly asm = null;
-        private static Type type = null;
-        private static MethodInfo methodInfo = null;
+        //[NonSerialized]
+        private Assembly asm = null;
+        private Type type = null;
+        private MethodInfo methodInfo = null;
         /// <summary>
         /// Get Folder of login user.
         /// </summary>
@@ -98,7 +97,6 @@ namespace VA012.Models
         public object LoadDocument(int CurrrentPage, string folderId, int Window_ID, int record_ID, bool isAdvancedSearch, bool isRecursive, bool isSubscribeDoc, string folType,
         Ctx ctx, int pageSize, int AD_Table_ID = 0, string orderBy = "")
         {
-            //List<VA012_FolderProperties> lstFolder = new List<VA012_FolderProperties>();
             object result = "";
             #region DMS service using reflection
             string className = "ViennaAdvantage.VADMS.Model.DocumentModel";
@@ -123,7 +121,7 @@ namespace VA012.Models
             return result;
         }
         /// <summary>
-        /// Download document based on document id
+        /// Download document in Tempdownload folder based on document id
         /// </summary>
         /// <param name="dmsToken">DMS Token</param>
         /// <param name="documentID">Document id which need to be Download</param>
@@ -140,6 +138,7 @@ namespace VA012.Models
             type = asm.GetType(className);
             if (type != null)
             {
+                //Get Meta data
                 MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => m.Name == "GetMetaData").ToArray();
                 Type[] parameterTypes = new Type[] { typeof(int), typeof(bool), typeof(int), typeof(Ctx), typeof(int), typeof(int), typeof(int) };
                 MethodInfo methodInfo = methods.FirstOrDefault(m => m.GetParameters().Select(p => p.ParameterType).SequenceEqual(parameterTypes));
@@ -155,16 +154,15 @@ namespace VA012.Models
                 }
             }
             #endregion
-
             if (result != null)
             {
-
                 className = "";
                 asm = null;
                 #region DMS service using reflection
                 className = "ViennaAdvantage.VADMS.Model.DocumentModel";
                 asm = System.Reflection.Assembly.Load("VADMSSvc");
                 type = asm.GetType(className);
+                //Get file path
                 MethodInfo[] method = type.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => m.Name == "GetAttachmentLineFilePath").ToArray();
                 Type[] parameterType = new Type[] { typeof(Ctx), typeof(int) };
                 MethodInfo methodInfo = method.FirstOrDefault(m => m.GetParameters().Select(p => p.ParameterType).SequenceEqual(parameterType));
@@ -180,11 +178,13 @@ namespace VA012.Models
                         {
                             Directory.CreateDirectory(Path.Combine(System.Web.Hosting.HostingEnvironment.ApplicationPhysicalPath, "TempDownload"));
                         }
+                        // Download file in TempDownload folder
                         downloadlink = Path.Combine(System.Web.Hosting.HostingEnvironment.ApplicationPhysicalPath, "TempDownload",filePath);
                     }
                 }
                 #endregion
             }
+            //return filename and file path
             data.Add("_filename", result[0].LstMetaData[0].Document+""+ result[0].LstMetaData[0].FileType);
             data.Add("_path", downloadlink);
             return data;
