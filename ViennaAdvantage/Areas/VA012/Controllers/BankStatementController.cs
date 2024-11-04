@@ -1191,11 +1191,19 @@ namespace VA012.Controllers
         {
             string retJSON = "";
             int window_Id = 0;
+            /* VIS_427 Split the window name element 0 will have new screen name and 
+            element 1 will contain old screen name*/
+            string[] windowArr = WindowName.Split(',');
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
-                string sql = @"SELECT AD_Window_ID FROM AD_Window WHERE Name ='" + WindowName + "'";  //VIS_427 Handeled Query
-                window_Id =Convert.ToInt32( DB.ExecuteScalar(sql));
+                string sql = @"SELECT AD_Window_ID FROM AD_Window WHERE Name ='" + windowArr[0] + "'";
+                window_Id = Util.GetValueOfInt(DB.ExecuteScalar(sql));
+                if (window_Id == 0)
+                {
+                    sql = "SELECT AD_Window_ID FROM AD_Window WHERE Name ='" + windowArr[1] + "'";
+                    window_Id = Util.GetValueOfInt(DB.ExecuteScalar(sql));
+                }
                 retJSON = JsonConvert.SerializeObject(window_Id);
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
