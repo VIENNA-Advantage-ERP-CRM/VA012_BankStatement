@@ -53,6 +53,8 @@
         var C_BANKACCOUNT_ID = 0
         var C_BANK_ID = 0;
         var VA012_BANKSTATEMENTCLASS_ID = 0;
+        /* VIS_427 initialized a boolean value for new record to be inserted*/
+        var IsNewRecordInserted = false;
 
         var _VA012_BankChargeDiv = null;
 
@@ -256,7 +258,7 @@
         };
         function InitializeEvents() {
             /*VIS_427 fetching the window id for Bank Statement window*/
-            BankStatementWindow_ID = zoomToWindow("Bank Statement");
+            BankStatementWindow_ID = zoomToWindow("VAS_BankStatement,Bank Statement");
 
             _btnHide.on(VIS.Events.onTouchStartOrClick, function (e) {
                 e.stopPropagation();
@@ -1907,7 +1909,15 @@
 
                     loadFunctions.LoadPaymentsPages(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val());
                     if (_paymentPageNo < _paymentPageCount) {
-                        _paymentPageNo++;
+                        /*VIS_427 If New record is inserted and pageNo is not equal to 1 then
+                        changed page number to 1 so that records get refreshed properly*/
+                        if (IsNewRecordInserted && _paymentPageNo != 1) {
+                            _paymentPageNo = 1;
+                            IsNewRecordInserted = false;
+                        }
+                        else {
+                            _paymentPageNo++;
+                        }
                         //_paymentPageSizeInc++;
                         loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
                     }
@@ -7246,7 +7256,7 @@
                     + "  AND ORD.ISACTIVE              ='Y' "
                     + "  AND PM.VA009_PAYMENTBASETYPE !='B')";
                 _lookupOrder = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 5043, VIS.DisplayType.Search, "C_Order_ID", 0, false, _orderWhere);
-                $_ctrlOrder = new VIS.Controls.VTextBoxButton("C_Order_ID", false, false, true, VIS.DisplayType.Search, _lookupOrder, zoomToWindow("Sales Order")); //VIS_427 Devops TaskId 1662 called zoom for sales order
+                $_ctrlOrder = new VIS.Controls.VTextBoxButton("C_Order_ID", false, false, true, VIS.DisplayType.Search, _lookupOrder, zoomToWindow("VAS_SalesOrder,Sales Order")); //VIS_427 Devops TaskId 1662 called zoom for sales order
                 $_ctrlOrder.getControl().addClass("va012-input-size-2");
                 $_ctrlOrder.getControl().attr("tabindex", "13");
                 _ctrlOrder.append($_ctrlOrder.getControl());
@@ -7385,7 +7395,7 @@
 
             loadBusinessPartner: function () {
                 _lookupBusinessPartner = VIS.MLookupFactory.get(VIS.Env.getCtx(), $self.windowNo, 2893, VIS.DisplayType.Search, "C_BPartner_ID", 0, false, null);
-                $_ctrlBusinessPartner = new VIS.Controls.VTextBoxButton("C_BPartner_ID", false, false, true, VIS.DisplayType.Search, _lookupBusinessPartner);
+                $_ctrlBusinessPartner = new VIS.Controls.VTextBoxButton("C_BPartner_ID", false, false, true, VIS.DisplayType.Search, _lookupBusinessPartner, zoomToWindow("VAS_BusinessPartner,Business Partner"));
                 $_ctrlBusinessPartner.getControl().addClass("va012-input-size-2");
                 $_ctrlBusinessPartner.getControl().attr("tabindex", "12");
                 _ctrlBusinessPartner.append($_ctrlBusinessPartner.getControl());
@@ -7546,6 +7556,7 @@
 
                         newRecordForm.scheduleRefresh();
                         newRecordForm.prepayRefresh();
+                        IsNewRecordInserted = true;
                         _paymentPageNo = 1;
                         storepaymentdata = [];
                         loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());

@@ -28,11 +28,8 @@ namespace VA012
             //script.Include("~/Areas/VA012/Scripts/uploadexcel.js");
             //script.Include("~/Areas/VA012/Scripts/model/callouts.js");
 
-            style.Include("~/Areas/VA012/Contents/BankConnectWidget.css");
-            script.Include("~/Areas/VA012/Scripts/apps/forms/VA012_BankConnectWidget.js");
-
-            //style.Include("~/Areas/VA012/Contents/VA012.all.min.css");
-            //script.Include("~/Areas/VA012/Scripts/VA012.all.min.js");
+            style.Include("~/Areas/VA012/Contents/VA012.all.min.css");
+            script.Include("~/Areas/VA012/Scripts/VA012.all.min.js");
 
             VAdvantage.ModuleBundles.RegisterScriptBundle(script, "VA012", 10);
             VAdvantage.ModuleBundles.RegisterStyleBundle(style, "VA012", 10);
