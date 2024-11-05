@@ -15,7 +15,8 @@ a:hover {
     /*background-color: #fcfcfc;*/
     height: 100%;
     padding: 0.2em;
-    overflow: hidden;
+    overflow-y: auto;
+    /* overflow: hidden;*/
     /*border-radius: 1em;*/
 }
 
@@ -55,22 +56,23 @@ a:hover {
 }
 
 .VA012-controls {
-    padding: 1px;
+    padding: 0.5px;
 }
 
 .VA012-labels {
-    /*background: #e1f0fa !important;*/
+    background: rgba(var(--v-c-secondary)) !important;
+    font-size: 11px !important;
 }
 
 .vis-input-wrap .VA012-nameLbl {
-    background: #e1f0fa !important;
+    background: rgba(var(--v-c-secondary)) !important;
     top: 4px;
     height: 86%;
     left: 10px;
 }
 
 .VA012-StatementDateAsAccountDate {
-    background: #e1f0fa !important;
+    background: rgba(var(--v-c-secondary)) !important;
     padding-left: 0.9em !important;
     left: 15px !important;
     padding-top: 0.5em !important;
@@ -131,6 +133,7 @@ a:hover {
     display: flex;
     gap: 2%;
     justify-content: center;
+    /*overflow-y: auto;*/
 }
 
     .VA012-paramFooterDiv input {
@@ -281,7 +284,7 @@ a:hover {
     }
 
 .VA012-bank-panel {
-    background-color: rgba(var(--v-c-primary), .1);
+    background-color: rgba(var(--v-c-secondary));
     /*border-radius: 0.5rem;*/
     padding: 1em;
     display: flex;
@@ -446,6 +449,13 @@ span.VA012-selected {
 li.VA012-selectedAction {
     background: rgba(var(--v-c-on-secondary), .05);
     color: rgba(var(--v-c-on-secondary), 1);
+}
+.VA012-Date {
+    font-size: 12px !important;
+}
+
+.VA012-nameLbl {
+    font-size: 12px !important;
 }
 
 

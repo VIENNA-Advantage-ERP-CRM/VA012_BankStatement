@@ -243,6 +243,50 @@
                 $bsyDiv.hide();
                 isDMS = false;
             });
+            //next button click
+            folTreeUpload.on('click', function (e) {
+                e.stopPropagation();
+                fileNameLabel.text('');
+                nxtBtn.attr("disabled", true);
+                $bsyDiv.show();
+                $.ajax({
+                    url: VIS.Application.contextUrl + "VA012_BankJournalWidget/GetMetaData",
+                    type: "GET",
+                    async: true,
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    data: ({
+                        documentID: $root.find(".VA012-selDoc").attr('data-documentid')
+                    }),
+                    success: function (data) {
+                        if (data != null && data != "") {
+                            //return filename and file path
+                            _result = JSON.parse(data);
+                            //hide folder div
+                            folderFader.addClass('d-none');
+                            isDMS = true;
+                            if (paramDiv == null) {
+                                dragDiv.hide();
+                                //load parameter div
+                                loadParam();
+                            }
+                            else {
+                                dragDiv.hide();
+                                //show parameter div
+                                paramDiv.show();
+                                paramFooter.show();
+                            }
+                        }
+                        $bsyDiv.hide();
+                    },
+                    error: function (errorThrown) {
+                        $bsyDiv.hide();
+                        VIS.ADialog.error(errorThrown.statusText);
+                        return false;
+                    }
+                });
+
+            });
         }
         /**
          * Uploading files to the DMS
@@ -330,7 +374,7 @@
                 + '</div > '
                 + '<div class=VA012-form-data>' + '<div class="input-group vis-input-wrap VA012-paramdiv VA012-margin-B0">'
                 + '<div class="vis-control-wrap VA012-controls">'
-                + '<input class="VA012-select" type="date" max="9999-12-31" id=VA012_STAT_statementDate_' + widgetID + '>'
+                + '<input class="VA012-select VA012-Date" type="date" max="9999-12-31" id=VA012_STAT_statementDate_' + widgetID + '>'
                 + '<label class="VA012-labels" id="VA012_STAT_lblStatementDate_' + widgetID + '">' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
                 + '</div>'
                 + '</div>'
@@ -909,7 +953,7 @@
                                     docExtClass = 'vis-doc-excel';
                                     docExtColor = '#39b54a';
                                     var $docLI = $(
-                                        '<li class="VA012-docTreeNode" data-documentid="' + DocumentID + '" data-versionNo="' + VersionNo +
+                                        '<li class="VA012-docTreeNode VA012-folderDocs" data-documentid="' + DocumentID + '" data-versionNo="' + VersionNo +
                                         '" data-parentfolderid="' + folderID + '" id="VA012-doclistingpanel_' + DocumentID + '">' +
                                         '<div class="VA012-leftTreeNode">' +
                                         '<a id="a_' + documentData[i].FolderID + '" href="javascript:void(0);" val="' + VIS.Utility.encodeText(documentData[i].DocumentName) + '">' +
@@ -943,49 +987,8 @@
                                 else if (folRow.children("ul").length > 0) {
                                     folRow.find("div").eq(0).removeClass("VA012-selectedTreeNode");
                                 }
-
-
-                            });
-                            //next button click
-                            folTreeUpload.on('click', function (e) {
-                                e.stopPropagation();
-                                $bsyDiv.show();
-                                $.ajax({
-                                    url: VIS.Application.contextUrl + "VA012_BankJournalWidget/GetMetaData",
-                                    type: "GET",
-                                    async: true,
-                                    dataType: "json",
-                                    contentType: "application/json; charset=utf-8",
-                                    data: ({
-                                        documentID: folRow.data('documentid')
-                                    }),
-                                    success: function (data) {
-                                        if (data != null && data != "") {
-                                            //return filename and file path
-                                            _result = JSON.parse(data);
-                                            //hide folder div
-                                            folderFader.addClass('d-none');
-                                            isDMS = true;
-                                            if (paramDiv == null) {
-                                                dragDiv.hide();
-                                                //load parameter div
-                                                loadParam();
-                                            }
-                                            else {
-                                                dragDiv.hide();
-                                                //show parameter div
-                                                paramDiv.show();
-                                                paramFooter.show();
-                                            }
-                                        }
-                                        $bsyDiv.hide();
-                                    },
-                                    error: function (errorThrown) {
-                                        $bsyDiv.hide();
-                                        VIS.ADialog.error(errorThrown.statusText);
-                                        return false;
-                                    }
-                                });
+                                $root.find(".VA012-folderDocs").removeClass("VA012-selDoc");
+                                $(folRow[0]).addClass("VA012-selDoc");
 
                             });
                         };
