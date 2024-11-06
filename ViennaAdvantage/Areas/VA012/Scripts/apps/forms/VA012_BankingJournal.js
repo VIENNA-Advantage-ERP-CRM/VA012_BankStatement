@@ -1007,14 +1007,14 @@
         this.refreshWidget = function () {
             $bsyDiv.hide();
             if (!isDMS) {
-                resetControls();
-                paramDiv.hide();
-                paramFooter.hide();
+                resetControls();               
             }
             else
             {
                 folderFader.addClass('d-none');
             }
+            paramDiv.hide();
+            paramFooter.hide();
             dragDiv.show();
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
             fileNameLabel.text('');
