@@ -24,7 +24,11 @@ namespace VA012
             ScriptBundle script = new ScriptBundle("~/Areas/VA012/Scripts/VA012Js");
 
             //style.Include("~/Areas/VA012/Contents/bankstatement.css");
+            //style.Include("~/Areas/VA012/Contents/BankConnectWidget.css");
+            //style.Include("~/Areas/VA012/Contents/VA012_BankingJournal.css");
             //script.Include("~/Areas/VA012/Scripts/apps/forms/bankstatement.js");
+            //script.Include("~/Areas/VA012/Scripts/apps/forms/VA012_BankConnectWidget.js");
+            //script.Include("~/Areas/VA012/Scripts/apps/forms/VA012_BankingJournal.js");
             //script.Include("~/Areas/VA012/Scripts/uploadexcel.js");
             //script.Include("~/Areas/VA012/Scripts/model/callouts.js");
 
