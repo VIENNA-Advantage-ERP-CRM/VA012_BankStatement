@@ -242,6 +242,7 @@
                 dragDiv.show();
                 $bsyDiv.hide();
                 isDMS = false;
+                folTreeUpload.attr("disabled", true);
             });
             //next button click
             folTreeUpload.on('click', function (e) {
@@ -285,7 +286,7 @@
                         return false;
                     }
                 });
-
+                
             });
         }
         /**
@@ -435,12 +436,12 @@
             //Cancel button represnts back button
             cancelBtn.on('click', function (e) {
                 paramDiv.hide();
-                paramFooter.hide();
-                nxtBtn.attr("disabled", false);
-                nxtBtn.css("opacity", 1);
+                paramFooter.hide();                
                 strFolderIds = "";
                 if (!isDMS) {
                     dragDiv.show();
+                    nxtBtn.attr("disabled", false);
+                   // nxtBtn.css("opacity", 1);
                 }
                 else {
                     folderFader.removeClass('d-none');
