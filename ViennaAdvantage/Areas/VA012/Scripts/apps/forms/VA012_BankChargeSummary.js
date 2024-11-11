@@ -143,12 +143,13 @@
         };
 
         function events() {
+            //Bank Accoount control change event
             _cmbBankAccountCtrl.fireValueChanged = function () {
                 if (_cmbBankAccountCtrl.getValue()) {
                     $bsyDiv.show();
                     _cmbBankAccountCtrl.setValue(_cmbBankAccountCtrl.getValue());
                     GetCanvas();
-                    $bsyDiv.hide();
+                    // $bsyDiv.hide();
                 }
                 else {
                     $root.find('canvas').remove();
@@ -157,6 +158,7 @@
                     return false;
                 }
             };
+            //Charge control change event
             _cmbChargeCtrl.fireValueChanged = function () {
                 if (_cmbChargeCtrl.getValue()) {
                     if (_cmbBankAccountCtrl.getValue()) {
@@ -164,7 +166,7 @@
                         _cmbChargeCtrl.setValue(_cmbChargeCtrl.getValue());
                         $bsyDiv.show();
                         GetCanvas();
-                        $bsyDiv.hide();
+                        // $bsyDiv.hide();
                     }
                     else {
                         VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
@@ -175,10 +177,11 @@
                     C_Charge_ID = 0;
                     $bsyDiv.show();
                     GetCanvas();
-                    $bsyDiv.hide();
+                    // $bsyDiv.hide();
                 }
             };
         };
+        // Get bank charge data and create chart
         function GetCanvas() {
             $.ajax({
                 url: VIS.Application.contextUrl + "VA012_BankChargeSummary/GetBankChargeData",
@@ -202,17 +205,18 @@
                         else {
                             // Define static labels and colors
                             const labels = bankData.labels;
+                            const iso_code = bankData.currency;
                             // Prepare the data object for the chart
                             const data = {
                                 labels: labels, // Dynamic labels
                                 datasets: [
                                     {
-                                       // label: VIS.Msg.getMsg("VA012_ChargeAmt"),
+                                        // label: VIS.Msg.getMsg("VA012_ChargeAmt"),
                                         data: bankData.bankChargeData,
                                         borderColor: 'rgba(0,0,0,0)', // Transparent border color
                                         borderWidth: 0, // No border
-                                       // backgroundColor: 'rgb(204, 0, 0, 0.6)',
-                                        backgroundColor:'rgba(249, 179, 29, 1)',
+                                        // backgroundColor: 'rgb(204, 0, 0, 0.6)',
+                                        backgroundColor: 'rgba(249, 179, 29, 1)',
                                         order: 1
                                     }
                                 ],
@@ -235,36 +239,25 @@
                                 data: data,
                                 options: {
                                     responsive: true,
-                                    maintainAspectRatio: true,
+                                    //   maintainAspectRatio: true,
                                     layout: {
                                         padding: 0
                                     },
                                     scales: {
                                         x: {
                                             grid: {
-                                                display: true // Hide the grid lines on the x-axis   
+                                                display: true// Hide the grid lines on the x-axis
+                                               // beginAtZero: true
                                             }
                                         },
                                         y: {
                                             grid: {
-                                                display: false, // Hide the grid lines on the y-axis
+                                                display: false,// Hide the grid lines on the y-axis
+                                                beginAtZero: true
                                             }
-                                        },
-                                        y1: {
-                                            display: false,
-                                            beginAtZero: false,
-                                        },
+                                        }
                                     },
                                     plugins: {
-                                        title: {
-                                            display: true,
-                                            text: " ",
-                                            align: 'start',
-                                            padding: {
-                                                top: 0,
-                                                bottom: 0
-                                            }
-                                        },
                                         legend: {
                                             display: false,
                                             position: 'bottom', // Positioning the legend on the right
@@ -279,23 +272,9 @@
                                                     const dataIndex = tooltipItem.dataIndex;
                                                     const datasetIndex = tooltipItem.datasetIndex;
                                                     const dataset = tooltipItem.chart.data.datasets[datasetIndex];
-                                                    const labels = tooltipItem.chart.data.labels;
-                                                    const dsLabel = dataset.label;
                                                     const value = dataset.data[dataIndex];
-                                                    return dsLabel + " - " + labels[dataIndex] + ': ' + value;
+                                                    return iso_code[dataIndex] + ': ' + value;
                                                 }
-                                            }
-                                        },
-                                        datalabels: {
-                                            display: false,
-                                            color: '#000',
-                                            anchor: 'end',
-                                            align: 'end',
-                                            formatter: function (value) {
-                                                return value; // Return value for external use only
-                                            },
-                                            font: {
-                                                weight: 'bold'
                                             }
                                         }
                                     }
@@ -304,7 +283,7 @@
                             };
 
                             // Create a new canvas element and append it to the root
-                            const canvas = $('<canvas class="Va012-columnChart-canvas"></canvas>');
+                            const canvas = $('<canvas class="VA012-columnChart-canvas"></canvas>');
                             var polarChart = $root.find('#VA012-columnChart_' + widgetID);
                             polarChart.append(canvas);
 

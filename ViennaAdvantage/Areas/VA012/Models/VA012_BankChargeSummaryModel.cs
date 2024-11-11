@@ -60,16 +60,32 @@ namespace VA012.Models
         {
             string[] labels = null;
             decimal[] chargeAmt = null;
+            string[] currency = null;
             VA012_BankChargeData bankData = new VA012_BankChargeData();
             //Get Bank Charge and Periods data
             sql.Append(@"WITH BANKSTATEMENTDATA AS (
                         SELECT
-                            C_BANKSTATEMENTLINE.CHARGEAMT,
-                            C_BANKSTATEMENTLINE.STATEMENTLINEDATE
+                            CASE
+                            WHEN (C_BANKACCOUNT.C_CURRENCY_ID != C_BANKSTATEMENTLINE.C_CURRENCY_ID) THEN
+                            ROUND(
+                                COALESCE(
+                                    (CURRENCYCONVERT(
+                                        C_BANKSTATEMENTLINE.CHARGEAMT, C_BANKSTATEMENTLINE.C_CURRENCY_ID, C_BANKACCOUNT.C_CURRENCY_ID, C_BANKSTATEMENTLINE.
+                                        STATEMENTLINEDATE, C_BANKSTATEMENTLINE.C_CONVERSIONTYPE_ID, C_BANKSTATEMENTLINE.AD_CLIENT_ID, C_BANKSTATEMENTLINE.
+                                        AD_ORG_ID
+                                    )), 0
+                                ), C_CURRENCY.STDPRECISION
+                            )
+                            ELSE
+                            C_BANKSTATEMENTLINE.CHARGEAMT
+                            END AS CHARGEAMT,
+                            C_BANKSTATEMENTLINE.STATEMENTLINEDATE,C_CURRENCY.ISO_CODE,C_CURRENCY.CurSymbol
                         FROM
                             C_BANKSTATEMENTLINE
                             INNER JOIN C_BANKSTATEMENT ON ( C_BANKSTATEMENT.C_BANKSTATEMENT_ID = C_BANKSTATEMENTLINE.C_BANKSTATEMENT_ID )
                             INNER JOIN C_CHARGE ON ( C_BANKSTATEMENTLINE.C_CHARGE_ID = C_CHARGE.C_CHARGE_ID )
+                            INNER JOIN C_BANKACCOUNT ON ( C_BANKACCOUNT.C_BANKACCOUNT_ID = C_BANKSTATEMENT.C_BANKACCOUNT_ID )
+                            INNER JOIN C_CURRENCY ON ( C_CURRENCY.C_CURRENCY_ID = C_BANKACCOUNT.C_CURRENCY_ID )
                         WHERE
                             C_BANKSTATEMENTLINE.ISACTIVE = 'Y'
                             AND C_BANKSTATEMENT.ISACTIVE = 'Y'
@@ -88,7 +104,7 @@ namespace VA012.Models
                                 SELECT
                                     SUM(COALESCE(
                                         BANKSTATEMENTDATA.CHARGEAMT, 0
-                                    )) AS CHARGEAMT,
+                                    )) AS CHARGEAMT,BANKSTATEMENTDATA.ISO_CODE,BANKSTATEMENTDATA.CurSymbol,
                                     PERIODDATA.NAME
                                 FROM
                                     (
@@ -103,7 +119,7 @@ namespace VA012.Models
                                     ) PERIODDATA
                                     LEFT JOIN BANKSTATEMENTDATA ON (1=1 AND BANKSTATEMENTDATA.STATEMENTLINEDATE BETWEEN PERIODDATA.StartDate AND PERIODDATA.ENDDate)
                                 GROUP BY
-                                    PERIODDATA.NAME,PERIODDATA.STARTDATE
+                                    PERIODDATA.NAME,PERIODDATA.STARTDATE,BANKSTATEMENTDATA.ISO_CODE,BANKSTATEMENTDATA.CurSymbol
                                 ORDER BY
                                     PERIODDATA.STARTDATE");
             DataSet ds = DB.ExecuteDataset(sql.ToString(), null, null);
@@ -111,13 +127,16 @@ namespace VA012.Models
             {
                 chargeAmt = new decimal[ds.Tables[0].Rows.Count];
                 labels = new string[ds.Tables[0].Rows.Count];
+                currency = new string[ds.Tables[0].Rows.Count];
                 for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
                 {
                     chargeAmt[i] =Util.GetValueOfDecimal(ds.Tables[0].Rows[i]["CHARGEAMT"]);
                     labels[i]=Util.GetValueOfString(ds.Tables[0].Rows[i]["NAME"]);
+                    currency[i] = Util.GetValueOfString(ds.Tables[0].Rows[i]["ISO_CODE"]);
                 }
                 bankData.bankChargeData=chargeAmt;
                 bankData.labels = labels;
+                bankData.currency = currency;
             }
             return bankData;
         }
@@ -129,6 +148,7 @@ namespace VA012.Models
             public decimal[] bankChargeData { get; set; }
 
             public string[] labels { get; set; }
+            public string [] currency { get; set; }
         }
     }
 }
