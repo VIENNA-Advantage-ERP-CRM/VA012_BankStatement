@@ -1,4 +1,11 @@
-﻿; VA012 = window.VA012 || {};
+﻿/************************************************************
+ * Module Name    : VA012
+ * Purpose        : Bank charge Summary-Month wise widget
+ * chronological  : Development
+ * Created Date   : 7 Nov, 2024
+ * Created by     : VIS103
+ ***********************************************************/
+; VA012 = window.VA012 || {};
 
 ; (function (VA012, $) {
 

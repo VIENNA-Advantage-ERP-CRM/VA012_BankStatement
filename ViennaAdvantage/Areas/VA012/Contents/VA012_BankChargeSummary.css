@@ -1,4 +1,11 @@
-﻿.VA012_rootBankCharge {
+﻿/************************************************************
+ * Module Name    : VA012
+ * Purpose        : Bank charge Summary-Month wise widget css class
+ * chronological  : Development
+ * Created Date   : 7 Nov, 2024
+ * Created by     : VIS103
+ ***********************************************************/
+.VA012_rootBankCharge {
     height: 100%;
     width: 100%;
 }

@@ -1,4 +1,11 @@
-﻿using System;
+﻿/*******************************************************
+       * Module Name    : VAS
+       * Purpose        : Bank charge Summary-Month wise widget Model
+       * Chronological  : Development
+       * Created Date   : 7 Nov, 2024
+       * Created by     : VIS103
+******************************************************/
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -18,7 +25,7 @@ namespace VA012.Models
         /// <param name="ctx">Context</param>
         /// <param name="ErrorMessage">Error Message if any</param>
         /// <returns>DataSet</returns>
-        /// <author>VIS_0045</author>
+        /// <author>VIS103</author>
         public DataSet GetFinancialYearDetail(Ctx ctx, out string ErrorMessage)
         {
             ErrorMessage = "";
@@ -48,16 +55,21 @@ namespace VA012.Models
         /// <summary>
         /// Get Bank Satement line data against charge
         /// </summary>
-        /// <param name="C_BankAccount_ID"></param>
-        /// <param name="C_Charge_ID"></param>
-        /// <returns></returns>
+        /// <param name="ctx">Context</param>
+        /// <param name="C_BankAccount_ID">Selected Bank Account</param>
+        /// <param name="C_Charge_ID">Selected Charge Parameter if any</param>
+        /// <param name="yrStartDate">Year Start Date</param>
+        /// <param name="yrEndDate">Year End Date</param>
+        /// <param name="Year_ID">Year ID</param>
+        /// <param name="errorMessage">out paramter to return error message</param>
+        /// <returns>return list of labels and bank statement data</returns>
         public VA012_BankChargeData GetBankChargeData(Ctx ctx, int C_BankAccount_ID, int C_Charge_ID, DateTime yrStartDate, DateTime yrEndDate, int Year_ID, out string errorMessage)
         {
             errorMessage = "";
             string[] labels = null;
             decimal[] chargeAmt = null;
             VA012_BankChargeData bankData = new VA012_BankChargeData();
-            //Get BAnk Charge and Periods data
+            //Get Bank Charge and Periods data
             sql.Append(@"WITH BANKSTATEMENTDATA AS (
                         SELECT
                             C_BANKSTATEMENTLINE.CHARGEAMT,
@@ -125,7 +137,9 @@ namespace VA012.Models
             }
             return bankData;
         }
-
+        /// <summary>
+        /// Properties declaration
+        /// </summary>
         public class VA012_BankChargeData
         {
             public decimal[] bankChargeData { get; set; }
