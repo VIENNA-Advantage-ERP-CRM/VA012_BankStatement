@@ -1,0 +1,59 @@
+﻿/************************************************************
+ * Module Name    : VA012
+ * Purpose        : Bank charge Summary-Month wise widget css class
+ * chronological  : Development
+ * Created Date   : 7 Nov, 2024
+ * Created by     : VIS103
+ ***********************************************************/
+.VA012_rootBankCharge {
+    height: 100%;
+    width: 100%;
+}
+.VA012-bankcharge-heading {
+    margin-bottom: 0.8rem;
+    margin-top: 0.5rem;
+    margin-left: 0.5rem;
+}
+.VA012-bankchargePanelLbl {
+    font-weight: 600;
+    color: #908989;
+}
+.VA012-paramtersDiv {
+    display: flex;
+    /*padding: 0.3rem;*/
+}
+.VA012-cmbBankAcct {
+    padding: 0.3rem;
+}
+.VA012-cmbCharge {
+    padding: 0.3rem;
+}
+.VA012-input-wrap{
+    margin-bottom: unset !important;
+}
+.VA012_rootBankCharge {
+    background: rgba(235, 245, 250, 1) !important;
+    /*background: rgb(255 255 255) !important;*/
+}
+.VA012-ctrlLbl {
+    background: rgba(var(--v-c-on-secondary), .0) !important;
+    /*background: rgb(255 255 255) !important;*/
+}
+.VA012-selectCtrls {
+    margin-top: 0.2rem !important;
+}
+@media screen and (max-width: 1366px) {
+    .VA012-bankcharge-heading {        
+        margin-left: 0.5rem;
+    } 
+}
+@media screen and (max-width: 1024px) {
+    .VA012-bankcharge-heading {
+        margin-bottom: 0rem !important;
+        margin-top: 0rem !important;
+        margin-left: 0.5rem !important;
+    }
+    .VA012-selectCtrls {
+        height:unset !important;
+    }
+}
