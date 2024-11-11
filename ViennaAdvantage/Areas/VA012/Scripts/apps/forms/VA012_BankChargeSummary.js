@@ -93,7 +93,7 @@
             /* parameters are: context, windowno., coloumn id, display type, DB coloumn name, Reference key, Is parent, Validation Code*/
             var lookup = VIS.MLookupFactory.get(VIS.context, 0, 0, VIS.DisplayType.TableDir, "C_BankAccount_ID", 0, false, validation);
             // Parameters are: columnName, mandatory, isReadOnly, isUpdateable, lookup,display length
-            _cmbBankAccountCtrl = new VIS.Controls.VComboBox("C_BankAccount_ID", true, false, true, lookup, 50);
+            _cmbBankAccountCtrl = new VIS.Controls.VComboBox("C_BankAccount_ID", false, false, true, lookup, 50);
 
             //Charge control validation
             validation = "";
@@ -131,6 +131,7 @@
             $root.find(".VA012-cmbBankAcct").append(_cmbBankAccountCtrl.getControl()).append('<label class="VA012-ctrlLbl">' + VIS.Msg.getMsg("VA012_BankAccount")
                 + '<sup style="color: red;">*</sup></label>');
             $root.find(".VA012-cmbCharge").append(_cmbChargeCtrl.getControl()).append('<label class="VA012-ctrlLbl">' + VIS.Msg.getMsg("Charge") + '</label>');
+            $root.find('select').addClass("VA012-selectCtrls");
             events();
         };
 
@@ -138,10 +139,13 @@
             _cmbBankAccountCtrl.fireValueChanged = function () {
                 if (_cmbBankAccountCtrl.getValue()) {
                     $bsyDiv.show();
+                    _cmbBankAccountCtrl.setValue(_cmbBankAccountCtrl.getValue());
                     GetCanvas();
                     $bsyDiv.hide();
                 }
                 else {
+                    $root.find('canvas').remove();
+                    _cmbChargeCtrl.setValue("");
                     VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                     return false;
                 }
@@ -150,6 +154,7 @@
                 if (_cmbChargeCtrl.getValue()) {
                     if (_cmbBankAccountCtrl.getValue()) {
                         C_Charge_ID = _cmbChargeCtrl.getValue();
+                        _cmbChargeCtrl.setValue(_cmbChargeCtrl.getValue());
                         $bsyDiv.show();
                         GetCanvas();
                         $bsyDiv.hide();
@@ -195,7 +200,7 @@
                                 labels: labels, // Dynamic labels
                                 datasets: [
                                     {
-                                        label: VIS.Msg.getMsg("VA012_ChargeAmt"),
+                                       // label: VIS.Msg.getMsg("VA012_ChargeAmt"),
                                         data: bankData.bankChargeData,
                                         borderColor: 'rgba(0,0,0,0)', // Transparent border color
                                         borderWidth: 0, // No border
@@ -223,6 +228,7 @@
                                 data: data,
                                 options: {
                                     responsive: true,
+                                    maintainAspectRatio: true,
                                     layout: {
                                         padding: 0
                                     },
@@ -253,7 +259,7 @@
                                             }
                                         },
                                         legend: {
-                                            display: true,
+                                            display: false,
                                             position: 'bottom', // Positioning the legend on the right
                                             padding: {
                                                 top: 0,
@@ -312,14 +318,10 @@
         };
         /*this function is used to refresh design and data of widget*/
         this.refreshWidget = function () {
-            _cmbBankAccountCtrl.setValue(null);
-            _cmbChargeCtrl.setValue(null);
-            yrStartDate = null;
-            yrEndDate = null;
-            Year_ID = null;
+            _cmbBankAccountCtrl.setValue("");
+            _cmbChargeCtrl.setValue("");
             C_Charge_ID = 0;
             $root.find('canvas').remove();
-            this.initialize();
         };
         this.disposeComponents = function () {
             $self = null;

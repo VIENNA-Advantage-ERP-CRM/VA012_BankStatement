@@ -73,7 +73,7 @@ namespace VA012.Models
                             AND C_BANKSTATEMENT.ISACTIVE = 'Y'
                             AND C_CHARGE.ISACTIVE = 'Y'
                             AND STATEMENTLINEDATE BETWEEN " + GlobalVariable.TO_DATE(yrStartDate, true) + " AND " + GlobalVariable.TO_DATE(yrEndDate, true)
-                           + @" AND C_BANKSTATEMENTLINE.C_CHARGE_ID > 0");
+                           + @" AND C_BANKSTATEMENTLINE.C_CHARGE_ID > 0 AND C_BANKSTATEMENT.DocStatus IN ('CO','CL')");
             if (C_BankAccount_ID > 0)
             {
                 sql.Append(@" AND C_BANKSTATEMENT.C_BANKACCOUNT_ID=" + C_BankAccount_ID);
@@ -100,7 +100,7 @@ namespace VA012.Models
                                             ISACTIVE = 'Y'
                                             AND C_YEAR_ID = " + Year_ID + @"
                                     ) PERIODDATA
-                                    LEFT JOIN BANKSTATEMENTDATA ON PERIODDATA.PERIODNO = BANKSTATEMENTDATA.PERIODNO
+                                    LEFT JOIN BANKSTATEMENTDATA ON (PERIODDATA.PERIODNO = BANKSTATEMENTDATA.PERIODNO)
                                 GROUP BY
                                     PERIODDATA.PERIODNO,
                                     PERIODDATA.NAME
