@@ -23,12 +23,10 @@ namespace VA012.Models
         /// This function is used to get the Financial Year Details
         /// </summary>
         /// <param name="ctx">Context</param>
-        /// <param name="ErrorMessage">Error Message if any</param>
         /// <returns>DataSet</returns>
         /// <author>VIS103</author>
-        public DataSet GetFinancialYearDetail(Ctx ctx, out string ErrorMessage)
+        public DataSet GetFinancialYearDetail(Ctx ctx)
         {
-            ErrorMessage = "";
             DataSet ds = null;
             sql.Append(@"SELECT cy.c_year_id
                          FROM C_Calendar cc
@@ -46,10 +44,6 @@ namespace VA012.Models
                 sql.Append("SELECT NAME,STARTDATE,ENDDATE,PERIODNO,C_YEAR_ID FROM C_PERIOD WHERE ISACTIVE='Y' AND C_YEAR_ID=" + Year_ID + " ORDER BY PERIODNO");
                 ds = DB.ExecuteDataset(sql.ToString(), null, null);
             }
-            else
-            {
-                ErrorMessage = Msg.GetMsg(ctx, "VA012_CalendarNotFound");
-            }
             return ds;
         }
         /// <summary>
@@ -61,11 +55,9 @@ namespace VA012.Models
         /// <param name="yrStartDate">Year Start Date</param>
         /// <param name="yrEndDate">Year End Date</param>
         /// <param name="Year_ID">Year ID</param>
-        /// <param name="errorMessage">out paramter to return error message</param>
         /// <returns>return list of labels and bank statement data</returns>
-        public VA012_BankChargeData GetBankChargeData(Ctx ctx, int C_BankAccount_ID, int C_Charge_ID, DateTime yrStartDate, DateTime yrEndDate, int Year_ID, out string errorMessage)
+        public VA012_BankChargeData GetBankChargeData(Ctx ctx, int C_BankAccount_ID, int C_Charge_ID, DateTime yrStartDate, DateTime yrEndDate, int Year_ID)
         {
-            errorMessage = "";
             string[] labels = null;
             decimal[] chargeAmt = null;
             VA012_BankChargeData bankData = new VA012_BankChargeData();
@@ -73,9 +65,7 @@ namespace VA012.Models
             sql.Append(@"WITH BANKSTATEMENTDATA AS (
                         SELECT
                             C_BANKSTATEMENTLINE.CHARGEAMT,
-                            TO_CHAR(
-                                STATEMENTLINEDATE, 'mm'
-                            ) AS PERIODNO
+                            C_BANKSTATEMENTLINE.STATEMENTLINEDATE
                         FROM
                             C_BANKSTATEMENTLINE
                             INNER JOIN C_BANKSTATEMENT ON ( C_BANKSTATEMENT.C_BANKSTATEMENT_ID = C_BANKSTATEMENTLINE.C_BANKSTATEMENT_ID )
@@ -99,25 +89,23 @@ namespace VA012.Models
                                     SUM(COALESCE(
                                         BANKSTATEMENTDATA.CHARGEAMT, 0
                                     )) AS CHARGEAMT,
-                                    PERIODDATA.PERIODNO,
                                     PERIODDATA.NAME
                                 FROM
                                     (
                                         SELECT
                                             NAME,
-                                            PERIODNO
+                                            StartDate,EndDate
                                         FROM
                                             C_PERIOD
                                         WHERE
                                             ISACTIVE = 'Y'
                                             AND C_YEAR_ID = " + Year_ID + @"
                                     ) PERIODDATA
-                                    LEFT JOIN BANKSTATEMENTDATA ON (PERIODDATA.PERIODNO = BANKSTATEMENTDATA.PERIODNO)
+                                    LEFT JOIN BANKSTATEMENTDATA ON (1=1 AND BANKSTATEMENTDATA.STATEMENTLINEDATE BETWEEN PERIODDATA.StartDate AND PERIODDATA.ENDDate)
                                 GROUP BY
-                                    PERIODDATA.PERIODNO,
-                                    PERIODDATA.NAME
+                                    PERIODDATA.NAME,PERIODDATA.STARTDATE
                                 ORDER BY
-                                    PERIODDATA.PERIODNO");
+                                    PERIODDATA.STARTDATE");
             DataSet ds = DB.ExecuteDataset(sql.ToString(), null, null);
             if (ds != null && ds.Tables[0].Rows.Count > 0)
             {
@@ -130,10 +118,6 @@ namespace VA012.Models
                 }
                 bankData.bankChargeData=chargeAmt;
                 bankData.labels = labels;
-            }
-            else
-            {
-                errorMessage = Msg.GetMsg(ctx, "VA012_NoDataFound");
             }
             return bankData;
         }

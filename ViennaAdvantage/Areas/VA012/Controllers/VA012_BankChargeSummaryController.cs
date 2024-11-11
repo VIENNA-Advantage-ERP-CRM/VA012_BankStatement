@@ -34,9 +34,8 @@ namespace VA012.Controllers
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
-                string errorMsg = "";
                 VA012_BankChargeSummaryModel obj = new VA012_BankChargeSummaryModel();
-                retJSON = JsonConvert.SerializeObject(obj.GetFinancialYearDetail(ctx, out errorMsg));
+                retJSON = JsonConvert.SerializeObject(obj.GetFinancialYearDetail(ctx));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
@@ -55,9 +54,8 @@ namespace VA012.Controllers
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
-                string errorMessage = "";
                 VA012_BankChargeSummaryModel obj = new VA012_BankChargeSummaryModel();
-                retJSON = JsonConvert.SerializeObject(obj.GetBankChargeData(ctx, C_BankAccount_ID, C_Charge_ID, yrStartDate, yrEndDate, Year_ID, out errorMessage));
+                retJSON = JsonConvert.SerializeObject(obj.GetBankChargeData(ctx, C_BankAccount_ID, C_Charge_ID, yrStartDate, yrEndDate, Year_ID));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
