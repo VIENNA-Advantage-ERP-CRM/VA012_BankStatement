@@ -141,6 +141,8 @@
     <Content Include="Areas\VA012\Contents\BankConnectWidget.css" />
     <Content Include="Areas\VA012\Contents\bankstatement.css" />
     <Content Include="Areas\VA012\Contents\VA012.all.min.css" />
+    <Content Include="Areas\VA012\Contents\VA012_BankChargeSummary.css" />
+    <Content Include="Areas\VA012\Contents\VA012_BankingJournal.css" />
     <Content Include="Areas\VA012\Images\batch-white.png" />
     <Content Include="Areas\VA012\Images\batch.png" />
     <Content Include="Areas\VA012\Images\cash-white.png" />
@@ -160,6 +162,7 @@
     <Content Include="Areas\VA012\Images\split.png" />
     <Content Include="Areas\VA012\Images\tick.png" />
     <Content Include="Areas\VA012\Scripts\apps\forms\bankstatement.js" />
+    <Content Include="Areas\VA012\Scripts\apps\forms\VA012_BankChargeSummary.js" />
     <Content Include="Areas\VA012\Scripts\apps\forms\VA012_BankingJournal.js" />
     <Content Include="Areas\VA012\Scripts\apps\forms\VA012_BankConnectWidget.js" />
     <Content Include="Areas\VA012\Scripts\model\callouts.js" />
@@ -192,6 +195,8 @@
     <Compile Include="Areas\VA012\Controllers\BankStatementController.cs" />
     <Compile Include="Areas\VA012\Controllers\StatementController.cs" />
     <Compile Include="Areas\VA012\Controllers\UploadExcelController.cs" />
+    <Compile Include="Areas\VA012\Controllers\VA012_BankChargeSummaryController.cs" />
+    <Compile Include="Areas\VA012\Controllers\VA012_BankJournalWidgetController.cs" />
     <Compile Include="Areas\VA012\Controllers\WidgetController.cs" />
     <Compile Include="Areas\VA012\Models\BankStatementModel.cs" />
     <Compile Include="Areas\VA012\Models\CreatePaymentFromStatement.cs" />
@@ -202,6 +207,8 @@
     </Compile>
     <Compile Include="Areas\VA012\Models\MatchBankStatement.cs" />
     <Compile Include="Areas\VA012\Models\StatementModel.cs" />
+    <Compile Include="Areas\VA012\Models\VA012_BankChargeSummaryModel.cs" />
+    <Compile Include="Areas\VA012\Models\VA012_BankingJournalWidgetModel.cs" />
     <Compile Include="Areas\VA012\Models\VA012_DMAKS.cs" />
     <Compile Include="Areas\VA012\Models\VA012_ENBD.cs" />
     <Compile Include="Areas\VA012\Models\VA012_ENBDChkNo.cs" />
