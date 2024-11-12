@@ -149,7 +149,7 @@
                 + '<sup style="color: red;">*</sup></label>');
             $root.find(".VA012-cmbCharge").append(_cmbChargeCtrl.getControl()).append('<label class="VA012-ctrlLbl">' + VIS.Msg.getMsg("Charge") + '</label>');
             $root.find('select').addClass("VA012-selectCtrls");
-            $($root.find('select')[1]).addClass("VA012-chargeCtrl");
+            $root.find(".VA012-cmbCharge select").addClass("VA012-chargeCtrl");
             events();
             if (_cmbBankAccountCtrl.getValue()) {
                 $bsyDiv.show();
