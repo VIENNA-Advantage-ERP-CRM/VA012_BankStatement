@@ -100,12 +100,22 @@
             /* parameters are: context, windowno., coloumn id, display type, DB coloumn name, Reference key, Is parent, Validation Code*/
             var lookup = VIS.MLookupFactory.get(VIS.context, 0, 0, VIS.DisplayType.TableDir, "C_BankAccount_ID", 0, false, validation);
             // Parameters are: columnName, mandatory, isReadOnly, isUpdateable, lookup,display length
-            _cmbBankAccountCtrl = new VIS.Controls.VComboBox("C_BankAccount_ID", false, false, true, lookup, 50);
+            _cmbBankAccountCtrl = new VIS.Controls.VComboBox("C_BankAccount_ID", true, false, true, lookup, 50);
+
+            //Get lookup data
+            var data = lookup.getData(true, true, false, false);
+            if (data != null && data != undefined && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    _cmbBankAccountCtrl.getControl().append('<option value=' + data[i].Key + '>' + data[i].Name + '</option>');
+                }
+                //Set default value
+                _cmbBankAccountCtrl.getControl().prop('selectedIndex', 0);
+            }            
 
             //Charge control validation
             validation = "";
             validation = "C_Charge.ISACTIVE='Y' AND C_Charge.C_Charge_ID IN ( SELECT C_Charge_ID FROM C_BANKSTATEMENTLINE WHERE TRUNC(STATEMENTLINEDATE) BETWEEN " + startDate
-                + " AND " + endDate + ")"
+                + " AND " + endDate + ")";
             var chargeLookup = VIS.MLookupFactory.get(VIS.context, 0, 0, VIS.DisplayType.TableDir, "C_Charge_ID", 0, false, validation);
             _cmbChargeCtrl = new VIS.Controls.VComboBox("C_Charge_ID", false, false, true, chargeLookup, 50);
 
@@ -139,9 +149,14 @@
                 + '<sup style="color: red;">*</sup></label>');
             $root.find(".VA012-cmbCharge").append(_cmbChargeCtrl.getControl()).append('<label class="VA012-ctrlLbl">' + VIS.Msg.getMsg("Charge") + '</label>');
             $root.find('select').addClass("VA012-selectCtrls");
+            $root.find(".VA012-cmbCharge select").addClass("VA012-chargeCtrl");
             events();
+            if (_cmbBankAccountCtrl.getValue()) {
+                $bsyDiv.show();
+                _cmbBankAccountCtrl.setValue(_cmbBankAccountCtrl.getValue());
+                GetCanvas();
+            }
         };
-
         function events() {
             //Bank Accoount control change event
             _cmbBankAccountCtrl.fireValueChanged = function () {
@@ -153,6 +168,7 @@
                 }
                 else {
                     $root.find('canvas').remove();
+                    _cmbBankAccountCtrl.setValue(_cmbBankAccountCtrl.getValue());
                     _cmbChargeCtrl.setValue("");
                     VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                     return false;
@@ -169,6 +185,7 @@
                         // $bsyDiv.hide();
                     }
                     else {
+                        _cmbChargeCtrl.setValue(_cmbChargeCtrl.getValue());
                         VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
                         return false;
                     }
@@ -304,10 +321,11 @@
         };
         /*this function is used to refresh design and data of widget*/
         this.refreshWidget = function () {
-            _cmbBankAccountCtrl.setValue("");
-            _cmbChargeCtrl.setValue("");
-            C_Charge_ID = 0;
-            $root.find('canvas').remove();
+           // _cmbBankAccountCtrl.setValue("");
+           // _cmbChargeCtrl.setValue("");
+            //C_Charge_ID = 0;
+            //$root.find('canvas').remove();
+            GetCanvas();
         };
         this.disposeComponents = function () {
             $self = null;
