@@ -42,6 +42,12 @@
 .VA012-selectCtrls {
     margin-top: 0.2rem !important;
 }
+.VA012-bankCtrl {
+    background-color: rgb(255 255 255) !important;
+}
+.VA012-chargeCtrl {
+    background-color: rgba(var(--v-c-on-secondary), .0) !important;
+}
 @media screen and (max-width: 1366px) {
     .VA012-bankcharge-heading {        
         margin-left: 0.5rem;
