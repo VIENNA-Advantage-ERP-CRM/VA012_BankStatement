@@ -1,4 +1,5 @@
-﻿/*Version 2.1.2.0*/
+﻿/*Version 2.1.3.0*/
+
 body {
     margin: 0;
     padding: 0;
@@ -1125,4 +1126,579 @@ body {
     .vis-add-row label.default {
         color: rgba(var(--v-c-on-secondary),1)
     }*/
+
+.VA012_root {
+    height: 100%;
+    width: 100%;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+.btn:focus, button:focus {
+    box-shadow: none;
+}
+
+.VA012_paramMainDiv {
+    /*background-color: #fcfcfc;*/
+    height: 100%;
+    padding: 0.2em;
+    overflow-y: auto;
+    /* overflow: hidden;*/
+    /*border-radius: 1em;*/
+}
+
+.VA012-NextBtn {
+    border-radius: 1em !important;
+    font-size: 0.9em !important;
+}
+
+.VA012-CancelBtn {
+    border-radius: 1em !important;
+    font-size: 0.9em;
+}
+
+.VA012-UploadBtn {
+    border-radius: 1em !important;
+    font-size: 0.9em;
+}
+
+.VA012-uploadImg {
+    color: rgba(var(--v-c-primary), 1);
+    font-size: 4em;
+}
+
+.VA012-headerPanelLbl {
+    font-weight: 600;
+    color: #908989;
+}
+
+.VA012-FileNamelbl {
+    font-weight: unset;
+    color: #908989;
+    margin-top: 1em;
+}
+
+.VA012-paramdiv {
+    margin-bottom: 3px;
+}
+
+.VA012-controls {
+    padding: 0.5px;
+}
+
+.VA012-labels {
+    background: rgba(var(--v-c-secondary)) !important;
+    font-size: 11px !important;
+}
+
+.vis-input-wrap .VA012-nameLbl {
+    background: rgba(var(--v-c-secondary)) !important;
+    top: 4px;
+    height: 86%;
+    left: 10px;
+}
+
+.VA012-StatementDateAsAccountDate {
+    background: rgba(var(--v-c-secondary)) !important;
+    padding-left: 0.9em !important;
+    left: 15px !important;
+    padding-top: 0.5em !important;
+}
+
+.VA012-arrow-right {
+    padding: 0.2em;
+    font-size: 0.8em;
+}
+
+.VA012-select {
+    background-color: rgba(var(--v-c-on-primary), .1) !important;
+    /*    background-image: linear-gradient(45deg, transparent 50%, rgba(var(--v-c-primary), 1) 50%),
+        linear-gradient(135deg, rgba(var(--v-c-primary), 1) 50%, transparent 50%) !important;*/
+}
+
+.VA012-form-data {
+    width: 100%;
+    float: left;
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.VA012-folderContainer {
+    background-color: rgba(var(--v-c-common), 1);
+    box-shadow: 0 3px 8px #cccccc;
+    width: 100%;
+    height: 100%;
+    /*display: flex;
+    align-items: center;
+    justify-content: center;*/
+    position: relative;
+}
+
+.VA012-fader-div {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(var(--v-c-common), .8);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.VA012-folTreeArea {
+    height: 72%;
+    width: 100%;
+    overflow: auto;
+    padding-right: .3rem;
+    /*padding-top: .5rem;*/
+}
+
+.VA012-paramFooterDiv {
+    /*height: 14%;*/
+    /*width: 100%;*/
+    margin-top: 2%;
+    display: flex;
+    gap: 2%;
+    justify-content: center;
+    /*overflow-y: auto;*/
+}
+
+    .VA012-paramFooterDiv input {
+        height: 100%;
+        width: 50%;
+    }
+
+.VA012-widgetContentArea .vis-scandoc, .VA012-folder-link .fa-folder-open, .VA012-window-link .vis-upload-history {
+    color: rgba(var(--v-c-primary), 1);
+    cursor: pointer;
+}
+
+.VA012-widgetContentArea .vis-scandoc {
+    font-size: 1.25em;
+}
+
+.VA012-WidgetContainer {
+    color: rgba(var(--v-c-on-secondary), 1);
+}
+
+.VA012-folderFader {
+    padding: 5%;
+}
+
+.VA012-links {
+    display: flex;
+    width: 100%;
+    align-items: end;
+    justify-content: space-between;
+    margin-top: 1rem !important;
+}
+
+    .VA012-links span {
+        font-size: .75rem;
+    }
+
+.VA012-DMS-folder .vis, .VA012-DMS-folder .fa {
+    font-size: 1.4em;
+}
+
+.VA012-DMS-folder {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
+
+    .VA012-DMS-folder a {
+        font-size: 0.875em;
+        color: rgba(var(--v-c-primary), 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+.VA012-widgetContentArea .vis-scandoc, .VA012-folder-link .fa-folder-open, .VA012-window-link .vis-upload-history {
+    color: rgba(var(--v-c-primary), 1);
+    cursor: pointer;
+}
+
+.VA012-widgetContentArea .vis-scandoc {
+    font-size: 1.25em;
+}
+
+.VA012-WidgetContainer {
+    color: rgba(var(--v-c-on-secondary), 1);
+}
+
+.VA012-folderFader {
+    padding: 5%;
+}
+
+.VA012-upload-col, .VA012-files-label {
+    height: 100%;
+}
+
+    .VA012-upload-col .VA012-input-file-field + .VA012-files-label {
+        border: 1px dashed #bbbbbb;
+        position: relative;
+        width: 100%;
+        border-radius: 0.25rem;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        padding: 1.25rem 0;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .VA012-upload-col .VA012-input-file-field {
+        width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        position: absolute;
+        z-index: -1;
+    }
+
+.VA012-labelTxt {
+    color: rgba(var(--v-c-on-secondary), .5);
+    font-size: 0.975em;
+    text-align: center;
+}
+
+    .VA012-labelTxt .VA012-browse-link {
+        cursor: pointer;
+        text-decoration: underline;
+        color: rgba(var(--v-c-primary),1);
+    }
+
+    .VA012-labelTxt .VA012-fileSize {
+        display: block;
+    }
+
+.VA012-files-label {
+    justify-content: center;
+}
+
+    .VA012-files-label .vis-uploaddocument {
+        font-size: 1.875em;
+        color: rgba(var(--v-c-on-secondary), .5);
+        margin-bottom: 0.5em;
+    }
+
+.VA012-shadow {
+    box-shadow: 6px 6px 7px rgba(var(--v-c-on-secondary), .2);
+    padding: 1.4em;
+    height: calc(100% - 3.6em);
+}
+
+.VA012-file-listing {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    /*height: calc(100% - 17.5rem);*/
+    overflow: auto;
+}
+
+.VA012-links {
+    display: flex;
+    width: 100%;
+    align-items: end;
+    justify-content: space-between;
+}
+
+    .VA012-links span {
+        font-size: .75rem;
+    }
+
+.VA012-bank-panel {
+    background-color: rgba(var(--v-c-secondary));
+    /*border-radius: 0.5rem;*/
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    /*justify-content: space-between;*/
+    /*border: 1px solid #e3e3e3;*/
+    height: 100%;
+    position: relative;
+}
+
+.VA012-widgetContentArea {
+    height: 100%;
+}
+
+
+/**Open DMS CSS**/
+/*.d-none {
+    display: none !important;
+}
+.list-unstyled {
+    padding-left: 0;
+    list-style: none;
+}*/
+.VA012-leftTreeNode,
+.VA012-leftTreeNode a,
+.VA012-leftTreeNode a span {
+    display: flex;
+}
+
+    .VA012-leftTreeNode,
+    .VA012-leftTreeNode a,
+    .VA012-leftTreeNode a span {
+        align-items: center;
+    }
+
+        .VA012-leftSideHeader,
+        .VA012-leftTreeNode a,
+        .VA012-leftTreeNode a span,
+        .VA012-folderFoot {
+            justify-content: space-between;
+        }
+
+            .VA012-headerWrap h6,
+            .VA012-leftSideSearch input,
+            .VA012-leftSideTree,
+            .VA012-leftTreeNode a,
+            .VA012-leftTreeNode a span,
+            .VA012-folderInfo {
+                flex: 1;
+            }
+
+                .VA012-leftSideHeader,
+                .VA012-leftTreeNode a > i, .VA012-folderFoot i {
+                    color: rgba(var(--v-c-primary), 1);
+                }
+
+.VA012-leftSideTreeUl {
+    height: 100%;
+    overflow: auto;
+    margin: 0 !important;
+    padding: 0;
+}
+
+.VA012-leftTreeNode a > i {
+    font-size: 1.2rem;
+}
+
+.VA012-leftTreeNode a {
+    color: inherit;
+    font-size: .875rem;
+}
+
+.VA012-leftTreeNode {
+    padding: .3rem 0;
+}
+
+.VA012-docTreeNode {
+    padding-left: 2.0rem;
+}
+
+.VA012-documentName {
+    font-size: 0.87em;
+    padding-left: 0.4em;
+}
+
+.VA012-leftTreeNode a span {
+    /*font-size: .7rem;*/
+    transition: -webkit-transform .2s ease-in-out;
+    padding-left: .5rem;
+    word-break: break-word;
+}
+
+.VA012-folderContainer {
+    background-color: rgba(var(--v-c-common), 1);
+    box-shadow: 0 3px 8px #cccccc;
+    width: 100%;
+    height: 100%;
+    /*display: flex;
+    align-items: center;
+    justify-content: center;*/
+    position: relative;
+}
+
+    .VA012-folderContainer h6 {
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0;
+        height: 10%;
+    }
+
+.VA012-folTreeArea {
+    height: 72%;
+    width: 100%;
+    overflow: auto;
+    padding-right: .3rem;
+}
+
+.VA012-folTreeFooter {
+    margin-top: 5%;
+    display: flex;
+    gap: 2%;
+    justify-content: center;
+}
+
+    .VA012-folTreeFooter input {
+        height: 100%;
+        width: 50%;
+    }
+
+.VA012-treeCancelBtn, .VA012-treeUploadBtn {
+    border-radius: 1em !important;
+    font-size: 0.9em;
+}
+
+span.VA012-selected {
+    color: rgba(var(--v-c-primary), 1);
+}
+
+.VA012-selectedTreeNode span i {
+    color: rgba(var(--v-c-on-secondary), 1);
+    transform: rotate(90deg);
+}
+
+.VA012-leftTreeNode:not(.VA012-selectedTreeNode) + .VA012-leftSideSubTreeUl {
+    display: none;
+}
+
+.VA012-leftSideSubTreeUl {
+    padding-left: 1rem;
+}
+
+.VA012-selectedrow {
+    background: rgba(var(--v-c-primary), .05);
+    border-color: rgba(var(--v-c-primary), .5);
+}
+
+.VA012-selectedBtn {
+    background: rgba(var(--v-c-primary), 1) !important;
+    color: rgba(var(--v-c-on-primary), 1) !important;
+}
+
+li.VA012-selectedAction {
+    background: rgba(var(--v-c-on-secondary), .05);
+    color: rgba(var(--v-c-on-secondary), 1);
+}
+
+.VA012-Date {
+    font-size: 12px !important;
+}
+
+.VA012-nameLbl {
+    font-size: 12px !important;
+}
+
+
+
+
+
+@media screen and (max-width: 1920px) {
+    .vis-editModeWidget .VA012-widgetContentArea {
+        height: calc(100% - 10%);
+    }
+
+    .vis-editModeWidget .fa .fa-cloud-upload {
+        font-size: 2em;
+    }
+
+    .vis-editModeWidget .VA012-files-label {
+        font-weight: 600;
+        font-size: 0.8em;
+    }
+
+    .vis-editModeWidget .VA012-folder-link .VA012-CancelBtn .VA012-UploadBtn {
+        font-size: 0.8em;
+    }
+
+    .vis-editModeWidget .VA012-panel-heading {
+        font-size: 0.8em;
+    }
+}
+
+@media screen and (max-width: 1366px) {
+    .VA012-bank-panel {
+        font-size: 10px;
+    }
+
+    .VA012-links {
+        margin-top: 0.6rem !important;
+    }
+
+    .vis-editModeWidget .VA012-labels {
+        top: -6px !important;
+    }
+}
+
+@media screen and (max-width: 1024px) {
+    .VA012-bank-panel {
+        font-size: 9px;
+    }
+
+    .VA012-links {
+        margin-top: 0.6rem !important;
+    }
+
+    .vis-editModeWidget .VA012-bank-panel {
+        font-size: 6px;
+    }
+
+    .vis-editModeWidget .VA012-links {
+        margin-top: 0.1rem !important;
+    }
+
+    .vis-editModeWidget .VA012-labels {
+        top: -6px !important;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .VA012-bank-panel {
+        font-size: 10px;
+    }
+
+    .vis-editModeWidget .VA012-bank-panel {
+        font-size: 7px;
+    }
+}
+
+@media screen and (max-width: 680px) {
+    .VA012-bank-panel {
+        font-size: 8px;
+        padding: 0.45em;
+    }
+
+    .VA012-links {
+        margin-top: 0.2rem !important;
+    }
+
+    .vis-editModeWidget .VA012-bank-panel {
+        font-size: 5.5px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .VA012-bank-panel {
+        font-size: 11.5px;
+    }
+
+    .vis-editModeWidget .VA012-bank-panel {
+        font-size: 9px;
+    }
+}
+
+@media screen and (max-width: 320px) {
+    .VA012-bank-panel {
+        font-size: 8px;
+    }
+
+    .VA012-widgetContentArea {
+        padding-right: 2px;
+    }
+
+    .vis-editModeWidget .VA012-bank-panel {
+        font-size: 5px;
+    }
+}
 
