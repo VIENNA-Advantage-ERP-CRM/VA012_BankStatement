@@ -110,7 +110,7 @@
                 }
                 //Set default value
                 _cmbBankAccountCtrl.getControl().prop('selectedIndex', 0);
-            }            
+            }
 
             //Charge control validation
             validation = "";
@@ -264,7 +264,7 @@
                                         x: {
                                             grid: {
                                                 display: true// Hide the grid lines on the x-axis
-                                               // beginAtZero: true
+                                                // beginAtZero: true
                                             }
                                         },
                                         y: {
@@ -321,11 +321,11 @@
         };
         /*this function is used to refresh design and data of widget*/
         this.refreshWidget = function () {
-           // _cmbBankAccountCtrl.setValue("");
-           // _cmbChargeCtrl.setValue("");
-            //C_Charge_ID = 0;
             //$root.find('canvas').remove();
-            GetCanvas();
+            if (_cmbBankAccountCtrl.getValue()) {
+                $bsyDiv.show();
+                GetCanvas();
+            }
         };
         this.disposeComponents = function () {
             $self = null;
