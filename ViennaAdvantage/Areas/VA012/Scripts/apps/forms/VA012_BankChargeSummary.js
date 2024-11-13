@@ -68,9 +68,9 @@
                 success: function (data) {
                     if (data != null && data != "") {
                         data = JSON.parse(data);
-                        yrStartDate = data.Table[0].STARTDATE;
-                        yrEndDate = data.Table[data.Table.length - 1].ENDDATE;
-                        Year_ID = data.Table[0].C_YEAR_ID;
+                        yrStartDate = data.StartDate;
+                        yrEndDate = data.EndDate;
+                        Year_ID = data.C_Year_ID;
                         Design();
                     }
                     $bsyDiv.hide();
@@ -207,7 +207,7 @@
                 dataType: "json",
                 contentType: "application/json; charset=utf-8",
                 data: ({
-                    C_BankAccount_ID: _cmbBankAccountCtrl.getValue(), C_Charge_ID: C_Charge_ID, yrStartDate: yrStartDate, yrEndDate: yrEndDate, Year_ID: Year_ID
+                    C_BankAccount_ID: VIS.Utility.Util.getValueOfInt(_cmbBankAccountCtrl.getValue()), C_Charge_ID: C_Charge_ID, yrStartDate: yrStartDate, yrEndDate: yrEndDate, Year_ID: Year_ID
                 }),
                 success: function (bankData) {
                     if (bankData != null && bankData != "") {
