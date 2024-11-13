@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -19,15 +20,17 @@ namespace VA012.Models
     public class VA012_BankChargeSummaryModel
     {
         StringBuilder sql = new StringBuilder("");
+
         /// <summary>
         /// This function is used to get the Financial Year Details
         /// </summary>
         /// <param name="ctx">Context</param>
-        /// <returns>DataSet</returns>
+        /// <returns>Dynamic Object</returns>
         /// <author>VIS103</author>
-        public DataSet GetFinancialYearDetail(Ctx ctx)
+        public dynamic GetFinancialYearDetail(Ctx ctx)
         {
             DataSet ds = null;
+            dynamic data = new ExpandoObject();
             sql.Append(@"SELECT cy.c_year_id
                          FROM C_Calendar cc
                          INNER JOIN AD_ClientInfo ci ON (ci.C_Calendar_ID=cc.C_Calendar_ID)
@@ -41,11 +44,18 @@ namespace VA012.Models
             if (Year_ID > 0)
             {
                 sql.Clear();
-                sql.Append("SELECT NAME,STARTDATE,ENDDATE,PERIODNO,C_YEAR_ID FROM C_PERIOD WHERE ISACTIVE='Y' AND C_YEAR_ID=" + Year_ID + " ORDER BY PERIODNO");
+                sql.Append("SELECT MIN(StartDate) as StartDate,MAX(EndDate) AS EndDate,C_Year_ID FROM C_PERIOD WHERE ISACTIVE='Y' AND C_YEAR_ID=" + Year_ID + " GROUP BY C_Year_ID");
                 ds = DB.ExecuteDataset(sql.ToString(), null, null);
+                if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+                {
+                    data.StartDate = Util.GetValueOfDateTime(ds.Tables[0].Rows[0]["StartDate"]);
+                    data.EndDate = Util.GetValueOfDateTime(ds.Tables[0].Rows[0]["EndDate"]);
+                    data.C_Year_ID = Util.GetValueOfInt(ds.Tables[0].Rows[0]["C_Year_ID"]);
+                }
             }
-            return ds;
+            return data;
         }
+
         /// <summary>
         /// Get Bank Satement line data against charge
         /// </summary>
@@ -140,6 +150,7 @@ namespace VA012.Models
             }
             return bankData;
         }
+
         /// <summary>
         /// Properties declaration
         /// </summary>
