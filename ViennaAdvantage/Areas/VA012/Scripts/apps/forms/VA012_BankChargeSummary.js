@@ -35,18 +35,21 @@
         this.getRoot = function () {
             return $root;
         };
+
         /*Create Busy Indicator */
         function createBusyIndicator() {
             $bsyDiv = $('<div id="busyDivId_' + widgetID + '" class="vis-busyindicatorouterwrap"><div class="vis-busyindicatorinnerwrap">' +
                 '<i class= "vis_widgetloader"></i></div></div>').css({ 'width': 'calc(100% - 40px)' }).hide();
             $root.append($bsyDiv);
         };
+
         this.setBusy = function (busy) {
             if (busy)
                 $bsyDiv.show();
             else
                 $bsyDiv.hide();
         };
+
         // Initialize the controls, Main function
         this.initialize = function () {
             widgetID = this.widgetInfo.AD_UserHomeWidgetID;
@@ -81,21 +84,26 @@
                     return false;
                 }
             });
-
         };
+
         function getDates(date) {
             var date = "TO_DATE('" + new Date(date).getDate() + "/" + (new Date(date).getMonth() + 1) + "/" + new Date(date).getFullYear() + "','dd/mm/yyyy')";
             return date;
         };
+
         //Create design
         function Design() {
+            $root.find('#VA012_cmbBankAcct_' + widgetID).empty();
+            $root.find("#VA012_cmbCharge_" + widgetID).empty();
+
             //Get year start and end date
             var startDate = getDates(yrStartDate);
             var endDate = getDates(yrEndDate);
 
             //Bank Account control validation
-            var validation = "C_BankAccount.ISACTIVE='Y' AND C_BankAccount.C_BankAccount_ID IN (SELECT C_BankAccount_ID FROM C_BANKSTATEMENTLINE"
-                + " WHERE TRUNC(STATEMENTLINEDATE) BETWEEN " + startDate + " AND " + endDate + ") ";
+            var validation = "C_BankAccount.ISACTIVE='Y' AND C_BankAccount.C_BankAccount_ID IN" +
+                "(SELECT bs.C_BankAccount_ID FROM C_BankStatement bs INNER JOIN C_BankStatementLine bsl ON (bs.C_BankStatement_ID = bsl.C_BankStatement_ID)" +
+                " WHERE TRUNC(bsl.STATEMENTLINEDATE) BETWEEN " + startDate + " AND " + endDate + ") ";
 
             /* parameters are: context, windowno., coloumn id, display type, DB coloumn name, Reference key, Is parent, Validation Code*/
             var lookup = VIS.MLookupFactory.get(VIS.context, 0, 0, VIS.DisplayType.TableDir, "C_BankAccount_ID", 0, false, validation);
@@ -145,9 +153,9 @@
             );
             $root.append(dropContainer);
             //Append bank account and Charge controls in root
-            $root.find(".VA012-cmbBankAcct").append(_cmbBankAccountCtrl.getControl()).append('<label class="VA012-ctrlLbl">' + VIS.Msg.getMsg("VA012_BankAccount")
+            $root.find("#VA012_cmbBankAcct_" + widgetID).append(_cmbBankAccountCtrl.getControl()).append('<label class="VA012-ctrlLbl">' + VIS.Msg.getMsg("VA012_BankAccount")
                 + '<sup style="color: red;">*</sup></label>');
-            $root.find(".VA012-cmbCharge").append(_cmbChargeCtrl.getControl()).append('<label class="VA012-ctrlLbl">' + VIS.Msg.getMsg("Charge") + '</label>');
+            $root.find("#VA012_cmbCharge_" + widgetID).append(_cmbChargeCtrl.getControl()).append('<label class="VA012-ctrlLbl">' + VIS.Msg.getMsg("Charge") + '</label>');
             $root.find('select').addClass("VA012-selectCtrls");
             $root.find(".VA012-cmbCharge select").addClass("VA012-chargeCtrl");
             events();
@@ -157,6 +165,7 @@
                 GetCanvas();
             }
         };
+
         function events() {
             //Bank Accoount control change event
             _cmbBankAccountCtrl.fireValueChanged = function () {
@@ -198,6 +207,7 @@
                 }
             };
         };
+
         // Get bank charge data and create chart
         function GetCanvas() {
             $.ajax({
@@ -220,6 +230,7 @@
                                 + VIS.Msg.getMsg("VA012_RecordNotFound") + '</div>')
                         }
                         else {
+                            let precision = bankData.Precision;
                             // Define static labels and colors
                             const labels = bankData.labels;
                             const iso_code = bankData.currency;
@@ -290,7 +301,7 @@
                                                     const datasetIndex = tooltipItem.datasetIndex;
                                                     const dataset = tooltipItem.chart.data.datasets[datasetIndex];
                                                     const value = dataset.data[dataIndex];
-                                                    return iso_code[dataIndex] + ': ' + value;
+                                                    return iso_code[dataIndex] + ': ' + value.toLocaleString(window.navigator.language, { minimumFractionDigits: precision, maximumFractionDigits: precision });
                                                 }
                                             }
                                         }
@@ -319,14 +330,17 @@
             });
 
         };
+
         /*this function is used to refresh design and data of widget*/
         this.refreshWidget = function () {
             //$root.find('canvas').remove();
-            if (_cmbBankAccountCtrl.getValue()) {
-                $bsyDiv.show();
-                GetCanvas();
-            }
+            Design();
+            //if (_cmbBankAccountCtrl.getValue()) {
+            //    $bsyDiv.show();
+            //    GetCanvas();
+            //}
         };
+
         this.disposeComponents = function () {
             $self = null;
             $root = null;
@@ -342,6 +356,7 @@
             C_Charge_ID = 0;
         };
     };
+
     // Must Implement with same parameter
     VA012.VA012_BankChargeSummary.prototype.init = function (windowNo, frame) {
         this.frame = frame;
@@ -351,11 +366,13 @@
         this.initialize();
         this.frame.getContentGrid().append(this.getRoot);
     };
+
     // To change size of the form
     VA012.VA012_BankChargeSummary.prototype.widgetSizeChange = function (size) {
         // Widget info, we can save additional information in widget record
         var x = size;
     };
+
     // Must implement dispose
     VA012.VA012_BankChargeSummary.prototype.dispose = function () {
         /*CleanUp Code */
@@ -366,16 +383,20 @@
             this.frame.dispose();
         this.frame = null;
     };
+
     VA012.VA012_BankChargeSummary.prototype.refreshWidget = function () {
         this.refreshWidget();
     };
+
     // Fire window's event from widget
     VA012.VA012_BankChargeSummary.prototype.addChangeListener = function (listener) {
         this.listener = listener;
     };
+
     VA012.VA012_BankChargeSummary.prototype.widgetFirevalueChanged = function (value) {
         // Trigger custom event with the value
         if (this.listener)
             this.listener.widgetFirevalueChanged(value);
     };
+
 })(VA012, jQuery);
