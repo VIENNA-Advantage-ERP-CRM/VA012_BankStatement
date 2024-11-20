@@ -89,7 +89,7 @@ namespace VA012.Models
                             ELSE
                             C_BANKSTATEMENTLINE.CHARGEAMT
                             END AS CHARGEAMT,
-                            C_BANKSTATEMENTLINE.STATEMENTLINEDATE,C_CURRENCY.ISO_CODE,C_CURRENCY.CurSymbol
+                            C_BANKSTATEMENTLINE.STATEMENTLINEDATE,C_CURRENCY.ISO_CODE,C_CURRENCY.CurSymbol, C_CURRENCY.StdPrecision 
                         FROM
                             C_BANKSTATEMENTLINE
                             INNER JOIN C_BANKSTATEMENT ON ( C_BANKSTATEMENT.C_BANKSTATEMENT_ID = C_BANKSTATEMENTLINE.C_BANKSTATEMENT_ID )
@@ -114,7 +114,7 @@ namespace VA012.Models
                                 SELECT
                                     SUM(COALESCE(
                                         BANKSTATEMENTDATA.CHARGEAMT, 0
-                                    )) AS CHARGEAMT,BANKSTATEMENTDATA.ISO_CODE,BANKSTATEMENTDATA.CurSymbol,
+                                    )) AS CHARGEAMT,BANKSTATEMENTDATA.ISO_CODE,BANKSTATEMENTDATA.CurSymbol,BANKSTATEMENTDATA.StdPrecision, 
                                     PERIODDATA.NAME
                                 FROM
                                     (
@@ -129,7 +129,7 @@ namespace VA012.Models
                                     ) PERIODDATA
                                     LEFT JOIN BANKSTATEMENTDATA ON (1=1 AND BANKSTATEMENTDATA.STATEMENTLINEDATE BETWEEN PERIODDATA.StartDate AND PERIODDATA.ENDDate)
                                 GROUP BY
-                                    PERIODDATA.NAME,PERIODDATA.STARTDATE,BANKSTATEMENTDATA.ISO_CODE,BANKSTATEMENTDATA.CurSymbol
+                                    PERIODDATA.NAME,PERIODDATA.STARTDATE,BANKSTATEMENTDATA.ISO_CODE,BANKSTATEMENTDATA.CurSymbol, BANKSTATEMENTDATA.StdPrecision 
                                 ORDER BY
                                     PERIODDATA.STARTDATE");
             DataSet ds = DB.ExecuteDataset(sql.ToString(), null, null);
@@ -143,10 +143,15 @@ namespace VA012.Models
                     chargeAmt[i] =Util.GetValueOfDecimal(ds.Tables[0].Rows[i]["CHARGEAMT"]);
                     labels[i]=Util.GetValueOfString(ds.Tables[0].Rows[i]["NAME"]);
                     currency[i] = Util.GetValueOfString(ds.Tables[0].Rows[i]["ISO_CODE"]);
+
+                    if (Util.GetValueOfInt(ds.Tables[0].Rows[i]["StdPrecision"]) != 0)
+                    {
+                        bankData.Precision = Util.GetValueOfInt(ds.Tables[0].Rows[i]["StdPrecision"]);
+                    }
                 }
                 bankData.bankChargeData=chargeAmt;
                 bankData.labels = labels;
-                bankData.currency = currency;
+                bankData.currency = currency;                
             }
             return bankData;
         }
@@ -160,6 +165,7 @@ namespace VA012.Models
 
             public string[] labels { get; set; }
             public string [] currency { get; set; }
+            public int Precision { get; set; }
         }
     }
 }
