@@ -47,6 +47,15 @@
         var folderFader = null;
         var strFolderIds = "";
         var isDMS = false;
+        var C_BankStatement_ID = 0;
+
+        var Batchsuccesspay = null;
+        var $loadStatementResult = "";
+        var $successNoteofloadStatement = "";
+        var ViewBankStatementForm = "";
+        var bankStatementFormInfo = [];
+        var BankStatementForm_ID = 0;
+
         VA012.Common =
         {
             IPadWidth: 1024,
@@ -64,25 +73,30 @@
             UpdatedAsc: 'UA',
             UpdatedDesc: 'UD'
         };
+
         // init log class
         this.log = VIS.Logging.VLogger.getVLogger('BankJournalWidget');
+
         //Privilized function
         this.getRoot = function () {
             createBusyIndicator();
             return $root;
         };
+
         /*Create Busy Indicator */
         function createBusyIndicator() {
             $bsyDiv = $('<div id="busyDivId_' + widgetID + '" class="vis-busyindicatorouterwrap"><div class="vis-busyindicatorinnerwrap">' +
                 '<i class= "vis_widgetloader"></i></div></div>').css({ 'width': 'calc(100% - 40px)' }).hide();
             $root.append($bsyDiv);
         };
+
         this.setBusy = function (busy) {
             if (busy)
                 $bsyDiv.show();
             else
                 $bsyDiv.hide();
         };
+
         // Initialize the controls, Main function
         this.initialize = function () {
             widgetID = this.widgetInfo.AD_UserHomeWidgetID;
@@ -92,7 +106,33 @@
             }
             $root = $("<div id='WidMainRoot_" + widgetID + "' class='VA012_root'></div>");
             Design();
+
+            //VIS_045: Get Bank Statement form ID
+            GetBankStatementFormID("VA012_BankStatement");
         };
+
+        /**
+         * This funtion i sused to get the Form ID
+         * @param {any} formName 
+         * VIS_045
+         */
+        function GetBankStatementFormID(formName) {
+            $.ajax({
+                type: 'GET',
+                data: {
+                    formName: formName
+                },
+                contentType: "application/json; charset=utf-8",
+                url: VIS.Application.contextUrl + "VA012_BankJournalWidget/GetBankStatementFormID",
+                success: function (result) {
+                    BankStatementForm_ID = JSON.parse(result);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        };
+
         //Create design
         function Design() {
             dropContainer = $('<div class="VA012-bank-panel VA012-WidgetContainer">' +
@@ -163,6 +203,7 @@
             }
             Events();
         };
+
         function Events() {
             // Preventing page from redirecting
             dropContainer.on("dragover", function (e) {
@@ -286,9 +327,10 @@
                         return false;
                     }
                 });
-                
+
             });
         }
+
         /**
          * Uploading files to the DMS
          * @param {any} files
@@ -354,6 +396,7 @@
                 }
             }
         }
+
         function loadParam() {
             $loadParaDiv = $('<div class="VA012_paramMainDiv" id="VA012_paramMainDiv_' + widgetID + '"><div class= "VA012-form-data">'
                 + '<div class="input-group vis-input-wrap VA012-paramdiv">'
@@ -425,9 +468,10 @@
             });
             _cmbBankAccount.on('click', function (e) {
                 if (_cmbBankAccount.val() != "null") {
+                    C_BankStatement_ID = 0;
                     loadFunctions.loadCurrency();
                     loadBankAccountClasses();
-
+                    CheckStatementExist();
                 }
                 else {
                     return "VA012_NoBankAccountSelected";
@@ -436,12 +480,12 @@
             //Cancel button represnts back button
             cancelBtn.on('click', function (e) {
                 paramDiv.hide();
-                paramFooter.hide();                
+                paramFooter.hide();
                 strFolderIds = "";
                 if (!isDMS) {
                     dragDiv.show();
                     nxtBtn.attr("disabled", false);
-                   // nxtBtn.css("opacity", 1);
+                    // nxtBtn.css("opacity", 1);
                 }
                 else {
                     folderFader.removeClass('d-none');
@@ -490,55 +534,20 @@
                         return;
                     }
                     else {
-                        var _path = _result._path;
-                        var _filename = _result._filename;
-                        var _bankaccount = _cmbBankAccount.val();
-                        var _statementno = _statementName.val();
-                        var _IsStatementDateAsAccountDate = isChecked.is(':checked');
-                        var _statementClassName = _cmbBankAccountClasses.val();
-                        var _statementCharges = Bank_Charge_ID;
-                        $.ajax({
-                            url: VIS.Application.contextUrl + "BankStatement/ImportStatement",
-                            type: "GET",
-                            datatype: "json",
-                            contentType: "application/json; charset=utf-8",
-                            async: true,
-                            data: ({
-                                _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno,
-                                _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: _statementDate.val(),
-                                IsStatementDateAsAccountDate: _IsStatementDateAsAccountDate
-                            }),
-                            success: function (result) {
-                                _statementID = result._statementID;
-                                if (_statementID != null && _statementID != "") {
+                        if (C_BankStatement_ID > 0) {
+                            VIS.ADialog.confirm("VA012_BankStatementExist", true, "", "Confirm", function (result) {
+                                if (!result) {
                                     $bsyDiv.hide();
-                                    resetControls();
-                                    paramDiv.hide();
-                                    paramFooter.hide();
-                                    dragDiv.show();
-                                    dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
-                                    fileNameLabel.text('');
-                                    nxtBtn.attr("disabled", true);
-                                    isDMS = false;
-                                    strFolderIds = "";
-                                    VIS.ADialog.info("VA012_StatementUploadDone", null, "", "");
-                                    return true;
+                                    return;
                                 }
                                 else {
-                                    if (result._error != null && result._error != "") {
-                                        $bsyDiv.hide();
-                                        VIS.ADialog.info(result._error, null, "", "");
-                                        return false;
-                                    }
+                                    UploadStatment();
                                 }
-                            },
-                            error: function () {
-                                $bsyDiv.hide();
-                                return VIS.ADialog.info("error", null, "", "");
-                                VIS.ADialog.info("VA012_ErrorWhileUploadExcel", null, "", "");
-                                return false;
-                            }
-                        })
+                            });
+                        }
+                        else {
+                            UploadStatment();
+                        }
                     }
                 }
                 else {
@@ -548,6 +557,120 @@
                 }
             });
         };
+
+        function UploadStatment() {
+            var _path = _result._path;
+            var _filename = _result._filename;
+            var _bankaccount = _cmbBankAccount.val();
+            var _statementno = _statementName.val();
+            var _IsStatementDateAsAccountDate = isChecked.is(':checked');
+            var _statementClassName = _cmbBankAccountClasses.val();
+            var _statementCharges = Bank_Charge_ID;
+            $.ajax({
+                url: VIS.Application.contextUrl + "BankStatement/ImportStatement",
+                type: "GET",
+                datatype: "json",
+                contentType: "application/json; charset=utf-8",
+                async: true,
+                data: ({
+                    _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno,
+                    _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: _statementDate.val(),
+                    IsStatementDateAsAccountDate: _IsStatementDateAsAccountDate
+                }),
+                success: function (result) {
+                    _statementID = result._statementID;
+                    if (_statementID != null && _statementID != "") {
+
+                        // Get Information to open Bank Statement form and set values
+                        SetbankStatementFormInfo();
+
+                        $bsyDiv.hide();
+                        resetControls();
+                        paramDiv.hide();
+                        paramFooter.hide();
+                        dragDiv.show();
+                        dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
+                        fileNameLabel.text('');
+                        nxtBtn.attr("disabled", true);
+                        isDMS = false;
+                        strFolderIds = "";
+                        //VIS.ADialog.info("VA012_StatementUploadDone", null, "", "");
+
+                        // Open Success Dialog
+                        Batchsuccesspay = new VIS.ChildDialog();
+                        Batchsuccesspay.setContent(ResponseDialog());
+                        $successNoteofloadStatement.text(VIS.Msg.getMsg("VA012_StatementUploadDone"));
+                        $successNoteofloadStatement.css('visibility', 'visible');
+                        Batchsuccesspay.setTitle(VIS.Msg.getMsg("VA009_LoadBatchPayment"));
+                        Batchsuccesspay.setWidth("24%");
+                        Batchsuccesspay.show();
+                        Batchsuccesspay.hidebuttons();
+
+                        return true;
+                    }
+                    else {
+                        if (result._error != null && result._error != "") {
+                            $bsyDiv.hide();
+                            VIS.ADialog.info(result._error, null, "", "");
+                            return false;
+                        }
+                    }
+                },
+                error: function () {
+                    $bsyDiv.hide();
+                    return VIS.ADialog.info("error", null, "", "");
+                    VIS.ADialog.info("VA012_ErrorWhileUploadExcel", null, "", "");
+                    return false;
+                }
+            });
+        }
+
+        /** VIS_045: This function is used to Open Dialog of Success */
+        function ResponseDialog() {
+            $loadStatementResult = $("<div>"
+                + "<label class='mb-3' id='VA012_SuccessMsg_" + widgetID + "'></label>"
+                + "</div>");
+            $resltbtns = $("<div class=''>" +
+                "<div class='d-flex align-items-center justify-content-end'>" +
+                "<button class='ui-button mr-3' id='VA012_OpenBankStatementForm_" + widgetID + "'>" + VIS.Msg.getMsg("VA012_ViewStatement") + "</button>" +
+                "</div>" +
+                "</div>");
+            $loadStatementResult.append($resltbtns);
+
+            // Success Message 
+            $successNoteofloadStatement = $loadStatementResult.find('#VA012_SuccessMsg_' + widgetID);
+
+            // Open Bank Statement Form
+            ViewBankStatementForm = $loadStatementResult.find('#VA012_OpenBankStatementForm_' + widgetID);
+            ViewBankStatementForm.on('click', function (e) {
+                $bsyDiv.show();
+
+                // get bank Statement Form ID
+                if (BankStatementForm_ID == 0) {
+                    GetBankStatementFormID("VA012_BankStatement");
+                }
+
+                // Open Form with Additional Information
+                VIS.viewManager.startForm(BankStatementForm_ID, bankStatementFormInfo);
+
+                // Close Dialog
+                Batchsuccesspay.close();
+
+                // Hide Busy Indicator
+                $bsyDiv.hide();
+            });
+
+            return $loadStatementResult;
+        }
+
+        /** VIS_045: This function is used to Set Information which will be used when Open Bank Statement Form */
+        function SetbankStatementFormInfo() {
+            bankStatementFormInfo = [];
+            bankStatementFormInfo.push(_cmbBank.val());
+            bankStatementFormInfo.push(_cmbBankAccount.val());
+            bankStatementFormInfo.push(_statementDate.val());
+        }
+
         //reset parameters and show and hide drag and parameter div
         function resetControls() {
             _cmbBank.prop('selectedIndex', 0);
@@ -651,6 +774,7 @@
                 }
             }
         };
+
         function getControls() {
             _cmbBank = $loadParaDiv.find("#VA012_STAT_cmbBank_" + widgetID);
             _cmbBankAccount = $loadParaDiv.find("#VA012_STAT_cmbBankAccount_" + widgetID);
@@ -663,6 +787,7 @@
             _statementName = $loadParaDiv.find('#VA012_STAT_txtStatementNo_' + widgetID);
             isChecked = $loadParaDiv.find('#VA012_CheckBox_' + widgetID);
         };
+
         function loadBankAccountClasses() {
             VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetBankAccountClasses",
                 { _cmbBankAccount: _cmbBankAccount.val() }, callbackloadBankAccountClasses);
@@ -677,6 +802,16 @@
                 _cmbBankAccountClasses.prop('selectedIndex', 0);
             }
         };
+
+        /** VIS_045:  This function is used to get the Open bank Statement Details Exist or not */
+        function CheckStatementExist() {
+            VIS.dataContext.getJSONData(VIS.Application.contextUrl + "VA012_BankJournalWidget/CheckStatementExist",
+                { C_BankAccount_ID: _cmbBankAccount.val() }, callbackCheckStatementExist);
+            function callbackCheckStatementExist(result) {
+                C_BankStatement_ID = JSON.parse(result);
+            }
+        };
+
         // Creating folder tree ul
         function WidgetFolderTreeStruct() {
             var folderArrayRes = null;
@@ -831,6 +966,7 @@
             });
 
         };
+
         /**
          * Creating recursive child folders
          * @param {any} row
@@ -907,6 +1043,7 @@
                 WidgetRecursiveFolder(ArrayFolder, data, padding + 10, folderPath);
             }
         }
+
         // Load documents for current record from database
         function LoadLinkedDocuments(orderByColumn, orderBy, pageNo, fromSort, folderID, currentFolder) {
             $bsyDiv.show();
@@ -1007,10 +1144,9 @@
         this.refreshWidget = function () {
             $bsyDiv.hide();
             if (!isDMS) {
-                resetControls();               
+                resetControls();
             }
-            else
-            {
+            else {
                 folderFader.addClass('d-none');
             }
             paramDiv.hide();
@@ -1023,6 +1159,7 @@
             strFolderIds = "";
             //this.initialize();
         };
+
         this.disposeComponents = function () {
             $self = null;
             $root = null;
@@ -1078,6 +1215,13 @@
             openDMSBtn.off('click');
             folTreeCancel.off('click');
             folTreeUpload.off('click');
+            C_BankStatement_ID = 0;
+            Batchsuccesspay = null;
+            $loadStatementResult = "";
+            $successNoteofloadStatement = "";
+            ViewBankStatementForm = "";
+            bankStatementFormInfo = [];
+            BankStatementForm_ID = 0;
         };
     };
     // Must Implement with same parameter
@@ -1089,11 +1233,13 @@
         this.initialize();
         this.frame.getContentGrid().append(this.getRoot);
     };
+
     // To change size of the form
     VA012.VA012_BankingJournal.prototype.widgetSizeChange = function (size) {
         // Widget info, we can save additional information in widget record
         var x = size;
     };
+
     // Must implement dispose
     VA012.VA012_BankingJournal.prototype.dispose = function () {
         /*CleanUp Code */
@@ -1104,16 +1250,20 @@
             this.frame.dispose();
         this.frame = null;
     };
+
     VA012.VA012_BankingJournal.prototype.refreshWidget = function () {
         this.refreshWidget();
     };
+
     // Fire window's event from widget
     VA012.VA012_BankingJournal.prototype.addChangeListener = function (listener) {
         this.listener = listener;
     };
+
     VA012.VA012_BankingJournal.prototype.widgetFirevalueChanged = function (value) {
         // Trigger custom event with the value
         if (this.listener)
             this.listener.widgetFirevalueChanged(value);
     };
+
 })(VA012, jQuery);
