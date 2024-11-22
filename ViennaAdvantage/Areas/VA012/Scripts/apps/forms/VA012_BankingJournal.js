@@ -630,9 +630,10 @@
             $loadStatementResult = $("<div>"
                 + "<label class='mb-3' id='VA012_SuccessMsg_" + widgetID + "'></label>"
                 + "</div>");
+
             $resltbtns = $("<div class=''>" +
                 "<div class='d-flex align-items-center justify-content-end'>" +
-                "<button class='ui-button mr-3' id='VA012_OpenBankStatementForm_" + widgetID + "'>" + VIS.Msg.getMsg("VA012_ViewStatement") + "</button>" +
+                "<input type=submit value=" + VIS.Msg.getMsg('VA012_ViewStatement') + " class='btn ui-button ui-corner-all ui-widget VA012-bs-ViewBtn mr-3' id='VA012_OpenBankStatementForm_" + widgetID + "'/>" +
                 "</div>" +
                 "</div>");
             $loadStatementResult.append($resltbtns);
