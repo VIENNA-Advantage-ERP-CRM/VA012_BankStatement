@@ -458,6 +458,11 @@ li.VA012-selectedAction {
     font-size: 12px !important;
 }
 
+.VA012-bs-ViewBtn {
+    border-radius: 1em !important;
+    font-size: 0.9em;
+}
+
 
 
 
