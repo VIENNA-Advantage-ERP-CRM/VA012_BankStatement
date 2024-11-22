@@ -669,19 +669,6 @@
             return txtValue;
         }
 
-        /**VIS_045: This function is used to Load Additional Info */
-        this.initLoadFormInfo = function () {
-            if ($self.FormInfo != null) {
-                _cmbBank.val($self.FormInfo[0]).prop('selected', true);
-                _cmbBank.trigger('change');
-                window.setTimeout(function () {
-                    _cmbBankAccount.val($self.FormInfo[1]).prop('selected', true);
-                    _cmbBankAccount.trigger('change');
-                    $self.FormInfo = null;
-                }, 200);
-                _statementDate.val($self.FormInfo[2]);
-            }
-        };
 
         /*VIS_427 Created Function for Zoom*/
         var zoomToWindow = function (windowName) {
@@ -1323,11 +1310,14 @@
                         if (data != null && data != "") {
                             data = $.parseJSON(data);
                             if (data != null) {
-                                C_BANK_ID = data.Table[0].C_BANK_ID;
-                                C_BANKACCOUNT_ID = data.Table[0].C_BANKACCOUNT_ID;
-
-                                //_cmbBank.val(data.Table[0].C_BANK_ID).prop('selected', true);
-                                //_cmbBankAccount.val(data.Table[0].C_BANKACCOUNT_ID).prop('selected', true);
+                                if ($self.FormInfo != null) {
+                                    C_BANK_ID = parseInt($self.FormInfo[0]);
+                                    C_BANKACCOUNT_ID = parseInt($self.FormInfo[1]);
+                                }
+                                else {
+                                    C_BANK_ID = data.Table[0].C_BANK_ID;
+                                    C_BANKACCOUNT_ID = data.Table[0].C_BANKACCOUNT_ID;
+                                }
                             }
                         }
                         loadFunctions.loadBank();
@@ -1579,10 +1569,9 @@
                         }
                     }
                     _cmbBank.prop('selectedIndex', 0);
-                    if (C_BANK_ID > 0 && $self.FormInfo == null) {
+                    if (C_BANK_ID > 0) {
                         _cmbBank.val(C_BANK_ID).prop('selected', true);
                         C_BANK_ID = 0;
-                        // _cmbBank.trigger('change');
                     }
                     loadFunctions.loadBankAccount();
                 }
@@ -1612,9 +1601,14 @@
                         }
                     }
                     _cmbBankAccount.prop('selectedIndex', 0);
-                    if (C_BANKACCOUNT_ID > 0 && $self.FormInfo == null) {
+                    if (C_BANKACCOUNT_ID > 0) {
                         _cmbBankAccount.val(C_BANKACCOUNT_ID).prop('selected', true);
                         C_BANKACCOUNT_ID = 0;
+                    }
+                    if ($self.FormInfo != null) {
+                        _statementDate.val($self.FormInfo[2]);
+                        _statementDate.trigger('change');
+                        $self.FormInfo = null;
                     }
                     loadFunctions.getMaxStatement("LO");
                     loadFunctions.loadSearchPaymentMethod();
@@ -8108,10 +8102,6 @@
         this.Initialize();
         this.frame.getContentGrid().append(this.getRoot());
         this.setSize();
-        var sself = this;
-        window.setTimeout(function () {
-            sself.initLoadFormInfo();
-        }, 200);
 
     };
     VA012.AForms = VA012.AForms || {};
