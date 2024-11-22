@@ -601,7 +601,7 @@
                         Batchsuccesspay.setContent(ResponseDialog());
                         $successNoteofloadStatement.text(VIS.Msg.getMsg("VA012_StatementUploadDone"));
                         $successNoteofloadStatement.css('visibility', 'visible');
-                        Batchsuccesspay.setTitle(VIS.Msg.getMsg("VA009_LoadBatchPayment"));
+                        Batchsuccesspay.setTitle(VIS.Msg.getMsg("VA012_LoadStatementRes"));
                         Batchsuccesspay.setWidth("24%");
                         Batchsuccesspay.show();
                         Batchsuccesspay.hidebuttons();
