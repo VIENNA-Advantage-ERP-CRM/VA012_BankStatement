@@ -92,6 +92,24 @@ namespace VA012.Controllers
             jsonResult.MaxJsonLength = int.MaxValue;
             return jsonResult;
         }
+
+        public JsonResult GetBankStatementFormID(string formName)
+        {
+            VA012_BankingJournalWidgetModel objDocument = new VA012_BankingJournalWidgetModel();
+            Ctx ctx = Session["ctx"] as Ctx;
+            var jsonResult = Json(JsonConvert.SerializeObject(objDocument.GetBankStatementFormID(ctx, formName)), JsonRequestBehavior.AllowGet);
+            return jsonResult;
+        }
+
+        public JsonResult CheckStatementExist(int C_BankAccount_ID)
+        {
+            VA012_BankingJournalWidgetModel objDocument = new VA012_BankingJournalWidgetModel();
+            Ctx ctx = Session["ctx"] as Ctx;
+            var jsonResult = Json(JsonConvert.SerializeObject(objDocument.CheckStatementExist(ctx, C_BankAccount_ID)), JsonRequestBehavior.AllowGet);
+            return jsonResult;
+        }
+
+        
     }
 
 }

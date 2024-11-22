@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web;
+using VAdvantage.DataBase;
 using VAdvantage.Logging;
+using VAdvantage.Model;
 using VAdvantage.Utility;
 
 namespace VA012.Models
@@ -15,6 +17,21 @@ namespace VA012.Models
         private Assembly asm = null;
         private Type type = null;
         private MethodInfo methodInfo = null;
+
+
+        public int GetBankStatementFormID(Ctx ctx, string formName)
+        {
+            int FormID = Util.GetValueOfInt(DB.ExecuteScalar($"SELECT AD_Form_ID FROM AD_Form WHERE Name = {GlobalVariable.TO_STRING(formName)}"));
+            return FormID;
+        }
+
+        public int CheckStatementExist(Ctx ctx, int C_BankAccount_ID)
+        {
+            int C_BankStatement_ID = Util.GetValueOfInt(DB.ExecuteScalar($@"SELECT C_BankStatement_ID FROM C_BankStatement WHERE IsActive='Y' 
+                        AND DocStatus NOT IN('RE','VO','CO','CL') AND AD_Client_ID = { ctx.GetAD_Client_ID()} AND C_BANKACCOUNT_ID={C_BankAccount_ID}")); ;
+            return C_BankStatement_ID;
+        }
+
         /// <summary>
         /// Get Folder of login user.
         /// </summary>
@@ -173,19 +190,19 @@ namespace VA012.Models
                     if (parameters.Length == 2)
                     {
                         object[] parametersArray = new object[] { ctx, result[0].LstMetaData[0].AttachmentID };
-                        filePath = methodInfo.Invoke(classInstance, parametersArray);                        
+                        filePath = methodInfo.Invoke(classInstance, parametersArray);
                         if (!Directory.Exists(Path.Combine(System.Web.Hosting.HostingEnvironment.ApplicationPhysicalPath, "TempDownload")))
                         {
                             Directory.CreateDirectory(Path.Combine(System.Web.Hosting.HostingEnvironment.ApplicationPhysicalPath, "TempDownload"));
                         }
                         // Download file in TempDownload folder
-                        downloadlink = Path.Combine(System.Web.Hosting.HostingEnvironment.ApplicationPhysicalPath, "TempDownload",filePath);
+                        downloadlink = Path.Combine(System.Web.Hosting.HostingEnvironment.ApplicationPhysicalPath, "TempDownload", filePath);
                     }
                 }
                 #endregion
             }
             //return filename and file path
-            data.Add("_filename", result[0].LstMetaData[0].Document+""+ result[0].LstMetaData[0].FileType);
+            data.Add("_filename", result[0].LstMetaData[0].Document + "" + result[0].LstMetaData[0].FileType);
             data.Add("_path", downloadlink);
             return data;
         }

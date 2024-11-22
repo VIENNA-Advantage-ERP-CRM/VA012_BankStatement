@@ -7,6 +7,7 @@
         $self = this;
         var $root = $("<div/>");
         this.frame;
+        this.FormInfo;
         var $BusyIndicator = null;
         var _cmbBank = null;
         var _cmbBankAccount = null;
@@ -667,6 +668,20 @@
             }
             return txtValue;
         }
+
+        /**VIS_045: This function is used to Load Additional Info */
+        this.initLoadFormInfo = function () {
+            if ($self.FormInfo != null) {
+                _cmbBank.val($self.FormInfo[0]).prop('selected', true);
+                _cmbBank.trigger('change');
+                window.setTimeout(function () {
+                    _cmbBankAccount.val($self.FormInfo[1]).prop('selected', true);
+                    _cmbBankAccount.trigger('change');
+                    $self.FormInfo = null;
+                }, 200);
+                _statementDate.val($self.FormInfo[2]);
+            }
+        };
 
         /*VIS_427 Created Function for Zoom*/
         var zoomToWindow = function (windowName) {
@@ -1564,7 +1579,7 @@
                         }
                     }
                     _cmbBank.prop('selectedIndex', 0);
-                    if (C_BANK_ID > 0) {
+                    if (C_BANK_ID > 0 && $self.FormInfo == null) {
                         _cmbBank.val(C_BANK_ID).prop('selected', true);
                         C_BANK_ID = 0;
                         // _cmbBank.trigger('change');
@@ -1597,7 +1612,7 @@
                         }
                     }
                     _cmbBankAccount.prop('selectedIndex', 0);
-                    if (C_BANKACCOUNT_ID > 0) {
+                    if (C_BANKACCOUNT_ID > 0 && $self.FormInfo == null) {
                         _cmbBankAccount.val(C_BANKACCOUNT_ID).prop('selected', true);
                         C_BANKACCOUNT_ID = 0;
                     }
@@ -3384,7 +3399,7 @@
                      which will be only visible if Bank Account Type is D(Credit Card) */
                     + "<div class='VA012-checkbox-div " + accounttype + "'>"
                     + " <input type='checkbox' value='checked' id='VA012_CheckBox_" + $self.windowNo + "'>"
-                    + "<label class='VA012-StatementDateAsAccountDate'>"+ VIS.Msg.getMsg("VA012_StatementDateAsAccountDate") +"</label>"
+                    + "<label class='VA012-StatementDateAsAccountDate'>" + VIS.Msg.getMsg("VA012_StatementDateAsAccountDate") + "</label>"
                     + "</div>"
 
                     + "</div>";
@@ -8085,13 +8100,19 @@
             this.frame.dispose();
         this.frame = null;
     };
-    bankStatement.prototype.init = function (windowNo, frame) {
+    bankStatement.prototype.init = function (windowNo, frame, additionalInfo) {
 
         this.windowNo = windowNo;
         this.frame = frame;
+        this.FormInfo = additionalInfo;
         this.Initialize();
         this.frame.getContentGrid().append(this.getRoot());
         this.setSize();
+        var sself = this;
+        window.setTimeout(function () {
+            sself.initLoadFormInfo();
+        }, 200);
+
     };
     VA012.AForms = VA012.AForms || {};
     VA012.AForms.bankStatement = bankStatement;
