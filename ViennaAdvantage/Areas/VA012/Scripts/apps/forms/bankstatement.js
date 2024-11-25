@@ -1310,7 +1310,7 @@
                         if (data != null && data != "") {
                             data = $.parseJSON(data);
                             if (data != null) {
-                                if ($self.FormInfo != null) {
+                                if ($self.FormInfo != undefined && $self.FormInfo != null) {
                                     C_BANK_ID = parseInt($self.FormInfo[0]);
                                     C_BANKACCOUNT_ID = parseInt($self.FormInfo[1]);
                                 }
@@ -1605,7 +1605,7 @@
                         _cmbBankAccount.val(C_BANKACCOUNT_ID).prop('selected', true);
                         C_BANKACCOUNT_ID = 0;
                     }
-                    if ($self.FormInfo != null) {
+                    if ($self.FormInfo != undefined && $self.FormInfo != null) {
                         _statementDate.val($self.FormInfo[2]);
                         _statementDate.trigger('change');
                         $self.FormInfo = null;
