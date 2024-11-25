@@ -78,7 +78,7 @@ namespace VA012.Controllers
         /// <param name="statementDate">Statement Date</param>
         /// <param name="IsStatementDateAsAccountDate">Statement Date As Account Date</param>
         /// <returns>class Object that returns C_BankStatement_ID or Error Message</returns>
-        private static StatementResponse ExecuteClass(string _className, Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate,bool IsStatementDateAsAccountDate)
+        private static StatementResponse ExecuteClass(string _className, Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate, bool IsStatementDateAsAccountDate)
         {
             StatementResponse _obj = new StatementResponse();
             MethodInfo methodInfo = null;
@@ -370,7 +370,7 @@ namespace VA012.Controllers
                         _sendBackData = "{\"_bPartnerID\":\"" + _ds.Tables[0].Rows[0]["C_BPARTNER_ID"] + "\",\"_invoiceID\":\"" + _ds.Tables[0].Rows[0]["C_INVOICE_ID"] + "\",\"VA034_DepositSlipNo\":\"" + _ds.Tables[0].Rows[0]["VA034_DepositSlipNo"] + "\",\"Count\":\"" + count + "\"}";
                     else
                         _sendBackData = "{\"_bPartnerID\":\"" + _ds.Tables[0].Rows[0]["C_BPARTNER_ID"] + "\",\"_invoiceID\":\"" + _ds.Tables[0].Rows[0]["C_INVOICE_ID"] + "\",\"Count\":\"" + count + "\"}";
-                
+
                 }
                 _ds.Dispose();
             }
@@ -470,6 +470,11 @@ namespace VA012.Controllers
             _ds = DB.ExecuteDataset(_sql, null, null);
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
+                foreach (DataColumn column in _ds.Tables[0].Columns)
+                {
+                    column.ColumnName = column.ColumnName.ToUpper();
+                }
+
                 retJSON = JsonConvert.SerializeObject(_ds);
                 _ds.Dispose();
             }
@@ -492,6 +497,11 @@ namespace VA012.Controllers
                 _ds1 = DB.ExecuteDataset(_sql1, null, null);
                 if (_ds1 != null && _ds1.Tables[0].Rows.Count > 0)
                 {
+                    foreach (DataColumn column in _ds1.Tables[0].Columns)
+                    {
+                        column.ColumnName = column.ColumnName.ToUpper();
+                    }
+
                     retJSON = JsonConvert.SerializeObject(_ds1);
                     _ds1.Dispose();
                 }
@@ -1217,12 +1227,12 @@ namespace VA012.Controllers
         public JsonResult GetTrxNoforVoucher(int _ctrlPayment)
         {
             string retJSON = "";
-            string res ="";
+            string res = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 string sql = @"select trxno from C_Payment where C_Payment_ID=" + _ctrlPayment;
-                 res =DB.ExecuteScalar(sql).ToString();
+                res = DB.ExecuteScalar(sql).ToString();
                 retJSON = JsonConvert.SerializeObject(res);
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
@@ -1260,8 +1270,8 @@ namespace VA012.Controllers
                 retJSON = JsonConvert.SerializeObject(_model.LoadListofStatementclass(ctx, _cmbBankAccount));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
-        } 
-        
+        }
+
         /// <summary>
         /// Get Cash Book
         /// </summary>
@@ -1284,7 +1294,7 @@ namespace VA012.Controllers
         /// <param name="AD_Client">AD_Client id</param>
         /// <param name="AD_Org">AD_Org id</param>
         /// <returns>List of Payment Method</returns>
-        public JsonResult LoadPaymentMethod(int AD_Client,int AD_Org)
+        public JsonResult LoadPaymentMethod(int AD_Client, int AD_Org)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
