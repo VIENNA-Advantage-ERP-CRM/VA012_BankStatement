@@ -451,7 +451,7 @@ li.VA012-selectedAction {
     color: rgba(var(--v-c-on-secondary), 1);
 }
 .VA012-Date {
-    font-size: 12px !important;
+    font-size: 14px !important;
 }
 
 .VA012-nameLbl {
