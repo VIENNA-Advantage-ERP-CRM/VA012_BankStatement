@@ -108,7 +108,7 @@
                 " WHERE TRUNC(bsl.STATEMENTLINEDATE) BETWEEN " + startDate + " AND " + endDate + ") ";
 
             /* parameters are: context, windowno., coloumn id, display type, DB coloumn name, Reference key, Is parent, Validation Code*/
-            var lookup = VIS.MLookupFactory.get(VIS.context, 0, 0, VIS.DisplayType.TableDir, "C_BankAccount_ID", 0, false, validation);
+            var lookup = VIS.MLookupFactory.get(VIS.context, $self.windowNo, 0, VIS.DisplayType.TableDir, "C_BankAccount_ID", 0, false, validation);
             // Parameters are: columnName, mandatory, isReadOnly, isUpdateable, lookup,display length
             _cmbBankAccountCtrl = new VIS.Controls.VComboBox("C_BankAccount_ID", true, false, true, lookup, 50);
 
