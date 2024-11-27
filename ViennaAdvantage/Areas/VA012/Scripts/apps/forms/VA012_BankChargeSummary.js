@@ -23,6 +23,7 @@
         var $root = null;
         var $bsyDiv = null;
         var _cmbBankAccountCtrl = null;
+        var ctx = VIS.Env.getCtx();
         var _cmbChargeCtrl = null;
         var yrStartDate = null;
         var yrEndDate = null;
@@ -93,8 +94,9 @@
 
         //Create design
         function Design() {
-            $root.find('#VA012_cmbBankAcct_' + widgetID).empty();
-            $root.find("#VA012_cmbCharge_" + widgetID).empty();
+            $root.find('#VA012-BankChargeContainer_' + widgetID).remove();
+            //$root.find("#VA012_cmbCharge_" + widgetID).empty();
+            //$root.find("#VA012_HeadingDiv_" + widgetID).empty();
 
             //Get year start and end date
             var startDate = getDates(yrStartDate);
@@ -122,14 +124,14 @@
 
             //Charge control validation
             validation = "";
-            validation = "C_Charge.ISACTIVE='Y' AND C_Charge.C_Charge_ID IN ( SELECT C_Charge_ID FROM C_BANKSTATEMENTLINE WHERE TRUNC(STATEMENTLINEDATE) BETWEEN " + startDate
-                + " AND " + endDate + ")";
-            var chargeLookup = VIS.MLookupFactory.get(VIS.context, 0, 0, VIS.DisplayType.TableDir, "C_Charge_ID", 0, false, validation);
+            validation = "C_Charge.ISACTIVE='Y' AND C_Charge.C_Charge_ID IN (SELECT bsl.C_Charge_ID FROM C_BankStatement bs INNER JOIN C_BankStatementLine bsl ON (bs.C_BankStatement_ID = bsl.C_BankStatement_ID)" +
+                " WHERE bs.C_BankAccount_ID=@VA012_BankAccount_ID@ AND TRUNC(bsl.STATEMENTLINEDATE) BETWEEN " + startDate + " AND " + endDate + ")";
+            var chargeLookup = VIS.MLookupFactory.get(VIS.context, $self.windowNo, 0, VIS.DisplayType.TableDir, "C_Charge_ID", 0, false, validation);
             _cmbChargeCtrl = new VIS.Controls.VComboBox("C_Charge_ID", false, false, true, chargeLookup, 50);
 
             dropContainer = $('<div class="VA012-bankcharge-panel VA012-BankChargeContainer" id="VA012-BankChargeContainer_' + widgetID + '">'
                 + '<div class="VA012-bankcharge-heading">'
-                + '<h6 class= "VA012-bankchargePanelLbl">' + VIS.Msg.getMsg('VA012_BankChargeSummary') + '</h6></div>'
+                + '<h6 class= "VA012-bankchargePanelLbl" id="VA012_HeadingDiv_' + widgetID + '">' + VIS.Msg.getMsg('VA012_BankChargeSummary') + '</h6></div>'
                 //Start Parameters Div
                 + '<div class="VA012-paramtersDiv" id="VA012-paramtersDiv_' + widgetID + '">'
                 + '<div class="input-group vis-input-wrap VA012-input-wrap">'
@@ -172,6 +174,8 @@
                 if (_cmbBankAccountCtrl.getValue()) {
                     $bsyDiv.show();
                     _cmbBankAccountCtrl.setValue(_cmbBankAccountCtrl.getValue());
+                    /*VIS_427 Set the value of bank account on context*/
+                    ctx.setContext($self.windowNo, "VA012_BankAccount_ID", VIS.Utility.Util.getValueOfInt(_cmbBankAccountCtrl.getValue()));
                     GetCanvas();
                     // $bsyDiv.hide();
                 }

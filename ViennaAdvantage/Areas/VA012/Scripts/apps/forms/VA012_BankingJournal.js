@@ -418,7 +418,7 @@
                 + '</div > '
                 + '<div class=VA012-form-data>' + '<div class="input-group vis-input-wrap VA012-paramdiv VA012-margin-B0">'
                 + '<div class="vis-control-wrap VA012-controls">'
-                + '<input class="VA012-select VA012-Date" type="date" max="9999-12-31" id=VA012_STAT_statementDate_' + widgetID + '>'
+                + '<input class="VA012-select VA012-Date" type="date" max="9999-12-31" id="VA012_STAT_statementDate_' + widgetID + '">'
                 + '<label class="VA012-labels" id="VA012_STAT_lblStatementDate_' + widgetID + '">' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
                 + '</div>'
                 + '</div>'
@@ -458,6 +458,17 @@
             getControls();
             loadFunctions.loadBank();
             loadFunctions.loadBankAccountCharges();
+            /*VIS_427 Shown message on change of statement date*/
+            _statementDate = paramDiv.find("#VA012_STAT_statementDate_" + widgetID);
+            _statementDate.on('change', function (e) {
+
+                if (Globalize.format(new Date(_statementDate.val()), "yyyy-MM-dd") > Globalize.format(new Date(), "yyyy-MM-dd")) {
+                    // not required the VIS.Msg.getMsg() function
+                    VIS.ADialog.info("VA012_StatementDateToday", null, "", "");
+                    _statementDate.val("");
+                    return false;
+                }
+            });
             _cmbBank.on('click', function (e) {
                 if (_cmbBank.val() != "null") {
                     loadFunctions.loadBankAccount();
@@ -674,7 +685,7 @@
 
         //reset parameters and show and hide drag and parameter div
         function resetControls() {
-            _cmbBank.prop('selectedIndex', 0);
+           _cmbBank.prop('selectedIndex', 0);
             _cmbBankAccount.prop('selectedIndex', 0);
             _cmbBankAccountClasses.prop('selectedIndex', 0);
             _statementDate.val('');
@@ -1145,7 +1156,7 @@
         this.refreshWidget = function () {
             $bsyDiv.hide();
             if (!isDMS) {
-                resetControls();
+               resetControls();
             }
             else {
                 folderFader.addClass('d-none');
