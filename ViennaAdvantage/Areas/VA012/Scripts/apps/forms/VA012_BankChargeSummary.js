@@ -262,7 +262,7 @@
                             //this plugin will differntiate b/w -ve and +ve line
                             const zeroLinePlugin = {
                                 id: 'zeroLine',
-                                beforeDraw: (chart) => {
+                                beforeDraw: function(chart) {
                                     const ctx = chart.ctx;
                                     const yScale = chart.scales.y;
                                     const xScale = chart.scales.x;
