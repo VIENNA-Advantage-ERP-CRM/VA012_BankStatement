@@ -178,6 +178,7 @@
                     //set charge value to null if user change bank account
                     if (_cmbChargeCtrl.getValue() != null) {
                         _cmbChargeCtrl.setValue(null);
+                        C_Charge_ID = 0;
                     }
                     /*VIS_427 Set the value of bank account on context*/
                     ctx.setContext($self.windowNo, "VA012_BankAccount_ID", VIS.Utility.Util.getValueOfInt(_cmbBankAccountCtrl.getValue()));
@@ -258,7 +259,28 @@
                                     }
                                 ],
                             };
+                            //this plugin will differntiate b/w -ve and +ve line
+                            const zeroLinePlugin = {
+                                id: 'zeroLine',
+                                beforeDraw: function(chart) {
+                                    const ctx = chart.ctx;
+                                    const yScale = chart.scales.y;
+                                    const xScale = chart.scales.x;
 
+                                    // Find the pixel for 0 on the Y-axis
+                                    const zeroY = yScale.getPixelForValue(0);
+
+                                    // Draw the line
+                                    ctx.save();
+                                    ctx.beginPath();
+                                    ctx.moveTo(xScale.left, zeroY);
+                                    ctx.lineTo(xScale.right, zeroY);
+                                    ctx.lineWidth = 1;
+                                    ctx.strokeStyle = 'rgb(211,211,211)';
+                                    ctx.stroke();
+                                    ctx.restore();
+                                }
+                            };
                             // this is used to set the padding for legend
                             const plugin = {
                                 beforeInit: function (chart) {
@@ -316,7 +338,8 @@
                                         }
                                     }
                                 },
-                                plugins: [plugin]
+                                plugins: [plugin],
+                                plugins: [zeroLinePlugin]
                             };
 
                             // Create a new canvas element and append it to the root
