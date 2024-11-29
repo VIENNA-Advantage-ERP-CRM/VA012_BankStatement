@@ -121,7 +121,8 @@
                 //Set default value
                 _cmbBankAccountCtrl.getControl().prop('selectedIndex', 0);
             }
-
+            //Set value on context  for default selected bank account
+            ctx.setContext($self.windowNo, "VA012_BankAccount_ID", VIS.Utility.Util.getValueOfInt(_cmbBankAccountCtrl.getValue()));
             //Charge control validation
             validation = "";
             validation = "C_Charge.ISACTIVE='Y' AND C_Charge.C_Charge_ID IN (SELECT bsl.C_Charge_ID FROM C_BankStatement bs INNER JOIN C_BankStatementLine bsl ON (bs.C_BankStatement_ID = bsl.C_BankStatement_ID)" +
@@ -174,6 +175,10 @@
                 if (_cmbBankAccountCtrl.getValue()) {
                     $bsyDiv.show();
                     _cmbBankAccountCtrl.setValue(_cmbBankAccountCtrl.getValue());
+                    //set charge value to null if user change bank account
+                    if (_cmbChargeCtrl.getValue() != null) {
+                        _cmbChargeCtrl.setValue(null);
+                    }
                     /*VIS_427 Set the value of bank account on context*/
                     ctx.setContext($self.windowNo, "VA012_BankAccount_ID", VIS.Utility.Util.getValueOfInt(_cmbBankAccountCtrl.getValue()));
                     GetCanvas();
