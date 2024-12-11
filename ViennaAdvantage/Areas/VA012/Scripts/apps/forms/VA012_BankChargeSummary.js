@@ -366,6 +366,8 @@
         /*this function is used to refresh design and data of widget*/
         this.refreshWidget = function () {
             //$root.find('canvas').remove();
+            //VIS_427 Set charge id to 0 if user refresh the widget
+            C_Charge_ID = 0;
             Design();
             //if (_cmbBankAccountCtrl.getValue()) {
             //    $bsyDiv.show();
