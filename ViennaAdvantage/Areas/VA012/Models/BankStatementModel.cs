@@ -3900,7 +3900,7 @@ namespace VA012.Models
                    + " THEN 'Y' "
                    + " ELSE 'N' "
                    + " END AS ISCONVERTED, "
-                   + " BSL.C_BANKSTATEMENTLINE_ID, "
+                   + " CASE WHEN NVL(BS.DocStatus, 'XX') IN ('RE', 'VO', 'XX') THEN 0 ELSE BSL.C_BANKSTATEMENTLINE_ID END AS C_BANKSTATEMENTLINE_ID, "
                     + "  CASE WHEN dt.docbasetype IN ('APP')   THEN 'Payment'   WHEN dt.docbasetype IN ('ARR')   THEN 'Receipt'   END AS PaymentType ,"
                     + " BS.DocStatus AS DocStatus ,"
                    + " PAY.TrxNo , PM.VA009_Name, pay.DateAcct,PAY.VA009_PAYMENTMETHOD_ID,PM.VA009_PaymentBaseType "
