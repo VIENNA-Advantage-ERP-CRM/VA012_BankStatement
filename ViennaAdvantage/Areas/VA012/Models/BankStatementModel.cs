@@ -4423,7 +4423,7 @@ namespace VA012.Models
         {
             string _sql = "";
 
-
+            Decimal result;
             _sql = "SELECT BS.NAME    AS STATEMENTNO, "
                                 + " CASE  "
                     + " WHEN (BSL.C_BPARTNER_ID IS NOT NULL  "
@@ -4532,9 +4532,14 @@ namespace VA012.Models
                 _sql += " AND (UPPER(BP.NAME) LIKE UPPER('%" + _txtSearch + "%')"
                         + " OR UPPER(BSL.DESCRIPTION) LIKE UPPER('%" + _txtSearch + "%')"
                         + " OR UPPER(BS.NAME) LIKE UPPER('%" + _txtSearch + "%')"
-                        + " OR UPPER(BSL.StmtAmt) LIKE UPPER('%" + _txtSearch + "%')"
-                        + " OR UPPER(BSL.TrxAmt) LIKE UPPER('%" + _txtSearch + "%') "
-                        + " OR UPPER(BSL.TRXNO) LIKE UPPER('%" + _txtSearch + "%'))";
+                        + " OR UPPER(BSL.TRXNO) LIKE UPPER('%" + _txtSearch + "%')";
+                //VIS_427 Checked if search value is number/Decimal then only added these field for searching
+                if (decimal.TryParse(_txtSearch, out result))
+                {
+                    _sql += " OR BSL.StmtAmt=" + Util.GetValueOfDecimal(_txtSearch) + ""
+                    + " OR BSL.TrxAmt=" + Util.GetValueOfDecimal(_txtSearch) + "";
+                }
+                _sql += ")";
             }
             //_sql += " ORDER BY BSL.StatementLineDate DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+')) DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
             _sql += " ORDER BY ( CASE  WHEN BS.DOCSTATUS='DR' THEN 1 ELSE 0 END) DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+'), '999999999999') DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
