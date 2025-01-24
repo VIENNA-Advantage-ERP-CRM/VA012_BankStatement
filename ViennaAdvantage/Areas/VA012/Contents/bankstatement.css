@@ -1012,6 +1012,3 @@ overflow: hidden;*/
     top: -7px;
     white-space: nowrap;
 }
-.VA012-EditRecordBackColor {
-    background: rgba(var(--v-c-secondary), 1);
-}
