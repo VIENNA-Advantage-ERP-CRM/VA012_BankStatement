@@ -7629,6 +7629,8 @@
                         _statementLinesList = [];
                         _lstStatement.html("");
                         _statementPageNo = 1;
+                        //VIS_427 Cleared the array 
+                        BankStatementLine_ID = [];
                         childDialogs.loadStatement(_statementID);
                         _lstPayments.html("");
 
@@ -7639,8 +7641,6 @@
                         storepaymentdata = [];
                         loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
                         //}
-                        //VIS_427 Cleared the array 
-                        BankStatementLine_ID = [];
                         newRecordForm.scheduleRefresh();
                         newRecordForm.prepayRefresh();
                         newRecordForm.refreshForm();
