@@ -686,14 +686,14 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult LoadStatements(int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch)
+        public JsonResult LoadStatements(int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch,int RecOrUnRecComboVal)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations obj = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(obj.LoadStatements(ctx, _cmbBankAccount, _statementPageNo, _PAGESIZE, _SEARCHREQUEST, _txtSearch));
+                retJSON = JsonConvert.SerializeObject(obj.LoadStatements(ctx, _cmbBankAccount, _statementPageNo, _PAGESIZE, _SEARCHREQUEST, _txtSearch, RecOrUnRecComboVal));
 
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);

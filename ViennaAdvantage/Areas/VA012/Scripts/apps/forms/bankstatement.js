@@ -293,6 +293,7 @@
             _cmbBankAccount.on('change', function () {
                 VIS.Env.getCtx().setContext($self.windowNo, "BankAccount_ID", _cmbBankAccount.val());
                 BankStatementLine_ID = [];
+                BankStatementLineIdForSave = 0;
                 //called loadPayment to update the data based on BankAccount
                 newRecordForm.loadPayment();
                 //newRecordForm.loadCurrency();
@@ -376,6 +377,12 @@
                     _lstStatement.html("");
                     _statementPageNo = 1;
                     childDialogs.loadStatement(_statementID);
+                    //VIS_427 This check will handle to set background color of edited record on search
+                    setTimeout(function () {
+                        if (BankStatementLineIdForSave != 0) {
+                            $root.find('span.glyphicon-edit[data-uid="' + BankStatementLineIdForSave + '"]').parents('.va012-right-data-wrap').addClass('VA012-EditRecordBackColor')
+                        }
+                    }, 500);
 
                     //_SEARCHREQUEST = false;
                 }
@@ -386,6 +393,12 @@
                     BankStatementLine_ID = [];
                     _statementPageNo = 1;
                     childDialogs.loadStatement(_statementID);
+                    //VIS_427 This check will handle to set background color of edited record on search
+                    setTimeout(function () {
+                        if (BankStatementLineIdForSave != 0) {
+                            $root.find('span.glyphicon-edit[data-uid="' + BankStatementLineIdForSave + '"]').parents('.va012-right-data-wrap').addClass('VA012-EditRecordBackColor')
+                        }
+                    }, 500);
                 }
             });
             _txtSearch.keypress(function (e) {
@@ -399,6 +412,12 @@
                         _lstStatement.html("");
                         _statementPageNo = 1;
                         childDialogs.loadStatement(_statementID);
+                        //VIS_427 This check will handle to set background color of edited record on search
+                        setTimeout(function () {
+                            if (BankStatementLineIdForSave != 0) {
+                                $root.find('span.glyphicon-edit[data-uid="' + BankStatementLineIdForSave + '"]').parents('.va012-right-data-wrap').addClass('VA012-EditRecordBackColor')
+                            }
+                        }, 500);
 
                         //_SEARCHREQUEST = false;
                     }
@@ -409,6 +428,12 @@
                         BankStatementLine_ID = [];
                         _statementPageNo = 1;
                         childDialogs.loadStatement(_statementID);
+                        //VIS_427 This check will handle to set background color of edited record on search
+                        setTimeout(function () {
+                            if (BankStatementLineIdForSave != 0) {
+                                $root.find('span.glyphicon-edit[data-uid="' + BankStatementLineIdForSave + '"]').parents('.va012-right-data-wrap').addClass('VA012-EditRecordBackColor')
+                            }
+                        }, 500);
 
                     }
                 }
@@ -454,6 +479,7 @@
                                 storepaymentdata = [];
                                 //VIS_427 Cleared the array 
                                 BankStatementLine_ID = [];
+                                BankStatementLineIdForSave = 0;
                                 _lstStatement.html("");
                                 _statementPageNo = 1;
                                 childDialogs.loadStatement(_statementID);
@@ -518,6 +544,7 @@
                                 }
                                 //VIS_427 Cleared the array 
                                 BankStatementLine_ID = [];
+                                BankStatementLineIdForSave = 0;
                                 newRecordForm.scheduleRefresh();
                                 newRecordForm.prepayRefresh();
                                 newRecordForm.refreshForm();
@@ -556,6 +583,12 @@
                 _statementPageNo = 1;
                 RecOrUnRecComboVal = RecOrUnRecCombDiv.val();
                 childDialogs.loadStatement(_statementID);
+                //This code is use to highlight already selected statement when user change DropDown Value
+                setTimeout(function () {
+                    if (BankStatementLineIdForSave != 0) {
+                        $root.find('span.glyphicon-edit[data-uid="' + BankStatementLineIdForSave + '"]').parents('.va012-right-data-wrap').addClass('VA012-EditRecordBackColor')
+                    }
+                }, 500);
 
             });
             ///
@@ -1265,17 +1298,17 @@
 
                     + '                     <div class="row">'
                     + '                          <div class="col-md-12 col-sm-12" style=" padding-right: 5px; ">'
-                    + '                           <div class="va012-right-search">'
+                    + '                           <div class="va012-right-search" style="flex-direction: row-reverse;display: flex;">'
                     + '                        <div class="VA012-StatementDropDown">'
-                    + '                       <select id="VA012_DropDown_' + $self.windowNo + '" class="VA012-DropDownForStatement">'
+                    + '                       <select id="VA012_DropDown_' + $self.windowNo + '" class="VA012-DropDownForStatement" style="width: calc(100% - 20px);">'
                     + '                           <option value="0">' + VIS.Msg.getMsg("VA012_Both") + '</option>'
                     + '                          <option value="1">' + VIS.Msg.getMsg("VA012_Reconciled") + '</option>'
                     + '                          <option value="2">' + VIS.Msg.getMsg("VA012_UnReconciled") + '</option>'
                     + '                        </select>'
                     + '                       <label id="VA012_lblDropDown_' + $self.windowNo + '" class="VA012-lblDropDownClass">' + VIS.Msg.getMsg("VA012_StatementType") + '</label>'
                     + '                        </div>'
-                    + '                            <div class="va012-search-wrap">'
-                    + '                               <input id="VA012_txtSearch_' + $self.windowNo + '" value="" placeholder="' + VIS.Msg.getMsg("VA012_Search") + '..." type="text">'
+                    + '                            <div class="va012-search-wrap va012-right-panel-search" >'
+                    + '                               <input id="VA012_txtSearch_' + $self.windowNo + '" value="" placeholder="' + VIS.Msg.getMsg("VA012_Search") + '..." type="text" style="width: 100%;">'
                     + '                               <a id="VA012_btnSearch_' + $self.windowNo + '" class="va012-search-icon"><span class="glyphicon glyphicon-search"></span></a>'
                     + '                          </div>'
                     + '                      <!-- end of search-wrap -->'
@@ -3828,7 +3861,7 @@
                             datatype: "json",
                             contentType: "application/json; charset=utf-8",
                             async: false,
-                            data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _statementPageNo: _statementPageNo, _PAGESIZE: _PAGESIZE, _SEARCHREQUEST: _SEARCHREQUEST }),
+                            data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _statementPageNo: _statementPageNo, _PAGESIZE: _PAGESIZE, _SEARCHREQUEST: _SEARCHREQUEST, RecOrUnRecComboVal: RecOrUnRecComboVal}),
                             success: function (data) {
                                 if (data != null && data != "") {
                                     callbackloadStatement(data);
@@ -3900,9 +3933,9 @@
                                         + '<div class="va012-form-check">'
                                         + ' <input type="checkbox" data-uid="' + data[i].c_bankstatementline_id + '" >'
                                         // + ' <div class="va012-form-text"> <span style="background: #999;color: white; padding: 3px;margin-left: 2px;">' + data[i].page + '/' + data[i].line + '</span>'
-                                        + ' <div class="va012-form-text"> <span style="background: rgba(var(--v-c-on-secondary), .4);color: rgba(var(--v-c-on-primary), 1); padding: 3px;margin-left: 2px;">' + data[i].statementno + '/' + data[i].page + '/' + data[i].line + '</span>'
+                                        + ' <div class="va012-form-text"> <span style="background: rgba(var(--v-c-on-secondary), .4);color: rgba(var(--v-c-on-primary), 1); padding: 3px;margin-left: 2px;word-break: break-word">' + data[i].statementno + '/' + data[i].page + '/' + data[i].line + '</span>'
                                         + '<label>' + new Date(data[i].stmtLineDate).toLocaleDateString() + '</label>' //StatementLine Date 
-                                        + '<label>' + data[i].currency + ' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
+                                        + '<label style="word-break: break-word">' + data[i].currency + ' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
 
                                     //if (data[i].isconverted == "Y") {
                                     //    _StatementsHTML += '<span>' + data[i].basecurrency + ' ' + Globalize.format(data[i].convertedamount, "N") + '</span>';
@@ -3917,9 +3950,9 @@
                                             + '<div class="col-md-4 col-sm-4 va012-padd-0 va012-width-sm">'
                                             + '<div class="va012-form-check">'
                                             + '<div class="va012-pay-text">'
-                                            + ' <p>' + VIS.Utility.encodeText(data[i].description) + '</p>'
-                                            + ' <span title="' + VIS.Msg.getMsg("VA012_CheckNo") + '">' + VIS.Utility.encodeText(data[i].EftCheckNo) + '</span>'
-                                            + '<span title="' + VIS.Msg.getMsg("DocumentNo") + '">' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
+                                            + ' <p style="word-break: break-word">' + VIS.Utility.encodeText(data[i].description) + '</p>'
+                                            + ' <span title="' + VIS.Msg.getMsg("VA012_CheckNo") + '" style="word-break: break-word">' + VIS.Utility.encodeText(data[i].EftCheckNo) + '</span>'
+                                            + '<span title="' + VIS.Msg.getMsg("DocumentNo") + '" style="word-break: break-word">' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
                                             + ' </div>'
                                             + '</div>'
                                             + ' <!-- end of form-group -->'
@@ -3962,9 +3995,9 @@
                                             + '<div class="col-md-4 col-sm-4 va012-padd-0 va012-width-sm">'
                                             + '<div class="va012-form-check">'
                                             + '<div class="va012-pay-text">'
-                                            + ' <p>' + VIS.Utility.encodeText(data[i].description) + '</p>'
-                                            + ' <span>' + VIS.Utility.encodeText(data[i].bpgroup) + '</span>'
-                                            + '<span>' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
+                                            + ' <p style="word-break: break-word">' + VIS.Utility.encodeText(data[i].description) + '</p>'
+                                            + ' <span style="word-break: break-word">' + VIS.Utility.encodeText(data[i].bpgroup) + '</span>'
+                                            + '<span style="word-break: break-word">' + VIS.Utility.encodeText(data[i].invoiceno) + '</span>'
                                             + ' </div>'
                                             + '</div>'
                                             + ' <!-- end of form-group -->'
@@ -4069,6 +4102,8 @@
                     target.parents().find('.va012-right-data-wrap').removeClass('VA012-EditRecordBackColor');
                     target.parents('.va012-right-data-wrap').addClass('VA012-EditRecordBackColor');
                     EdiStatementtRecordDiv = target.parents('.va012-right-data-wrap');
+                    //Set the value to highlight the particular record
+                    BankStatementLineIdForSave = VIS.Utility.Util.getValueOfInt(target.data("uid"));
                     _bankStatementLineID = target.data("uid");
                     _btnNewRecord.attr("activestatus", "1"); // adjust the scrolling
                     _btnNewRecord.attr("src", "Areas/VA012/Images/hide.png");
@@ -5485,6 +5520,7 @@
                         $_formNewRecord.hide()
                         _btnNewRecord.attr("activestatus", "0");
                         //Remove the back ground color of high lighted grid
+                        BankStatementLineIdForSave = 0;
                         EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
                         //_btnNewRecord.attr("src", "Areas/VA012/Images/add.png");
                         _btnNewRecord.addClass("vis vis-plus");
@@ -5515,6 +5551,7 @@
                     //    childDialogs.statementListRecordEdit($_formNewRecord.attr("data-uid"))
                     //}
                     //else {
+                    BankStatementLineIdForSave = 0;
                     EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
@@ -7601,6 +7638,9 @@
                 if (VIS.Utility.Util.getValueOfInt(_formData[0]["_bankStatementLineID"]) != 0) {
                     BankStatementLineIdForSave = VIS.Utility.Util.getValueOfInt(_formData[0]["_bankStatementLineID"]);
                 }
+                else {
+                    BankStatementLineIdForSave = 0;
+                }
                 $.ajax({
                     type: 'POST',
                     url: VIS.Application.contextUrl + "VA012/BankStatement/InsertData",
@@ -7651,6 +7691,7 @@
                         //VIS_427 if record is saved and their exist any statement in right panel the triggered its event
                         var indexOfId = BankStatementLine_ID.indexOf(BankStatementLineIdForSave);
                             if (BankStatementLine_ID.length > indexOfId + 1 && BankStatementLine_ID[indexOfId + 1] != 0) {
+                                BankStatementLineIdForSave = BankStatementLine_ID[indexOfId + 1];
                                 $root.find('span.glyphicon-edit[data-uid="' + BankStatementLine_ID[indexOfId + 1] + '"]').trigger('click');                        }
                         }, 1000);
                     }
