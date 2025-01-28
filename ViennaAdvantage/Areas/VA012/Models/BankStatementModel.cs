@@ -2215,13 +2215,19 @@ namespace VA012.Models
 
             if (_searchRequest)
             {
+                Decimal result;
 
                 _sqlCon += " AND (UPPER(BP.NAME) LIKE UPPER('%" + txtSearch + "%')"
                     + " OR UPPER(BSL.DESCRIPTION) LIKE UPPER('%" + txtSearch + "%')"
                     + " OR UPPER(BS.NAME) LIKE UPPER('%" + txtSearch + "%')"
-                    + " OR UPPER(BSL.StmtAmt) LIKE UPPER('%" + txtSearch + "%')"
-                    + " OR UPPER(BSL.TRXNO) LIKE UPPER('%" + txtSearch + "%')"
-                    + " OR UPPER(BSL.TrxAmt) LIKE UPPER('%" + txtSearch + "%'))";
+                    + " OR UPPER(BSL.TRXNO) LIKE UPPER('%" + txtSearch + "%')";
+                //VIS_427 Checked if search value is number/Decimal then only added these field for searching
+                if (decimal.TryParse(txtSearch, out result))
+                {
+                    _sqlCon += " OR BSL.StmtAmt=" + Util.GetValueOfDecimal(txtSearch) + ""
+                    + " OR BSL.TrxAmt=" + Util.GetValueOfDecimal(txtSearch) + "";
+                }
+                _sqlCon += ")";
             }
             _sqlCon += " GROUP BY BCURR.ISO_CODE ,NVL(CURR.StdPrecision,2)";
             //Applied a MRole Check
@@ -4418,8 +4424,9 @@ namespace VA012.Models
         /// <param name="_PAGESIZE">Page Size</param>
         /// <param name="_SEARCHREQUEST">Search Request</param>
         /// <param name="_txtSearch">Search Text</param>
+        /// <param name="RecOrUnRecComboVal">RecOrUnRecComboVal</param>
         /// <returns>List of Statement Lines</returns>
-        public List<StatementLineProp> LoadStatements(Ctx ctx, int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch)
+        public List<StatementLineProp> LoadStatements(Ctx ctx, int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch, int RecOrUnRecComboVal)
         {
             string _sql = "";
 
@@ -4526,7 +4533,20 @@ namespace VA012.Models
             {
                 _sql += " AND BS.AD_ORG_ID=" + org_Id;
             }
-
+            /*VIS_427 Here RecOrUnRecComboVal=1 represent that user has selected Reconcile on UI and hence Applied this check
+            in order get value of reconciled records*/
+            if (RecOrUnRecComboVal == 1)
+            {
+                _sql += @"AND ((NVL(BSL.C_PAYMENT_ID,0) != 0) OR (NVL(BSL.C_CASHLINE_ID,0) != 0)
+             OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
+            }
+            /*VIS_427 Here RecOrUnRecComboVal=2 represent that user has selected UnReconcile on UI and hence Applied this check
+            in order get value of Unreconciled records*/
+            else if (RecOrUnRecComboVal == 2)
+            {
+                _sql += @"AND ((NVL(BSL.C_PAYMENT_ID,0)= 0) OR (NVL(BSL.C_CASHLINE_ID,0) = 0) OR (NVL(BSL.C_CHARGE_ID,0)=0)
+             OR (ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) != (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
+            }
             if (_SEARCHREQUEST)
             {
                 _sql += " AND (UPPER(BP.NAME) LIKE UPPER('%" + _txtSearch + "%')"

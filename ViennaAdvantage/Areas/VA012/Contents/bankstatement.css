@@ -987,10 +987,8 @@ overflow: hidden;*/
     height: 32px;
 }
 .VA012-StatementDropDown {
-    margin-right: -43px;
     width: 50%;
     position: relative;
-    float: right;
 }
 .VA012-lblDropDownClass {
     background: linear-gradient(#fff 50%, transparent 0);
@@ -1011,4 +1009,8 @@ overflow: hidden;*/
     text-overflow: ellipsis;
     top: -7px;
     white-space: nowrap;
+}
+.va012-right-panel-search {
+    width: 50%;
+    display: flex;
 }
