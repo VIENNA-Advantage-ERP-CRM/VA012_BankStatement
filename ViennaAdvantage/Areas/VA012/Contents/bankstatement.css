@@ -643,9 +643,9 @@ span.va012-font-red {
     float: left;
     outline: medium none;
     border-radius: 0px;
-    width: calc(100% - 50px);
-    width: -moz-calc(100% - 50px);
-    width: -webkit-calc(100% - 50px);
+    width: 50%;
+   /* width: -moz-calc(100% - 50px);*/
+    /*width: -webkit-calc(100% - 50px);*/
 }
 
 .va012-search-wrap > a:hover {
@@ -693,7 +693,9 @@ span.va012-font-red {
         border-bottom: 2px solid rgba(var(--v-c-primary), 1);
         background: rgba(var(--v-c-secondary), 1);
     }
-
+.VA012-EditRecordBackColor {
+    background: rgba(var(--v-c-secondary), 1);
+}
 .va012-right-data-main {
     border-bottom: 1px solid rgba(var(--v-c-on-secondary),.2);
 }
@@ -979,4 +981,36 @@ overflow: hidden;*/
 }
 .VA012-StatementDateAsAccountDate{
     font-weight:normal
+}
+.VA012-DropDownForStatement {
+    margin-left: 8px;
+    height: 32px;
+}
+.VA012-StatementDropDown {
+    width: 50%;
+    position: relative;
+}
+.VA012-lblDropDownClass {
+    background: linear-gradient(#fff 50%, transparent 0);
+    margin: 0;
+    pointer-events: none;
+    position: absolute;
+    -webkit-transition: all .2s ease;
+    z-index: 4;
+    color: rgba(var(--v-c-on-secondary), 1);
+    display: block;
+    font-size: 12px;
+    height: auto;
+    left: 5px;
+    max-width: 100%;
+    opacity: 1;
+    overflow: hidden;
+    padding: 0 .4rem;
+    text-overflow: ellipsis;
+    top: -7px;
+    white-space: nowrap;
+}
+.va012-right-panel-search {
+    width: 50%;
+    display: flex;
 }
