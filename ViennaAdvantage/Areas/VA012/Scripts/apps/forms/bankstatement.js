@@ -5521,7 +5521,9 @@
                         _btnNewRecord.attr("activestatus", "0");
                         //Remove the back ground color of high lighted grid
                         BankStatementLineIdForSave = 0;
-                        EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
+                        if (EdiStatementtRecordDiv != null && EdiStatementtRecordDiv != undefined) {
+                            EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
+                        }
                         //_btnNewRecord.attr("src", "Areas/VA012/Images/add.png");
                         _btnNewRecord.addClass("vis vis-plus");
                         _btnNewRecord.removeClass("fa fa-minus");
@@ -5552,7 +5554,9 @@
                     //}
                     //else {
                     BankStatementLineIdForSave = 0;
-                    EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
+                    if (EdiStatementtRecordDiv != null && EdiStatementtRecordDiv != undefined) {
+                        EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
+                    }
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
                     newRecordForm.refreshForm();
