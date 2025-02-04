@@ -209,6 +209,8 @@
         //VIS_427 Intialized variable to store value for Reconcile and UnReconciled div
         var RecOrUnRecCombDiv = null;
         var RecOrUnRecComboVal = null;
+        //VIS_427 Defined this variable to store the _textAmountControl
+        var _textAmountCopyControl = null;
 
         this.Initialize = function () {
             //Rakesh:Get VA034 module
@@ -1561,7 +1563,7 @@
                 _btnUnmatch = $root.find("#VA012_btnUnmatch_" + $self.windowNo);
                 RecOrUnRecCombDiv = $root.find("#VA012_DropDown_" + $self.windowNo);
                 //Intializing value of combo on div load
-                 RecOrUnRecComboVal = RecOrUnRecCombDiv.val();
+                RecOrUnRecComboVal = RecOrUnRecCombDiv.val();
                 _btnProcess = $root.find("#VA012_btnProcess_" + $self.windowNo);
                 _btnHide = $root.find("#VA012_btnHide_" + $self.windowNo);
                 _tdLeft = $root.find("#VA012_tdLeft_" + $self.windowNo);
@@ -3983,8 +3985,8 @@
                                             + ' <!-- end of col -->'
 
                                         //VIS_427 Commented this code as it is consuming extra space after edit and zoom button
-                                            //+ ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
-                                            //+ '<div class="va012-form-data">';
+                                        //+ ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-width-xs">'
+                                        //+ '<div class="va012-form-data">';
                                     }
                                     else {
                                         _StatementsHTML += '</div>'
@@ -5521,7 +5523,9 @@
                         _btnNewRecord.attr("activestatus", "0");
                         //Remove the back ground color of high lighted grid
                         BankStatementLineIdForSave = 0;
-                        EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
+                        if (EdiStatementtRecordDiv != null && EdiStatementtRecordDiv != "") {
+                            EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
+                        }
                         //_btnNewRecord.attr("src", "Areas/VA012/Images/add.png");
                         _btnNewRecord.addClass("vis vis-plus");
                         _btnNewRecord.removeClass("fa fa-minus");
@@ -5552,7 +5556,9 @@
                     //}
                     //else {
                     BankStatementLineIdForSave = 0;
-                    EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
+                    if (EdiStatementtRecordDiv != null && EdiStatementtRecordDiv != "") {
+                        EdiStatementtRecordDiv.removeClass('VA012-EditRecordBackColor');
+                    }
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
                     newRecordForm.refreshForm();
@@ -6511,6 +6517,10 @@
                     if (parseFloat(_formData[0]["_txtDifference"]) != 0 && VIS.Utility.Util.getValueOfInt(_formData[0]["_ctrlPayment"]) != 0 && _formData[0]["_cmbDifferenceType"] != "CH") {
                         VIS.ADialog.info("VA012_PlsSelectDiffTypeCharge", null, "", "");
                         return;
+                    }
+                    //VIS_427 if _txtAmount then redefined its value on save and new button click
+                    if (_txtAmount == undefined) {
+                        _txtAmount = _textAmountCopyControl;
                     }
                     //get the Amount in standard format
                     //for Invoice schedule when statement amount is more than the schedule amount it should be Diff Amount as charge other wise it should show validation message in case match with unconciled StatementLine!
@@ -7604,7 +7614,8 @@
                 formData["_txtCheckNo"] = _txtCheckNo.val();
 
                 formData["_cmbDifferenceType"] = _cmbDifferenceType.val();
-
+                //store the _txtAmount control value
+                _textAmountCopyControl = _txtAmount;
                 if (_cmbDifferenceType.val() == "CH" && _cmbVoucherMatch.val() != "C") {
                     formData["_txtAmount"] = convertAmtCulture(_txtTrxAmt.getControl().val());
                     formData["_txtTrxAmt"] = convertAmtCulture(_txtAmount.getControl().val());
@@ -7688,8 +7699,8 @@
                         _txtCurrency.addClass("va012-mandatory");
                         _txtConversionType.addClass("va012-mandatory");
                         setTimeout(function () {
-                        //VIS_427 if record is saved and their exist any statement in right panel the triggered its event
-                        var indexOfId = BankStatementLine_ID.indexOf(BankStatementLineIdForSave);
+                            //VIS_427 if record is saved and their exist any statement in right panel the triggered its event
+                            var indexOfId = BankStatementLine_ID.indexOf(BankStatementLineIdForSave);
                             if (BankStatementLine_ID.length > indexOfId + 1 && BankStatementLine_ID[indexOfId + 1] != 0) {
                                 BankStatementLineIdForSave = BankStatementLine_ID[indexOfId + 1];
                                 $root.find('span.glyphicon-edit[data-uid="' + BankStatementLine_ID[indexOfId + 1] + '"]').trigger('click');                        }
