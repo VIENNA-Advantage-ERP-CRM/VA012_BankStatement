@@ -1014,3 +1014,112 @@ overflow: hidden;*/
     width: 50%;
     display: flex;
 }
+
+html[dir="rtl"] .va012-payment-chkBox {
+   float:right;
+}
+html[dir="rtl"] .va012-form-check .va012-inside-form-check > span{
+    float:right;
+}
+html[dir="rtl"] .va012-middle-wrap{
+    float:right;
+}
+html[dir="rtl"] .va012-btn-rtl{
+    float:right;
+    margin-left:5px
+}
+html[dir="rtl"] .VA012-lblDropDownClass {
+    background: linear-gradient(#fff 50%, transparent 0);
+    margin: 0;
+    pointer-events: none;
+    position: absolute;
+    -webkit-transition: all .2s ease;
+    z-index: 4;
+    color: rgba(var(--v-c-on-secondary), 1);
+    display: block;
+    font-size: 12px;
+    height: auto;
+    right: 5px;
+    max-width: 100%;
+    opacity: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    top: -7px;
+    left : auto;
+    white-space: nowrap;
+}
+.va012-btn-rtl {
+    float: left;
+    margin-left: 5px;
+}
+.va012-btn-rtlUnMatch {
+    float: left;
+    margin-left: 5px
+}
+html[dir="rtl"] .va012-btn-rtlUnMatch {
+    float: right;
+}
+html[dir="rtl"] .va012-newform .va012-fl-padd > .va012-padd-0:first-child {
+    padding-right: 10px !important;
+}
+.va012-saveNew-div{
+    float:right;
+}
+html[dir="rtl"] .va012-saveNew-div {
+    float: left;
+}
+.va012-zoomeditIcon {
+    margin-left: 35px;
+}
+html[dir="rtl"] .va012-zoomeditIcon {
+    margin-right: 35px;
+}
+html[dir="rtl"] .VA012-DropDownForStatement {
+    width: calc(100% - 8px);
+    margin-right: 5px;
+}
+html[dir="rtl"] .va012-base-curr {
+    float: right;
+    margin-left: 5px;
+}
+html[dir="rtl"] .va012-currency {
+    float: right; 
+    margin-left: 5px;
+}
+html[dir="rtl"] .va012-red-color {
+    border-right: 8px solid #fe0000;
+    border-left: 0px;
+}
+html[dir="rtl"] .va012-green-color {
+    border-right: 8px solid #48a321;
+    border-left: 0px;
+}
+html[dir="rtl"] .va012-statementamount {
+    font-size: 14px;
+    float: right;
+    color: rgba(var(--v-c-on-secondary), 1);
+    /* font-weight: 600;*/
+}
+.va012-statementamount {
+    color: rgba(var(--v-c-on-secondary), 1) !important;
+    font-size: 14px !important;
+}
+html[dir="rtl"] .va012-newform {
+    float: right;
+}
+.va012-recunrecdiv {
+    padding-right: 5px;
+}
+html[dir="rtl"] .va012-recunrecdiv {
+    padding-right: 15px;
+}
+.va012-searchdiv {
+    padding-right: 5px;
+}
+html[dir="rtl"] .va012-searchdiv {
+    padding-left: 5px;
+    margin-right:8px;
+}
+html[dir="rtl"] .va012-left-btn {
+    float:right;
+}
