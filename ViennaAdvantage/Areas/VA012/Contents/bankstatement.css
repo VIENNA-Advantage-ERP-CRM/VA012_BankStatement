@@ -1123,3 +1123,14 @@ html[dir="rtl"] .va012-searchdiv {
 html[dir="rtl"] .va012-left-btn {
     float:right;
 }
+html[dir="rtl"] .VA012-img-combo {
+    content: url("../Images/select.png");
+    position: absolute;
+    left: 10px;
+    right:auto;
+    top: 13px;
+    cursor: pointer;
+}
+html[dir="rtl"] .va012-left-data > select, .va012-left-data > input{
+    margin-right:0px;
+} 
