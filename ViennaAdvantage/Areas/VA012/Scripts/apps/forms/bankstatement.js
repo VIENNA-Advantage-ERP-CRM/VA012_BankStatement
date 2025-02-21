@@ -4640,7 +4640,7 @@
                     + "<select id='VA012_cmbTaxRate_" + $self.windowNo + "'>"
                     + "</select></div> "
                     //added Accept button manually
-                    + "<div class='va012-frm-btn va012-btn-blue' style='float: right;'>"
+                    + "<div class='va012-frm-btn va012-btn-blue va012-acceptbtn'>"
                     + "<label style='font-weight: normal;' id ='VA012_accept_" + $self.windowNo + "'>" + VIS.Msg.getMsg("VA012_Accept") + "</label></div> "
 
                     + "</div>";
