@@ -444,15 +444,23 @@ namespace VA012.Models
 
                                             if (!_BnkStmtLine.Save())
                                             {
-                                                //Used ValueNamePair to get error
-                                                ValueNamePair pp = VLogger.RetrieveError();
-                                                //some times getting the error pp also
-                                                string error = pp != null ? pp.ToString() == null ? pp.GetValue() : pp.ToString() : "";
+                                                //VIS_427 17/02/2025 Handled the code of value name pair to retrieve correct message
+                                                string error = "";
+                                                ValueNamePair vp = VLogger.RetrieveError();
+                                                if (vp != null)
+                                                {
+                                                    string val = vp.GetName();
+                                                    if (String.IsNullOrEmpty(val))
+                                                    {
+                                                        val = vp.GetValue();
+                                                    }
+                                                    error = val;
+                                                }
                                                 if (string.IsNullOrEmpty(error))
                                                 {
-                                                    error = pp != null ? pp.GetName() : "";
+                                                    error = "VA012_StatementLineNotSaved";
                                                 }
-                                                _obj._error = !string.IsNullOrEmpty(error) ? error : "VA012_StatementLineNotSaved";
+                                                _obj._error = error;
                                                 return _obj;
                                             }
                                         }

@@ -1152,7 +1152,7 @@
                 divRow9 = $('<div class="row va012-fl-padd" style="width:102%">'
                     + '                       <div class="col-md-4 col-sm-4 va012-padd-0">'
                     + '                              <div class="va012-form-group va012-form-check">'
-                    + '                                  <input tabindex="13" id="VA012_chkUseNextTime_' + $self.windowNo + '" type="checkbox">'
+                    + '                                  <input tabindex="13" id="VA012_chkUseNextTime_' + $self.windowNo + '" type="checkbox" class="va012-payment-chkBox">'
                     + '                                  <label style="position: absolute;">' + VIS.Msg.getMsg("VA012_UseNextTime") + '</label>'
                     + '                              </div>'
                     + '                              <!-- end of form-group -->'
@@ -1167,7 +1167,7 @@
                     + '                          <!-- end of col -->'
 
                     + '                          <div class="col-md-6 col-sm-6 va012-padd-0" >'
-                    + '                          <div style="float:right;">'
+                    + '                          <div class="va012-saveNew-div">'
                     //               + '                              <a id="VA012_btnCreatePayment_' + $self.windowNo + '" class="va012-frm-btn va012-btn-blue"  style=" float: left; margin-right: 10px; display: none;">' + VIS.Msg.getMsg("VA012_CreatePayment") + '</a>'
                     + '                              <a tabindex="15" title="Save Record" id="VA012_btnSave_' + $self.windowNo + '" class="va012-frm-btn va012-btn-blue" style=" float: left;">' + VIS.Msg.getMsg("VA012_SaveandNew") + '</a>'
                     + '                          </div>'
@@ -1267,7 +1267,7 @@
                 rightWrap = $('<div id="VA012_rightWrap_' + $self.windowNo + '" class="va012-right-wrap">'
                     + '                  <div id="VA012_rightTop_' + $self.windowNo + '" class="va012-right-top">'
                     + '                      <div class="row">'
-                    + '                          <div class="col-md-3 col-sm-3" style=" padding-right: 5px; ">'
+                    + '                          <div class="col-md-3 col-sm-3 va012-recunrecdiv">'
                     + '                              <div class="va012-pay-text" id="VA012_secReconciled_' + $self.windowNo + '" >'
                     + '                                <p>' + VIS.Msg.getMsg("VA012_Reconciled") + '</p>'
                     + '                                <p style="margin-top: 4px;">' + VIS.Msg.getMsg("VA012_Unreconciled") + '</p>'
@@ -1289,9 +1289,9 @@
                     + '                      <div class="row">'
                     + '                          <div class="col-md-12 col-sm-12" style=" padding-left: 5px; ">'
                     + '                      <div style=" /* float: right; */ padding-left: 10px;"> '
-                    + '                              <a id="VA012_btnUnmatch_' + $self.windowNo + '" class="va012-frm-btn va012-btn-blue" title="Show Unmatched Record" style=" float: left; ">' + VIS.Msg.getMsg("VA012_Unmatch") + '</a>'
-                    + '                              <a id="VA012_btnProcess_' + $self.windowNo + '" class="va012-frm-btn va012-btn-blue" title="Clear Matched Record" style=" float: left; margin-left: 5px; ">' + VIS.Msg.getMsg("VA012_Process") + '</a>'
-                    + '                             <a id="VA012_btnDelete_' + $self.windowNo + '" class="va012-frm-btn va012-btn-blue" title="Delete Selected Record" style=" float: left; margin-left: 5px; ">' + VIS.Msg.getMsg("VA012_Delete") + '</a>'
+                    + '                              <a id="VA012_btnUnmatch_' + $self.windowNo + '" class="va012-frm-btn va012-btn-blue va012-btn-rtlUnMatch" title="Show Unmatched Record">' + VIS.Msg.getMsg("VA012_Unmatch") + '</a>'
+                    + '                              <a id="VA012_btnProcess_' + $self.windowNo + '" class="va012-frm-btn va012-btn-blue va012-btn-rtl" title="Clear Matched Record">' + VIS.Msg.getMsg("VA012_Process") + '</a>'
+                    + '                             <a id="VA012_btnDelete_' + $self.windowNo + '" class="va012-frm-btn va012-btn-blue va012-btn-rtl" title="Delete Selected Record">' + VIS.Msg.getMsg("VA012_Delete") + '</a>'
                     + '                       </div> '
                     + '                          </div>'
                     + '                          <!-- end of col -->'
@@ -1299,7 +1299,7 @@
                     + '                      <!-- end of row -->'
 
                     + '                     <div class="row">'
-                    + '                          <div class="col-md-12 col-sm-12" style=" padding-right: 5px; ">'
+                    + '                          <div class="col-md-12 col-sm-12 va012-searchdiv">'
                     + '                           <div class="va012-right-search" style="flex-direction: row-reverse;display: flex;">'
                     + '                        <div class="VA012-StatementDropDown">'
                     + '                       <select id="VA012_DropDown_' + $self.windowNo + '" class="VA012-DropDownForStatement" style="width: calc(100% - 20px);">'
@@ -1808,9 +1808,9 @@
                                 + '<div class="row">'
                                 + ' <div class="col-md-3 col-sm-3">'
                                 + '    <div class="va012-form-check">'
-                                + '        <input type="checkbox" data-uid="' + data[i].c_payment_id + '"  >'
+                                + '        <input type="checkbox" data-uid="' + data[i].c_payment_id + '" class="va012-payment-chkBox">'
                                 + '    <div title="' + VIS.Msg.getMsg('VA012_PaymentAmount') + '" class="va012-inside-form-check" style=" float: left; width: 85%; ">'
-                                + '      <label style=" width: 100%; ">' + data[i].currency + ' ' + parseFloat(data[i].paymentamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
+                                + '      <span style=" width: 100%;" class="va012-statementamount">' + '<span class="va012-currency ">' + data[i].currency +'</span>' + ' ' + parseFloat(data[i].paymentamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
                             if (data[i].isconverted == "Y") {
                                 _PaymentsHTML += '      <span>' + data[i].basecurrency + ' ' + parseFloat(data[i].convertedamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
                             }
@@ -3933,11 +3933,11 @@
                                         + '<div class="va012-fl-padd">'
                                         + '<div class="col-md-4 col-sm-4 va012-padd-0">'
                                         + '<div class="va012-form-check">'
-                                        + ' <input type="checkbox" data-uid="' + data[i].c_bankstatementline_id + '" >'
+                                        + ' <input type="checkbox" data-uid="' + data[i].c_bankstatementline_id + '" class="va012-payment-chkBox">'
                                         // + ' <div class="va012-form-text"> <span style="background: #999;color: white; padding: 3px;margin-left: 2px;">' + data[i].page + '/' + data[i].line + '</span>'
                                         + ' <div class="va012-form-text"> <span style="background: rgba(var(--v-c-on-secondary), .4);color: rgba(var(--v-c-on-primary), 1); padding: 3px;margin-left: 2px;word-break: break-word">' + data[i].statementno + '/' + data[i].page + '/' + data[i].line + '</span>'
                                         + '<label>' + new Date(data[i].stmtLineDate).toLocaleDateString() + '</label>' //StatementLine Date 
-                                        + '<label style="word-break: break-word">' + data[i].currency + ' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</label>';
+                                        + '<span style="word-break: break-word" class="va012-statementamount">' + '<span class="va012-currency">'+data[i].currency + '</span>'+' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
 
                                     //if (data[i].isconverted == "Y") {
                                     //    _StatementsHTML += '<span>' + data[i].basecurrency + ' ' + Globalize.format(data[i].convertedamount, "N") + '</span>';
@@ -3974,7 +3974,7 @@
 
 
 
-                                            + ' <div class="col-md-1 col-sm-1 va012-padd-0" style="margin-left: 35px">'
+                                            + ' <div class="col-md-1 col-sm-1 va012-padd-0 va012-zoomeditIcon" style="margin-left: 35px">'
                                             + '<div class="va012-form-check">'
                                             + '<div class="va012-pay-text">'
                                             + ' <p><span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-edit" title=' + VIS.Msg.getMsg("EditRecord") + '></span> <span data-uid="' + data[i].c_bankstatementline_id + '" class="glyphicon glyphicon-zoom-in" title=' + VIS.Msg.getMsg("ZoomToRecord") + '></span> </p>'
@@ -4640,7 +4640,7 @@
                     + "<select id='VA012_cmbTaxRate_" + $self.windowNo + "'>"
                     + "</select></div> "
                     //added Accept button manually
-                    + "<div class='va012-frm-btn va012-btn-blue' style='float: right;'>"
+                    + "<div class='va012-frm-btn va012-btn-blue va012-acceptbtn'>"
                     + "<label style='font-weight: normal;' id ='VA012_accept_" + $self.windowNo + "'>" + VIS.Msg.getMsg("VA012_Accept") + "</label></div> "
 
                     + "</div>";
@@ -7699,8 +7699,8 @@
                         _txtCurrency.addClass("va012-mandatory");
                         _txtConversionType.addClass("va012-mandatory");
                         setTimeout(function () {
-                            //VIS_427 if record is saved and their exist any statement in right panel the triggered its event
-                            var indexOfId = BankStatementLine_ID.indexOf(BankStatementLineIdForSave);
+                        //VIS_427 if record is saved and their exist any statement in right panel the triggered its event
+                        var indexOfId = BankStatementLine_ID.indexOf(BankStatementLineIdForSave);
                             if (BankStatementLine_ID.length > indexOfId + 1 && BankStatementLine_ID[indexOfId + 1] != 0) {
                                 BankStatementLineIdForSave = BankStatementLine_ID[indexOfId + 1];
                                 $root.find('span.glyphicon-edit[data-uid="' + BankStatementLine_ID[indexOfId + 1] + '"]').trigger('click');                        }
