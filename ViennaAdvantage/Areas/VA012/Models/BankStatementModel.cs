@@ -4537,14 +4537,14 @@ namespace VA012.Models
             in order get value of reconciled records*/
             if (RecOrUnRecComboVal == 1)
             {
-                _sql += @"AND ((NVL(BSL.C_PAYMENT_ID,0) != 0) OR (NVL(BSL.C_CASHLINE_ID,0) != 0)
+                _sql += @" AND ((NVL(BSL.C_PAYMENT_ID,0) != 0) OR (NVL(BSL.C_CASHLINE_ID,0) != 0)
              OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
             }
             /*VIS_427 Here RecOrUnRecComboVal=2 represent that user has selected UnReconcile on UI and hence Applied this check
             in order get value of Unreconciled records*/
             else if (RecOrUnRecComboVal == 2)
             {
-                _sql += @"AND ((NVL(BSL.C_PAYMENT_ID,0)= 0) OR (NVL(BSL.C_CASHLINE_ID,0) = 0) OR (NVL(BSL.C_CHARGE_ID,0)=0)
+                _sql += @" AND ((NVL(BSL.C_PAYMENT_ID,0)= 0) OR (NVL(BSL.C_CASHLINE_ID,0) = 0) OR (NVL(BSL.C_CHARGE_ID,0)=0)
              OR (ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) != (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
             }
             if (_SEARCHREQUEST)
