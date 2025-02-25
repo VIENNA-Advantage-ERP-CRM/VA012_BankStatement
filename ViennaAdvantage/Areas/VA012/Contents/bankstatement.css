@@ -1151,7 +1151,7 @@ html[dir="rtl"] .va012-file-upload {
     float: left;
     padding-right: 12px;
     width: 20%;
-    position: relative;
+   /* position: relative;*/
     overflow: hidden;
 }
 html[dir="rtl"] .va012-icons-wrap {
@@ -1161,4 +1161,13 @@ html[dir="rtl"] .va012-icons-wrap {
 html[dir="rtl"] .va012-search-icon-right {
     float: left !important;
     cursor: pointer;
+}
+html[dir="rtl"] .va012-file-upload > input {
+    opacity: 0;
+    cursor: pointer;
+    float: left;
+    width: 100%;
+    margin-top: -40px;
+    position: relative;
+    font-size: 14px;
 }
