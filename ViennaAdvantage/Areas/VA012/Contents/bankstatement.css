@@ -1151,7 +1151,7 @@ html[dir="rtl"] .va012-file-upload {
     float: left;
     padding-right: 12px;
     width: 20%;
-    position: absolute;
+   /* position: relative;*/
     overflow: hidden;
 }
 html[dir="rtl"] .va012-icons-wrap {
