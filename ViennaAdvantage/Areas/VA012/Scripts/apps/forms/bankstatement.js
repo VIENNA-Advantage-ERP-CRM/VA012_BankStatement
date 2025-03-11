@@ -4789,6 +4789,8 @@
                                         _cmbStatementNo.prop('selectedIndex', 0);
                                         // _cmbChargeType.prop('selectedIndex', 0);
                                         $ChargeControl.value = null;
+                                        //Handled to set value as null for charge control after match statement
+                                        $ChargeControl.setValue(null);
                                         _cmbTaxRate.prop('selectedIndex', 0);
 
                                         _matchingBaseItemList = [];
