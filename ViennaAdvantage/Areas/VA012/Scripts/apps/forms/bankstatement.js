@@ -3355,6 +3355,10 @@
         function convertAmtCulture(_convAmt) {
             var val = 0;
             dotFormatter = $self.dotFormatter;// checl dotFomatter true or false
+            //VIS_427 Handled the undefined of dotFromatter value which will give correct amount
+            if (typeof(dotFormatter) == 'undefined') {
+                dotFormatter = VIS.Env.isDecimalPoint();
+            }
             //check _convAmt type is string or not if not then convert into string
             typeof _convAmt === "string" ? _convAmt : _convAmt = _convAmt.toString();
             if (!dotFormatter) {
@@ -4785,6 +4789,8 @@
                                         _cmbStatementNo.prop('selectedIndex', 0);
                                         // _cmbChargeType.prop('selectedIndex', 0);
                                         $ChargeControl.value = null;
+                                        //Handled to set value as null for charge control after match statement
+                                        $ChargeControl.setValue(null);
                                         _cmbTaxRate.prop('selectedIndex', 0);
 
                                         _matchingBaseItemList = [];
