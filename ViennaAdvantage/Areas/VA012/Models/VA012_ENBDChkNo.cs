@@ -222,6 +222,15 @@ namespace VA012.Models
                                 _branchName = "";
                                 _IBAN = "";
                                 _AccountNum = "";
+                                /*VIS_427: This function checks whether the Excel record has a null or empty Description or Date. 
+                                 If so, it returns an error message.*/
+                                string errorMsg = CheckWhetherDtHasNullValueOrNot(dt);
+                                if (!string.IsNullOrEmpty(errorMsg))
+                                {
+                                    _obj._error = errorMsg;
+                                    return _obj;
+                                }
+
                                 for (int i = 0; i < dt.Rows.Count; i++)
                                 {
                                     if (i <= 2)
@@ -464,9 +473,6 @@ namespace VA012.Models
                                                 return _obj;
                                             }
                                         }
-                                        else
-                                        {
-                                        }
                                     }
                                     #endregion
                                 }
@@ -510,6 +516,27 @@ namespace VA012.Models
             string[] _dateArray = _date.Split('/');
             DateTime? _returnDate = new DateTime(Util.GetValueOfInt(_dateArray[2]), Util.GetValueOfInt(_dateArray[1]), Util.GetValueOfInt(_dateArray[0]));
             return _returnDate;
+        }
+        /// <summary>
+        /// This function checks whether the Excel record has a null or empty Description or Date.If so, it returns an error message.
+        /// </summary>
+        /// <param name="dt">DataTbale</param>
+        /// <returns>error message</returns>
+        /// <author>VIS_427</author>
+        public string CheckWhetherDtHasNullValueOrNot(DataTable dt)
+        {
+            string _error = "";
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                //here if date(0) or description(1) is null and debit(3)/Credit(4) are not zero for each row then return message else skip the message
+                if ((string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i][0])) || string.IsNullOrEmpty(Util.GetValueOfString(dt.Rows[i][1]))) 
+                    && !(Util.GetValueOfDecimal(dt.Rows[i][3]) == 0 && Util.GetValueOfDecimal(dt.Rows[i][4]) == 0))
+                {
+                    _error = "VA012_EitherDescriptionOrDateIsEmpty";
+                    return _error;
+                }
+            }
+            return _error;
         }
 
         /// <summary>
