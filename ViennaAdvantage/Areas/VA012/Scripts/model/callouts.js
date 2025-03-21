@@ -22,6 +22,9 @@
                 mTab.setValue("VA012_IsContra", true);
             }
             else {
+                //set the value of bank account and checkno to null if charge is not of contra type
+                mTab.setValue("CheckNo", null);
+                mTab.setValue("C_BankAccount_ID", null);
                 mTab.setValue("VA012_IsContra", false);
             }
         }
