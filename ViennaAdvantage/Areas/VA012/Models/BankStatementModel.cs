@@ -1195,6 +1195,10 @@ namespace VA012.Models
                 else
                 {
                     _bankStatementLine.SetC_Charge_ID(0);
+                    //Set these fields value as zero in order to save the bankstatement line
+                    _bankStatementLine.SetChargeAmt(0);
+                    _bankStatementLine.SetTaxAmt(0);
+                    _bankStatementLine.SetC_Tax_ID(0);
                 }
                 /*chnage by pratap*/
 
