@@ -921,12 +921,12 @@
                     + '                          </div>'
                     + '                          <!-- end of col -->'
                     + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                              <div id="VA012_divVoucherNo_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                  <label>' + VIS.Msg.getMsg("VA012_VoucherNo") + '</label>'
-                    + '                                  <input tabindex="9" id="VA012_txtVoucherNo_' + $self.windowNo + '" type="text">'
+                    + '                                  <div id="VA012_divCtrlBusinessPartner_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                      <label>' + VIS.Msg.getMsg("VA012_BusinessPartner") + '</label>'
+                    + '                                      <div id="VA012_ctrlBusinessPartner_' + $self.windowNo + '" ></div>'
+                    + '                                  </div>'
+                    + '                                  <!-- end of form-group -->'
                     + '                              </div>'
-                    + '                              <!-- end of form-group -->'
-                    + '                          </div>'
                     + '                          <!-- end of col -->'
                     + '                      </div>'
                     + '                      <!-- end of row -->'
@@ -1095,13 +1095,13 @@
                     + '                                  <!-- end of form-group -->'
                     + '                              </div>'
                     + '                              <!-- end of col -->'
-                    + '                              <div class="col-md-4 col-sm-4 va012-padd-0">'
-                    + '                                  <div id="VA012_divCtrlBusinessPartner_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
-                    + '                                      <label>' + VIS.Msg.getMsg("VA012_BusinessPartner") + '</label>'
-                    + '                                      <div id="VA012_ctrlBusinessPartner_' + $self.windowNo + '" ></div>'
-                    + '                                  </div>'
-                    + '                                  <!-- end of form-group -->'
+                    + '                          <div class="col-md-4 col-sm-4 va012-padd-0">'
+                    + '                              <div id="VA012_divVoucherNo_' + $self.windowNo + '" class="va012-form-group va012-form-data">'
+                    + '                                  <label>' + VIS.Msg.getMsg("VA012_VoucherNo") + '</label>'
+                    + '                                  <input tabindex="9" id="VA012_txtVoucherNo_' + $self.windowNo + '" type="text">'
                     + '                              </div>'
+                    + '                              <!-- end of form-group -->'
+                    + '                          </div>'
                     + '                              <!-- end of col -->'
                     + '                          </div>'
                     //+ '                      </div>'
@@ -1810,7 +1810,7 @@
                                 + '    <div class="va012-form-check">'
                                 + '        <input type="checkbox" data-uid="' + data[i].c_payment_id + '" class="va012-payment-chkBox">'
                                 + '    <div title="' + VIS.Msg.getMsg('VA012_PaymentAmount') + '" class="va012-inside-form-check" style=" float: left; width: 85%; ">'
-                                + '      <span style=" width: 100%;" class="va012-statementamount">' + '<span class="va012-currency ">' + data[i].currency +'</span>' + ' ' + parseFloat(data[i].paymentamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
+                                + '      <span style=" width: 100%;" class="va012-statementamount">' + '<span class="va012-currency ">' + data[i].currency + '</span>' + ' ' + parseFloat(data[i].paymentamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
                             if (data[i].isconverted == "Y") {
                                 _PaymentsHTML += '      <span>' + data[i].basecurrency + ' ' + parseFloat(data[i].convertedamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
                             }
@@ -3356,7 +3356,7 @@
             var val = 0;
             dotFormatter = $self.dotFormatter;// checl dotFomatter true or false
             //VIS_427 Handled the undefined of dotFromatter value which will give correct amount
-            if (typeof(dotFormatter) == 'undefined') {
+            if (typeof (dotFormatter) == 'undefined') {
                 dotFormatter = VIS.Env.isDecimalPoint();
             }
             //check _convAmt type is string or not if not then convert into string
@@ -3867,7 +3867,7 @@
                             datatype: "json",
                             contentType: "application/json; charset=utf-8",
                             async: false,
-                            data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _statementPageNo: _statementPageNo, _PAGESIZE: _PAGESIZE, _SEARCHREQUEST: _SEARCHREQUEST, RecOrUnRecComboVal: RecOrUnRecComboVal}),
+                            data: ({ _cmbBankAccount: _cmbBankAccount.val(), _txtSearch: _txtSearch.val(), _statementPageNo: _statementPageNo, _PAGESIZE: _PAGESIZE, _SEARCHREQUEST: _SEARCHREQUEST, RecOrUnRecComboVal: RecOrUnRecComboVal }),
                             success: function (data) {
                                 if (data != null && data != "") {
                                     callbackloadStatement(data);
@@ -3941,7 +3941,7 @@
                                         // + ' <div class="va012-form-text"> <span style="background: #999;color: white; padding: 3px;margin-left: 2px;">' + data[i].page + '/' + data[i].line + '</span>'
                                         + ' <div class="va012-form-text"> <span style="background: rgba(var(--v-c-on-secondary), .4);color: rgba(var(--v-c-on-primary), 1); padding: 3px;margin-left: 2px;word-break: break-word">' + data[i].statementno + '/' + data[i].page + '/' + data[i].line + '</span>'
                                         + '<label>' + new Date(data[i].stmtLineDate).toLocaleDateString() + '</label>' //StatementLine Date 
-                                        + '<span style="word-break: break-word" class="va012-statementamount">' + '<span class="va012-currency">'+data[i].currency + '</span>'+' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
+                                        + '<span style="word-break: break-word" class="va012-statementamount">' + '<span class="va012-currency">' + data[i].currency + '</span>' + ' ' + parseFloat(data[i].trxamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
 
                                     //if (data[i].isconverted == "Y") {
                                     //    _StatementsHTML += '<span>' + data[i].basecurrency + ' ' + Globalize.format(data[i].convertedamount, "N") + '</span>';
@@ -4575,6 +4575,14 @@
                         _EftOrManualCheckNo = null;
                         //execute autocheck functionality for selected bank and payment method
                         _txtPaymentMethod.trigger('change');
+                    }
+                    /*VIS_427 This function is used to disable all the controls of already reconciled record
+                     else enable them for unreconciled records*/
+                    if (_reconciledLine) {
+                        DisableEnableControlsOfRecOrUnrecRecord(true);
+                    }
+                    else {
+                        DisableEnableControlsOfRecOrUnrecRecord(false);
                     }
                 }
             },
@@ -5548,6 +5556,7 @@
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
                     newRecordForm.refreshForm();
+                    DisableEnableControlsOfRecOrUnrecRecord(false);
                     //set the mandatory class to the Currency field
                     _txtCurrency.trigger('change');
                     loadFunctions.setPaymentListHeight();
@@ -5568,6 +5577,7 @@
                     newRecordForm.scheduleRefresh();
                     newRecordForm.prepayRefresh();
                     newRecordForm.refreshForm();
+                    DisableEnableControlsOfRecOrUnrecRecord(false);
                     //}
                     //set the mandatory class to the Currency field
                     _txtCurrency.trigger('change');
@@ -5685,7 +5695,8 @@
                     else if (_cmbVoucherMatch.val() == "V") {
                         //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
                         //added event condition to avoid the values to refresh
-                        if (_cashLineSelectedVal != 0 || _paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0
+                        //VIS_427 Applied brackets in order to execute condition properly when user click on hide button
+                        if ((_cashLineSelectedVal != 0 || _paymentSelectedVal != 0 || _scheduleList.length > 0 || _orderSelectedVal != 0)
                             && (event != null && event.currentTarget.className != _btnMore[0].className)) {
                             newRecordForm.refreshSelectedValues();
                             //set or load Currency 
@@ -5707,7 +5718,7 @@
                         _divTransferType.hide();
                         _divCheckNo.hide();
 
-                        _divVoucherNo.show();
+                        _divVoucherNo.hide();
                         _divCharge.show();
                         _divTaxRate.show();
                         _divTaxAmount.show();
@@ -5743,7 +5754,7 @@
                         _cmbDifferenceType.removeClass("va012-mandatory");
                         _divCtrlPayment.hide();
                         _divCtrlInvoice.hide();
-                        _divCtrlBusinessPartner.hide();
+                        _divCtrlBusinessPartner.show();
                         _divPrepayOrder.hide();
                         _divPaymentSchedule.hide();
                         _cmbContraType.removeClass("va012-mandatory");
@@ -6262,7 +6273,9 @@
 
                     }
 
-
+                    if (_reconciledLine) {
+                        DisableEnableControlsOfRecOrUnrecRecord(true);
+                    }
                     // _divMore.hide();
 
                     loadFunctions.setPaymentListHeight();
@@ -6391,12 +6404,16 @@
                         VIS.ADialog.info("VA012_PleaseSelectAnyOne", null, "", "");
                         return;
                     }
-
+                    /*VIS_427 if payment is voucher and their is no business partner selected then added amount in differnce type
+                     so that charge amount can be calculated*/
+                    if (_formData[0]["_cmbVoucherMatch"] == "V" && VIS.Utility.Util.getValueOfInt(_formData["_ctrlBusinessPartner"]) == 0) {
+                        _formData[0]["_txtDifference"] = _formData[0]["_txtAmount"];
+                    }
                     if (_formData[0]["_txtAmount"] == null || _formData[0]["_txtAmount"] == "" || _formData[0]["_txtAmount"] == "0" || _formData[0]["_txtAmount"] == "0.00") {
                         VIS.ADialog.info("VA012_PleaseEnterAmount", null, "", "");
                         return;
                     }
-
+                   
                     if (_formData[0]["_cmbVoucherMatch"] == "C") {
 
 
@@ -6552,6 +6569,10 @@
                         }
                         else {
                             chargeAmt = VIS.Utility.Util.getValueOfDecimal(_formData[0]["_txtAmount"]);
+                        }
+                        //Set difference value to zero after charge amount is calculated
+                        if (_formData[0]["_cmbVoucherMatch"] == "V") {
+                            _formData[0]["_txtDifference"] = 0;
                         }
                         //chargeAmt is not equals to zero then execute the GetTaxAmount()
                         if (_tax_ID > 0 && chargeAmt != 0) {
@@ -7372,7 +7393,9 @@
                 _openingFromEdit = false;
             },
             loadOrder: function () {
-                var _orderWhere = "C_ORDER_ID IN (SELECT ORD.C_ORDER_ID "
+                /*VIS_427 Added table name in order to get rid of error "column ambiguously defined" in oracle
+                when user open prepay order*/
+                var _orderWhere = "C_ORDER.C_ORDER_ID IN (SELECT ORD.C_ORDER_ID "
                     + " FROM C_Order ORD "
                     + " LEFT JOIN C_DocType DT "
                     + " ON (ORD.C_DOCTYPETARGET_ID=DT.C_DOCTYPE_ID) "
@@ -7623,8 +7646,8 @@
                 //store the _txtAmount control value
                 _textAmountCopyControl = _txtAmount;
                 if (_cmbDifferenceType.val() == "CH" && _cmbVoucherMatch.val() != "C") {
-                    formData["_txtAmount"] = convertAmtCulture(_txtTrxAmt.getControl().val());
-                    formData["_txtTrxAmt"] = convertAmtCulture(_txtAmount.getControl().val());
+                    formData["_txtAmount"] = convertAmtCulture(_txtAmount.getControl().val());
+                    formData["_txtTrxAmt"] = convertAmtCulture(_txtTrxAmt.getControl().val());
                 }
                 else {
                     formData["_txtAmount"] = convertAmtCulture(_txtAmount.getControl().val());
@@ -8108,6 +8131,76 @@
                 error: function (data) { VIS.ADialog.info(data, null, "", ""); }
             });
         };
+          
+        /**
+         *VIS_427 This function is used to disable all the controls of already reconciled record else enable them for unreconciled records
+         * @param {any} IsDisable
+         */
+        function DisableEnableControlsOfRecOrUnrecRecord(IsDisable) {
+           //if condition executes when the Voucher/Match is not of voucher type and for reconciled record
+            if (IsDisable && (_cmbVoucherMatch.val() != "V" || (_cmbVoucherMatch.val() == "V" && $_ctrlBusinessPartner.getValue() != 0))) {
+                _txtAmount.getControl().attr("disabled", true);
+                _txtCurrency.attr("disabled", true);
+                _txtDescription.attr("disabled", true);
+                _txtCharge.attr("disabled", true);
+                _txtVoucherNo.attr("disabled", true);
+                _divTaxRate.find("*").prop("disabled", true);
+                _cmbVoucherMatch.attr("disabled", true);
+                _divDifferenceType.find("*").prop("disabled", true);
+                _cmbContraType.attr("disabled", true);
+                _cmbContraType.attr("disabled", true);
+                _dtStatementDate.attr("disabled", true);
+                _txtStatementNo.attr("disabled", true);
+                _txtStatementPage.attr("disabled", true);
+                _txtStatementLine.attr("disabled", true);
+                _divCtrlPayment.find("*").prop("disabled", true);
+                _divCtrlInvoice.find("*").prop("disabled", true);
+                _divCtrlBusinessPartner.find("*").prop("disabled", true);
+                _divPrepayOrder.find("*").prop("disabled", true);
+                _divPaymentSchedule.find("*").prop("disabled", true);
+                _txtPaymentSchedule.prop("disabled", true);
+                _btnPaymentSchedule.prop("disabled", true);
+                _divCheckDate.find("*").prop("disabled", true);
+                _btnPaymentSchedule.css('pointer-events', 'none');
+                _divCtrlCashLine.find("*").prop("disabled", true);
+                _divContraType.find("*").prop("disabled", true);
+                _divCashBook.find("*").prop("disabled", true);
+                _divTransferType.find("*").prop("disabled", true);
+                _divCheckNo.find("*").prop("disabled", true);
+                _btnOut.css('pointer-events', 'none');
+                _btnIn.css('pointer-events', 'none');
+            }
+            //this condition executes when we dont want control to be disabled
+            else if (!IsDisable) {
+                _txtAmount.getControl().attr("disabled", false);
+                _txtCurrency.attr("disabled", false);
+                _txtDescription.attr("disabled", false);
+                _dtStatementDate.attr("disabled", false);
+                _txtStatementNo.attr("disabled", false);
+                _txtStatementPage.attr("disabled", false);
+                _txtStatementLine.attr("disabled", false);
+                _divCtrlBusinessPartner.find("*").prop("disabled", false);
+                //if voucher type is voucher and has value of charge then disabled the controls else enabled them
+                if (_cmbVoucherMatch.val() == "V" && VIS.Utility.Util.getValueOfInt(_txtCharge.attr('chargeid')) != 0) {
+                    _divCtrlPayment.find("*").prop("disabled", true);
+                    _divCtrlInvoice.find("*").prop("disabled", true);
+                    _divPrepayOrder.find("*").prop("disabled", true);
+                    _btnPaymentSchedule.css('pointer-events', 'none');
+                    _cmbVoucherMatch.trigger('change');
+                }
+                else {
+                    _divCtrlPayment.find("*").prop("disabled", false);
+                    _divCtrlInvoice.find("*").prop("disabled", false);
+                    _divPrepayOrder.find("*").prop("disabled", false);
+                    _btnPaymentSchedule.css('pointer-events', 'auto');
+                }
+                _cmbVoucherMatch.attr("disabled", false);
+                _divCheckDate.find("*").prop("disabled", false);
+                _btnOut.css('pointer-events', 'auto');
+                _btnIn.css('pointer-events', 'auto');
+
+            }
+        }
 
         function isInList(value, array) {
             return array.indexOf(value) > -1;
