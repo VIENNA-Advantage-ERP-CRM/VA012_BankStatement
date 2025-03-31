@@ -6736,6 +6736,8 @@
                     }
                     loadFunctions.getMaxStatement("BT");
                     $_formNewRecord.attr("data-uid", 0);
+                    //VIS_427 Enabled the controls
+                    DisableEnableControlsOfRecOrUnrecRecord(false);
                     // _txtStatementNo.val(parseInt(_txtStatementNo.val()) + 1);
                     //not required below two lines, we are updating pageno and lineno by using call above getMaxStatement()
                     //_txtStatementPage.val("1");
