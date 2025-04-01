@@ -183,6 +183,10 @@ namespace VA012.Models
                     _obj._error = "VA012_AttachmentsAllreadyInSystem";
                     return _obj;
                 }
+                //VIS_427 01/04/2025 here get the payment method whose payment base type is wire transfer
+                int payMethod_ID = Util.GetValueOfInt(DB.ExecuteScalar(@"SELECT VA009_PaymentMethod_ID FROM VA009_PaymentMethod WHERE 
+                                                     VA009_PaymentBaseType = 'W' AND AD_Client_ID IN (0," + ctx.GetAD_Client_ID() + ")" +
+                                                    " AND AD_Org_ID IN (0," + _AD_Org_ID + ") ORDER BY AD_Org_ID DESC", null, null));
                 _message = _Filenames.ToString();
                 string[] _filenamesall = _message.Split(',');
                 for (int K = 0; K < _filenamesall.Length; K++)
@@ -363,11 +367,27 @@ namespace VA012.Models
                                             //set charge id if charge value is available in Bank Statement 7 column
                                             if (Util.GetValueOfString(dt.Rows[i][7]) != "")
                                             {
+                                                int C_Tax_ID = 0;
                                                 //'Value' replaced with 'Name' - 'Name' contains string Value
-                                                _C_Charge_ID = Util.GetValueOfInt(DB.ExecuteScalar(@"SELECT C_Charge_ID FROM C_Charge
-                                                    WHERE AD_Client_ID IN (0,  " + ctx.GetAD_Client_ID() +
-                                                    @") AND LOWER(Name)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][7])) + ")"));
+                                                //VIS_427 01/04/2025 Fixed query to get the tax id associated with charge
+                                                DataSet dsCharge = DB.ExecuteDataset(@"SELECT cc.C_Charge_ID,ct.C_Tax_ID FROM C_Charge cc INNER JOIN C_TaxCategory ct ON
+                                                    (ct.C_TaxCategory_ID=cc.C_TaxCategory_ID) WHERE cc.AD_Client_ID IN (0,  " + ctx.GetAD_Client_ID() +
+                                                    @") AND LOWER(cc.Name)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][7])) + ")");
+                                                if(dsCharge != null && dsCharge.Tables[0].Rows.Count > 0)
+                                                {
+                                                    _C_Charge_ID = Util.GetValueOfInt(dsCharge.Tables[0].Rows[0]["C_Charge_ID"]);
+                                                    C_Tax_ID = Util.GetValueOfInt(dsCharge.Tables[0].Rows[0]["C_Tax_ID"]);
+                                                }
                                                 _BnkStmtLine.SetC_Charge_ID(_C_Charge_ID);
+
+                                                if(C_Tax_ID > 0)
+                                                {
+                                                    _BnkStmtLine.SetC_Tax_ID(C_Tax_ID);
+                                                }
+                                                if (payMethod_ID > 0)
+                                                {
+                                                    _BnkStmtLine.SetVA009_PaymentMethod_ID(payMethod_ID);
+                                                }
                                                 //If chanrge id is available then set charge amount and statement amount on bank statement line suggested by Ashish.
                                                 if (_C_Currency_ID > 0)
                                                     _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type

@@ -490,6 +490,7 @@
                                 newRecordForm.prepayRefresh();
                                 _paymentPageNo = 1;
                                 loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                                DisableEnableControlsOfRecOrUnrecRecord(false);
                                 busyIndicator($root, false, "absolute");
                             }
 
@@ -4557,7 +4558,8 @@
                     //Rakesh:If cheque number exists on bank statement line for selected bank assigned as discussed with amit & ashish
                     if (_result._txtCheckNum) {
                         _divCheckNum.show();
-                        _txtCheckNum.attr("disabled", true);
+                        /*VIS_427 01/04/2025 enabled the check number when user edit the unreconciled statement*/
+                        _txtCheckNum.attr("disabled", false);
                         _txtCheckNum.removeClass("va012-mandatory");
                         _divCheckDate.show();
                         //VA228:Use _EftCheckNo value while dragdrop invoice schedule
@@ -6736,6 +6738,8 @@
                     }
                     loadFunctions.getMaxStatement("BT");
                     $_formNewRecord.attr("data-uid", 0);
+                    //VIS_427 Enabled the controls
+                    DisableEnableControlsOfRecOrUnrecRecord(false);
                     // _txtStatementNo.val(parseInt(_txtStatementNo.val()) + 1);
                     //not required below two lines, we are updating pageno and lineno by using call above getMaxStatement()
                     //_txtStatementPage.val("1");
