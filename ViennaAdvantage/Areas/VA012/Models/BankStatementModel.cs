@@ -2840,17 +2840,17 @@ namespace VA012.Models
                             {
                                 _obj.SetC_Invoice_ID(0);
                             }
-                            //Clear order reference
+                            //VIS_427 01/04/2025 Clear order reference
                             if (_obj.GetC_Order_ID() > 0)
                             {
                                 _obj.SetC_Order_ID(0);
                             }
-                            //Clear business partner reference
+                            //VIS_427 01/04/2025 Clear business partner reference
                             if (_obj.GetC_BPartner_ID() > 0)
                             {
                                 _obj.SetC_BPartner_ID(0);
                             }
-                            //Cleared fields
+                            //VIS_427 01/04/2025 Cleared fields
                             if (_obj.GetEftCheckNo() != null)
                             {
                                 _obj.SetEftCheckNo(null);

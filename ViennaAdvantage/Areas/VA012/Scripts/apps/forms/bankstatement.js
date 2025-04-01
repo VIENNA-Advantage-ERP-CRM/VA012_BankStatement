@@ -4558,6 +4558,7 @@
                     //Rakesh:If cheque number exists on bank statement line for selected bank assigned as discussed with amit & ashish
                     if (_result._txtCheckNum) {
                         _divCheckNum.show();
+                        /*VIS_427 01/04/2025 enabled the check number when user edit the unreconciled statement*/
                         _txtCheckNum.attr("disabled", false);
                         _txtCheckNum.removeClass("va012-mandatory");
                         _divCheckDate.show();

@@ -183,10 +183,10 @@ namespace VA012.Models
                     _obj._error = "VA012_AttachmentsAllreadyInSystem";
                     return _obj;
                 }
-                //VIS_427 here get the payment method whose payment base type is wire transfer
+                //VIS_427 01/04/2025 here get the payment method whose payment base type is wire transfer
                 int payMethod_ID = Util.GetValueOfInt(DB.ExecuteScalar(@"SELECT VA009_PaymentMethod_ID FROM VA009_PaymentMethod WHERE 
                                                      VA009_PaymentBaseType = 'W' AND AD_Client_ID IN (0," + ctx.GetAD_Client_ID() + ")" +
-                                                    " AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID() + ") ORDER BY AD_Org_ID DESC", null, null));
+                                                    " AND AD_Org_ID IN (0," + _AD_Org_ID + ") ORDER BY AD_Org_ID DESC", null, null));
                 _message = _Filenames.ToString();
                 string[] _filenamesall = _message.Split(',');
                 for (int K = 0; K < _filenamesall.Length; K++)
@@ -369,7 +369,7 @@ namespace VA012.Models
                                             {
                                                 int C_Tax_ID = 0;
                                                 //'Value' replaced with 'Name' - 'Name' contains string Value
-                                                //VIS_427 Fixed query to get the tax id associated with charge
+                                                //VIS_427 01/04/2025 Fixed query to get the tax id associated with charge
                                                 DataSet dsCharge = DB.ExecuteDataset(@"SELECT cc.C_Charge_ID,ct.C_Tax_ID FROM C_Charge cc INNER JOIN C_TaxCategory ct ON
                                                     (ct.C_TaxCategory_ID=cc.C_TaxCategory_ID) WHERE cc.AD_Client_ID IN (0,  " + ctx.GetAD_Client_ID() +
                                                     @") AND LOWER(cc.Name)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][7])) + ")");
