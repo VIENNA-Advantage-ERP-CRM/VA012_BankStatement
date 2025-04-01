@@ -4558,8 +4558,14 @@
                     //Rakesh:If cheque number exists on bank statement line for selected bank assigned as discussed with amit & ashish
                     if (_result._txtCheckNum) {
                         _divCheckNum.show();
-                        /*VIS_427 01/04/2025 enabled the check number when user edit the unreconciled statement*/
-                        _txtCheckNum.attr("disabled", false);
+                        /*VIS_427 01/04/2025 disabled the check number when user edit the reconciled statement*/
+                        if (_reconciledLine) {
+                            _txtCheckNum.attr("disabled", true);
+                        }
+                            /*VIS_427 01/04/2025 enabled the check number when user edit the unreconciled statement*/
+                        else {
+                            _txtCheckNum.attr("disabled", false);
+                        }
                         _txtCheckNum.removeClass("va012-mandatory");
                         _divCheckDate.show();
                         //VA228:Use _EftCheckNo value while dragdrop invoice schedule
