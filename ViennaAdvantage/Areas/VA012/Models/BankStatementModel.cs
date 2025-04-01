@@ -2850,6 +2850,23 @@ namespace VA012.Models
                             {
                                 _obj.SetC_BPartner_ID(0);
                             }
+                            //Cleared fields
+                            if (_obj.GetEftCheckNo() != null)
+                            {
+                                _obj.SetEftCheckNo(null);
+                            }
+                            if(_obj.GetEftValutaDate() != null)
+                            {
+                                _obj.SetEftValutaDate(null);
+                            }
+                            if(_obj.GetVA009_PaymentMethod_ID() > 0)
+                            {
+                                _obj.SetVA009_PaymentMethod_ID(0);
+                            }
+                            if (!string.IsNullOrEmpty(Util.GetValueOfString(_obj.Get_Value("TenderType"))))
+                            {
+                                _obj.Set_Value("TenderType", null);
+                            }
 
                             _obj.SetVA012_IsMatchingConfirmed(false);
                             if (!_obj.Save())

@@ -490,6 +490,7 @@
                                 newRecordForm.prepayRefresh();
                                 _paymentPageNo = 1;
                                 loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                                DisableEnableControlsOfRecOrUnrecRecord(false);
                                 busyIndicator($root, false, "absolute");
                             }
 
@@ -4557,7 +4558,7 @@
                     //Rakesh:If cheque number exists on bank statement line for selected bank assigned as discussed with amit & ashish
                     if (_result._txtCheckNum) {
                         _divCheckNum.show();
-                        _txtCheckNum.attr("disabled", true);
+                        _txtCheckNum.attr("disabled", false);
                         _txtCheckNum.removeClass("va012-mandatory");
                         _divCheckDate.show();
                         //VA228:Use _EftCheckNo value while dragdrop invoice schedule
