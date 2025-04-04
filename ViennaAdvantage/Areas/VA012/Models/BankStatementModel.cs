@@ -1195,6 +1195,10 @@ namespace VA012.Models
                 else
                 {
                     _bankStatementLine.SetC_Charge_ID(0);
+                    //Set these fields value as zero in order to save the bankstatement line
+                    _bankStatementLine.SetChargeAmt(0);
+                    _bankStatementLine.SetTaxAmt(0);
+                    _bankStatementLine.SetC_Tax_ID(0);
                 }
                 /*chnage by pratap*/
 
@@ -2835,6 +2839,33 @@ namespace VA012.Models
                             if (_obj.GetC_Invoice_ID() > 0)
                             {
                                 _obj.SetC_Invoice_ID(0);
+                            }
+                            //VIS_427 01/04/2025 Clear order reference
+                            if (_obj.GetC_Order_ID() > 0)
+                            {
+                                _obj.SetC_Order_ID(0);
+                            }
+                            //VIS_427 01/04/2025 Clear business partner reference
+                            if (_obj.GetC_BPartner_ID() > 0)
+                            {
+                                _obj.SetC_BPartner_ID(0);
+                            }
+                            //VIS_427 01/04/2025 Cleared fields
+                            if (_obj.GetEftCheckNo() != null)
+                            {
+                                _obj.SetEftCheckNo(null);
+                            }
+                            if(_obj.GetEftValutaDate() != null)
+                            {
+                                _obj.SetEftValutaDate(null);
+                            }
+                            if(_obj.GetVA009_PaymentMethod_ID() > 0)
+                            {
+                                _obj.SetVA009_PaymentMethod_ID(0);
+                            }
+                            if (!string.IsNullOrEmpty(Util.GetValueOfString(_obj.Get_Value("TenderType"))))
+                            {
+                                _obj.Set_Value("TenderType", null);
                             }
 
                             _obj.SetVA012_IsMatchingConfirmed(false);
