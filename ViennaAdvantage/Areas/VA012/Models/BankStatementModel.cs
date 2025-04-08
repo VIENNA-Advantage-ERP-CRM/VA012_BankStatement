@@ -7130,6 +7130,7 @@ namespace VA012.Models
         /// Get the list of PaymentMethods
         /// </summary>
         /// <param name="ctx">Context</param>
+        /// <param name="BankOrgId">Bank Account Organization Id</param>
         /// <returns>List of payment methods</returns>
         public List<ChargeProp> GetPaymentMethods(Ctx ctx,int BankOrgId)
         {

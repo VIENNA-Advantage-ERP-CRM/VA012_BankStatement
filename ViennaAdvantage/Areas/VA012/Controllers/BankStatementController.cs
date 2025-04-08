@@ -1046,6 +1046,7 @@ namespace VA012.Controllers
         /// <summary>
         /// Get the Payment Methods
         /// </summary>
+        /// <param name="BankOrgId">Bank Account Organization Id</param>
         /// <returns>List Of payment methods</returns>
         public JsonResult GetPaymentMethods(int BankOrgId)
         {
