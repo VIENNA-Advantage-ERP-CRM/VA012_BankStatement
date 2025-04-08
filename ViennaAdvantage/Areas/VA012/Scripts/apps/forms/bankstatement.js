@@ -4226,7 +4226,7 @@
 
                     // when cmb on transaction type Contra then bind "Voucher/Match" type as Contra
                     //when statement is not reconciled and vocuher match is not voucher
-                    if (!_reconciledLine && _cmbVoucherMatch.val() != "V" && _cmbTransactionType.val() == "CO") {
+                    if (!_result._reconciled && _cmbVoucherMatch.val() != "V" && _cmbTransactionType.val() == "CO") {
                         _cmbVoucherMatch.val("C").prop('selected', true);
                     }
 
