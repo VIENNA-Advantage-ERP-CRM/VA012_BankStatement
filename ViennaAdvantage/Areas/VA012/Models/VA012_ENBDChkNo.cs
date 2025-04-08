@@ -186,7 +186,7 @@ namespace VA012.Models
                 //VIS_427 01/04/2025 here get the payment method whose payment base type is wire transfer
                 int payMethod_ID = Util.GetValueOfInt(DB.ExecuteScalar(@"SELECT VA009_PaymentMethod_ID FROM VA009_PaymentMethod WHERE 
                                                      VA009_PaymentBaseType = 'W' AND AD_Client_ID IN (0," + ctx.GetAD_Client_ID() + ")" +
-                                                    " AND AD_Org_ID IN (0," + _AD_Org_ID + ") ORDER BY AD_Org_ID DESC", null, null));
+                                                    " AND IsActive='Y' AND AD_Org_ID IN (0," + _AD_Org_ID + ") ORDER BY AD_Org_ID DESC", null, null));
                 _message = _Filenames.ToString();
                 string[] _filenamesall = _message.Split(',');
                 for (int K = 0; K < _filenamesall.Length; K++)
@@ -379,8 +379,8 @@ namespace VA012.Models
                                                     C_Tax_ID = Util.GetValueOfInt(dsCharge.Tables[0].Rows[0]["C_Tax_ID"]);
                                                 }
                                                 _BnkStmtLine.SetC_Charge_ID(_C_Charge_ID);
-
-                                                if(C_Tax_ID > 0)
+                                                _BnkStmtLine.SetVA012_VoucherType("V");
+                                                if (C_Tax_ID > 0)
                                                 {
                                                     _BnkStmtLine.SetC_Tax_ID(C_Tax_ID);
                                                 }
