@@ -1975,7 +1975,8 @@
                 }, 2);
             },
             loadSearchPaymentMethod: function () {
-                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetPaymentMethods", null, callbackloadSearchPaymentMethod);
+                VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetPaymentMethods",
+                    { "BankOrgId": VIS.Utility.Util.getValueOfInt($('option:selected', _cmbBankAccount).attr('orgid')) }, callbackloadSearchPaymentMethod);
                 function callbackloadSearchPaymentMethod(_ds) {
                     //VA230:store payment method data in global varibale for further use
                     _DsPaymentMethod = _ds;
@@ -3700,6 +3701,7 @@
                                                 BankStatementLine_ID = [];
                                                 childDialogs.loadStatement(_statementID);
                                                 newRecordForm.refreshForm();
+                                                DisableEnableControlsOfRecOrUnrecRecord(false);
 
 
                                             }
@@ -3910,7 +3912,10 @@
                                         //set status as green incase of Charge reference is present
                                         else if ((data[i].c_charge_id != null && data[i].c_charge_id != "0" && data[i].c_charge_id != 0) /*&& data[i].usenexttime == true*/) {
 
-                                            if (data[i].STMTAMT == data[i].trxamount)
+                                            if (((data[i].VA009_PayMethod_ID != 0 && data[i].c_bpartner_id == 0
+                                                && data[i].c_payment_id == 0) ||
+                                                (data[i].c_bpartner_id != 0 && data[i].c_payment_id > 0))
+                                                && data[i].STMTAMT == data[i].trxamount)
                                                 status = "va012-green-color";
                                             else
                                                 status = "va012-red-color";
@@ -4220,7 +4225,8 @@
                     }
 
                     // when cmb on transaction type Contra then bind "Voucher/Match" type as Contra
-                    if (_cmbTransactionType.val() == "CO") {
+                    //when statement is not reconciled and vocuher match is not voucher
+                    if (!_reconciledLine && _cmbVoucherMatch.val() != "V" && _cmbTransactionType.val() == "CO") {
                         _cmbVoucherMatch.val("C").prop('selected', true);
                     }
 
