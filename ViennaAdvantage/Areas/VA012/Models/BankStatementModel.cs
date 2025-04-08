@@ -4514,7 +4514,7 @@ namespace VA012.Models
                 + " THEN 'Y' "
                 + " ELSE 'N' "
                 + " END AS ISCONVERTED, "
-                + "  INV.DOCUMENTNO AS INVOICENO,BS.C_BANKSTATEMENT_ID,BS.DOCSTATUS,BSL.C_CASHLINE_ID, BSL.TRXNO, BSL.StatementLineDate,NVL(bsl.EftCheckNo,'') AS EftCheckNo "
+                + "  INV.DOCUMENTNO AS INVOICENO,BS.C_BANKSTATEMENT_ID,BS.DOCSTATUS,BSL.C_CASHLINE_ID, BSL.TRXNO, BSL.StatementLineDate,NVL(bsl.EftCheckNo,'') AS EftCheckNo,BSL.VA009_PaymentMethod_ID,BSL.C_BPARTNER_ID "
                + " FROM C_BankStatementLine BSL "
                + " INNER JOIN C_BankStatement BS "
                + " ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID) "
@@ -4569,13 +4569,16 @@ namespace VA012.Models
             if (RecOrUnRecComboVal == 1)
             {
                 _sql += @" AND ((NVL(BSL.C_PAYMENT_ID,0) != 0) OR (NVL(BSL.C_CASHLINE_ID,0) != 0)
-             OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
+             OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.VA009_PaymentMethod_ID,0) != 0) AND (NVL(BSL.C_BPARTNER_ID,0) = 0) AND (NVL(BSL.C_PAYMENT_ID,0) = 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))) 
+              OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.C_BPARTNER_ID,0) != 0) AND (NVL(BSL.C_PAYMENT_ID,0) != 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
             }
             /*VIS_427 Here RecOrUnRecComboVal=2 represent that user has selected UnReconcile on UI and hence Applied this check
             in order get value of Unreconciled records*/
             else if (RecOrUnRecComboVal == 2)
             {
                 _sql += @" AND ((NVL(BSL.C_PAYMENT_ID,0)= 0) OR (NVL(BSL.C_CASHLINE_ID,0) = 0) OR (NVL(BSL.C_CHARGE_ID,0)=0)
+             OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.VA009_PaymentMethod_ID,0) != 0) AND (NVL(BSL.C_BPARTNER_ID,0) != 0) AND (NVL(BSL.C_PAYMENT_ID,0) = 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2))))
+             OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.VA009_PaymentMethod_ID,0) = 0) AND (NVL(BSL.C_BPARTNER_ID,0) = 0) AND (NVL(BSL.C_PAYMENT_ID,0) = 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))) 
              OR (ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) != (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
             }
             if (_SEARCHREQUEST)
@@ -4623,6 +4626,8 @@ namespace VA012.Models
                         _statement.description = Util.GetValueOfString(_ds.Tables[0].Rows[i]["DESCRIPTION"]);
                         _statement.trxamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]);
                         _statement.STMTAMT = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"]);
+                        _statement.VA009_PayMethod_ID = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["VA009_PaymentMethod_ID"]);
+                        _statement.c_bpartner_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BPartner_ID"]);
                         //if charge id is there and Statement amount is Equal to Charge Amount then make it Matching Confirmed.
                         //when charge reference is there on Line then VA012_ISMATCHINGCONFIRMED set as true
                         if (Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_CHARGE_ID"]) > 0)
@@ -7126,12 +7131,12 @@ namespace VA012.Models
         /// </summary>
         /// <param name="ctx">Context</param>
         /// <returns>List of payment methods</returns>
-        public List<ChargeProp> GetPaymentMethods(Ctx ctx)
+        public List<ChargeProp> GetPaymentMethods(Ctx ctx,int BankOrgId)
         {
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
             //here Cash and On Credit is not into consideration
-            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID,VA009_PaymentBaseType FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE NOT IN ('B','P') AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ") ORDER BY VA009_NAME";
+            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID,VA009_PaymentBaseType FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE NOT IN ('B','P') AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ","+ BankOrgId +") ORDER BY VA009_NAME";
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "VA009_PaymentMethod", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
 
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
@@ -7600,6 +7605,7 @@ namespace VA012.Models
         public string trxno { get; set; }
         public DateTime? stmtLineDate { get; internal set; }
         public string EftCheckNo { get; set; }
+        public int VA009_PayMethod_ID { get; set; }
     }
     public class ChargeProp
     {

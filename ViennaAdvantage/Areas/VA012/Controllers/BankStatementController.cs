@@ -1047,14 +1047,14 @@ namespace VA012.Controllers
         /// Get the Payment Methods
         /// </summary>
         /// <returns>List Of payment methods</returns>
-        public JsonResult GetPaymentMethods()
+        public JsonResult GetPaymentMethods(int BankOrgId)
         {
             string retJSON = "";
             if (Session["ctx"] != null)
             {
                 Ctx ctx = Session["ctx"] as Ctx;
                 StatementOperations _model = new StatementOperations();
-                retJSON = JsonConvert.SerializeObject(_model.GetPaymentMethods(ctx));
+                retJSON = JsonConvert.SerializeObject(_model.GetPaymentMethods(ctx, BankOrgId));
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
