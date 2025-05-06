@@ -2055,6 +2055,7 @@
 
                             ////// open record for edit
                             if ($(this).data("uid") > 0) {
+                                var statementAmt = $(this).data("statementamt");
 
                                 if (_cmbTransactionType.val() == "PY") {
                                     var _dragPaymentID = ($(ui.draggable)).data('uid');
@@ -2111,6 +2112,8 @@
                                     if (parseInt($_formNewRecord.attr("data-uid")) != $(this).data("uid")) {
                                         newRecordForm.scheduleRefresh();
                                     }
+                                    //get statement id
+                                    var _dragStatementID = $(this).data("uid");
                                     //VA230:Get payment method base type and payment methodid
                                     _PaymentBaseType = VIS.Utility.Util.getValueOfString($(ui.draggable).attr('paymentbasetype'));
                                     _PaymentMethodId = VIS.Utility.Util.getValueOfInt($(ui.draggable).attr('paymentmethodid'));
@@ -2126,10 +2129,11 @@
                                             //if (_txtAmount.val() == "0.00") {
                                             //    _scheduleAmount.push("0");
                                             //}
+                                            var amount = 0;
                                             _scheduleAmount.push($(ui.draggable).attr('paymentamount'));
 
-                                            if (Number(_scheduleAmount[0]) == "0") {
-                                                var amount = 0;
+                                            if (Number(_scheduleAmount.length) > 0) {
+                                                
                                                 for (var i = 0; i < _scheduleAmount.length; i++) {
                                                     amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                                 }
@@ -2149,7 +2153,10 @@
                                                     _btnOut.addClass("va012-inactive");
                                                     _btnOut.attr("v_active", "0");
                                                 }
-                                                _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                                                //if statement id not found then set value of amount as then amount of scheule
+                                                if (_dragStatementID == 0) {
+                                                    _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
+                                                }                                                
                                                 //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
                                                 //_txtTrxAmt.trigger('change');
                                             }
@@ -2186,6 +2193,7 @@
                                             if (_scheduleAmount.length == 1) {
                                                 _scheduleAmount[0] = VIS.Utility.Util.getValueOfString(convertAmtCulture(_txtTrxAmt.getControl().val()));
                                             }
+                                            _txtTrxAmt.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
                                             //get the Amount in standard format
                                             _txtTrxAmt.getControl().trigger('blur', [convertAmtCulture(_txtAmount.getControl().val()), convertAmtCulture(_txtTrxAmt.getControl().val())]);
                                         }, 500); // for Accurate Result
@@ -2203,6 +2211,13 @@
                                     _PaymentMethodId = VIS.Utility.Util.getValueOfInt($(ui.draggable).attr('paymentmethodid'));
 
                                     if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _prepayList.toString(), convertAmtCulture(_txtAmount.getControl().val()))) {
+                                        /*VIS_427 Bug ID 6484 02/05/2025 if the statment amount is less then order amount then show message*/
+                                        if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(statementAmt)) != 0 &&
+                                            CheckWhetherTrxAmtGreaterThanTxtAmt(ui, VIS.Utility.Util.getValueOfDecimal(convertAmtCulture($(ui.draggable).attr('paymentamount'))),
+                                                VIS.Utility.Util.getValueOfDecimal(convertAmtCulture($(ui.draggable).attr('paymentamount'))), statementAmt)) {
+                                            VIS.ADialog.info("VA012_StatementAmtShouldBeMore", null, "", "");
+                                            return;
+                                        }
                                         //get _txtTrxAmt from prepay order
                                         childDialogs.statementOpenEdit($(this).data("uid"), _dragOrderID);
 
@@ -2288,6 +2303,31 @@
                         }
                     }
                 });
+                /**
+                 * This function is used to check if transaction amount is less then trnasaction amount or not
+                 * @param {any} ui
+                 * @param {any} amt
+                 * @param {any} amtToRemoved
+                 * @param {any} statementAmt
+                 */
+                function CheckWhetherTrxAmtGreaterThanTxtAmt(ui, amt, amtToRemoved, statementAmt) {
+                    if (Math.abs(convertAmtCulture(amt)) > Math.abs(convertAmtCulture(statementAmt))) {
+                        if (VIS.Utility.Util.getValueOfString(_cmbDifferenceType.val()) == "CH") {
+                            _cmbDifferenceType.prop('selectedIndex', 0);
+                            _cmbCharge.prop('selectedIndex', 0);
+                            _txtCharge.attr('chargeid', 0);
+                            _txtCharge.val("");
+                            _cmbTaxRate.prop('selectedIndex', 0);
+                            _txtTaxAmount.setValue(0);
+                            _cmbDifferenceType.addClass('va012-mandatory');
+                            _divCharge.hide();
+                            _divTaxRate.hide();
+                            _divTaxAmount.hide();
+                        }
+                        return true;
+                    }
+                    return false;
+                }
                 //$_formNewRecord.find(".va012-drop-schedule").droppable({
                 $_formNewRecord.droppable({
                     hoverClass: "va012-dropping",
@@ -2481,7 +2521,12 @@
                                 }
                             }
                             if (_cmbTransactionType.val() == "PO") {
-
+                                //Converted the amount
+                                var _ds = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount", { recordID: parseInt(($(ui.draggable)).data('uid')), bnkAct_Id: _cmbBankAccount.val(), transcType: _cmbTransactionType.val(), stmtDate: _dtStatementDate.val() });
+                                if (_ds.length == 0 || _ds[0].DueAmount == 0) {
+                                    VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                    return;
+                                }
                                 //if (loadFunctions.checkPrepayCondition(($(ui.draggable)).data('uid'), $(this).attr("data-uid"), _prepayList.toString(), _txtAmount.getValue())) {
                                 // if amount is zero then should pop-up this message
                                 //return message if try to drag another record while already has the record on the form.
@@ -2495,6 +2540,12 @@
                                     return;
                                 }
                                 else {
+                                    /*VIS_427 Bug ID 6484 02/05/2025 if the statment amount is less then order amount then show message*/
+                                    if (VIS.Utility.Util.getValueOfDecimal(convertAmtCulture(_txtAmount.getControl().val())) != 0 &&
+                                        CheckWhetherTrxAmtGreaterThanTxtAmt(ui, _ds[0].DueAmount, _ds[0].DueAmount, _txtAmount.getControl().val())) {
+                                        VIS.ADialog.info("VA012_StatementAmtShouldBeMore", null, "", "");
+                                        return;
+                                    }
                                     $_ctrlOrder.setValue(($(ui.draggable)).data('uid'), false, true);
                                 }
                                 //disable the amount becoz can't change amount for prepay order
@@ -3938,7 +3989,7 @@
                                     (status == "va012-red-color" && VIS.Utility.Util.getValueOfInt(RecOrUnRecComboVal) == 2)) {
                                     BankStatementLine_ID.push(data[i].c_bankstatementline_id);
 
-                                    _StatementsHTML = '<div  data-uid="' + data[i].c_bankstatementline_id + '" class="va012-right-data-wrap ' + status + '">'
+                                    _StatementsHTML = '<div  data-uid="' + data[i].c_bankstatementline_id + '" data-statementamt="' + VIS.Utility.Util.getValueOfDecimal(data[i].trxamount) + '" class="va012-right-data-wrap ' + status + '">'
                                         + '<div class="va012-statement-wrap">'
                                         + '<div class="va012-fl-padd">'
                                         + '<div class="col-md-4 col-sm-4 va012-padd-0">'
@@ -4568,7 +4619,7 @@
                         if (_reconciledLine) {
                             _txtCheckNum.attr("disabled", true);
                         }
-                            /*VIS_427 01/04/2025 enabled the check number when user edit the unreconciled statement*/
+                        /*VIS_427 01/04/2025 enabled the check number when user edit the unreconciled statement*/
                         else {
                             _txtCheckNum.attr("disabled", false);
                         }
@@ -6427,7 +6478,7 @@
                         VIS.ADialog.info("VA012_PleaseEnterAmount", null, "", "");
                         return;
                     }
-                   
+
                     if (_formData[0]["_cmbVoucherMatch"] == "C") {
 
 
@@ -6834,6 +6885,11 @@
                                     if (_cmbDifferenceType.val() != "CH") {
                                         _cmbDifferenceType.val("0").prop('selected', true);
                                     }
+                                }
+                                    /*VIS_427 Bug ID 6484 02/05/2025 if the statment amount is 
+                                     less then invoice schedule amount then disable the check option*/
+                                else if (_scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) > Math.abs(convertAmtCulture(_txtAmount.getControl().val()))) {
+                                    _cmbDifferenceType.find("option[value=CH]").prop('disabled', true);
                                 }
                                 //considered _cmbDifferenceType value not zero then remove mandatory class
                                 //changed != to <= to check null also
@@ -7744,11 +7800,12 @@
                         _txtCurrency.addClass("va012-mandatory");
                         _txtConversionType.addClass("va012-mandatory");
                         setTimeout(function () {
-                        //VIS_427 if record is saved and their exist any statement in right panel the triggered its event
-                        var indexOfId = BankStatementLine_ID.indexOf(BankStatementLineIdForSave);
+                            //VIS_427 if record is saved and their exist any statement in right panel the triggered its event
+                            var indexOfId = BankStatementLine_ID.indexOf(BankStatementLineIdForSave);
                             if (BankStatementLine_ID.length > indexOfId + 1 && BankStatementLine_ID[indexOfId + 1] != 0) {
                                 BankStatementLineIdForSave = BankStatementLine_ID[indexOfId + 1];
-                                $root.find('span.glyphicon-edit[data-uid="' + BankStatementLine_ID[indexOfId + 1] + '"]').trigger('click');                        }
+                                $root.find('span.glyphicon-edit[data-uid="' + BankStatementLine_ID[indexOfId + 1] + '"]').trigger('click');
+                            }
                         }, 1000);
                     }
                     else {
@@ -8147,13 +8204,13 @@
                 error: function (data) { VIS.ADialog.info(data, null, "", ""); }
             });
         };
-          
+
         /**
          *VIS_427 This function is used to disable all the controls of already reconciled record else enable them for unreconciled records
          * @param {any} IsDisable
          */
         function DisableEnableControlsOfRecOrUnrecRecord(IsDisable) {
-           //if condition executes when the Voucher/Match is not of voucher type and for reconciled record
+            //if condition executes when the Voucher/Match is not of voucher type and for reconciled record
             if (IsDisable && (_cmbVoucherMatch.val() != "V" || (_cmbVoucherMatch.val() == "V" && $_ctrlBusinessPartner.getValue() != 0))) {
                 _txtAmount.getControl().attr("disabled", true);
                 _txtCurrency.attr("disabled", true);
