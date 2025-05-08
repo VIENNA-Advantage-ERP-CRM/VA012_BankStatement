@@ -2312,18 +2312,6 @@
                  */
                 function CheckWhetherTrxAmtGreaterThanTxtAmt(ui, amt, amtToRemoved, statementAmt) {
                     if (Math.abs(convertAmtCulture(amt)) > Math.abs(convertAmtCulture(statementAmt))) {
-                        if (VIS.Utility.Util.getValueOfString(_cmbDifferenceType.val()) == "CH") {
-                            _cmbDifferenceType.prop('selectedIndex', 0);
-                            _cmbCharge.prop('selectedIndex', 0);
-                            _txtCharge.attr('chargeid', 0);
-                            _txtCharge.val("");
-                            _cmbTaxRate.prop('selectedIndex', 0);
-                            _txtTaxAmount.setValue(0);
-                            _cmbDifferenceType.addClass('va012-mandatory');
-                            _divCharge.hide();
-                            _divTaxRate.hide();
-                            _divTaxAmount.hide();
-                        }
                         return true;
                     }
                     return false;
@@ -6890,6 +6878,16 @@
                                      less then invoice schedule amount then disable the check option*/
                                 else if (_scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) > Math.abs(convertAmtCulture(_txtAmount.getControl().val()))) {
                                     _cmbDifferenceType.find("option[value=CH]").prop('disabled', true);
+                                        _cmbDifferenceType.prop('selectedIndex', 0);
+                                        _cmbCharge.prop('selectedIndex', 0);
+                                        _txtCharge.attr('chargeid', 0);
+                                        _txtCharge.val("");
+                                        _cmbTaxRate.prop('selectedIndex', 0);
+                                        _txtTaxAmount.setValue(0);
+                                        _cmbDifferenceType.addClass('va012-mandatory');
+                                        _divCharge.hide();
+                                        _divTaxRate.hide();
+                                        _divTaxAmount.hide();
                                 }
                                 //considered _cmbDifferenceType value not zero then remove mandatory class
                                 //changed != to <= to check null also
