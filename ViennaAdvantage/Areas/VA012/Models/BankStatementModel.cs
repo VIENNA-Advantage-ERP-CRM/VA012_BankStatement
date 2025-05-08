@@ -4908,6 +4908,14 @@ namespace VA012.Models
                     #region under Payment
                     if (_ds.Tables[0].Rows.Count == 1)
                     {
+                        /*VIS_427 Bug ID 6484 02/05/2025 if transaction amount is smaller then set 
+                         text amount with value of transaction amount in order to correct difference amount based
+                        on difference tye selected by user*/
+                        if (Math.Abs(_formData[0]._txtAmount) > 
+                            Math.Abs(_formData[0]._txtTrxAmt))
+                        {
+                            _txtAmount = _txtTrxAmt;
+                        }
                         decimal differenceAmount = 0;
                         MPayment _pay = new MPayment(ctx, 0, _trx);
                         /*chnage by pratap*/
@@ -5495,6 +5503,7 @@ namespace VA012.Models
         {
             //int _paymentMethodID = 0;
             decimal _txtAmount = 0;
+            decimal _txtTrxAmt = 0;
             try
             {
                 //Getting the PaymentMethod_ID from Bank Statement form so not required commented code to get PaymentMethod
@@ -5513,15 +5522,22 @@ namespace VA012.Models
                 if (_formData[0]._cmbCurrency != _formData[0]._txtCurrency)
                 {
                     _txtAmount = MConversionRate.Convert(ctx, _formData[0]._txtAmount, _formData[0]._cmbCurrency, _formData[0]._txtCurrency, _formData[0]._dtStatementDate, _formData[0]._txtConversionType, ctx.GetAD_Client_ID(), _formData[0]._bankAcctOrg_ID);
+                    _txtTrxAmt = MConversionRate.Convert(ctx, _formData[0]._txtTrxAmt, _formData[0]._cmbCurrency, _formData[0]._txtCurrency, _formData[0]._dtStatementDate, _formData[0]._txtConversionType, ctx.GetAD_Client_ID(), _formData[0]._bankAcctOrg_ID);
                 }
                 else
                 {
                     _txtAmount = _formData[0]._txtAmount;
+                    _txtTrxAmt = _formData[0]._txtTrxAmt;
+                }
+                /*this condition is handled if user drag order and click on save button*/
+                if (Math.Abs(_formData[0]._txtAmount) > Math.Abs(_formData[0]._txtTrxAmt) && Math.Abs(_formData[0]._txtTrxAmt) == 0)
+                {
+                    _txtTrxAmt = _txtAmount;
                 }
 
                 MPayment _pay = new MPayment(ctx, 0, _trx);
                 //passed third parameter to pass AD_Org_ID
-                int C_Doctype_ID = GetDocTypeID(ctx, _txtAmount, _formData[0]._bankAcctOrg_ID);//Get DocType using Amount
+                int C_Doctype_ID = GetDocTypeID(ctx, _txtTrxAmt, _formData[0]._bankAcctOrg_ID);//Get DocType using Amount
                 _pay.SetC_DocType_ID(C_Doctype_ID);
                 //Payment AcctDate & Trx Date should be StatementLine AcctDate
                 //_pay.SetDateAcct(System.DateTime.Now);
@@ -5536,7 +5552,7 @@ namespace VA012.Models
                 _pay.SetC_BPartner_Location_ID(_bPartnerLocation_ID);
                 _pay.SetC_Currency_ID(_formData[0]._txtCurrency);// set Currency selected on form.
                 _pay.SetC_ConversionType_ID(_formData[0]._txtConversionType);//set conversionType selected on form.
-                _pay.SetPayAmt(Math.Abs(_txtAmount));//Set Amount which is converted based on Currency and ConversionRate
+                _pay.SetPayAmt(Math.Abs(_txtTrxAmt));//Set Amount which is converted based on Currency and ConversionRate
                 //Set Payment Method by getting from the form
                 _pay.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);
                 //_pay.SetVA009_PaymentMethod_ID(_paymentMethodID);
