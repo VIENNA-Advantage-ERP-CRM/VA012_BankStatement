@@ -4576,10 +4576,13 @@ namespace VA012.Models
             in order get value of Unreconciled records*/
             else if (RecOrUnRecComboVal == 2)
             {
-                _sql += @" AND ((NVL(BSL.C_PAYMENT_ID,0)= 0) OR (NVL(BSL.C_CASHLINE_ID,0) = 0) OR (NVL(BSL.C_CHARGE_ID,0)=0)
-             OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.VA009_PaymentMethod_ID,0) != 0) AND (NVL(BSL.C_BPARTNER_ID,0) != 0) AND (NVL(BSL.C_PAYMENT_ID,0) = 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2))))
-             OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.VA009_PaymentMethod_ID,0) = 0) AND (NVL(BSL.C_BPARTNER_ID,0) = 0) AND (NVL(BSL.C_PAYMENT_ID,0) = 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))) 
-             OR (ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) != (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
+                //   _sql += @" AND ((NVL(BSL.C_PAYMENT_ID,0)= 0) OR (NVL(BSL.C_CASHLINE_ID,0) = 0) OR (NVL(BSL.C_CHARGE_ID,0)=0)
+                //OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.VA009_PaymentMethod_ID,0) != 0) AND (NVL(BSL.C_BPARTNER_ID,0) != 0) AND (NVL(BSL.C_PAYMENT_ID,0) = 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2))))
+                //OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.VA009_PaymentMethod_ID,0) = 0) AND (NVL(BSL.C_BPARTNER_ID,0) = 0) AND (NVL(BSL.C_PAYMENT_ID,0) = 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))) 
+                //OR (ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) != (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
+                _sql += @" AND NOT ((NVL(BSL.C_PAYMENT_ID,0) != 0) OR (NVL(BSL.C_CASHLINE_ID,0) != 0)
+             OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.VA009_PaymentMethod_ID,0) != 0) AND (NVL(BSL.C_BPARTNER_ID,0) = 0) AND (NVL(BSL.C_PAYMENT_ID,0) = 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))) 
+              OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.C_BPARTNER_ID,0) != 0) AND (NVL(BSL.C_PAYMENT_ID,0) != 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
             }
             if (_SEARCHREQUEST)
             {
