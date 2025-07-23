@@ -287,7 +287,7 @@
     </Reference>
     <Reference Include="VAPrintLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\VAPrintLib.dll</HintPath>
+      <HintPath>DLL\VAPrintLib.dll</HintPath>
     </Reference>
     <Reference Include="VAS">
       <HintPath>DLL\VAS.dll</HintPath>
@@ -297,7 +297,7 @@
     </Reference>
     <Reference Include="VAWorkflow, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\VAWorkflow.dll</HintPath>
+      <HintPath>DLL\VAWorkflow.dll</HintPath>
     </Reference>
     <Reference Include="ViennaBase">
       <HintPath>..\..\..\..\BreakageDLL\ViennaBase.dll</HintPath>
