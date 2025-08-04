@@ -245,18 +245,30 @@ namespace VA012.Controllers
                 {
                     //changed logic as per requirement that first get the Statement Name and if name is null then fetch name from regular expression
                     //when the DocStatus in InProgress also should allow to check the StatementID
-                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BankStatement WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + "  AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    _sql = "SELECT C_BANKSTATEMENT_ID FROM C_BankStatement WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount;
+                    if (ctx != null)
+                    {
+                        _sql += " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    }
                     statementID = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
                     if (statementID > 0)
                     {
                         //when the DocStatus in InProgress also should allow  to check the statementNo
-                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BankStatement WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                        _sql = "SELECT NAME AS STATEMENTNO FROM C_BankStatement WHERE ISACTIVE='Y' AND DOCSTATUS IN ('DR','IP') AND  C_BANKACCOUNT_ID=" + _bankAccount;
+                        if (ctx != null)
+                        {
+                            _sql += " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                        }
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
                     else
                     {
                         //based on BankAcct fetch the Statement Name
-                        _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BankStatement WHERE ISACTIVE='Y' AND  C_BANKACCOUNT_ID=" + _bankAccount + " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                        _sql = "SELECT NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1,0) AS STATEMENTNO FROM C_BankStatement WHERE ISACTIVE='Y' AND  C_BANKACCOUNT_ID=" + _bankAccount;
+                        if (ctx != null)
+                        {
+                            _sql += " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                        }
                         statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                     }
 
@@ -285,8 +297,11 @@ namespace VA012.Controllers
 
                     _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE FROM C_BankStatementLine BSL
                     WHERE BSL.VA012_PAGE=(" + pageNo + @") 
-                    AND BSL.C_BANKSTATEMENT_ID =" + statementID + "  AND BSL.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
-                    //pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+                    AND BSL.C_BANKSTATEMENT_ID =" + statementID;
+                    if (ctx != null)
+                    {
+                        _sql += " AND BSL.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                    }
                     //No need of PageNo condition to fetch the LineNo so get both PageNo and LineNo in One dB Query
                     DataSet _data = DB.ExecuteDataset(_sql, null, null);
                     if (_data != null && _data.Tables[0].Rows.Count > 0)
@@ -314,7 +329,11 @@ namespace VA012.Controllers
             else
             {
                 //not required start and end date's
-                _sql = "SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1 AS STATEMENTNO FROM C_BankStatement WHERE ISACTIVE='Y'   AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                _sql = "SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(NAME, '\\d+'), '999999999999'))+1 AS STATEMENTNO FROM C_BankStatement WHERE ISACTIVE='Y'";
+                if (ctx != null)
+                {
+                    _sql += " AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+                }
                 statementNo = Util.GetValueOfString(DB.ExecuteScalar(_sql));
                 pageno = 1;
                 lineno = 10;
@@ -686,7 +705,7 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
-        public JsonResult LoadStatements(int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch,int RecOrUnRecComboVal)
+        public JsonResult LoadStatements(int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch, int RecOrUnRecComboVal)
         {
             string retJSON = "";
             if (Session["ctx"] != null)

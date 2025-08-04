@@ -576,7 +576,7 @@ namespace VA012.Models
         /// <param name="ctx">Context</param>
         /// <param name="_formData">List of StatementProp class properties</param>
         /// <returns>Success or Error Message (string type)</returns>
-        public string InsertData(Ctx ctx, List<StatementProp> _formData,int stdprecision)
+        public string InsertData(Ctx ctx, List<StatementProp> _formData, int stdprecision)
         {
             int _existingStatementID = 0;
             int _existingAccountID = 0;
@@ -712,7 +712,7 @@ namespace VA012.Models
             if (_formData[0]._ctrlPayment <= 0 && !string.IsNullOrEmpty(_formData[0]._scheduleList))
             {
                 //added trx parameter to handle the transaction
-                schedulePaymentResult = CreatePaymentFromSchedule(ctx, _formData, trx, eftCheckNo, _formData[0]._OverrideAutoCheck);
+                schedulePaymentResult = CreatePaymentFromSchedule(ctx, _formData, trx, eftCheckNo, _formData[0]._OverrideAutoCheck, stdprecision);
                 if (int.TryParse(schedulePaymentResult, out paymentID))
                 {
                 }
@@ -964,28 +964,24 @@ namespace VA012.Models
                         }
                     }
 
-
                     decimal _paymentAmt = 0;
                     if (paymentrecord.GetC_Currency_ID() != _formData[0]._cmbCurrency)
                     {
                         //Conversion according to the Statement Date and BankCurrency
                         //Conversion will be based on ConversionRate selected on form to consider.
-                        _paymentAmt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(paymentrecord.GetPayAmt()), paymentrecord.GetC_Currency_ID(), _formData[0]._cmbCurrency, _formData[0]._dtStatementDate, _formData[0]._txtConversionType, ctx.GetAD_Client_ID(), _formData[0]._bankAcctOrg_ID);
+                        _paymentAmt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(paymentrecord.GetPayAmt()), paymentrecord.GetC_Currency_ID(),
+                            _formData[0]._cmbCurrency, _formData[0]._dtStatementDate, _formData[0]._txtConversionType, ctx.GetAD_Client_ID(), _formData[0]._bankAcctOrg_ID);
                     }
                     else
                     {
                         _paymentAmt = Util.GetValueOfDecimal(paymentrecord.GetPayAmt());
                     }
-                    ////
 
-
-                    documentType = new MDocType(ctx, paymentrecord.GetC_DocType_ID(), null);
+                    documentType = MDocType.Get(ctx, paymentrecord.GetC_DocType_ID());
                     if (documentType.GetDocBaseType() == "ARR")
                     {
-
                         _bankStatementLine.SetTrxAmt(_paymentAmt);
 
-                        /////
                         if (_bankStatementLine.GetTrxAmt() > 0)
                         {
                             differenceAmount = Math.Abs(_formData[0]._txtTrxAmt) - _bankStatementLine.GetTrxAmt();
@@ -994,7 +990,6 @@ namespace VA012.Models
                         {
                             differenceAmount = (Math.Abs(_formData[0]._txtTrxAmt) * -1) - _bankStatementLine.GetTrxAmt();
                         }
-                        /////
 
                         if (_formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType == "CH" && differenceAmount != 0)
                         {
@@ -1015,11 +1010,7 @@ namespace VA012.Models
                     {
                         if (_paymentAmt < 0)
                         {
-
-
-                            //_bankStatementLine.SetStmtAmt(Decimal.Negate(Util.GetValueOfDecimal(paymentrecord.GetPayAmt())));
                             _bankStatementLine.SetTrxAmt(Decimal.Negate(_paymentAmt));
-                            /////
                             if (_bankStatementLine.GetTrxAmt() > 0)
                             {
                                 differenceAmount = Math.Abs(_formData[0]._txtTrxAmt) - _bankStatementLine.GetTrxAmt();
@@ -1028,7 +1019,6 @@ namespace VA012.Models
                             {
                                 differenceAmount = (Math.Abs(_formData[0]._txtTrxAmt) * -1) - _bankStatementLine.GetTrxAmt();
                             }
-                            /////
                             if (_formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType == "CH" && differenceAmount != 0)
                             {
                                 if (_bankStatementLine.GetStmtAmt() == 0)
@@ -1043,14 +1033,10 @@ namespace VA012.Models
                                     _bankStatementLine.SetStmtAmt(Decimal.Negate(_paymentAmt));
                                 }
                             }
-
                         }
                         else
                         {
-
-                            // _bankStatementLine.SetStmtAmt(Decimal.Negate(Util.GetValueOfDecimal(paymentrecord.GetPayAmt())));
                             _bankStatementLine.SetTrxAmt(Decimal.Negate(_paymentAmt));
-                            /////
                             if (_bankStatementLine.GetTrxAmt() > 0)
                             {
                                 differenceAmount = Math.Abs(_formData[0]._txtTrxAmt) - _bankStatementLine.GetTrxAmt();
@@ -1059,7 +1045,6 @@ namespace VA012.Models
                             {
                                 differenceAmount = (Math.Abs(_formData[0]._txtTrxAmt) * -1) - _bankStatementLine.GetTrxAmt();
                             }
-                            /////
                             if (_formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType == "CH" && differenceAmount != 0)
                             {
                                 if (_bankStatementLine.GetStmtAmt() == 0)
@@ -1079,9 +1064,7 @@ namespace VA012.Models
 
                     else
                     {
-                        //_bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
                         _bankStatementLine.SetTrxAmt(Util.GetValueOfDecimal(_formData[0]._txtAmount));
-                        /////
                         if (_bankStatementLine.GetTrxAmt() > 0)
                         {
                             differenceAmount = Math.Abs(_formData[0]._txtTrxAmt) - _bankStatementLine.GetTrxAmt();
@@ -1090,7 +1073,6 @@ namespace VA012.Models
                         {
                             differenceAmount = (Math.Abs(_formData[0]._txtTrxAmt) * -1) - _bankStatementLine.GetTrxAmt();
                         }
-                        /////
                         if (_formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType == "CH" && differenceAmount != 0)
                         {
                             if (_bankStatementLine.GetStmtAmt() == 0)
@@ -1110,11 +1092,12 @@ namespace VA012.Models
                 else
                 {
                     //VAI066 Devops ID 4783 While user will select voucher or contra and currency is not equal then it will convert currency 
-                    if(_formData[0]._cmbCurrency != _formData[0]._txtCurrency &&
-                        (Util.GetValueOfString(_formData[0]._cmbVoucherMatch).Equals("V") 
-                        || Util.GetValueOfString(_formData[0]._cmbVoucherMatch).Equals("C"))) {
+                    if (_formData[0]._cmbCurrency != _formData[0]._txtCurrency &&
+                        (Util.GetValueOfString(_formData[0]._cmbVoucherMatch).Equals("V")
+                        || Util.GetValueOfString(_formData[0]._cmbVoucherMatch).Equals("C")))
+                    {
                         _convertedtxtAmt = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_formData[0]._txtAmount), _formData[0]._txtCurrency, _formData[0]._cmbCurrency, _formData[0]._dtStatementDate, _formData[0]._txtConversionType, ctx.GetAD_Client_ID(), _formData[0]._bankAcctOrg_ID);
-                        if(_convertedtxtAmt != 0)
+                        if (_convertedtxtAmt != 0)
                         {
                             _bankStatementLine.SetStmtAmt(Util.GetValueOfDecimal(_convertedtxtAmt));
                         }
@@ -1823,12 +1806,16 @@ namespace VA012.Models
                                     ELSE ROUND(PAY.DUEAMT*-1,NVL(BCURR.StdPrecision, 2))
                                     END
                                     END AS DueAmt,
-                                    PAY.C_INVOICE_ID,PAY.C_INVOICEPAYSCHEDULE_ID, INV.DocumentNo
+                                    PAY.C_INVOICE_ID,PAY.C_INVOICEPAYSCHEDULE_ID, INV.DocumentNo,
+                                 CASE WHEN (NVL(BP.AP_WithholdingTax_ID, 0) > 0 AND BP.IsApplicableonAPPayment = 'Y' AND dt.docbasetype IN ('API' , 'APC')) THEN whold.PayPercentage 
+                                      WHEN (NVL(BP.C_Withholding_ID, 0) > 0 AND BP.IsApplicableonARReceipt = 'Y' AND dt.docbasetype IN ('ARI' , 'ARC')) THEN wholdAR.PayPercentage 
+                                      ELSE 0 END AS wholdPayPercentage
                             FROM C_InvoicePaySchedule PAY
-                            INNER JOIN C_Invoice INV
-                            ON (PAY.C_INVOICE_ID = INV.C_INVOICE_ID)
-                            INNER JOIN C_DocType dt
-                            ON (dt.C_Doctype_id = INV.c_doctype_id)
+                            INNER JOIN C_Invoice INV ON (PAY.C_INVOICE_ID = INV.C_INVOICE_ID)
+                            INNER JOIN C_DocType dt ON (dt.C_Doctype_id = INV.c_doctype_id)
+                            INNER JOIN C_BPartner BP ON (INV.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                            LEFT JOIN C_Withholding whold ON (whold.C_Withholding_ID = BP.AP_WithholdingTax_ID AND BP.IsApplicableonAPPayment = 'Y')
+                            LEFT JOIN C_Withholding wholdAR ON (wholdAR.C_Withholding_ID = BP.C_Withholding_ID AND BP.IsApplicableonARReceipt = 'Y')
                             LEFT JOIN C_Currency BCURR
                             ON (" + currency + @" = BCURR.C_CURRENCY_ID)
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + schedules + ")";
@@ -1900,6 +1887,7 @@ namespace VA012.Models
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
                 decimal amount = 0;
+                decimal wholdAmount = 0;
                 ids = new string[_ds.Tables[0].Rows.Count];
                 for (int i = 0; _ds.Tables[0].Rows.Count > i; i++)
                 {
@@ -1908,6 +1896,11 @@ namespace VA012.Models
                     if (cashLineId != 0)
                     {
                         amount = Decimal.Negate(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]));
+                    }
+                    else if (!string.IsNullOrEmpty(schedules))
+                    {
+                        wholdAmount = (Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]) * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["wholdPayPercentage"])) / 100;
+                        amount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]) - wholdAmount;
                     }
                     else
                     {
@@ -2026,26 +2019,49 @@ namespace VA012.Models
             if (transcType.Equals("IS"))
             {
                 //added VA009_PaymentMethod_ID and used Order BY to get PaymentMethod from latest record of Schedule
-                _sql = @"SELECT INV.C_Currency_ID,INV.C_ConversionType_ID,PAY.DueAmt,DT.DocBaseType, PAY.VA009_PaymentMethod_ID FROM C_InvoicePaySchedule PAY
+                _sql = @"SELECT INV.C_Currency_ID,INV.C_ConversionType_ID,PAY.DueAmt,DT.DocBaseType, PAY.VA009_PaymentMethod_ID,
+                         CASE WHEN (NVL(BP.AP_WithholdingTax_ID, 0) > 0 AND BP.IsApplicableonAPPayment = 'Y' AND dt.docbasetype IN ('API' , 'APC')) THEN whold.PayPercentage 
+                              WHEN (NVL(BP.C_Withholding_ID, 0) > 0 AND BP.IsApplicableonARReceipt = 'Y' AND dt.docbasetype IN ('ARI' , 'ARC')) THEN wholdAR.PayPercentage 
+                              ELSE 0 END AS wholdPayPercentage
+                        FROM C_InvoicePaySchedule PAY
                         INNER JOIN C_Invoice INV ON (PAY.C_Invoice_ID=INV.C_Invoice_ID) 
 		                INNER JOIN C_DocType DT ON (DT.C_DOCTYPE_ID=INV.C_DOCTYPE_ID)
+                        INNER JOIN C_BPartner BP ON (INV.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                        LEFT JOIN C_Withholding whold ON (whold.C_Withholding_ID = BP.AP_WithholdingTax_ID AND BP.IsApplicableonAPPayment = 'Y')
+                        LEFT JOIN C_Withholding wholdAR ON (wholdAR.C_Withholding_ID = BP.C_Withholding_ID AND BP.IsApplicableonARReceipt = 'Y')
 			            WHERE PAY.IsActive='Y' AND  PAY.C_INVOICEPAYSCHEDULE_ID IN (" + recordIds + ") ORDER BY PAY.C_INVOICEPAYSCHEDULE_ID DESC";
 
                 _ds = DB.ExecuteDataset(_sql, null, null);
                 if (_ds != null && _ds.Tables[0].Rows.Count > 0)
                 {
-
+                    decimal amountAfterWithHolding = 0;
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
                     {
                         list = new InvoicePaySchedule();
-                        //Conversion is based On Bank Org not Context Organziation
-                        if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
+                        if (Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["wholdPayPercentage"]) != 0)
                         {
-                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID) * -1;
+                            amountAfterWithHolding = (Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]) * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["wholdPayPercentage"])) / 100;
+                            amountAfterWithHolding = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]) - amountAfterWithHolding;
                         }
-                        else if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_ARINVOICE) || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_APCREDITMEMO))
+                        else
                         {
-                            list.DueAmount = MConversionRate.Convert(ctx, Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]), Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID);
+                            amountAfterWithHolding = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["DueAmt"]);
+                        }
+
+                        //Conversion is based On Bank Org not Context Organziation
+                        if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_APINVOICE) || 
+                            Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_ARCREDITMEMO))
+                        {
+                            list.DueAmount = MConversionRate.Convert(ctx, amountAfterWithHolding, 
+                                Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, 
+                                Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID) * -1;
+                        }
+                        else if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_ARINVOICE) || 
+                            Util.GetValueOfString(_ds.Tables[0].Rows[i]["DocBaseType"]).Equals(MDocBaseType.DOCBASETYPE_APCREDITMEMO))
+                        {
+                            list.DueAmount = MConversionRate.Convert(ctx, amountAfterWithHolding, 
+                                Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_Currency_ID"]), bnkCurrency_ID, stmtDate, 
+                                Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_ConversionType_ID"]), ctx.GetAD_Client_ID(), bnkOrg_ID);
                         }
                         //Get the Payment Method
                         list._paymentMethod_Id = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PaymentMethod_ID"]);
@@ -2264,7 +2280,6 @@ namespace VA012.Models
         /// <param name="_trxType">Tranaction Type</param>
         /// <param name="payment_ID">C_Payment_ID or C_InvoiceSchedule_ID or C_Order_ID</param>
         /// <returns>List</returns>
-
         public StatementProp GetStatementLine(Ctx ctx, int _bankStatementLineID, string _trxType, int payment_ID)
         {
 
@@ -2404,15 +2419,29 @@ namespace VA012.Models
                                     WHEN (dt.DOCBASETYPE IN ('API','ARC'))
                                      THEN ROUND(pay.DUEAMT,NVL(BCURR.StdPrecision,2))*-1
                                   END
-                                END AS DueAmt, inv.C_Currency_ID, inv.C_ConversionType_ID, inv.VA009_PaymentMethod_ID, dt.DocBaseType
+                                END AS DueAmt, inv.C_Currency_ID, inv.C_ConversionType_ID, inv.VA009_PaymentMethod_ID, dt.DocBaseType,
+                                 CASE WHEN (NVL(BP.AP_WithholdingTax_ID, 0) > 0 AND BP.IsApplicableonAPPayment = 'Y' AND dt.docbasetype IN ('API' , 'APC')) THEN whold.PayPercentage 
+                                      WHEN (NVL(BP.C_Withholding_ID, 0) > 0 AND BP.IsApplicableonARReceipt = 'Y' AND dt.docbasetype IN ('ARI' , 'ARC')) THEN wholdAR.PayPercentage 
+                                      ELSE 0 END AS wholdPayPercentage
                                 FROM C_InvoicePaySchedule pay
                                 INNER JOIN C_Invoice inv ON (pay.C_Invoice_ID = inv.C_Invoice_ID)
                                 INNER JOIN C_DocType dt ON (dt.C_DocType_ID = inv.C_DocType_ID)
+                                INNER JOIN C_BPartner BP ON (inv.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                                LEFT JOIN C_Withholding whold ON (whold.C_Withholding_ID = BP.AP_WithholdingTax_ID)
+                                LEFT JOIN C_Withholding wholdAR ON (wholdAR.C_Withholding_ID = BP.C_Withholding_ID)
                                 LEFT JOIN C_CURRENCY BCURR ON (" + _bankStatementLine.GetC_Currency_ID() + @" =BCURR.C_CURRENCY_ID) WHERE pay.IsActive='Y' AND pay.C_InvoicePaySchedule_ID =" + payment_ID, null, null);
 
                 if (data != null && data.Tables[0].Rows.Count > 0)
                 {
-                    statementDetail._txtTrxAmt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]);
+                    if (Util.GetValueOfDecimal(data.Tables[0].Rows[0]["wholdPayPercentage"]) != 0)
+                    {
+                        statementDetail._txtTrxAmt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]) -
+                            (Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]) * Util.GetValueOfDecimal(data.Tables[0].Rows[0]["wholdPayPercentage"]) / 100);
+                    }
+                    else
+                    {
+                        statementDetail._txtTrxAmt = Util.GetValueOfDecimal(data.Tables[0].Rows[0]["DueAmt"]);
+                    }
                     //get Currency_ID and C_ConversionType_ID
                     statementDetail._txtCurrency = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_Currency_ID"]);
                     statementDetail._txtConversionType = Util.GetValueOfInt(data.Tables[0].Rows[0]["C_ConversionType_ID"]);
@@ -2558,13 +2587,7 @@ namespace VA012.Models
             return statementDetail;
 
         }
-        //public List<GetScheduleProp> GetPaymentSchedules(Ctx ctx, int _paymentID)
-        //{
-        //    List<GetScheduleProp> _obj = new List<GetScheduleProp>();
 
-        //    return _obj;
-
-        //}
         /// <summary>
         /// Get PaymentAmt and Transaction Amount
         /// </summary>
@@ -2855,11 +2878,11 @@ namespace VA012.Models
                             {
                                 _obj.SetEftCheckNo(null);
                             }
-                            if(_obj.GetEftValutaDate() != null)
+                            if (_obj.GetEftValutaDate() != null)
                             {
                                 _obj.SetEftValutaDate(null);
                             }
-                            if(_obj.GetVA009_PaymentMethod_ID() > 0)
+                            if (_obj.GetVA009_PaymentMethod_ID() > 0)
                             {
                                 _obj.SetVA009_PaymentMethod_ID(0);
                             }
@@ -3504,7 +3527,6 @@ namespace VA012.Models
         //        }
         #endregion matching statement
 
-
         /// <summary>
         /// Get Total Pages Count of StatementLines 
         /// </summary>
@@ -3861,7 +3883,6 @@ namespace VA012.Models
             _totalPageCount = Util.GetValueOfInt(Math.Ceiling((decimal)_totalRecordCount / _PAGESIZE));
             return _totalPageCount;
         }
-        //
 
         /// <summary>
         /// to get the data based on selected parameters from payment window
@@ -4030,8 +4051,8 @@ namespace VA012.Models
             }
             else if (_transactionType == "IS")
             {
-            /*VIS_427 05/12/2023 Bugid:3179 When user is creating the Payment with the reference of invoice and Payment is drafted
-            then handled Query to restrict those refrences to not visible on Bank statement form*/
+                /*VIS_427 05/12/2023 Bugid:3179 When user is creating the Payment with the reference of invoice and Payment is drafted
+                then handled Query to restrict those refrences to not visible on Bank statement form*/
                 _sql = @" SELECT 
                               PAY.C_INVOICEPAYSCHEDULE_id AS C_PAYMENT_ID,
                               CURR.ISO_CODE               AS CURRENCY,
@@ -4074,22 +4095,20 @@ namespace VA012.Models
                             THEN 'Receipt'
                              END AS PaymentType,
                              'CO' AS DocStatus ,
-                            ' ' as TrxNo , PM.VA009_Name, INV.DateAcct, PAY.DueDate,PAY.VA009_PAYMENTMETHOD_ID,PM.VA009_PaymentBaseType
+                            ' ' as TrxNo , PM.VA009_Name, INV.DateAcct, PAY.DueDate,PAY.VA009_PAYMENTMETHOD_ID,PM.VA009_PaymentBaseType,
+                            CASE WHEN (NVL(BP.AP_WithholdingTax_ID, 0) > 0 AND BP.IsApplicableonAPPayment = 'Y' AND dt.docbasetype IN ('API' , 'APC')) THEN whold.PayPercentage 
+                                 WHEN (NVL(BP.C_Withholding_ID, 0) > 0 AND BP.IsApplicableonARReceipt = 'Y' AND dt.docbasetype IN ('ARI' , 'ARC')) THEN wholdAR.PayPercentage 
+                                 ELSE 0 END AS wholdPayPercentage
                             FROM C_InvoicePaySchedule PAY
-                            INNER JOIN C_Invoice INV
-                            ON (PAY.C_INVOICE_id=INV.C_INVOICE_id)
-                            LEFT JOIN C_BPartner BP
-                            ON (INV.C_BPARTNER_ID =BP.C_BPARTNER_ID)
-                            LEFT JOIN C_BP_Group BPG
-                            ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
-                            LEFT JOIN C_Currency CURR
-                            ON (inv.C_CURRENCY_ID =CURR.C_CURRENCY_ID)
-                            LEFT JOIN C_Currency BCURR
-                            ON (" + bankCurr_ID + @" =BCURR.C_CURRENCY_ID)
-                            INNER JOIN VA009_PaymentMethod PM  
-                            ON (PM.VA009_PAYMENTMETHOD_ID   =PAY.VA009_PAYMENTMETHOD_ID )
-                            INNER JOIN C_DocType DT
-                            ON (DT.C_DOCTYPE_ID =INV.C_DOCTYPE_ID)
+                            INNER JOIN C_Invoice INV ON (PAY.C_Invoice_ID = INV.C_Invoice_ID)
+                            LEFT JOIN C_BPartner BP ON (INV.C_BPartner_ID =BP.C_BPartner_ID)
+                            LEFT JOIN C_BP_Group BPG ON (BP.C_BP_Group_ID = BPG.C_BP_Group_ID)
+                            LEFT JOIN C_Currency CURR ON (inv.C_Currency_ID = CURR.C_Currency_ID)
+                            LEFT JOIN C_Currency BCURR ON (" + bankCurr_ID + @" = BCURR.C_Currency_ID)
+                            INNER JOIN VA009_PaymentMethod PM ON (PM.VA009_PaymentMethod_ID = PAY.VA009_PaymentMethod_ID)
+                            INNER JOIN C_DocType DT ON (DT.C_DocType_ID = INV.C_DocType_ID)
+                            LEFT JOIN C_Withholding whold ON (whold.C_Withholding_ID = BP.AP_WithholdingTax_ID)
+                            LEFT JOIN C_Withholding wholdAR ON (wholdAR.C_Withholding_ID = BP.C_Withholding_ID)
                             WHERE  pay.VA009_IsPaid='N'
                             AND PAY.ISACTIVE='Y' AND INV.DOCSTATUS IN ('CO','CL') AND PM.VA009_PAYMENTBASETYPE != 'B'
                             AND PAY.C_InvoicePaySchedule_ID NOT IN (
@@ -4167,8 +4186,8 @@ namespace VA012.Models
             }
             else if (_transactionType == "PO")
             {
-            /*VIS_427 05/12/2023 Bugid:3179 When user is creating the Payment with the reference of order and Payment is drafted
-            then handled Query to restrict those refrences to not visible on Bank statement form*/
+                /*VIS_427 05/12/2023 Bugid:3179 When user is creating the Payment with the reference of order and Payment is drafted
+                then handled Query to restrict those refrences to not visible on Bank statement form*/
                 _sql = @" SELECT PAY.C_order_id AS C_PAYMENT_ID,
                           CURR.ISO_CODE       AS CURRENCY,
                           PAY.DOCUMENTNO      AS PAYMENTNO,
@@ -4359,6 +4378,7 @@ namespace VA012.Models
             List<PaymentProp> _payments = new List<PaymentProp>();
             PaymentProp _payment = new PaymentProp();
             DataSet _ds = new DataSet();
+            decimal wholdAmount = 0;
             try
             {
                 //Applied Check MRole
@@ -4375,13 +4395,38 @@ namespace VA012.Models
                         _payment.paymentno = Util.GetValueOfString(_ds.Tables[0].Rows[i]["PAYMENTNO"]);
                         _payment.c_bpartner_id = Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BPARTNER_ID"]);
                         _payment.businesspartner = Util.GetValueOfString(_ds.Tables[0].Rows[i]["BUSINESSPARTNER"]);
-                        _payment.paymentamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["PAYMENTAMOUNT"]);
+
+                        // Calculate WithHolding Amount which to be deduct on Payment
+                        if (_transactionType.Equals("IS") && Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["wholdPayPercentage"]) != 0)
+                        {
+                            wholdAmount = (Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["PAYMENTAMOUNT"]) * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["wholdPayPercentage"])) / 100;
+                            _payment.wholdPayPercentage = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["wholdPayPercentage"]);
+                            _payment.wholdAmount = wholdAmount;
+                            _payment.paymentamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["PAYMENTAMOUNT"]) - wholdAmount;
+                        }
+                        else
+                        {
+                            _payment.paymentamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["PAYMENTAMOUNT"]);
+                        }
+
                         if (_transactionType.Equals("IS"))
                         {
                             _payment.bpgroup = Util.GetValueOfString(_ds.Tables[0].Rows[i]["InvoiceRef"]);
                         }
                         _payment.basecurrency = Util.GetValueOfString(_ds.Tables[0].Rows[i]["BASECURRENCY"]);
-                        _payment.convertedamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["CONVERTEDAMOUNT"]);
+
+                        // Calculate WithHolding Amount which to be deduct on Payment
+                        if (_transactionType.Equals("IS") && Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["wholdPayPercentage"]) != 0)
+                        {
+                            wholdAmount = (Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["CONVERTEDAMOUNT"]) * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["wholdPayPercentage"])) / 100;
+                            _payment.wholdPayPercentage = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["wholdPayPercentage"]);
+                            _payment.wholdAmount = wholdAmount;
+                            _payment.convertedamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["CONVERTEDAMOUNT"]) - wholdAmount;
+                        }
+                        else
+                        {
+                            _payment.convertedamount = Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["CONVERTEDAMOUNT"]);
+                        }
                         _payment.isconverted = Util.GetValueOfString(_ds.Tables[0].Rows[i]["ISCONVERTED"]);
                         /* change by pratap */
                         _payment.paymenttype = Util.GetValueOfString(_ds.Tables[0].Rows[i]["PaymentType"]);
@@ -4687,13 +4732,6 @@ namespace VA012.Models
             }
             return _statements;
         }
-        //public string CreatePayment(Ctx ctx, int _bankStatementLineID)
-        //{
-        //    CreatePaymentFromStatement _obj = new CreatePaymentFromStatement();
-        //    return _obj.CreatePayment(new MBankStatementLine(ctx, _bankStatementLineID, null), ctx);
-        //    //VAdvantage.Process.BankStatementPayment _obj = new VAdvantage.Process.BankStatementPayment();
-        //    ////return _obj.CreatePayment(new MBankStatementLine(ctx, _bankStatementLineID, null));
-        //}
 
         /// <summary>
         /// Get the Charge
@@ -4765,7 +4803,6 @@ namespace VA012.Models
         /// <param name="docBaseType">C_DocBaseType</param>
         /// <param name="org_Id">AD_Org_ID</param>
         /// <returns></returns>
-        /*Created by pratap */
         public int GetDocTypeID(Ctx ctx, string docBaseType, int org_Id)
         {
             if (docBaseType == "API" || docBaseType == "APC")
@@ -4831,19 +4868,12 @@ namespace VA012.Models
         /// <param name="eftCheckNo">bank statement line eftcheck no</param>
         /// <param name="overrideAutoCheck">check whether check to override or not </param>
         /// <returns>either DocNo or Error Msg(string type Value)</returns>
-        public string CreatePaymentFromSchedule(Ctx ctx, List<StatementProp> _formData, Trx _trx, string eftCheckNo, bool overrideAutoCheck)
+        public string CreatePaymentFromSchedule(Ctx ctx, List<StatementProp> _formData, Trx _trx, string eftCheckNo, bool overrideAutoCheck, int precision = 2)
         {
-            //Get Transaction
-            //Trx trx = Trx.GetTrx("Payment_" + DateTime.Now.ToString("yyMMddHHmmssff"));
-            string ex = "";
-            string docno = "";
-            string processMsg = "";
-
             string _sql = "";
             DataSet _ds = new DataSet();
             try
             {
-
                 _sql = @"SELECT COUNT(*)
                             FROM
                               (SELECT PAY.C_INVOICEPAYSCHEDULE_ID FROM C_Payment PAY WHERE PAY.DOCSTATUS NOT IN ('VO','RE')
@@ -4871,18 +4901,24 @@ namespace VA012.Models
                                     THEN CURRENCYCONVERT(inv.GrandTotal, inv.C_CURRENCY_ID, BCURR.C_CURRENCY_ID, " + GlobalVariable.TO_DATE(_formData[0]._dtStatementDate, true) +
                                             @", " + _formData[0]._txtConversionType + @", INV.AD_Client_ID, " + _formData[0]._bankAcctOrg_ID + @")
                                     ELSE ROUND(inv.GrandTotal,NVL(BCURR.STDPRECISION,2)) END AS GrandTotal,
-
                                     PAY.C_INVOICE_ID,PAY.VA009_PAYMENTMETHOD_ID,PAY.C_INVOICEPAYSCHEDULE_ID,
-                               PAY.AD_ORG_ID,PAY.AD_CLIENT_ID, dt.DOCBASETYPE, INV.C_BPartner_Location_ID
+                               PAY.AD_ORG_ID,PAY.AD_CLIENT_ID, dt.DOCBASETYPE, INV.C_BPartner_Location_ID,
+                                CASE WHEN (NVL(BP.AP_WithholdingTax_ID, 0) > 0 AND BP.IsApplicableonAPPayment = 'Y' AND dt.docbasetype IN ('API' , 'APC')) THEN whold.PayPercentage 
+                                     WHEN (NVL(BP.C_Withholding_ID, 0) > 0 AND BP.IsApplicableonARReceipt = 'Y' AND dt.docbasetype IN ('ARI' , 'ARC')) THEN wholdAR.PayPercentage 
+                                     ELSE 0 END AS wholdPayPercentage
                             FROM C_InvoicePaySchedule PAY
-                            INNER JOIN C_Invoice INV
-                            ON (PAY.C_INVOICE_ID=INV.C_INVOICE_ID)
-                            INNER JOIN C_DocType dt
-                            ON (dt.C_Doctype_id = INV.c_doctype_id)
+                            INNER JOIN C_Invoice INV ON (PAY.C_INVOICE_ID=INV.C_INVOICE_ID)
+                            INNER JOIN C_DocType dt ON (dt.C_Doctype_id = INV.c_doctype_id)
+                            INNER JOIN C_BPartner BP ON (INV.C_BPARTNER_ID =BP.C_BPARTNER_ID)
+                            /*INNER JOIN C_BPartner_Location bploc ON (bploc.C_BPartner_Location_ID = INV.C_BPartner_Location_ID)
+                            INNER JOIN C_Location loc on (loc.C_Location_ID = bploc.C_Location_ID)*/
+                            LEFT JOIN C_Withholding whold ON (whold.C_Withholding_ID = BP.AP_WithholdingTax_ID AND BP.IsApplicableonAPPayment = 'Y'
+                            /*AND ((whold.C_Country_ID = loc.C_Country_ID OR whold.C_Country_ID IS NULL) AND (whold.C_Region_ID = loc.C_Region_ID OR whold.C_Region_ID IS NULL))*/)
+                            LEFT JOIN C_Withholding wholdAR ON (wholdAR.C_Withholding_ID = BP.C_Withholding_ID AND BP.IsApplicableonARReceipt = 'Y'
+                            /*AND ((wholdAR.C_Country_ID = loc.C_Country_ID OR wholdAR.C_Country_ID IS NULL) AND (wholdAR.C_Region_ID = loc.C_Region_ID OR wholdAR.C_Region_ID IS NULL))*/)
                             LEFT JOIN C_Currency BCURR
                             ON (" + _formData[0]._txtCurrency + @" =BCURR.C_CURRENCY_ID) 
                             WHERE PAY.C_INVOICEPAYSCHEDULE_ID IN(" + _formData[0]._scheduleList + ")";
-                // Trx trx = Trx.Get("VA012_PaymentCreate" + System.DateTime.Now.Ticks);
                 _ds = DB.ExecuteDataset(_sql.ToString(), null, _trx);
                 if (_ds != null)
                 {
@@ -4890,6 +4926,7 @@ namespace VA012.Models
                     decimal _txtAmount = 0;
                     decimal _txtTrxAmt = 0;
                     decimal _txtDifference = 0;
+                    decimal _txtAmountwithWithHoldingAmount = 0;
 
                     //_formData[0]._txtCurrency - selected Currency on the form either Invoice or Bank Currency
                     //_formData[0]._cmbCurrency - Bank Currency
@@ -4914,7 +4951,7 @@ namespace VA012.Models
                         /*VIS_427 Bug ID 6484 02/05/2025 if transaction amount is smaller then set 
                          text amount with value of transaction amount in order to correct difference amount based
                         on difference tye selected by user*/
-                        if (Math.Abs(_formData[0]._txtAmount) > 
+                        if (Math.Abs(_formData[0]._txtAmount) >
                             Math.Abs(_formData[0]._txtTrxAmt))
                         {
                             _txtAmount = _txtTrxAmt;
@@ -4941,13 +4978,25 @@ namespace VA012.Models
                         /*chnage by pratap*/
                         //_pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
 
-                        if (Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "ARI")
+                        if (Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["wholdPayPercentage"]) != 0)
                         {
-                            _pay.SetPayAmt(Math.Abs(_txtAmount));
+                            _txtAmountwithWithHoldingAmount = decimal.Round(_txtAmount / (1 - (Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["wholdPayPercentage"]) / 100)),
+                                                                precision, MidpointRounding.AwayFromZero);
+                            _txtDifference = decimal.Round((_formData[0]._cmbDifferenceType != "CH" ? _txtDifference / (1 - (Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["wholdPayPercentage"]) / 100))
+                                                : _txtDifference), precision, MidpointRounding.AwayFromZero);
                         }
                         else
                         {
-                            _pay.SetPayAmt(-1 * Math.Abs(_txtAmount));
+                            _txtAmountwithWithHoldingAmount = _txtAmount;
+                        }
+
+                        if (Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]) == "ARI")
+                        {
+                            _pay.SetPayAmt(Math.Abs(_txtAmountwithWithHoldingAmount));
+                        }
+                        else
+                        {
+                            _pay.SetPayAmt(-1 * Math.Abs(_txtAmountwithWithHoldingAmount));
                         }
                         /*end change by pratap*/
 
@@ -4957,27 +5006,26 @@ namespace VA012.Models
 
                         #region OverUnder
 
-                        if (Util.GetValueOfDecimal(_pay.GetPayAmt()) >= 0)
+                        if (_pay.GetPayAmt() >= 0)
                         {
-                            if (Math.Abs(_txtTrxAmt) > _pay.GetPayAmt())
+                            if (Math.Abs(_txtTrxAmt) > Math.Abs(_txtAmount))
                             {
                                 differenceAmount = Math.Abs(_txtDifference);
                             }
-                            else if (Math.Abs(_txtTrxAmt) < _pay.GetPayAmt())
+                            else if (Math.Abs(_txtTrxAmt) < Math.Abs(_txtAmount))
                             {
                                 differenceAmount = Math.Abs(_txtDifference) * -1;
                             }
                         }
                         else
                         {
-                            if (Math.Abs(_txtTrxAmt) > Math.Abs(Util.GetValueOfDecimal(_pay.GetPayAmt())))
+                            if (Math.Abs(_txtTrxAmt) > Math.Abs(_txtAmount))
                             {
                                 differenceAmount = Math.Abs(_txtDifference) * -1;
                             }
-                            else if (Math.Abs(_txtTrxAmt) < Math.Abs(Util.GetValueOfDecimal(_pay.GetPayAmt())))
+                            else if (Math.Abs(_txtTrxAmt) < Math.Abs(_txtAmount))
                             {
                                 differenceAmount = Math.Abs(_txtDifference);
-
                             }
 
                         }
@@ -5104,34 +5152,24 @@ namespace VA012.Models
                     }
                     else if (_ds.Tables[0].Rows.Count > 1)
                     {
-                        //int _paymentMethodID = 0;
-                        //_paymentMethodID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT VA009_PAYMENTMETHOD_ID FROM C_BPARTNER WHERE C_BPARTNER_ID=" + Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner)));
                         MPayment _pay = new MPayment(ctx, 0, _trx);
-
-
-                        //int C_Doctype_ID = GetDocTypeID(ctx, _formData[0]._txtAmount);
-                        /*chnage by pratap*/
                         int C_Doctype_ID = GetDocTypeID(ctx, Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCBASETYPE"]), _formData[0]._bankAcctOrg_ID);
-                        /*end change by pratap*/
 
                         _pay.SetC_DocType_ID(C_Doctype_ID);
                         //Payment AcctDate & Trx Date should be StatementLine AcctDate
-                        //_pay.SetDateAcct(System.DateTime.Now);
                         _pay.SetDateAcct(_formData[0]._dtStatementDate);
-                        //_pay.SetDateTrx(System.DateTime.Now);
                         _pay.SetDateTrx(_formData[0]._dtStatementDate);
+
                         //set the Organization from the backaccount
                         _pay.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
                         _pay.SetC_BankAccount_ID(Util.GetValueOfInt(_formData[0]._cmbBankAccount));
                         _pay.SetC_BPartner_ID(Util.GetValueOfInt(_formData[0]._ctrlBusinessPartner));
+
                         //added BPartner_Location_ID from Invoice Reference
                         _pay.SetC_BPartner_Location_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BPartner_Location_ID"]));
                         _pay.SetC_Currency_ID(Util.GetValueOfInt(_formData[0]._txtCurrency)); //Set the Currency which selected on new form
                         _pay.SetC_ConversionType_ID(_formData[0]._txtConversionType); //Set the Currency ConversionType which selected on new form
-                        //_pay.SetPayAmt(Math.Abs(_formData[0]._txtAmount));
-                        //get C_PaymentMethod_ID from Invoice or Selected by the user on form
-                        _pay.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);
-                        //_pay.SetVA009_PaymentMethod_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]));
+                        _pay.SetVA009_PaymentMethod_ID(_formData[0]._txtPaymentMethod);  //get C_PaymentMethod_ID from Invoice or Selected by the user on form
 
                         //VA230:Override autocheckno. with eftcheck number if exists on bankstatementline
                         if (!string.IsNullOrEmpty(eftCheckNo))
@@ -5145,7 +5183,7 @@ namespace VA012.Models
                         if ("S".Equals(_payBaseType))    // Check
                         {
                             _pay.SetTenderType(X_C_Payment.TENDERTYPE_Check);
-                            //Arpit In Case of Payment is of check type then we insert Check Date + Check Number
+                            // In Case of Payment is of check type then we insert Check Date + Check Number
                             _pay.SetCheckDate(_formData[0]._dtStatementDate);
                             //Rakesh(VA228):When check number is prsent on bank statementline
                             if (string.IsNullOrEmpty(_formData[0]._txtCheckNum))
@@ -5155,7 +5193,6 @@ namespace VA012.Models
                                 {
                                     _trx.Rollback();
                                     checkMsg = Msg.GetMsg(ctx, checkMsg);
-                                    //MBankAccount ba = new MBankAccount(ctx, Util.GetValueOfInt(ds.Tables[0].Rows[i]["c_bankaccount_id"]), Get_TrxName());
                                     int _acctNo = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AccountNo FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + _pay.GetC_BankAccount_ID(), null, _trx));
                                     //Want space between the Message and AccountNo
                                     return checkMsg + " : " + _acctNo;
@@ -5204,27 +5241,13 @@ namespace VA012.Models
                                 differenceAmount = 0;
                                 MPaymentAllocate PayAlocate = new MPaymentAllocate(ctx, 0, _trx);
                                 PayAlocate.SetC_Payment_ID(_pay.GetC_Payment_ID());
-                                //PayAlocate.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
-                                //PayAlocate.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
-
-
-
-                                //PayAlocate.SetInvoiceAmt(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["GrandTotal"]));
-                                //PayAlocate.SetAD_Org_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_ORG_ID"]));
                                 PayAlocate.SetAD_Client_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_CLIENT_ID"]));
-                                //set Organization with the reference of Bank Account
-                                PayAlocate.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID);
-                                //PayAlocate.SetWriteOffAmt(0);
-                                //PayAlocate.SetOverUnderAmt(0);
-
+                                PayAlocate.SetAD_Org_ID(_formData[0]._bankAcctOrg_ID); //set Organization with the reference of Bank Account
 
                                 #region OverUnder
-                                if (_txtDifference != 0 && _formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType != "CH" && Math.Abs(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"])) > Math.Abs(_txtDifference) && _status)
+                                if (_txtDifference != 0 && _formData[0]._cmbVoucherMatch == "M" && _formData[0]._cmbDifferenceType != "CH"
+                                    && Math.Abs(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"])) > Math.Abs(_txtDifference) && _status)
                                 {
-
-
-                                    //pratap
-                                    //PayAlocate.SetAmount(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
                                     if (Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "API" || Util.GetValueOfString(_ds.Tables[0].Rows[i]["DOCBASETYPE"]) == "ARI")
                                     {
                                         PayAlocate.SetInvoiceAmt(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"]));
@@ -5238,9 +5261,14 @@ namespace VA012.Models
                                         PayAlocate.SetAmount((-1 * Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["AMOUNT"])));
                                     }
 
+                                    if (Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["wholdPayPercentage"]) != 0)
+                                    {
+                                        _txtDifference = decimal.Round(_txtDifference / (1 - (Util.GetValueOfDecimal(_ds.Tables[0].Rows[0]["wholdPayPercentage"]) / 100)),
+                                                          precision, MidpointRounding.AwayFromZero);
+                                    }
+
                                     if (PayAlocate.GetAmount() > 0)
                                     {
-
                                         differenceAmount = Math.Abs(_txtDifference);
                                         PayAlocate.SetAmount(PayAlocate.GetAmount() - differenceAmount);
                                     }
@@ -5257,12 +5285,7 @@ namespace VA012.Models
                                             differenceAmount = Decimal.Negate(_txtDifference);
                                             PayAlocate.SetAmount(PayAlocate.GetAmount() + differenceAmount);
                                         }
-
                                     }
-
-
-                                    //differenceAmount = _formData[0]._txtDifference;
-                                    //end pratap
 
                                     //DiscountAmount
                                     if (_formData[0]._cmbDifferenceType == "DA")
@@ -5278,10 +5301,7 @@ namespace VA012.Models
                                     else if (_formData[0]._cmbDifferenceType == "OU")
                                     {
                                         PayAlocate.SetOverUnderAmt(differenceAmount);
-
                                     }
-
-
                                     _status = false;
                                 }
                                 #endregion OverUnder
@@ -5299,13 +5319,8 @@ namespace VA012.Models
                                     }
                                 }
 
-
-
                                 PayAlocate.SetC_Invoice_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICE_ID"]));
                                 PayAlocate.SetC_InvoicePaySchedule_ID(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_INVOICEPAYSCHEDULE_ID"]));
-
-
-
                                 if (!PayAlocate.Save())
                                 {
                                     _trx.Rollback();
@@ -5320,7 +5335,6 @@ namespace VA012.Models
                                 }
                             }
                             //fetch the Updated data from new Instance 
-                            //_pay = new MPayment(ctx, _pay.GetC_Payment_ID(), _trx);
                             //Committed Transaction
                             _trx.Commit();
                             //Complete Action using worker
@@ -5377,7 +5391,6 @@ namespace VA012.Models
                         }
                     }
                     #endregion under Payment
-                    //}
                 }
 
                 else
@@ -5744,6 +5757,7 @@ namespace VA012.Models
                 return e.Message;
             }
         }
+
         #region CreatePaymentFromCash --> Not in Use
         //public string CreatePaymentFromCash(Ctx ctx, List<StatementProp> _formData)
         //{
@@ -5869,7 +5883,6 @@ namespace VA012.Models
         /// <param name="statmtDate">Statement Date</param>
         /// <param name="accountID">C_BankAccount_ID</param>
         /// <returns>List of Amount</returns>
-
         public PaymentResponse CheckPaymentCondition(Ctx ctx, int _dragSourceID, int _dragDestinationID, decimal _amount, DateTime? statmtDate, int accountID)
         {
             PaymentResponse _obj = new PaymentResponse();
@@ -5940,7 +5953,6 @@ namespace VA012.Models
                     _checkDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[0]["CheckDate"]);
 
                 }
-                //string.IsNullOrEmpty() method
                 if (string.IsNullOrEmpty(_authCode))
                 {
                     if (_amount == 0)
@@ -5979,6 +5991,7 @@ namespace VA012.Models
             _obj._status = "Success";
             return _obj;
         }
+
         public string CheckScheduleCondition(Ctx ctx, int _dragSourceID, int _dragDestinationID, string _listToCheck, decimal _amount, int _currencyId, int _formBPartnerID)
         {
             decimal _amt = 0;
@@ -5997,6 +6010,15 @@ namespace VA012.Models
                 {
                     DateTime? _stmtDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT StatementLineDate FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
                     DateTime? _dueDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT DueDate FROM C_InvoicePaySchedule WHERE C_InvoicePaySchedule_ID =" + _scheduleId));
+                    if (_stmtDate < _dueDate)
+                    {
+                        return "VA012_StmtDateCantlessTrxDate";
+                    }
+                }
+                else
+                {
+                    DateTime? _stmtDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT StatementLineDate FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
+                    DateTime? _dueDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT DueDate FROM C_InvoicePaySchedule WHERE C_InvoicePaySchedule_ID =" + _dragSourceID));
                     if (_stmtDate < _dueDate)
                     {
                         return "VA012_StmtDateCantlessTrxDate";
@@ -6788,6 +6810,7 @@ namespace VA012.Models
             }
             return "Success";
         }
+
         public PaymentResponse CheckFormPaymentCondition(Ctx ctx, int _paymentID, decimal _amount)
         {
             PaymentResponse _obj = new PaymentResponse();
@@ -7151,12 +7174,12 @@ namespace VA012.Models
         /// <param name="ctx">Context</param>
         /// <param name="BankOrgId">Bank Account Organization Id</param>
         /// <returns>List of payment methods</returns>
-        public List<ChargeProp> GetPaymentMethods(Ctx ctx,int BankOrgId)
+        public List<ChargeProp> GetPaymentMethods(Ctx ctx, int BankOrgId)
         {
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
             //here Cash and On Credit is not into consideration
-            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID,VA009_PaymentBaseType FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE NOT IN ('B','P') AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + ","+ BankOrgId +") ORDER BY VA009_NAME";
+            string _sql = "SELECT VA009_NAME,VA009_PAYMENTMETHOD_ID,VA009_PaymentBaseType FROM VA009_PaymentMethod WHERE ISACTIVE='Y' AND VA009_PAYMENTBASETYPE NOT IN ('B','P') AND AD_ORG_ID IN(0," + ctx.GetAD_Org_ID() + "," + BankOrgId + ") ORDER BY VA009_NAME";
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "VA009_PaymentMethod", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
 
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
@@ -7200,6 +7223,7 @@ namespace VA012.Models
             }
             return _list;
         }
+
         /// <summary>
         /// Author: VA230
         /// Get List of Bank Accounts
@@ -7307,6 +7331,7 @@ namespace VA012.Models
             }
             return _list;
         }
+
         /// <summary>
         /// Get the cash book data
         /// </summary>
@@ -7360,6 +7385,7 @@ namespace VA012.Models
             }
             return _list;
         }
+
         /// <summary>
         /// This function is related to currency conversion not found message.
         /// </summary>
@@ -7369,7 +7395,7 @@ namespace VA012.Models
         /// <param name="conversionTypeID">This will give the conversion type ID from form</param>
         /// <author>VAI066 Devops Id 4783</author>
         /// <returns>It will return the Message as a string</returns>
-        public string currConversionNotFound(Ctx ctx,int currencyFromID, int currencyToID, int conversionTypeID)
+        public string currConversionNotFound(Ctx ctx, int currencyFromID, int currencyToID, int conversionTypeID)
         {
             String sql = $@"SELECT C_Currency_ID AS ID, Iso_Code AS CODE, NULL AS Name
                                             FROM C_Currency
@@ -7595,6 +7621,9 @@ namespace VA012.Models
         public string DueAmt { get; internal set; }
         public int PaymentMethodId { get; set; }
         public string PaymentBaseType { get; set; }
+
+        public decimal wholdPayPercentage { get; set; }
+        public decimal wholdAmount { get; set; }
     }
     public class StatementLineProp
     {
