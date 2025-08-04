@@ -1800,6 +1800,9 @@
                                 _PaymentsHTML += status;
                             }
                             _PaymentsHTML += ' " paymentdata="' + VIS.Utility.encodeText(new Date(data[i].DueDate).toLocaleDateString()) + "_" + VIS.Utility.encodeText(data[i].DueAmt) + '" data-uid="' + data[i].c_payment_id;
+                            if (data[i].wholdPayPercentage != 0) {
+                                _PaymentsHTML += '" data-whRate="' + data[i].wholdPayPercentage;
+                            }
 
                             /* change by pratap*/
                             _PaymentsHTML += ' " paymentamount = " ' + VIS.Utility.Util.getValueOfDecimal(data[i].convertedamount, "N") + '" paymentmethodid="' + VIS.Utility.Util.getValueOfInt(data[i].PaymentMethodId) + '" paymentbasetype="' + VIS.Utility.Util.getValueOfString(data[i].PaymentBaseType) + '">'
@@ -1814,6 +1817,9 @@
                                 + '      <span style=" width: 100%;" class="va012-statementamount">' + '<span class="va012-currency ">' + data[i].currency + '</span>' + ' ' + parseFloat(data[i].paymentamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
                             if (data[i].isconverted == "Y") {
                                 _PaymentsHTML += '      <span>' + data[i].basecurrency + ' ' + parseFloat(data[i].convertedamount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
+                            }
+                            if (data[i].wholdPayPercentage != 0) {
+                                _PaymentsHTML += '      <span title="' + VIS.Msg.getMsg('VA012_wholdAmount') + '" data-whRate="' + data[i].wholdPayPercentage + '">' + data[i].basecurrency + ' ' + parseFloat(data[i].wholdAmount).toLocaleString(navigator.language, { minimumFractionDigits: _stdPrecision, maximumFractionDigits: _stdPrecision }) + '</span>';
                             }
                             _PaymentsHTML += '   </div></div>'
                                 + '    <!-- end of form-group -->'
