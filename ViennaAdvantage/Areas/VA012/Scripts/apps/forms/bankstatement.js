@@ -7074,7 +7074,15 @@
                     else {
                         //avoid the exception when user click on statement date field and removed the curson again
                         //due to blur event will fire at that case.
-                        if ($_formNewRecord[0].attributes["data-uid"].value > 0 && ($_ctrlPayment.getValue() > 0 || $_ctrlCashLine.getValue() > 0 || $_ctrlInvoice.getValue() > 0 || $_ctrlOrder.getValue() > 0 || _scheduleList.length > 0)) {
+                        var fNewrecord;
+                        if ($_formNewRecord == undefined) {
+                            fNewrecord = $root.find("#VA012_formNewRecord_" + $self.windowNo);
+                        }
+                        else {
+                            fNewrecord = $_formNewRecord;
+                        }
+                        
+                        if (fNewrecord[0].attributes["data-uid"].value > 0 && ($_ctrlPayment.getValue() > 0 || $_ctrlCashLine.getValue() > 0 || $_ctrlInvoice.getValue() > 0 || $_ctrlOrder.getValue() > 0 || _scheduleList.length > 0)) {
 
                         }
                         else {
