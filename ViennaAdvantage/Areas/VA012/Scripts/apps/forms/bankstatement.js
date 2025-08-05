@@ -2127,19 +2127,29 @@
                                     //get the Amount in standard format
                                     if (loadFunctions.checkScheduleCondition(($(ui.draggable)).data('uid'), $(this).data("uid"), _scheduleList.toString(), convertAmtCulture(_txtAmount.getControl().val()))) {
                                         if (!isInList(parseInt(($(ui.draggable)).data('uid')), _scheduleList)) {
+                                            /** VIS_045: 5-Aug-2025, Convert Schedule Amount from Invoice currency to bank Currency on Statement Date */
+                                            var _ds = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "BankStatement/GetConvtAmount",
+                                                {
+                                                    recordID: parseInt(($(ui.draggable)).data('uid')),
+                                                    bnkAct_Id: _cmbBankAccount.val(),
+                                                    transcType: _cmbTransactionType.val(),
+                                                    stmtDate: _dtStatementDate.val()
+                                                });
+
+                                            if (_ds.length == 0 || _ds[0].DueAmount == 0) {
+                                                VIS.ADialog.info("VA012_ConversionRateNotFound", null, "", "");
+                                                return;
+                                            }
+
                                             _scheduleList.push(parseInt(($(ui.draggable)).data('uid')));
                                             _scheduleDataList.push($(ui.draggable).attr('paymentdata'));
 
-
-                                            /*change by pratap*/
-                                            //if (_txtAmount.val() == "0.00") {
-                                            //    _scheduleAmount.push("0");
-                                            //}
                                             var amount = 0;
-                                            _scheduleAmount.push($(ui.draggable).attr('paymentamount'));
+                                            //_scheduleAmount.push($(ui.draggable).attr('paymentamount'));
+                                            _scheduleAmount.push(_ds[0].DueAmount);
 
                                             if (Number(_scheduleAmount.length) > 0) {
-                                                
+
                                                 for (var i = 0; i < _scheduleAmount.length; i++) {
                                                     amount += VIS.Utility.Util.getValueOfDecimal(_scheduleAmount[i]);
                                                 }
@@ -2162,7 +2172,7 @@
                                                 //if statement id not found then set value of amount as then amount of scheule
                                                 if (_dragStatementID == 0) {
                                                     _txtAmount.setValue(VIS.Utility.Util.getValueOfDecimal(amount.toFixed(_stdPrecision)));
-                                                }                                                
+                                                }
                                                 //_txtTrxAmt.val((amount).toFixed(_stdPrecision));
                                                 //_txtTrxAmt.trigger('change');
                                             }
@@ -6384,7 +6394,6 @@
                 //});
 
                 _btnSave.on(VIS.Events.onTouchStartOrClick, function () {
-
                     var _formData = newRecordForm.getFormData();
                     //when user try to save the reconciled record it will show the pop message
                     //Line is already reconciled
@@ -6880,20 +6889,20 @@
                                         _cmbDifferenceType.val("0").prop('selected', true);
                                     }
                                 }
-                                    /*VIS_427 Bug ID 6484 02/05/2025 if the statment amount is 
-                                     less then invoice schedule amount then disable the check option*/
+                                /*VIS_427 Bug ID 6484 02/05/2025 if the statment amount is 
+                                 less then invoice schedule amount then disable the check option*/
                                 else if (_scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) > Math.abs(convertAmtCulture(_txtAmount.getControl().val()))) {
                                     _cmbDifferenceType.find("option[value=CH]").prop('disabled', true);
-                                        _cmbDifferenceType.prop('selectedIndex', 0);
-                                        _cmbCharge.prop('selectedIndex', 0);
-                                        _txtCharge.attr('chargeid', 0);
-                                        _txtCharge.val("");
-                                        _cmbTaxRate.prop('selectedIndex', 0);
-                                        _txtTaxAmount.setValue(0);
-                                        _cmbDifferenceType.addClass('va012-mandatory');
-                                        _divCharge.hide();
-                                        _divTaxRate.hide();
-                                        _divTaxAmount.hide();
+                                    _cmbDifferenceType.prop('selectedIndex', 0);
+                                    _cmbCharge.prop('selectedIndex', 0);
+                                    _txtCharge.attr('chargeid', 0);
+                                    _txtCharge.val("");
+                                    _cmbTaxRate.prop('selectedIndex', 0);
+                                    _txtTaxAmount.setValue(0);
+                                    _cmbDifferenceType.addClass('va012-mandatory');
+                                    _divCharge.hide();
+                                    _divTaxRate.hide();
+                                    _divTaxAmount.hide();
                                 }
                                 //considered _cmbDifferenceType value not zero then remove mandatory class
                                 //changed != to <= to check null also
