@@ -14,9 +14,14 @@ using System.Net;
 using System.Web;
 using System.Threading;
 using System.Globalization;
+using VAdvantage.Logging;
 
 namespace VA012.Models
 {
+    /// <summary>
+    /// This Class is used to import the credit card statement on banking journal
+    // SRL_NO MERCHANT_ID CHAIN_ID MERCHANT_NAME   LOCATION TELEPHONE   TERMINAL_ID SEQUENCE_NUMBER TRAN_CURR TRAN_DATE   CARD_TYPE CREDIT_CARD_NUMBER  AUTHORIZATION_CODE TRAN_TYPE   SALES_AMOUNT_trxAmount COMMISSION  COMMISSION_PERCENTAGE NET_AMOUNT  ACQUIRER_DATA REFERENCE_NO    TY BANK_ACCOUNT    TIME BANK_ACCOUNT_30B    DISC_TYPE MASTER_CHAIN_ID TIP_AMOUNT TAG_ID  DRIVER_ID
+    /// </summary>
     public class VA012_TRXNO
     {
         #region Variables
@@ -34,9 +39,9 @@ namespace VA012.Models
         string _Extension = string.Empty, _FileLocation = string.Empty;
         #endregion        
 
-        public StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges)
+        public StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate, bool IsStatementDateAsAccountDate)
         {
-            StatementResponse _obj = new StatementResponse();           
+            StatementResponse _obj = new StatementResponse();
 
             #region Period StartDate and End Date
             DateTime? _startdate = null;
@@ -82,7 +87,7 @@ namespace VA012.Models
             int lineno = 10;
 
 
-            DataSet _ds = new DataSet();           
+            DataSet _ds = new DataSet();
             _ds = DB.ExecuteDataset("SELECT C_BANKSTATEMENT_ID,DOCSTATUS FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _statementno + "' AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true), null);
             if (_ds != null)
             {
@@ -106,7 +111,7 @@ namespace VA012.Models
                     {
                         pageno = 1;
                     }
-                 
+
                     _sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
                     FROM C_BANKSTATEMENTLINE BSL
                     INNER JOIN C_BANKSTATEMENT BS
@@ -157,10 +162,10 @@ namespace VA012.Models
                     if (File.Exists(_path))
                     {
                         FileInfo fileToDelete = new FileInfo(_path);
-                        fileToDelete.Delete();                       
+                        fileToDelete.Delete();
                     }
 
-                    if (ds != null && ds.Tables.Count>0)
+                    if (ds != null && ds.Tables.Count > 0)
                     {
                         #region [NEW FORMAT]
 
@@ -202,11 +207,26 @@ namespace VA012.Models
                                             _BnkStatm.SetAD_Org_ID(_AD_Org_ID);
                                             _BnkStatm.SetC_BankAccount_ID(_C_BankAccount_ID);
                                             _BnkStatm.SetName(_statementno);
-                                            _BnkStatm.SetStatementDate(DateTime.Now);
+                                            _BnkStatm.SetStatementDate(statementDate);
 
                                             if (!_BnkStatm.Save())
                                             {
-                                                _obj._error = "VA012_BankStatementHeaderNotSaved";
+                                                string val = string.Empty;
+                                                ValueNamePair vp = VLogger.RetrieveError();
+                                                if (vp != null)
+                                                {
+                                                    val = vp.GetName();
+                                                    if (String.IsNullOrEmpty(val))
+                                                    {
+                                                        val = vp.GetValue();
+                                                    }
+                                                }
+                                                if (string.IsNullOrEmpty(val))
+                                                {
+                                                    val = "VA012_BankStatementHeaderNotSaved";
+                                                }
+
+                                                _obj._error = val;
                                                 return _obj;
                                             }
                                             else
@@ -226,19 +246,18 @@ namespace VA012.Models
                                         if (!string.IsNullOrEmpty(dt.Rows[i][1].ToString().Trim()) && !string.IsNullOrEmpty(dt.Rows[i][2].ToString().Trim())) //if it is not a sum of rows
                                         {
                                             _BnkStmtLine = new MBankStatementLine(_BnkStatm);
-                                            _BnkStmtLine.SetAD_Client_ID(ctx.GetAD_Client_ID());
-                                            _BnkStmtLine.SetAD_Org_ID(ctx.GetAD_Org_ID());
+                                            _BnkStmtLine.SetAD_Client_ID(_BnkStatm.GetAD_Client_ID());
+                                            _BnkStmtLine.SetAD_Org_ID(_BnkStatm.GetAD_Org_ID());
                                             _BnkStmtLine.SetVA012_Page(pageno);
                                             _BnkStmtLine.SetLine(lineno);
                                             lineno = lineno + 10;
-                                            _BnkStmtLine.SetStatementLineDate(Convert.ToDateTime(DateTime.ParseExact(dt.Rows[i][9].ToString().Trim(), "dd/MM/yyyy", null)));// Set Transaction Date
-                                            _BnkStmtLine.SetDateAcct(Convert.ToDateTime(DateTime.ParseExact(dt.Rows[i][9].ToString().Trim(), "dd/MM/yyyy", null)));// Set Transaction Date
-                                            _BnkStmtLine.SetValutaDate(Convert.ToDateTime(DateTime.ParseExact(dt.Rows[i][9].ToString().Trim(), "dd/MM/yyyy", null)));// Set Transaction Date
+                                            _BnkStmtLine.SetStatementLineDate(DateTime.Parse(dt.Rows[i][9].ToString().Trim()));// Set Transaction Date
+                                            _BnkStmtLine.SetDateAcct(DateTime.Parse(dt.Rows[i][9].ToString().Trim()));// Set Transaction Date
+                                            _BnkStmtLine.SetValutaDate(DateTime.Parse(dt.Rows[i][9].ToString().Trim()));// Set Transaction Date
                                             _BnkStmtLine.SetReferenceNo(Convert.ToString(dt.Rows[i][19]).Trim());// Set Reference No.
                                             _BnkStmtLine.SetDescription(Convert.ToString(dt.Rows[i][19]).Trim());// Set Reference No.
                                             _BnkStmtLine.SetMemo(Convert.ToString(dt.Rows[i][3]).Trim() + " " + Convert.ToString(dt.Rows[i][4]).Trim());// Set Merchant name and Location                                    
 
-                                            // _C_Currency_ID = Convert.ToInt32(DB.ExecuteScalar("Select C_Currency_ID from C_Currency Where iso_code= '" + (dt.Rows[i][8].ToString().Trim()) + "'"));
                                             if (_C_Currency_ID > 0)
                                                 _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
 
@@ -287,9 +306,8 @@ namespace VA012.Models
                                                 _BnkStmtLine.SetC_Charge_ID(chargeID);
 
                                                 var _sql = "SELECT C_TAX_ID FROM C_TAX WHERE AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND EXPORT_ID IS NOT NULL AND ISDEFAULT = 'Y' AND IsActive='Y'";
-                                              // _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Tax", true, false);
-                                               int _C_Tax_ID = Convert.ToInt32(DB.ExecuteScalar(_sql));
-                                               
+                                                int _C_Tax_ID = Convert.ToInt32(DB.ExecuteScalar(_sql));
+
                                                 if (_C_Tax_ID > 0)
                                                 {
                                                     _BnkStmtLine.SetC_Tax_ID(_C_Tax_ID);
@@ -307,10 +325,24 @@ namespace VA012.Models
                                             }
 
                                             _BnkStmtLine.Set_Value("TrxNo", Convert.ToString(dt.Rows[i][12]).Trim());
-
                                             if (!_BnkStmtLine.Save())
                                             {
-
+                                                string val = string.Empty;
+                                                ValueNamePair vp = VLogger.RetrieveError();
+                                                if (vp != null)
+                                                {
+                                                    val = vp.GetName();
+                                                    if (String.IsNullOrEmpty(val))
+                                                    {
+                                                        val = vp.GetValue();
+                                                    }
+                                                }
+                                                if (string.IsNullOrEmpty(val))
+                                                {
+                                                    val = "VA012_StatementLineNotSaved";
+                                                }
+                                                _obj._error = val;
+                                                return _obj;
                                             }
                                         }
                                     }
@@ -319,7 +351,21 @@ namespace VA012.Models
                                     _BnkStatm.SetEndingBalance(_BnkStatm.GetBeginningBalance() + _BnkStatm.GetStatementDifference());
                                     if (!_BnkStatm.Save())
                                     {
-                                        _obj._error = "VA012_BeginningBalanceNotUpdated";
+                                        string val = string.Empty;
+                                        ValueNamePair vp = VLogger.RetrieveError();
+                                        if (vp != null)
+                                        {
+                                            val = vp.GetName();
+                                            if (String.IsNullOrEmpty(val))
+                                            {
+                                                val = vp.GetValue();
+                                            }
+                                        }
+                                        if (string.IsNullOrEmpty(val))
+                                        {
+                                            val = "VA012_BeginningBalanceNotUpdated";
+                                        }
+                                        _obj._error = val;
                                         return _obj;
                                     }
                                 }
@@ -341,7 +387,7 @@ namespace VA012.Models
                     {
                         _obj._error = "VA012_NoRecordsInExcel";
                         return _obj;
-                    }     
+                    }
                 }
                 else
                 {
@@ -351,7 +397,7 @@ namespace VA012.Models
             }
 
             _obj._statementID = _stementID.ToString();
-            return _obj;            
+            return _obj;
         }
 
         public DateTime? GetDate(string _date)
