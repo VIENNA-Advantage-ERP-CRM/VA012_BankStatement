@@ -117,6 +117,10 @@ namespace VA012.Controllers
                         {
                             obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate, IsStatementDateAsAccountDate };
                         }
+                        else if (_className.Equals("VA012.Models.VA012_TRXNO"))
+                        {
+                            obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate, IsStatementDateAsAccountDate };
+                        }
                         else
                         {
                             obj = new object[] { ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges };
