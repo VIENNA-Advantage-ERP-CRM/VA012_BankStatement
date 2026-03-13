@@ -6012,19 +6012,21 @@ namespace VA012.Models
                 {
                     DateTime? _stmtDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT StatementLineDate FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
                     DateTime? _dueDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT DueDate FROM C_InvoicePaySchedule WHERE C_InvoicePaySchedule_ID =" + _scheduleId));
-                    if (_stmtDate < _dueDate)
-                    {
-                        return "VA012_StmtDateCantlessTrxDate";
-                    }
+                    //VIS_045: 13-Mar-2026, After discussion with Ashish - no need to check the due date for invoice
+                    //if (_stmtDate < _dueDate)
+                    //{
+                    //    return "VA012_StmtDateCantlessTrxDate";
+                    //}
                 }
                 else
                 {
                     DateTime? _stmtDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT StatementLineDate FROM C_BankStatementLine WHERE C_BANKSTATEMENTLINE_id =" + _dragDestinationID));
                     DateTime? _dueDate = Util.GetValueOfDateTime(DB.ExecuteScalar("SELECT DueDate FROM C_InvoicePaySchedule WHERE C_InvoicePaySchedule_ID =" + _dragSourceID));
-                    if (_stmtDate < _dueDate)
-                    {
-                        return "VA012_StmtDateCantlessTrxDate";
-                    }
+                    //VIS_045: 13-Mar-2026, After discussion with Ashish - no need to check the due date for invoice
+                    //if (_stmtDate < _dueDate)
+                    //{
+                    //    return "VA012_StmtDateCantlessTrxDate";
+                    //}
                 }
                 try
                 {
