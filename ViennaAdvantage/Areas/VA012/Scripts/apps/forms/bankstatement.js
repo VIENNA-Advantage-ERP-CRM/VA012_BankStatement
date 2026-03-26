@@ -3970,7 +3970,7 @@
                                             if (((data[i].VA009_PayMethod_ID != 0 && data[i].c_bpartner_id == 0
                                                 && data[i].c_payment_id == 0) ||
                                                 (data[i].c_bpartner_id != 0 && data[i].c_payment_id > 0))
-                                                && data[i].STMTAMT == data[i].trxamount)
+                                                && data[i].STMTAMT == data[i].trxamount || data[i].VA012_ContraType=="BB")
                                                 status = "va012-green-color";
                                             else
                                                 status = "va012-red-color";
@@ -4295,8 +4295,10 @@
                     }
 
                     // when voucher match is contra and voucher type not eselected then bind as " Cash To Bank"
+                    /*VIS_427 25/03/2026 Changed condition if vouchermatch is not null and contra type is null or empty then set contra ty as
+                     " Cash To Bank"*/
                     if (_cmbVoucherMatch.val() != null && _cmbVoucherMatch.val() != ""
-                        && _cmbContraType.val() != null && _cmbContraType.val() != "") {//replaced "" with null to check condition
+                        && VIS.Utility.Util.getValueOfString(_cmbContraType.val()) == "") {//replaced "" with null to check condition
                         _cmbContraType.val("CB").prop('selected', true);
                         _cmbContraType.trigger('change');
                     }
@@ -5715,7 +5717,7 @@
                         _divCtrlBusinessPartner.show();
                         _divPrepayOrder.show();
                         _divPaymentSchedule.show();
-
+                        _txtPaymentMethod.val("");
 
                         _divCtrlPayment.find("*").prop("disabled", false);
                         _divCtrlInvoice.find("*").prop("disabled", false);
