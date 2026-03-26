@@ -4615,7 +4615,8 @@ namespace VA012.Models
             {
                 _sql += @" AND ((NVL(BSL.C_PAYMENT_ID,0) != 0) OR (NVL(BSL.C_CASHLINE_ID,0) != 0)
              OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.VA009_PaymentMethod_ID,0) != 0) AND (NVL(BSL.C_BPARTNER_ID,0) = 0) AND (NVL(BSL.C_PAYMENT_ID,0) = 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))) 
-              OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.C_BPARTNER_ID,0) != 0) AND (NVL(BSL.C_PAYMENT_ID,0) != 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2)))))";
+              OR (NVL(BSL.C_CHARGE_ID,0)!= 0 AND (NVL(BSL.C_BPARTNER_ID,0) != 0) AND (NVL(BSL.C_PAYMENT_ID,0) != 0) AND ROUND(BSL.StmtAmt,NVL(CURR.StdPrecision,2)) = (ROUND(BSL.TRXAMT,NVL(CURR.StdPrecision,2)) + ROUND(BSL.ChargeAmt,NVL(CURR.StdPrecision,2))))
+              OR ((NVL(BSL.C_CHARGE_ID,0)!= 0) and BSL.VA012_ContraType='BB'))";
             }
             /*VIS_427 Here RecOrUnRecComboVal=2 represent that user has selected UnReconcile on UI and hence Applied this check
             in order get value of Unreconciled records*/
