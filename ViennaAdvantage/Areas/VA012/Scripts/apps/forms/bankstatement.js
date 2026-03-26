@@ -4297,7 +4297,7 @@
                     // when voucher match is contra and voucher type not eselected then bind as " Cash To Bank"
                     /*VIS_427 25/03/2026 Changed condition if vouchermatch is not null and contra type is null or empty then set contra ty as
                      " Cash To Bank"*/
-                    if (_cmbVoucherMatch.val() != null && _cmbVoucherMatch.val() != ""
+                    if (_cmbVoucherMatch.val() != null && _cmbVoucherMatch.val() != "" && _cmbVoucherMatch.val() == "C"
                         && VIS.Utility.Util.getValueOfString(_cmbContraType.val()) == "") {//replaced "" with null to check condition
                         _cmbContraType.val("CB").prop('selected', true);
                         _cmbContraType.trigger('change');
