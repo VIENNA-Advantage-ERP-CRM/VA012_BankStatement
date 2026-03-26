@@ -3970,7 +3970,7 @@
                                             if (((data[i].VA009_PayMethod_ID != 0 && data[i].c_bpartner_id == 0
                                                 && data[i].c_payment_id == 0) ||
                                                 (data[i].c_bpartner_id != 0 && data[i].c_payment_id > 0))
-                                                && data[i].STMTAMT == data[i].trxamount)
+                                                && data[i].STMTAMT == data[i].trxamount || data[i].VA012_ContraType=="BB")
                                                 status = "va012-green-color";
                                             else
                                                 status = "va012-red-color";
@@ -5717,7 +5717,7 @@
                         _divCtrlBusinessPartner.show();
                         _divPrepayOrder.show();
                         _divPaymentSchedule.show();
-
+                        _txtPaymentMethod.val("");
 
                         _divCtrlPayment.find("*").prop("disabled", false);
                         _divCtrlInvoice.find("*").prop("disabled", false);
