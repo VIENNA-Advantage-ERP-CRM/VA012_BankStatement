@@ -4559,7 +4559,7 @@ namespace VA012.Models
                 + " THEN 'Y' "
                 + " ELSE 'N' "
                 + " END AS ISCONVERTED, "
-                + "  INV.DOCUMENTNO AS INVOICENO,BS.C_BANKSTATEMENT_ID,BS.DOCSTATUS,BSL.C_CASHLINE_ID, BSL.TRXNO, BSL.StatementLineDate,NVL(bsl.EftCheckNo,'') AS EftCheckNo,BSL.VA009_PaymentMethod_ID,BSL.C_BPARTNER_ID "
+                + "  INV.DOCUMENTNO AS INVOICENO,BS.C_BANKSTATEMENT_ID,BS.DOCSTATUS,BSL.C_CASHLINE_ID, BSL.TRXNO, BSL.StatementLineDate,NVL(bsl.EftCheckNo,'') AS EftCheckNo,BSL.VA009_PaymentMethod_ID,BSL.C_BPARTNER_ID,BSL.VA012_CONTRATYPE "
                + " FROM C_BankStatementLine BSL "
                + " INNER JOIN C_BankStatement BS "
                + " ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID) "
@@ -4700,6 +4700,7 @@ namespace VA012.Models
                         _statement.stmtLineDate = Util.GetValueOfDateTime(_ds.Tables[0].Rows[i]["StatementLineDate"]);
                         //Get eft checkno
                         _statement.EftCheckNo = Util.GetValueOfString(_ds.Tables[0].Rows[i]["EftCheckNo"]);
+                        _statement.VA012_ContraType = Util.GetValueOfString(_ds.Tables[0].Rows[i]["VA012_CONTRATYPE"]);
                         //if (_ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != DBNull.Value && _ds.Tables[0].Rows[i]["AD_IMAGE_ID"] != null && Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]) > 0)
                         //{
                         //    MImage _image = new MImage(ctx, Util.GetValueOfInt(_ds.Tables[0].Rows[i]["AD_IMAGE_ID"]), null);
@@ -7711,6 +7712,7 @@ namespace VA012.Models
         public DateTime? stmtLineDate { get; internal set; }
         public string EftCheckNo { get; set; }
         public int VA009_PayMethod_ID { get; set; }
+        public string VA012_ContraType { get; set; }
     }
     public class ChargeProp
     {
