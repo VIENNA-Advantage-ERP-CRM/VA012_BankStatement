@@ -56,7 +56,8 @@
         var VA012_BANKSTATEMENTCLASS_ID = 0;
         /* VIS_427 initialized a boolean value for new record to be inserted*/
         var IsNewRecordInserted = false;
-
+        /*VIS_427 this variable will track whether cash line is changed or not */
+        var IsCashLineChanged = false;
         var _VA012_BankChargeDiv = null;
 
         //newRecord Form Variables
@@ -3149,12 +3150,17 @@
                                     if ($_formNewRecord[0].attributes["data-uid"].value > 0) {
                                         _dragDestinationID = $_formNewRecord[0].attributes["data-uid"].value;
                                     }
-                                    if (_dragSourceID > 0 && _dragDestinationID > 0) {
+                                    /*not to call this function when cashlie is changed*/
+                                    if (_dragSourceID > 0 && _dragDestinationID > 0 && !IsCashLineChanged) {
+
                                         childDialogs.statementOpenEdit(_dragDestinationID, _dragSourceID);
                                         //set Statement Date as Readonly
                                         _dtStatementDate.attr("readonly", true);
                                         _status = true;
                                         return _status;
+                                    }
+                                    else {
+                                        IsCashLineChanged = false;
                                     }
                                 }
                             }
@@ -4289,6 +4295,7 @@
 
                     if (_result._cmbContraType != null && _result._cmbContraType != "") {
                         _cmbContraType.val(_result._cmbContraType).prop('selected', true);
+                        _cmbContraType.trigger('change');
                     }
                     else {
                         _cmbContraType.prop('selectedIndex', 0);
@@ -5947,7 +5954,8 @@
                         $('.astric_' + $self.windowNo).show();
                     }
                     //added if _cmbVoucherMatch as Contra then it re-arrange the fields
-                    else if (_cmbVoucherMatch.val() == "M" || _cmbVoucherMatch.val() == "C") {
+                    /*VIS_4227 27/03/2026 if the contra type id Bank to Bank and user changed the amount then do not hide charge */
+                    else if (_cmbVoucherMatch.val() == "M" || (_cmbVoucherMatch.val() == "C" && VIS.Utility.Util.getValueOfString(_cmbContraType.val()) != "BB")) {
                         //_divVoucherNo.find("*").prop("disabled", true);
                         _divCharge.find("*").prop("disabled", true);
                         _divTaxRate.find("*").prop("disabled", true);
@@ -7608,7 +7616,8 @@
                     }
                     _cashLineSelectedVal = 0;
                     _cashLineSelectedVal = $_ctrlCashLine.value;
-
+                    /*This line indicate that cash line is changed*/
+                    IsCashLineChanged = true;
                     if ($_ctrlCashLine.value) {
                         if (!_openingFromDrop && !_openingFromEdit) {
                             if (!loadFunctions.checkContraCondition($_ctrlCashLine.value, 0, convertAmtCulture(_txtAmount.getControl().val()))) {
