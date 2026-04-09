@@ -41,8 +41,8 @@ a:hover {
 }
 
 .VA012-headerPanelLbl {
-    font-weight: 600;
-    color: #908989;
+    font-weight:400;
+   /* color: #908989;*/
 }
 
 .VA012-FileNamelbl {
@@ -58,21 +58,26 @@ a:hover {
 .VA012-controls {
     padding: 0.5px;
 }
-
+.VA012-selectCtrlsbankj {
+    margin-top: 0.5rem !important;
+}
 .VA012-labels {
-    background: rgba(var(--v-c-secondary)) !important;
+    /*background: rgba(var(--v-c-secondary)) !important;*/
     font-size: 11px !important;
+    background: rgba(var(--v-c-on-secondary), .0) !important;
 }
 
 .vis-input-wrap .VA012-nameLbl {
-    background: rgba(var(--v-c-secondary)) !important;
+    /* background: rgba(var(--v-c-secondary)) !important;*/
+    background: rgba(var(--v-c-on-secondary), .0) !important;
     top: 4px;
     height: 86%;
     left: 10px;
 }
 
 .VA012-StatementDateAsAccountDate {
-    background: rgba(var(--v-c-secondary)) !important;
+    /* background: rgba(var(--v-c-secondary)) !important;*/
+    background: rgba(var(--v-c-on-secondary), .0) !important;
     padding-left: 0.9em !important;
     left: 15px !important;
     padding-top: 0.5em !important;
@@ -259,7 +264,7 @@ a:hover {
     }
 
 .VA012-shadow {
-    box-shadow: 6px 6px 7px rgba(var(--v-c-on-secondary), .2);
+    /*box-shadow: 6px 6px 7px rgba(var(--v-c-on-secondary), .2);*/
     padding: 1.4em;
     height: calc(100% - 3.6em);
 }
@@ -284,7 +289,7 @@ a:hover {
     }
 
 .VA012-bank-panel {
-    background-color: rgba(var(--v-c-secondary));
+   /* background-color: rgba(var(--v-c-secondary));*/
     /*border-radius: 0.5rem;*/
     padding: 1em;
     display: flex;

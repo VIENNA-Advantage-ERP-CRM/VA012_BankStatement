@@ -104,7 +104,7 @@
             if (widgetID == 0) {
                 widgetID = $self.windowNo;
             }
-            $root = $("<div id='WidMainRoot_" + widgetID + "' class='VA012_root'></div>");
+            $root = $("<div id='WidMainRoot_" + widgetID + "' class='VA012_root va012-widget-bg'></div>");
             Design();
 
             //VIS_045: Get Bank Statement form ID
@@ -136,7 +136,7 @@
         //Create design
         function Design() {
             dropContainer = $('<div class="VA012-bank-panel VA012-WidgetContainer">' +
-                '<div class="VA012-panel-heading"><h6 class="VA012-headerPanelLbl">' + VIS.Msg.getMsg('VA012_BankingJournal') + '</h6></div>' +
+                '<div class="VA012-panel-heading va012-common-heading"><div class="VA012-headerPanelLbl">' + VIS.Msg.getMsg('VA012_BankingJournal') + '</div></div>' +
                 '<div class="VA012-fader-div VA012-folderFader d-none" id="VA012-folderFader_' + widgetID + '">' +
                 '<div class="p-2 VA012-folderContainer VA012-folderContainer_' + widgetID + '">' +
                 '<h6>' + VIS.Msg.getMsg('VA012_SelectFolder') + '</h6>' +
@@ -149,7 +149,7 @@
                 '</div>' +
                 '</div>' +
                 '<div class="VA012-widgetContentArea">' +
-                '<div class="VA012-shadow bg-white">' +
+                '<div class="VA012-shadow">' +
                 '<div class="VA012-upload-col">' +
                 '<input id="VA012-uploadFile_' + widgetID + '" class="VA012-input-file-field VA012-uploadFileWidget_' + widgetID
                 + '" type="file" accept=".csv, .xls, .xlsx">' +
@@ -401,7 +401,7 @@
             $loadParaDiv = $('<div class="VA012_paramMainDiv" id="VA012_paramMainDiv_' + widgetID + '"><div class= "VA012-form-data">'
                 + '<div class="input-group vis-input-wrap VA012-paramdiv">'
                 + '<div class="vis-control-wrap VA012-controls">'
-                + '<select class="VA012-select" id="VA012_STAT_cmbBank_' + widgetID + '">'
+                + '<select class="VA012-select VA012-selectCtrlsbankj" id="VA012_STAT_cmbBank_' + widgetID + '">'
                 + '</select>'
                 + '<label class="VA012-labels">' + VIS.Msg.getMsg("VA012_Bank") + '<sup style="color: red;">*</sup></label>'
                 + '</div>'
@@ -410,7 +410,7 @@
                 + '<div class= "VA012-form-data">'
                 + '<div class="input-group vis-input-wrap VA012-paramdiv">'
                 + '<div class="vis-control-wrap VA012-controls">'
-                + '<select class="VA012-select" id="VA012_STAT_cmbBankAccount_' + widgetID + '">'
+                + '<select class="VA012-select VA012-selectCtrlsbankj" id="VA012_STAT_cmbBankAccount_' + widgetID + '">'
                 + '</select>'
                 + '<label class="VA012-labels">' + VIS.Msg.getMsg("VA012_BankAccount") + '<sup style="color: red;">*</sup></label>'
                 + '</div>'
@@ -418,7 +418,7 @@
                 + '</div > '
                 + '<div class=VA012-form-data>' + '<div class="input-group vis-input-wrap VA012-paramdiv VA012-margin-B0">'
                 + '<div class="vis-control-wrap VA012-controls">'
-                + '<input class="VA012-select VA012-Date" type="date" max="9999-12-31" id="VA012_STAT_statementDate_' + widgetID + '">'
+                + '<input class="VA012-select VA012-Date VA012-selectCtrlsbankj" type="date" max="9999-12-31" id="VA012_STAT_statementDate_' + widgetID + '">'
                 + '<label class="VA012-labels" id="VA012_STAT_lblStatementDate_' + widgetID + '">' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
                 + '</div>'
                 + '</div>'
@@ -426,7 +426,7 @@
                 + '<div class="VA012-form-data">'
                 + '<div class="input-group vis-input-wrap VA012-paramdiv">'
                 + '<div class="vis-control-wrap VA012-controls">'
-                + '<select class="VA012-select" id="VA012_STAT_cmbBankAccountClassName_' + widgetID + '">'
+                + '<select class="VA012-select VA012-selectCtrlsbankj" id="VA012_STAT_cmbBankAccountClassName_' + widgetID + '">'
                 + '</select>'
                 + '<label class="VA012-labels">' + VIS.Msg.getMsg("VA012_ClassName") + '<sup style="color: red;">*</sup></label>'
                 + '</div>'
@@ -435,7 +435,7 @@
                 + '<div class="VA012-form-data">'
                 + '<div class="input-group vis-input-wrap VA012-paramdiv">'
                 + '<div class="vis-control-wrap VA012-controls">'
-                + '<input class="VA012-select" type="text" id="VA012_STAT_txtStatementNo_' + widgetID + '" placeholder=" " data-placeholder="">'
+                + '<input class="VA012-select VA012-selectCtrlsbankj" type="text" id="VA012_STAT_txtStatementNo_' + widgetID + '" placeholder=" " data-placeholder="">'
                 + '<label class="VA012-nameLbl">' + VIS.Msg.getMsg("VA012_StatementNumber") + '<sup style="color: red;">*</sup></label>'
                 + '</div>'
                 + '</div>'
