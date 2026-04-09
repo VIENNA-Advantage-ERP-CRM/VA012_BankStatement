@@ -59,7 +59,7 @@
                 widgetID = $self.windowNo;
             }
             //Define root and busy indicator
-            $root = $("<div id='VA012_rootBankCharge_" + widgetID + "' class='VA012_rootBankCharge'></div>");
+            $root = $("<div id='VA012_rootBankCharge_" + widgetID + "' class='VA012_rootBankCharge va012-widget-bg'></div>");
             createBusyIndicator();
             $bsyDiv.show();
             //Get Finacial Year data
@@ -111,7 +111,7 @@
             var lookup = VIS.MLookupFactory.get(VIS.context, $self.windowNo, 0, VIS.DisplayType.TableDir, "C_BankAccount_ID", 0, false, validation);
             // Parameters are: columnName, mandatory, isReadOnly, isUpdateable, lookup,display length
             _cmbBankAccountCtrl = new VIS.Controls.VComboBox("C_BankAccount_ID", true, false, true, lookup, 50);
-
+            _cmbBankAccountCtrl.getControl().addClass('va012-removemandatory')
             //Get lookup data
             var data = lookup.getData(true, true, false, false);
             if (data != null && data != undefined && data.length > 0) {
@@ -131,8 +131,8 @@
             _cmbChargeCtrl = new VIS.Controls.VComboBox("C_Charge_ID", false, false, true, chargeLookup, 50);
 
             dropContainer = $('<div class="VA012-bankcharge-panel VA012-BankChargeContainer" id="VA012-BankChargeContainer_' + widgetID + '">'
-                + '<div class="VA012-bankcharge-heading">'
-                + '<h6 class= "VA012-bankchargePanelLbl" id="VA012_HeadingDiv_' + widgetID + '">' + VIS.Msg.getMsg('VA012_BankChargeSummary') + '</h6></div>'
+                + '<div class="VA012-bankcharge-heading va012-common-heading">'
+                + '<div class= "VA012-bankchargePanelLbl" id="VA012_HeadingDiv_' + widgetID + '">' + VIS.Msg.getMsg('VA012_BankChargeSummary') + '</div></div>'
                 //Start Parameters Div
                 + '<div class="VA012-paramtersDiv" id="VA012-paramtersDiv_' + widgetID + '">'
                 + '<div class="input-group vis-input-wrap VA012-input-wrap">'
