@@ -49,9 +49,15 @@ a:hover {
     font-weight: unset;
     color: #908989;
     margin-top: 1em;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
 }
-
 .VA012-paramdiv {
+    margin-top: 2px;
     margin-bottom: 3px;
 }
 
@@ -80,7 +86,7 @@ a:hover {
     background: rgba(var(--v-c-on-secondary), .0) !important;
     padding-left: 0.9em !important;
     left: 15px !important;
-    padding-top: 0.5em !important;
+    padding-top: 0.45em !important;
 }
 .VA012-arrow-right {
     padding: 0.2em;
@@ -250,7 +256,7 @@ a:hover {
     }
 
     .VA012-labelTxt .VA012-fileSize {
-        display: block;
+      /*  display: block;*/
     }
 
 .VA012-files-label {
