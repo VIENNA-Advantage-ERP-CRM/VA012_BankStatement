@@ -15,6 +15,7 @@ using System.Web;
 using System.Threading;
 using System.Globalization;
 using VAdvantage.Logging;
+using System.Data.SqlClient;
 
 namespace VA012.Models
 {
@@ -88,7 +89,19 @@ namespace VA012.Models
 
 
             DataSet _ds = new DataSet();
-            _ds = DB.ExecuteDataset("SELECT C_BANKSTATEMENT_ID,DOCSTATUS FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _statementno + "' AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true), null);
+            string stmtSql = @"SELECT C_BANKSTATEMENT_ID,DOCSTATUS 
+FROM C_BANKSTATEMENT 
+WHERE ISACTIVE='Y' 
+AND NAME=@Name 
+AND STATEMENTDATE BETWEEN @StartDate AND @EndDate";
+
+            _ds = DB.ExecuteDataset(stmtSql, new SqlParameter[]
+            {
+    new SqlParameter("@Name", _statementno),
+    new SqlParameter("@StartDate", _startdate),
+    new SqlParameter("@EndDate", _enddate)
+            });
+
             if (_ds != null)
             {
                 if (_ds.Tables[0].Rows.Count > 0)
@@ -193,7 +206,13 @@ namespace VA012.Models
 
                                     if (i == -1)
                                     {
-                                        _C_Currency_ID = Convert.ToInt32(DB.ExecuteScalar("Select C_Currency_ID from C_Currency Where iso_code= '" + (dt.Rows[i + 1][8]).ToString().Trim() + "'"));
+                                        var isoCode = dt.Rows[i + 1][8]?.ToString()?.Trim();
+
+                                        _C_Currency_ID = Convert.ToInt32(DB.ExecuteScalar(
+                                            "Select C_Currency_ID from C_Currency Where iso_code=@ISO",
+                                             new SqlParameter[] { new SqlParameter("@ISO", isoCode) },
+                                            null
+                                        ));
                                         if (_C_Currency_ID != _bankAccountCurrency)
                                         {
                                             _obj._error = "VA012_DiffAccountAndStatementCurrency";

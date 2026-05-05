@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -21,7 +22,14 @@ namespace VA012.Models
 
         public int GetBankStatementFormID(Ctx ctx, string formName)
         {
-            int FormID = Util.GetValueOfInt(DB.ExecuteScalar($"SELECT AD_Form_ID FROM AD_Form WHERE Name = {GlobalVariable.TO_STRING(formName)}"));
+            string sql = "SELECT AD_Form_ID FROM AD_Form WHERE Name = @FormName";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@FormName", formName)
+            };
+
+            int FormID = Util.GetValueOfInt(DB.ExecuteScalar(sql, parameters, null));
             return FormID;
         }
 

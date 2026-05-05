@@ -289,6 +289,7 @@
             folTreeUpload.on('click', function (e) {
                 e.stopPropagation();
                 fileNameLabel.text('');
+                fileNameLabel.attr("title", '');
                 nxtBtn.attr("disabled", true);
                 $bsyDiv.show();
                 $.ajax({
@@ -380,6 +381,7 @@
                 if (files.length > 0) {
                     fileNameLabel.text(filename + "" + fileExt);
                     fileNameLabel.val(filename + "" + fileExt);
+                    fileNameLabel.attr("title", filename + "" + fileExt);
                     var file = obj;
                     _result = $.parseJSON(VA012.UploadExcel(file, null, null));
                     if (paramDiv == null) {
@@ -602,6 +604,7 @@
                         dragDiv.show();
                         dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
                         fileNameLabel.text('');
+                        fileNameLabel.attr("title", '');
                         nxtBtn.attr("disabled", true);
                         isDMS = false;
                         strFolderIds = "";
@@ -1167,6 +1170,7 @@
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
             fileNameLabel.text('');
             fileNameLabel.val('');
+            fileNameLabel.attr("title", '');
             nxtBtn.attr("disabled", true);
             strFolderIds = "";
             //this.initialize();

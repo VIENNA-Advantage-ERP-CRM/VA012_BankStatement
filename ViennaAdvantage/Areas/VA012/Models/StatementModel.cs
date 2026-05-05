@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
 using VAdvantage.Classes;
@@ -71,22 +72,43 @@ namespace VA012.Models
         {
             Dictionary<string, object> list = new Dictionary<string, object>();
             string[] paramValue = fields.Split(',');
-            int id = Util.GetValueOfInt(paramValue[0].ToString());
+
+            int id = Util.GetValueOfInt(paramValue[0]);
+            int type = Util.GetValueOfInt(paramValue[1]);
+
             DataSet ds = null;
-            //1->Invoice & 2->Order PaymentMethodId
-            if (Util.GetValueOfInt(paramValue[1].ToString()) == 1)
-                ds = DB.ExecuteDataset("SELECT VA009_PAYMENTMETHOD_ID,C_CONVERSIONTYPE_ID FROM C_INVOICE WHERE C_INVOICE_ID=" + id, null, null);
-            else if (Util.GetValueOfInt(paramValue[1].ToString()) == 2)
-                ds = DB.ExecuteDataset("SELECT VA009_PAYMENTMETHOD_ID,C_CONVERSIONTYPE_ID FROM C_ORDER WHERE C_ORDER_ID=" + id, null, null);
-            
-            if (ds != null && ds.Tables[0].Rows.Count > 0)
+
+            // Create parameter array
+            SqlParameter[] param = new SqlParameter[]
+            {
+        new SqlParameter("@ID", id)
+            };
+
+            if (type == 1)
+            {
+                ds = DB.ExecuteDataset(
+                    "SELECT VA009_PAYMENTMETHOD_ID, C_CONVERSIONTYPE_ID FROM C_INVOICE WHERE C_INVOICE_ID = @ID",
+                    param,
+                    null
+                );
+            }
+            else if (type == 2)
+            {
+                ds = DB.ExecuteDataset(
+                    "SELECT VA009_PAYMENTMETHOD_ID, C_CONVERSIONTYPE_ID FROM C_ORDER WHERE C_ORDER_ID = @ID",
+                    param,
+                    null
+                );
+            }
+
+            if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
             {
                 list["VA009_PaymentMethod_ID"] = Util.GetValueOfInt(ds.Tables[0].Rows[0]["VA009_PAYMENTMETHOD_ID"]);
                 list["C_ConversionType_ID"] = Util.GetValueOfInt(ds.Tables[0].Rows[0]["C_CONVERSIONTYPE_ID"]);
             }
+
             return list;
         }
-
         /// <summary>
         /// Get Charge type
         /// </summary>
@@ -96,9 +118,22 @@ namespace VA012.Models
         public string GetChargeMethod(Ctx ctx, string fields)
         {
             string[] paramValue = fields.Split(',');
-            //Assign parameter value
-            int Charge_ID = Util.GetValueOfInt(paramValue[0].ToString());
-            return Util.GetValueOfString(DB.ExecuteScalar("SELECT DTD001_ChargeType FROM C_Charge WHERE  C_Charge_ID="+ Charge_ID, null, null));
+
+            // Assign parameter value
+            int Charge_ID = Util.GetValueOfInt(paramValue[0]);
+
+            SqlParameter[] param = new SqlParameter[]
+            {
+        new SqlParameter("@Charge_ID", Charge_ID)
+            };
+
+            return Util.GetValueOfString(
+                DB.ExecuteScalar(
+                    "SELECT DTD001_ChargeType FROM C_Charge WHERE C_Charge_ID = @Charge_ID",
+                    param,
+                    null
+                )
+            );
         }
 
     }
