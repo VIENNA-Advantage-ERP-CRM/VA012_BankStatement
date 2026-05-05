@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -1432,7 +1434,7 @@ namespace VA012.Models
         {
             List<ChargeProp> _list = new List<ChargeProp>();
             ChargeProp obj = null;
-            //Bug639--  Get charge Name AS  Value_Name         
+            //Bug639--  Get charge Name AS  Value_Name  
             string _sql = "SELECT Value ||'_' ||Name AS Name, C_Charge_ID FROM C_Charge WHERE IsActive='Y' AND AD_Org_ID IN (0," + ctx.GetAD_Org_ID() + ")";
             if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
             {
@@ -1448,6 +1450,7 @@ namespace VA012.Models
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Charge", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
 
             DataSet _ds = DB.ExecuteDataset(_sql, null, null);
+
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
                 for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
@@ -1785,7 +1788,6 @@ namespace VA012.Models
             Dictionary<String, Object> _list = new Dictionary<String, Object>();
             //corrected Query to fetch the Organization ID
             int _org_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _accountId, null, null));
-
             //string _query = "SELECT pay.C_InvoicePaySchedule_ID, pay.DueAmt, inv.C_Currency_ID  FROM C_Invoice inv INNER JOIN C_InvoicePaySchedule pay ON inv.C_Invoice_ID=pay.C_Invoice_ID WHERE" +
             //    " pay.IsActive = 'Y' AND C_InvoicePaySchedule_ID IN (" + schedules + ")";
             if (!string.IsNullOrEmpty(schedules))
@@ -2169,92 +2171,100 @@ namespace VA012.Models
         /// <returns></returns>
         public List<ConcileStatement> LoadConciledOrUnConciledStatements(Ctx ctx, int cmbBankAccount, string txtSearch, int currencyID, bool _searchRequest)
         {
-            //TableNames are Case Sensitive when Applied a MRole
             string _sqlCon = @"SELECT NVL(ROUND(SUM( 
-             CASE 
-             WHEN (BSL.C_PAYMENT_ID IS NOT NULL OR BSL.C_CHARGE_ID IS NOT NULL OR BSL.C_CASHLINE_ID IS NOT NULL) 
-             THEN ( 
-             CASE 
-             WHEN ( BSL.C_CURRENCY_ID != BCURR.C_CURRENCY_ID) 
-             THEN BSL.StmtAmt * ( 
-              CASE 
-             WHEN CCR.MULTIPLYRATE IS NOT NULL 
-             THEN CCR.MULTIPLYRATE 
-              ELSE CCR1.DIVIDERATE 
-              END) 
-             ELSE BSL.StmtAmt 
-             END) 
-             END),NVL(CURR.StdPrecision,2)),0) AS RECONCILED, 
-             NVL(ROUND(SUM( 
-             CASE 
-             WHEN (BSL.C_PAYMENT_ID IS NULL AND BSL.C_CHARGE_ID IS NULL AND  BSL.C_CASHLINE_ID IS NULL) 
-             THEN ( 
-             CASE 
-             WHEN ( BSL.C_CURRENCY_ID != BCURR.C_CURRENCY_ID) 
-             THEN BSL.StmtAmt * ( 
-             CASE  
-              WHEN CCR.MULTIPLYRATE IS NOT NULL 
-             THEN CCR.MULTIPLYRATE 
-              ELSE CCR1.DIVIDERATE 
-              END) 
-             ELSE BSL.StmtAmt 
-             END) 
-             END),NVL(CURR.StdPrecision,2)),0) AS UNRECONCILED,BCURR.ISO_CODE AS BASECURRENCY 
-              FROM C_BankStatementLine BSL 
-               INNER JOIN C_BankStatement BS 
-              ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID)
-              LEFT JOIN C_BPartner BP
-              ON (BSL.C_BPARTNER_ID=BP.C_BPARTNER_ID)
-              LEFT JOIN C_Currency CURR 
-              ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID)             
-             INNER JOIN AD_ClientInfo CINFO  
-             ON (CINFO.AD_CLIENT_ID = BSL.AD_CLIENT_ID) 
-             INNER JOIN C_AcctSchema AC 
-             ON (AC.C_ACCTSCHEMA_ID = CINFO.C_ACCTSCHEMA1_ID)
-             LEFT JOIN C_Currency BCURR
-             ON (" + currencyID + @" = BCURR.C_CURRENCY_ID)
-             LEFT JOIN C_Conversion_Rate CCR 
-             ON ((CCR.C_CURRENCY_ID   = BSL.C_CURRENCY_ID) 
-             AND CCR.ISACTIVE ='Y' 
-             AND (CCR.C_CURRENCY_TO_ID=" + currencyID + @") AND (CCR.AD_CLIENT_ID =BSL.AD_CLIENT_ID)
-             AND (CCR.AD_ORG_ID IN (BSL.AD_ORG_ID,0))
-             AND (SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO))
-             
-             LEFT JOIN C_Conversion_Rate CCR1
-             ON ((CCR1.C_CURRENCY_ID   = " + currencyID + @") AND (CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID)
-             AND (CCR1.ISACTIVE        = 'Y')
-             AND (CCR1.AD_CLIENT_ID    = BSL.AD_CLIENT_ID )
-             AND (CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0))
-             AND (SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)) 
-             WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + cmbBankAccount + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
+     CASE 
+     WHEN (BSL.C_PAYMENT_ID IS NOT NULL OR BSL.C_CHARGE_ID IS NOT NULL OR BSL.C_CASHLINE_ID IS NOT NULL) 
+     THEN ( 
+     CASE 
+     WHEN ( BSL.C_CURRENCY_ID != BCURR.C_CURRENCY_ID) 
+     THEN BSL.StmtAmt * ( 
+      CASE 
+     WHEN CCR.MULTIPLYRATE IS NOT NULL 
+     THEN CCR.MULTIPLYRATE 
+      ELSE CCR1.DIVIDERATE 
+      END) 
+     ELSE BSL.StmtAmt 
+     END) 
+     END),NVL(CURR.StdPrecision,2)),0) AS RECONCILED, 
+     NVL(ROUND(SUM( 
+     CASE 
+     WHEN (BSL.C_PAYMENT_ID IS NULL AND BSL.C_CHARGE_ID IS NULL AND  BSL.C_CASHLINE_ID IS NULL) 
+     THEN ( 
+     CASE 
+     WHEN ( BSL.C_CURRENCY_ID != BCURR.C_CURRENCY_ID) 
+     THEN BSL.StmtAmt * ( 
+     CASE  
+      WHEN CCR.MULTIPLYRATE IS NOT NULL 
+     THEN CCR.MULTIPLYRATE 
+      ELSE CCR1.DIVIDERATE 
+      END) 
+     ELSE BSL.StmtAmt 
+     END) 
+     END),NVL(CURR.StdPrecision,2)),0) AS UNRECONCILED,BCURR.ISO_CODE AS BASECURRENCY 
+      FROM C_BankStatementLine BSL 
+       INNER JOIN C_BankStatement BS 
+      ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID)
+      LEFT JOIN C_BPartner BP
+      ON (BSL.C_BPARTNER_ID=BP.C_BPARTNER_ID)
+      LEFT JOIN C_Currency CURR 
+      ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID)             
+     INNER JOIN AD_ClientInfo CINFO  
+     ON (CINFO.AD_CLIENT_ID = BSL.AD_CLIENT_ID) 
+     INNER JOIN C_AcctSchema AC 
+     ON (AC.C_ACCTSCHEMA_ID = CINFO.C_ACCTSCHEMA1_ID)
+     LEFT JOIN C_Currency BCURR
+     ON (" + currencyID + @" = BCURR.C_CURRENCY_ID)
+     LEFT JOIN C_Conversion_Rate CCR 
+     ON ((CCR.C_CURRENCY_ID   = BSL.C_CURRENCY_ID) 
+     AND CCR.ISACTIVE ='Y' 
+     AND (CCR.C_CURRENCY_TO_ID=" + currencyID + @") AND (CCR.AD_CLIENT_ID =BSL.AD_CLIENT_ID)
+     AND (CCR.AD_ORG_ID IN (BSL.AD_ORG_ID,0))
+     AND (SYSDATE BETWEEN CCR.VALIDFROM AND CCR.VALIDTO))
+     
+     LEFT JOIN C_Conversion_Rate CCR1
+     ON ((CCR1.C_CURRENCY_ID   = " + currencyID + @") AND (CCR1.C_CURRENCY_TO_ID=BSL.C_CURRENCY_ID)
+     AND (CCR1.ISACTIVE        = 'Y')
+     AND (CCR1.AD_CLIENT_ID    = BSL.AD_CLIENT_ID )
+     AND (CCR1.AD_ORG_ID      IN (BSL.AD_ORG_ID,0))
+     AND (SYSDATE BETWEEN CCR1.VALIDFROM AND CCR1.VALIDTO)) 
+     WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + cmbBankAccount + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
 
             if (cmbBankAccount > 0)
             {
                 _sqlCon += " AND BS.AD_ORG_ID = (SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive = 'Y' AND C_BankAccount_ID = " + cmbBankAccount + ")";
             }
 
+            // ✅ only string parameterized
+            List<SqlParameter> param = new List<SqlParameter>();
+
             if (_searchRequest)
             {
                 Decimal result;
 
-                _sqlCon += " AND (UPPER(BP.NAME) LIKE UPPER('%" + txtSearch + "%')"
-                    + " OR UPPER(BSL.DESCRIPTION) LIKE UPPER('%" + txtSearch + "%')"
-                    + " OR UPPER(BS.NAME) LIKE UPPER('%" + txtSearch + "%')"
-                    + " OR UPPER(BSL.TRXNO) LIKE UPPER('%" + txtSearch + "%')";
-                //VIS_427 Checked if search value is number/Decimal then only added these field for searching
+                _sqlCon += @" AND (UPPER(BP.NAME) LIKE UPPER(@search)
+                    OR UPPER(BSL.DESCRIPTION) LIKE UPPER(@search)
+                    OR UPPER(BS.NAME) LIKE UPPER(@search)
+                    OR UPPER(BSL.TRXNO) LIKE UPPER(@search)";
+
+                param.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+
                 if (decimal.TryParse(txtSearch, out result))
                 {
-                    _sqlCon += " OR BSL.StmtAmt=" + Util.GetValueOfDecimal(txtSearch) + ""
-                    + " OR BSL.TrxAmt=" + Util.GetValueOfDecimal(txtSearch) + "";
+                    _sqlCon += " OR BSL.StmtAmt=" + Util.GetValueOfDecimal(txtSearch) +
+                               " OR BSL.TrxAmt=" + Util.GetValueOfDecimal(txtSearch);
                 }
+
                 _sqlCon += ")";
             }
+
             _sqlCon += " GROUP BY BCURR.ISO_CODE ,NVL(CURR.StdPrecision,2)";
-            //Applied a MRole Check
+
+            // (same as your original, no force change)
             _sqlCon.Replace(_sqlCon.ToString(), MRole.GetDefault(ctx).AddAccessSQL(_sqlCon.ToString(), "BSL", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO));
-            DataSet _ds = DB.ExecuteDataset(_sqlCon, null, null);
+
+            DataSet _ds = DB.ExecuteDataset(_sqlCon, param.ToArray(), null);
+
             List<ConcileStatement> _statements = new List<ConcileStatement>();
-            //ConcileStatement conOrunconcile = new ConcileStatement();
             ConcileStatement conOrunconcile = null;
 
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
@@ -3540,7 +3550,7 @@ namespace VA012.Models
         public int LoadStatementsPages(Ctx ctx, int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch)
         {
             string _sql = "";
-            //fetch the record count according to the BankAccount_Organization
+
             int _bankOrg_ID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _cmbBankAccount));
 
             _sql = "SELECT COUNT(*) AS Records "
@@ -3549,52 +3559,54 @@ namespace VA012.Models
                + " ON (BS.C_BANKSTATEMENT_ID=BSL.C_BANKSTATEMENT_ID) "
                + " LEFT JOIN C_Invoice INV "
                + " ON (BSL.C_INVOICE_ID = INV.C_INVOICE_ID) "
-               + "  LEFT JOIN C_BPartner BP "
-               + "  ON (BSL.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
+               + " LEFT JOIN C_BPartner BP "
+               + " ON (BSL.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
                + " LEFT JOIN C_Charge CHRG "
                + " ON (BSL.C_CHARGE_ID=CHRG.C_CHARGE_ID) "
-              //+ " LEFT JOIN AD_IMAGE IMG "
-              //+ " ON BP.PIC=IMG.AD_IMAGE_ID "
-              + "  LEFT JOIN C_BP_Group BPG "
-              + " ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID) "
-              + "  LEFT JOIN C_Currency CURR "
-              + "  ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID) "
-                + " INNER JOIN AD_ClientInfo CINFO  "
-                + " ON (CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID)  "
-                + " INNER JOIN C_AcctSchema AC  "
-                + " ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID)  "
-                + " LEFT JOIN C_Currency BCURR  "
-                + " ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID)  "
+               + " LEFT JOIN C_BP_Group BPG "
+               + " ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID) "
+               + " LEFT JOIN C_Currency CURR "
+               + " ON (BSL.C_CURRENCY_ID=CURR.C_CURRENCY_ID) "
+               + " INNER JOIN AD_ClientInfo CINFO  "
+               + " ON (CINFO.AD_CLIENT_ID =BSL.AD_CLIENT_ID)  "
+               + " INNER JOIN C_AcctSchema AC  "
+               + " ON (AC.C_ACCTSCHEMA_ID =CINFO.C_ACCTSCHEMA1_ID)  "
+               + " LEFT JOIN C_Currency BCURR  "
+               + " ON (AC.C_CURRENCY_ID =BCURR.C_CURRENCY_ID)  "
+               + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount +
+                 " AND BS.DOCSTATUS NOT IN ('VO','RE','CO','CL') AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
 
-            //+ " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS !='VO' AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
-            + " WHERE BS.ISACTIVE='Y' AND BS.C_BANKACCOUNT_ID= " + _cmbBankAccount + " AND BS.DOCSTATUS NOT IN ('VO','RE','CO','CL') AND BS.AD_CLIENT_ID=" + ctx.GetAD_Client_ID();
-
-            //if (ctx.GetAD_Org_ID() != 0)
             if (_bankOrg_ID > 0)
             {
                 _sql += " AND BS.AD_ORG_ID=" + _bankOrg_ID;
             }
 
+            // only string parameterized
+            List<SqlParameter> param = new List<SqlParameter>();
+
             if (_SEARCHREQUEST)
             {
-                _sql += " AND (UPPER(BP.NAME) LIKE UPPER('%" + _txtSearch + "%')"
-                        + " OR UPPER(BSL.DESCRIPTION) LIKE UPPER('%" + _txtSearch + "%')"
-                        + " OR UPPER(BS.NAME) LIKE UPPER('%" + _txtSearch + "%')"
-                        + " OR UPPER(BSL.StmtAmt) LIKE UPPER('%" + _txtSearch + "%'))";
-            }
+                _sql += @" AND (UPPER(BP.NAME) LIKE UPPER(@search)
+                OR UPPER(BSL.DESCRIPTION) LIKE UPPER(@search)
+                OR UPPER(BS.NAME) LIKE UPPER(@search)
+                OR UPPER(BSL.StmtAmt) LIKE UPPER(@search))";
 
+                param.Add(new SqlParameter("@search", "%" + _txtSearch + "%"));
+            }
 
             #region Check Total Pages Count
             int _totalPageCount = 0;
             int _totalRecordCount = 0;
-            //Applied MRole Check
+
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "BSL", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
-            _totalRecordCount = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+
+            _totalRecordCount = Util.GetValueOfInt(DB.ExecuteScalar(_sql, param.ToArray(), null));
+
             _totalPageCount = Util.GetValueOfInt(Math.Ceiling((decimal)_totalRecordCount / _PAGESIZE));
-            #endregion Check Total Pages Count
+            #endregion
+
             return _totalPageCount;
         }
-
         /// <summary>
         /// /Get the Count of Payments or Invoices or Orders or CashJournal Lines 
         /// based on conditions
@@ -3615,6 +3627,7 @@ namespace VA012.Models
             //fetch the record count according to the BankAccount_Organization
             int bankCurr_ID = 0;
             int _bankOrg_ID = 0;
+            List<SqlParameter> parameters = new List<SqlParameter>();
             DataSet ds = DB.ExecuteDataset("SELECT C_CURRENCY_ID,AD_Org_ID FROM C_BankAccount WHERE C_BANKACCOUNT_ID=" + _accountID);
             if (ds != null && ds.Tables[0].Rows.Count > 0)
             {
@@ -3665,24 +3678,38 @@ namespace VA012.Models
                     {
                         StringBuilder sql = new StringBuilder();
                         String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+
                         if (myStringArray.Length > 0)
                         {
                             sql.Append(" AND UPPER(PAY.DocumentNo) IN ( ");
+
                             for (int z = 0; z < myStringArray.Length; z++)
                             {
                                 if (z != 0)
-                                { sql.Append(","); }
-                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                                {
+                                    sql.Append(",");
+                                }
+
+                                string paramName = "@doc" + z;
+                                sql.Append(" UPPER(" + paramName + ")");
+
+                                parameters.Add(new SqlParameter(paramName, myStringArray[z].Trim()));
                             }
+
                             sql.Append(")");
                             _sql += sql.ToString();
                         }
                     }
                     else
                     {
-                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR CAST(CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
-                        "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
+                        _sql += @" AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search)
+                OR CAST(CASE WHEN(DT.DOCBASETYPE = 'ARR')  
+                THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) 
+                WHEN (DT.DOCBASETYPE='APP')  
+                THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  
+                END AS VARCHAR(255)) LIKE @search)";
+
+                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
                     }
                 }
             }
@@ -3722,29 +3749,43 @@ namespace VA012.Models
                 }
                 if (!string.IsNullOrEmpty(txtSearch))
                 {
-                    //Rakesh(VA228):when search text contain "=" then serach with document no only
+                    //Rakesh(VA228):when search text contain "=" then search with document no only
                     if (txtSearch.Contains("="))
                     {
                         StringBuilder sql = new StringBuilder();
                         String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+
                         if (myStringArray.Length > 0)
                         {
                             sql.Append(" AND UPPER(INV.DocumentNo) IN ( ");
+
                             for (int z = 0; z < myStringArray.Length; z++)
                             {
                                 if (z != 0)
-                                { sql.Append(","); }
-                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                                {
+                                    sql.Append(",");
+                                }
+
+                                string paramName = "@doc" + z;
+                                sql.Append(" UPPER(" + paramName + ")");
+
+                                parameters.Add(new SqlParameter(paramName, myStringArray[z].Trim()));
                             }
+
                             sql.Append(")");
                             _sql += sql.ToString();
                         }
                     }
                     else
                     {
-                        _sql += " AND (UPPER(INV.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                            "OR  CAST(CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
-                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END AS VARCHAR(255))  LIKE '%" + txtSearch + "%')";
+                        _sql += @" AND (UPPER(INV.DOCUMENTNO) LIKE UPPER(@search)
+                OR CAST(CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) 
+                THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) 
+                WHEN(DT.DOCBASETYPE IN('API', 'ARC')) 
+                THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 
+                END AS VARCHAR(255)) LIKE @search)";
+
+                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
                     }
                 }
                 //                //Check Schedule already mapped to payment
@@ -3798,28 +3839,39 @@ namespace VA012.Models
                 }
                 if (!string.IsNullOrEmpty(txtSearch))
                 {
-                    //Rakesh(VA228):when search text contain "=" then serach with document no only
+                    //Rakesh(VA228):when search text contain "=" then search with document no only
                     if (txtSearch.Contains("="))
                     {
                         StringBuilder sql = new StringBuilder();
                         String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+
                         if (myStringArray.Length > 0)
                         {
                             sql.Append(" AND UPPER(PAY.DocumentNo) IN ( ");
+
                             for (int z = 0; z < myStringArray.Length; z++)
                             {
                                 if (z != 0)
-                                { sql.Append(","); }
-                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                                {
+                                    sql.Append(",");
+                                }
+
+                                string paramName = "@doc" + z;
+                                sql.Append(" UPPER(" + paramName + ")");
+
+                                parameters.Add(new SqlParameter(paramName, myStringArray[z].Trim()));
                             }
+
                             sql.Append(")");
                             _sql += sql.ToString();
                         }
                     }
                     else
                     {
-                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR CAST(ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255))  LIKE '%" + txtSearch + "%')";
+                        _sql += @" AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search)
+                OR CAST(ROUND(PAY.GrandTotal, NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search)";
+
+                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
                     }
                 }
             }
@@ -3856,23 +3908,34 @@ namespace VA012.Models
                     {
                         StringBuilder sql = new StringBuilder();
                         String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+
                         if (myStringArray.Length > 0)
                         {
                             sql.Append(" AND UPPER(CS.DocumentNo) IN ( ");
+
                             for (int z = 0; z < myStringArray.Length; z++)
                             {
                                 if (z != 0)
-                                { sql.Append(","); }
-                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                                {
+                                    sql.Append(",");
+                                }
+
+                                string paramName = "@doc" + z;
+                                sql.Append(" UPPER(" + paramName + ")");
+
+                                parameters.Add(new SqlParameter(paramName, myStringArray[z].Trim()));
                             }
+
                             sql.Append(")");
                             _sql += sql.ToString();
                         }
                     }
                     else
                     {
-                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
+                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER(@search) " +
+                                "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search)";
+
+                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
                     }
                 }
                 _sql += " ORDER BY CS.NAME";
@@ -3883,7 +3946,6 @@ namespace VA012.Models
             _totalPageCount = Util.GetValueOfInt(Math.Ceiling((decimal)_totalRecordCount / _PAGESIZE));
             return _totalPageCount;
         }
-
         /// <summary>
         /// to get the data based on selected parameters from payment window
         /// </summary>
@@ -3908,7 +3970,7 @@ namespace VA012.Models
                 bankOrg_ID = Util.GetValueOfInt(ds.Tables[0].Rows[0]["AD_Org_ID"]);
             }
             //multiply rate 
-
+            List<SqlParameter> parameters = new List<SqlParameter>();
             string _sql = "";
             int _CountVA034 = Env.IsModuleInstalled("VA034_") ? 1 : 0;
 
@@ -4019,30 +4081,40 @@ namespace VA012.Models
                 }
                 if (!string.IsNullOrEmpty(txtSearch))
                 {
-                    //Rakesh(VA228):when search text contain "=" then serach with document no only
+                    //Rakesh(VA228):when search text contain "=" then search with document no only
                     if (txtSearch.Contains("="))
                     {
                         StringBuilder sql = new StringBuilder();
                         String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+
                         if (myStringArray.Length > 0)
                         {
-                            //_sql += " AND UPPER(t.DocumentNo) IN ( ";
                             sql.Append(" AND UPPER(PAY.DocumentNo) IN ( ");
+
                             for (int z = 0; z < myStringArray.Length; z++)
                             {
                                 if (z != 0)
-                                { sql.Append(","); }
-                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                                {
+                                    sql.Append(",");
+                                }
+
+                                string paramName = "@doc" + z;
+                                sql.Append(" UPPER(" + paramName + ")");
+
+                                parameters.Add(new SqlParameter(paramName, myStringArray[z].Trim()));
                             }
+
                             sql.Append(")");
                             _sql += sql.ToString();
                         }
                     }
                     else
                     {
-                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR CAST(CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
-                        "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
+                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search) " +
+                                "OR CAST(CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
+                                "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END AS VARCHAR(255)) LIKE @search)";
+
+                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
                     }
                 }
                 //Order by DateAcct requirement given by ranvir
@@ -4144,25 +4216,36 @@ namespace VA012.Models
                     {
                         StringBuilder sql = new StringBuilder();
                         String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+
                         if (myStringArray.Length > 0)
                         {
                             sql.Append(" AND UPPER(INV.DocumentNo) IN ( ");
+
                             for (int z = 0; z < myStringArray.Length; z++)
                             {
                                 if (z != 0)
-                                { sql.Append(","); }
-                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                                {
+                                    sql.Append(",");
+                                }
+
+                                string paramName = "@doc" + z;
+                                sql.Append(" UPPER(" + paramName + ")");
+
+                                parameters.Add(new SqlParameter(paramName, myStringArray[z].Trim()));
                             }
+
                             sql.Append(")");
                             _sql += sql.ToString();
                         }
                     }
-                    else
-                    {
-                        _sql += " AND (UPPER(INV.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                            "OR  CAST(CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
-                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
-                    }
+                }
+                else
+                {
+                    _sql += " AND (UPPER(INV.DOCUMENTNO) LIKE UPPER(@search) " +
+                            "OR CAST(CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
+                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END AS VARCHAR(255)) LIKE @search)";
+
+                    parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
                 }
                 //                //Check Schedule already mapped to payment
                 //                _sql += @" AND PAY.C_INVOICEPAYSCHEDULE_ID NOT IN (SELECT NVL(C_INVOICEPAYSCHEDULE_ID,0)
@@ -4246,29 +4329,39 @@ namespace VA012.Models
                 }
                 if (!string.IsNullOrEmpty(txtSearch))
                 {
-                    //Rakesh(VA228):when search text contain "=" then serach with document no only
+                    //Rakesh(VA228):when search text contain "=" then search with document no only
                     if (txtSearch.Contains("="))
                     {
                         StringBuilder sql = new StringBuilder();
                         String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+
                         if (myStringArray.Length > 0)
                         {
-                            //_sql += " AND UPPER(t.DocumentNo) IN ( ";
                             sql.Append(" AND UPPER(PAY.DocumentNo) IN ( ");
+
                             for (int z = 0; z < myStringArray.Length; z++)
                             {
                                 if (z != 0)
-                                { sql.Append(","); }
-                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                                {
+                                    sql.Append(",");
+                                }
+
+                                string paramName = "@doc" + z;
+                                sql.Append(" UPPER(" + paramName + ")");
+
+                                parameters.Add(new SqlParameter(paramName, myStringArray[z].Trim()));
                             }
+
                             sql.Append(")");
                             _sql += sql.ToString();
                         }
                     }
                     else
                     {
-                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR CAST(ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
+                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search) " +
+                                "OR CAST(ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search)";
+
+                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
                     }
                 }
                 //Change required by Ranvir Order by Date Account
@@ -4351,23 +4444,34 @@ namespace VA012.Models
                     {
                         StringBuilder sql = new StringBuilder();
                         String[] myStringArray = txtSearch.TrimStart(new Char[] { ' ', '=' }).Split(',');
+
                         if (myStringArray.Length > 0)
                         {
                             sql.Append(" AND UPPER(CS.DocumentNo) IN ( ");
+
                             for (int z = 0; z < myStringArray.Length; z++)
                             {
                                 if (z != 0)
-                                { sql.Append(","); }
-                                sql.Append(" UPPER('" + myStringArray[z].Trim(new Char[] { ' ' }) + "')");
+                                {
+                                    sql.Append(",");
+                                }
+
+                                string paramName = "@doc" + z;
+                                sql.Append(" UPPER(" + paramName + ")");
+
+                                parameters.Add(new SqlParameter(paramName, myStringArray[z].Trim()));
                             }
+
                             sql.Append(")");
                             _sql += sql.ToString();
                         }
                     }
                     else
                     {
-                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER('%" + txtSearch + "%') " +
-                        "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE '%" + txtSearch + "%')";
+                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER(@search) " +
+                                "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search)";
+
+                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
                     }
                 }
                 //change required by Ranvir
@@ -4383,7 +4487,7 @@ namespace VA012.Models
             {
                 //Applied Check MRole
                 _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "PAY", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
-                _ds = VIS.DBase.DB.ExecuteDatasetPaging(_sql, _paymentPageNo, _PAGESIZE);
+                _ds = VIS.DBase.DB.ExecuteDatasetPaging(_sql, parameters.ToArray(),null,_paymentPageNo, _PAGESIZE);
                 if (_ds != null)
                 {
                     for (int i = 0; i < _ds.Tables[0].Rows.Count; i++)
@@ -4490,7 +4594,6 @@ namespace VA012.Models
             }
             return _payments;
         }
-
         /// <summary>
         /// Get Statement Lines
         /// </summary>
@@ -4505,7 +4608,7 @@ namespace VA012.Models
         public List<StatementLineProp> LoadStatements(Ctx ctx, int _cmbBankAccount, int _statementPageNo, int _PAGESIZE, bool _SEARCHREQUEST, string _txtSearch, int RecOrUnRecComboVal)
         {
             string _sql = "";
-
+            List<SqlParameter> parameters = new List<SqlParameter>();
             Decimal result;
             _sql = "SELECT BS.NAME    AS STATEMENTNO, "
                                 + " CASE  "
@@ -4632,16 +4735,22 @@ namespace VA012.Models
             }
             if (_SEARCHREQUEST)
             {
-                _sql += " AND (UPPER(BP.NAME) LIKE UPPER('%" + _txtSearch + "%')"
-                        + " OR UPPER(BSL.DESCRIPTION) LIKE UPPER('%" + _txtSearch + "%')"
-                        + " OR UPPER(BS.NAME) LIKE UPPER('%" + _txtSearch + "%')"
-                        + " OR UPPER(BSL.TRXNO) LIKE UPPER('%" + _txtSearch + "%')";
+                _sql += " AND (UPPER(BP.NAME) LIKE UPPER(@search)"
+                      + " OR UPPER(BSL.DESCRIPTION) LIKE UPPER(@search)"
+                      + " OR UPPER(BS.NAME) LIKE UPPER(@search)"
+                      + " OR UPPER(BSL.TRXNO) LIKE UPPER(@search)";
+
+                parameters.Add(new SqlParameter("@search", "%" + _txtSearch + "%"));
+
                 //VIS_427 Checked if search value is number/Decimal then only added these field for searching
                 if (decimal.TryParse(_txtSearch, out result))
                 {
-                    _sql += " OR BSL.StmtAmt=" + Util.GetValueOfDecimal(_txtSearch) + ""
-                    + " OR BSL.TrxAmt=" + Util.GetValueOfDecimal(_txtSearch) + "";
+                    _sql += " OR BSL.StmtAmt = @amt"
+                          + " OR BSL.TrxAmt = @amt";
+
+                    parameters.Add(new SqlParameter("@amt", Util.GetValueOfDecimal(_txtSearch)));
                 }
+
                 _sql += ")";
             }
             //_sql += " ORDER BY BSL.StatementLineDate DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+')) DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
@@ -4654,7 +4763,7 @@ namespace VA012.Models
 
                 //Applied Check MRole
                 _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "BSL", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
-                _ds = VIS.DBase.DB.ExecuteDatasetPaging(_sql, _statementPageNo, _PAGESIZE);
+                _ds = VIS.DBase.DB.ExecuteDatasetPaging(_sql,parameters.ToArray(),null, _statementPageNo, _PAGESIZE);
 
                 //_ds = DB.ExecuteDataset(_sql);
                 if (_ds != null)
@@ -4736,7 +4845,6 @@ namespace VA012.Models
             }
             return _statements;
         }
-
         /// <summary>
         /// Get the Charge
         /// </summary>
@@ -4748,23 +4856,35 @@ namespace VA012.Models
         public List<ChargeProp> GetCharge(Ctx ctx, string searchText, string voucherType, int bankAcct)
         {
             List<ChargeProp> _lstcharge = new List<ChargeProp>();
-            //var _sql = "SELECT NAME,C_CHARGE_ID FROM C_CHARGE WHERE ISACTIVE='Y' AND AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + " AND AD_ORG_ID=" + ctx.GetAD_Org_ID() + " AND UPPER(Name) like UPPER('%" + searchText + "%')";
-            //Bug639--  Get charge Name AS  Value_Name        
-            var _sql = "SELECT Value ||'_' ||Name AS Name,C_Charge_ID FROM C_Charge WHERE IsActive='Y' " +
-                       "AND (UPPER(Name) LIKE UPPER('%" + searchText + "%') OR UPPER(Value) LIKE UPPER('%" + searchText + "%'))";
-            //if the voucher Type not contra then hide those records which is belogns to Contra ChargeType
+            List<SqlParameter> parameters = new List<SqlParameter>();
+
+            var _sql = @"SELECT Value || '_' || Name AS Name, C_Charge_ID 
+                FROM C_Charge 
+                WHERE IsActive='Y'
+                AND (UPPER(Name) LIKE UPPER(@search)
+                OR UPPER(Value) LIKE UPPER(@search))";
+
+            parameters.Add(new SqlParameter("@search", "%" + searchText + "%"));
+
             if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
             {
-                _sql += " AND DTD001_ChargeType!='CON' ";
+                _sql += " AND DTD001_ChargeType != 'CON' ";
             }
-            //added Bank Check
+
             if (bankAcct > 0)
             {
-                int bnkOrg = Util.GetValueOfInt(DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + bankAcct));
-                _sql += " AND AD_Org_ID IN(0, " + bnkOrg + ")";
+                int bnkOrg = Util.GetValueOfInt(
+                    DB.ExecuteScalar("SELECT AD_Org_ID FROM C_BankAccount WHERE IsActive='Y' AND C_BankAccount_ID=" + bankAcct)
+                );
+
+                _sql += " AND AD_Org_ID IN (0, @bnkOrg)";
+                parameters.Add(new SqlParameter("@bnkOrg", bnkOrg));
             }
+
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "C_Charge", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
-            DataSet ds = DB.ExecuteDataset(_sql);
+
+            DataSet ds = DB.ExecuteDataset(_sql, parameters.ToArray());
+
             if (ds != null && ds.Tables[0].Rows.Count > 0)
             {
                 for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
@@ -4775,6 +4895,7 @@ namespace VA012.Models
                     _lstcharge.Add(_chrg);
                 }
             }
+
             return _lstcharge;
         }
 
@@ -4817,9 +4938,28 @@ namespace VA012.Models
             {
                 docBaseType = "ARR";
             }
+
             //Used Order By clause and DESC command to get the C_DocType_ID for non zero AD_Org_ID
             //not required MIN() aggregate func handled for to run in POSTGRE SQL also
-            return Util.GetValueOfInt(DB.ExecuteScalar("SELECT  dt.c_doctype_id FROM C_DocType dt INNER JOIN C_DocBaseType dbt ON (dt.docbasetype=dbt.docbasetype) WHERE dbt.docbasetype='" + docBaseType + "' AND dt.IsActive = 'Y' AND (dt.ad_org_id = " + org_Id + " or  DT.ad_org_id = 0) AND dt.AD_Client_ID = " + ctx.GetAD_Client_ID() + " ORDER BY dt.AD_Org_ID DESC"));
+
+            string sql = @"SELECT dt.c_doctype_id 
+                   FROM C_DocType dt 
+                   INNER JOIN C_DocBaseType dbt 
+                   ON (dt.docbasetype = dbt.docbasetype) 
+                   WHERE dbt.docbasetype = @docBaseType 
+                   AND dt.IsActive = 'Y' 
+                   AND (dt.ad_org_id = @orgId OR dt.ad_org_id = 0) 
+                   AND dt.AD_Client_ID = @clientId 
+                   ORDER BY dt.AD_Org_ID DESC";
+
+            List<SqlParameter> parameters = new List<SqlParameter>
+    {
+        new SqlParameter("@docBaseType", docBaseType),
+        new SqlParameter("@orgId", org_Id),
+        new SqlParameter("@clientId", ctx.GetAD_Client_ID())
+    };
+
+            return Util.GetValueOfInt(DB.ExecuteScalar(sql, parameters.ToArray(),null));
         }
         public int GetCurrencyType()
         {
@@ -6159,7 +6299,11 @@ namespace VA012.Models
             string _existingDocBaseType2 = "";
             if (_listToCheck != "")
             {
-                listToCheck = _listToCheck.Split(',');
+                listToCheck = _listToCheck
+     .Split(',')
+     .Select(id => id.Trim())
+     .Where(id => !string.IsNullOrEmpty(id))
+     .ToArray();
 
             }
             //            _sql = @"SELECT inv.C_BPARTNER_ID ,
@@ -6768,6 +6912,7 @@ namespace VA012.Models
         {
             string _sql = "";
             string _docBaseType = "";
+            //var ids = _invoiceID.Split(',').Select(id => int.Parse(id.Trim())).ToList();
             if (!string.IsNullOrEmpty(_invoiceID))
             {
                 _sql = @"SELECT DT.DOCBASETYPE
@@ -7424,49 +7569,67 @@ namespace VA012.Models
         /// <param name="WindowName">Names of window</param>
         /// <returns>AD_Window_ID</returns>
         /// <author>VIS_427</author>
-        public int GetWindowID(Ctx ct, string WindowName)
+        public int GetWindowID(Ctx ct, string windowName)
         {
             int window_Id = 0;
 
-            string[] windowArr = WindowName.Split(',');
-            string sql = "";
+            if (string.IsNullOrWhiteSpace(windowName))
+                return 0;
+
+            string[] windowArr = windowName.Split(',');
+
             foreach (string win in windowArr)
             {
                 if (string.IsNullOrWhiteSpace(win))
                     continue;
 
-                // Step 1: Check in VAS_ZoomScreenConfig
-                sql = $@"SELECT Value 
+                string trimmedWin = win.Trim();
+
+                // Step 1: Zoom config
+                string zoomSql = @"SELECT Value 
                            FROM VAS_ZoomScreenConfig 
-                           WHERE Name ={GlobalVariable.TO_STRING(win)} AND IsActive='Y'";
+                           WHERE Name = @Name AND IsActive='Y'";
 
-                string zoomName = Util.GetValueOfString(DB.ExecuteScalar(sql));
+                List<SqlParameter> zoomParams = new List<SqlParameter>();
+                zoomParams.Add(new SqlParameter("@Name", trimmedWin));
 
-                // Step 2: If found → get AD_Window_ID using Name
+                string zoomName = Util.GetValueOfString(
+                    DB.ExecuteScalar(zoomSql, zoomParams.ToArray(),null)
+                );
+
                 if (!string.IsNullOrEmpty(zoomName))
                 {
-                    sql = $@"SELECT AD_Window_ID 
-                           FROM AD_Window 
-                           WHERE Name ={GlobalVariable.TO_STRING(zoomName)} AND IsActive='Y'";
+                    string windowSql = @"SELECT AD_Window_ID 
+                                 FROM AD_Window 
+                                 WHERE Name = @Name AND IsActive='Y'";
 
-                    window_Id = Util.GetValueOfInt(DB.ExecuteScalar(sql));
+                    List<SqlParameter> winParams = new List<SqlParameter>();
+                    winParams.Add(new SqlParameter("@Name", zoomName));
+
+                    window_Id = Util.GetValueOfInt(
+                        DB.ExecuteScalar(windowSql, winParams.ToArray(),null)
+                    );
 
                     if (window_Id > 0)
                         break;
                 }
 
-                // Step 3: fallback → direct match from AD_Window
-                sql = $@"SELECT AD_Window_ID 
-                        FROM AD_Window 
-                        WHERE Name = {GlobalVariable.TO_STRING(win)} AND IsActive='Y'";
+                // Step 2: fallback
+                string fallbackSql = @"SELECT AD_Window_ID 
+                               FROM AD_Window 
+                               WHERE Name = @Name AND IsActive='Y'";
 
-                window_Id = Util.GetValueOfInt(DB.ExecuteScalar(sql));
+                List<SqlParameter> fallbackParams = new List<SqlParameter>();
+                fallbackParams.Add(new SqlParameter("@Name", trimmedWin));
 
+                window_Id = Util.GetValueOfInt(
+                    DB.ExecuteScalar(fallbackSql, fallbackParams.ToArray(),null)
+                );
 
-                // IMPORTANT: break as soon as value found
                 if (window_Id > 0)
                     break;
             }
+
             return window_Id;
         }
 
