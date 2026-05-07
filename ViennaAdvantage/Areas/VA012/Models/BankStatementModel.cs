@@ -4020,20 +4020,20 @@ namespace VA012.Models
                    + " THEN 'Y' "
                    + " ELSE 'N' "
                    + " END AS ISCONVERTED, "
-                   + " CASE WHEN NVL(BS.DocStatus, 'XX') IN ('RE', 'VO', 'XX') THEN 0 ELSE BSL.C_BANKSTATEMENTLINE_ID END AS C_BANKSTATEMENTLINE_ID, "
+                   + " CASE WHEN NVL(BSL.DocStatus, 'XX') IN ('RE', 'VO', 'XX') THEN 0 ELSE BSL.C_BANKSTATEMENTLINE_ID END AS C_BANKSTATEMENTLINE_ID, "
                     + "  CASE WHEN dt.docbasetype IN ('APP')   THEN 'Payment'   WHEN dt.docbasetype IN ('ARR')   THEN 'Receipt'   END AS PaymentType ,"
-                    + " BS.DocStatus AS DocStatus ,"
+                    + " BSL.DocStatus AS DocStatus ,"
                    + " PAY.TrxNo , PM.VA009_Name, pay.DateAcct,PAY.VA009_PAYMENTMETHOD_ID,PM.VA009_PaymentBaseType "
                     + " FROM C_Payment PAY "
                    + " LEFT JOIN C_BPartner BP "
                    + " ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID) "
 
-                   + " LEFT JOIN C_BankStatementLine BSL "
-                   + " ON (PAY.C_PAYMENT_ID =BSL.C_PAYMENT_ID) "
-
-                   + " LEFT JOIN C_BankStatement BS "
-                   + " ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID AND 'VO' <> NVL(BS.DocStatus, 'XX')) "
-
+                   + " LEFT JOIN (SELECT BSL_INNER.C_PAYMENT_ID,BSL_INNER.C_BANKSTATEMENTLINE_ID,BSL_INNER.C_BANKSTATEMENT_ID,"
+                   + " BS_INNER.DocStatus"
+                   +" FROM C_BankStatementLine BSL_INNER"
+                   +" INNER JOIN C_BankStatement BS_INNER ON"
+                   +" (BS_INNER.C_BANKSTATEMENT_ID = BSL_INNER.C_BANKSTATEMENT_ID"
+                   +" AND NVL(BS_INNER.DocStatus, 'XX') NOT IN ('VO', 'RE'))) BSL ON (PAY.C_PAYMENT_ID = BSL.C_PAYMENT_ID)"
 
                    + " LEFT JOIN C_BP_Group BPG "
                    + " ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID) "
