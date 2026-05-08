@@ -430,7 +430,7 @@
                         //VIS_427 Cleared the array 
                         BankStatementLine_ID = [];
                         _statementPageNo = 1;
-                        childDialogs.loadStatement(_statementID);
+                        childDialogs.loadStatement(_statementID);                        
                         //VIS_427 This check will handle to set background color of edited record on search
                         setTimeout(function () {
                             if (BankStatementLineIdForSave != 0) {
@@ -1760,7 +1760,10 @@
                             data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _PAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, statementDate: (_statementDate == null || _statementDate == "") ? new (Date) : _statementDate, businessPartnerId: _BPSearchControl.value, txtSearch: txtSearchText }),
                             success: function (data) {
                                 if (data != null && data != "") {
-
+                                    //cleared the array so that now data combine when user search record
+                                    if (_paymentPageNo == 1) {
+                                        storepaymentdata = [];
+                                    }
                                     callbackloadPayments(data);
                                     busyIndicator($(_paymentLists), false, "inherit");
                                 }
@@ -3947,7 +3950,9 @@
                     function callbackloadStatement(data) {
                         data = $.parseJSON(data);
                         var _StatementsHTML = "";
-
+                        if (_statementPageNo == 1) {
+                            _lstStatement.html("");
+                        }
 
                         if (data != null && data.length > 0) {
                             for (var i = 0; i < data.length; i++) {
