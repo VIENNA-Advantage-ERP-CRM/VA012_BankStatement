@@ -125,6 +125,9 @@
         var _divCheckDate = null;
         var _txtSearch = null;
         var _btnSearch = null;
+        // VA012: in-flight guards to prevent duplicate data on rapid search clicks
+        var _isStatementSearching = false;
+        var _isPaymentSearching = false;
         var _btnMore = null;
         var _divMore = null;
         var _btnAmount = null;
@@ -371,11 +374,15 @@
                 childDialogs.prepayOrderDialog();
             });
             _btnSearch.on(VIS.Events.onTouchStartOrClick, function () {
+                // VA012: ignore repeat clicks while a previous statement search is still running
+                if (_isStatementSearching) return;
+                _isStatementSearching = true;
+                _btnSearch.addClass('va012-disabled').css('pointer-events', 'none');
 
                 if (_txtSearch.val() != null && _txtSearch.val() != "") {
                     _SEARCHREQUEST = true;
                     _statementLinesList = [];
-                    //VIS_427 Cleared the array 
+                    //VIS_427 Cleared the array
                     BankStatementLine_ID = [];
                     _lstStatement.html("");
                     _statementPageNo = 1;
@@ -392,7 +399,7 @@
                 else {
                     _statementLinesList = [];
                     _lstStatement.html("");
-                    //VIS_427 Cleared the array 
+                    //VIS_427 Cleared the array
                     BankStatementLine_ID = [];
                     _statementPageNo = 1;
                     childDialogs.loadStatement(_statementID);
@@ -406,11 +413,15 @@
             });
             _txtSearch.keypress(function (e) {
                 if (e.which == 13) {
+                    // VA012: same in-flight guard for Enter key
+                    if (_isStatementSearching) return;
+                    _isStatementSearching = true;
+                    _btnSearch.addClass('va012-disabled').css('pointer-events', 'none');
 
                     if (_txtSearch.val() != null && _txtSearch.val() != "") {
                         _SEARCHREQUEST = true;
                         _statementLinesList = [];
-                        //VIS_427 Cleared the array 
+                        //VIS_427 Cleared the array
                         BankStatementLine_ID = [];
                         _lstStatement.html("");
                         _statementPageNo = 1;
@@ -427,7 +438,7 @@
                     else {
                         _statementLinesList = [];
                         _lstStatement.html("");
-                        //VIS_427 Cleared the array 
+                        //VIS_427 Cleared the array
                         BankStatementLine_ID = [];
                         _statementPageNo = 1;
                         childDialogs.loadStatement(_statementID);
@@ -712,11 +723,19 @@
             //Rakesh(VA228):Bind SearchControl valuechanged event
             _BPSearchControl.fireValueChanged = loadFunctions.loadDataOnBPChanged;
             _btnSearchPayment.on(VIS.Events.onTouchStartOrClick, function () {
+                // VA012: ignore repeat clicks while a previous payment search is still running
+                if (_isPaymentSearching) return;
+                _isPaymentSearching = true;
+                _btnSearchPayment.addClass('va012-disabled').css('pointer-events', 'none');
                 //VA230:Load only middle grid payment/prepay order/invoiceschedule/contra data
                 loadFunctions.loadAndResetPaymentData();
             });
             _txtSearchPayment.keypress(function (e) {
                 if (e.which == 13) {
+                    // VA012: same in-flight guard for Enter key
+                    if (_isPaymentSearching) return;
+                    _isPaymentSearching = true;
+                    _btnSearchPayment.addClass('va012-disabled').css('pointer-events', 'none');
                     //VA230:Load only middle grid payment/prepay order/invoiceschedule/contra data
                     loadFunctions.loadAndResetPaymentData();
                 }
@@ -1764,12 +1783,23 @@
                                     callbackloadPayments(data);
                                     busyIndicator($(_paymentLists), false, "inherit");
                                 }
+                                // VA012: release in-flight guard for payment search
+                                _isPaymentSearching = false;
+                                if (_btnSearchPayment) _btnSearchPayment.removeClass('va012-disabled').css('pointer-events', '');
                             },
                             error: function () {
                                 busyIndicator($(_paymentLists), false, "inherit");
+                                // VA012: release in-flight guard for payment search
+                                _isPaymentSearching = false;
+                                if (_btnSearchPayment) _btnSearchPayment.removeClass('va012-disabled').css('pointer-events', '');
                             }
                         });
                     }, 2);
+                }
+                else {
+                    // VA012: no account selected — nothing to fetch, release in-flight guard
+                    _isPaymentSearching = false;
+                    if (_btnSearchPayment) _btnSearchPayment.removeClass('va012-disabled').css('pointer-events', '');
                 }
                 function callbackloadPayments(data) {
                     data = $.parseJSON(data);
@@ -3937,9 +3967,15 @@
                                     callbackloadStatement(data);
                                     busyIndicator($(_lstStatement), false, "inherit");
                                 }
+                                // VA012: release in-flight guard for statement search
+                                _isStatementSearching = false;
+                                if (_btnSearch) _btnSearch.removeClass('va012-disabled').css('pointer-events', '');
                             },
                             error: function () {
                                 busyIndicator($(_lstStatement), false, "inherit");
+                                // VA012: release in-flight guard for statement search
+                                _isStatementSearching = false;
+                                if (_btnSearch) _btnSearch.removeClass('va012-disabled').css('pointer-events', '');
                             }
                         })
                     }, 2);
@@ -4138,6 +4174,11 @@
                         loadFunctions.dropPayments();
 
                     }
+                }
+                else {
+                    // VA012: no bank account selected — release in-flight guard
+                    _isStatementSearching = false;
+                    if (_btnSearch) _btnSearch.removeClass('va012-disabled').css('pointer-events', '');
                 }
             },
             setStatementListHeight: function () {
