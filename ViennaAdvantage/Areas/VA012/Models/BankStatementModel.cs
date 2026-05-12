@@ -4399,7 +4399,7 @@ namespace VA012.Models
                             WHEN 'R'
                             THEN 'Payment'
                             END AS PaymentType,
-                            BS.DocStatus AS DocStatus ,
+                            BSL.DocStatus AS DocStatus ,
                               ' '  as TrxNo , '' as VA009_Name, CS.DateAcct,0 as VA009_PAYMENTMETHOD_ID,'' as VA009_PaymentBaseType
                         FROM C_CashLine PAY 
                         INNER JOIN C_Cash CS
@@ -4408,10 +4408,14 @@ namespace VA012.Models
                         ON (chrg.c_charge_id=PAY.c_charge_id)
                         LEFT JOIN C_BPartner BP
                         ON (PAY.C_BPARTNER_ID =BP.C_BPARTNER_ID)
-                        LEFT JOIN C_BankStatementLine BSL 
-                         ON (PAY.C_CASHLINE_ID =BSL.C_CASHLINE_ID)
-                         LEFT JOIN C_BankStatement BS 
-                         ON (BS.C_BANKSTATEMENT_ID =BSL.C_BANKSTATEMENT_ID AND 'VO' <> NVL(BS.DocStatus, 'XX'))
+                        LEFT JOIN (SELECT 
+                                    BSL_INNER.C_CASHLINE_ID,
+                                    BSL_INNER.C_BANKSTATEMENTLINE_ID,
+                                    BSL_INNER.C_BANKSTATEMENT_ID,
+                                    BS_INNER.DocStatus
+                                  FROM C_BankStatementLine BSL_INNER
+                                  INNER JOIN C_BankStatement BS_INNER ON (BS_INNER.C_BANKSTATEMENT_ID = BSL_INNER.C_BANKSTATEMENT_ID
+                                    AND NVL(BS_INNER.DocStatus, 'XX') NOT IN ('VO', 'RE'))) BSL ON (PAY.C_CASHLINE_ID = BSL.C_CASHLINE_ID)
                         LEFT JOIN C_BP_Group BPG
                         ON (BP.C_BP_GROUP_ID=BPG.C_BP_GROUP_ID)
                         LEFT JOIN C_Currency CURR
