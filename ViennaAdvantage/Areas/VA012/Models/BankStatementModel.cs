@@ -2241,12 +2241,17 @@ namespace VA012.Models
             {
                 Decimal result;
 
-                _sqlCon += @" AND (UPPER(BP.NAME) LIKE UPPER(@search)
-                    OR UPPER(BSL.DESCRIPTION) LIKE UPPER(@search)
-                    OR UPPER(BS.NAME) LIKE UPPER(@search)
-                    OR UPPER(BSL.TRXNO) LIKE UPPER(@search)";
+                //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                _sqlCon += @" AND (UPPER(BP.NAME) LIKE UPPER(@search1)
+                    OR UPPER(BSL.DESCRIPTION) LIKE UPPER(@search2)
+                    OR UPPER(BS.NAME) LIKE UPPER(@search3)
+                    OR UPPER(BSL.TRXNO) LIKE UPPER(@search4)";
 
-                param.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+                string _like = "%" + txtSearch + "%";
+                param.Add(new SqlParameter("@search1", _like));
+                param.Add(new SqlParameter("@search2", _like));
+                param.Add(new SqlParameter("@search3", _like));
+                param.Add(new SqlParameter("@search4", _like));
 
                 if (decimal.TryParse(txtSearch, out result))
                 {
@@ -3586,12 +3591,18 @@ namespace VA012.Models
 
             if (_SEARCHREQUEST)
             {
-                _sql += @" AND (UPPER(BP.NAME) LIKE UPPER(@search)
-                OR UPPER(BSL.DESCRIPTION) LIKE UPPER(@search)
-                OR UPPER(BS.NAME) LIKE UPPER(@search)
-                OR UPPER(BSL.StmtAmt) LIKE UPPER(@search))";
+                //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                //StmtAmt is numeric - cast it so PostgreSQL does not fail on upper(numeric)
+                _sql += @" AND (UPPER(BP.NAME) LIKE UPPER(@search1)
+                OR UPPER(BSL.DESCRIPTION) LIKE UPPER(@search2)
+                OR UPPER(BS.NAME) LIKE UPPER(@search3)
+                OR CAST(BSL.StmtAmt AS VARCHAR(255)) LIKE @search4)";
 
-                param.Add(new SqlParameter("@search", "%" + _txtSearch + "%"));
+                string _like = "%" + _txtSearch + "%";
+                param.Add(new SqlParameter("@search1", _like));
+                param.Add(new SqlParameter("@search2", _like));
+                param.Add(new SqlParameter("@search3", _like));
+                param.Add(new SqlParameter("@search4", _like));
             }
 
             #region Check Total Pages Count
@@ -3702,14 +3713,16 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _sql += @" AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search)
-                OR CAST(CASE WHEN(DT.DOCBASETYPE = 'ARR')  
-                THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) 
-                WHEN (DT.DOCBASETYPE='APP')  
-                THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  
-                END AS VARCHAR(255)) LIKE @search)";
+                        //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                        _sql += @" AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search1)
+                OR CAST(CASE WHEN(DT.DOCBASETYPE = 'ARR')
+                THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2))
+                WHEN (DT.DOCBASETYPE='APP')
+                THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1
+                END AS VARCHAR(255)) LIKE @search2)";
 
-                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search1", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search2", "%" + txtSearch + "%"));
                     }
                 }
             }
@@ -3778,14 +3791,16 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _sql += @" AND (UPPER(INV.DOCUMENTNO) LIKE UPPER(@search)
-                OR CAST(CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) 
-                THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) 
-                WHEN(DT.DOCBASETYPE IN('API', 'ARC')) 
-                THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 
-                END AS VARCHAR(255)) LIKE @search)";
+                        //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                        _sql += @" AND (UPPER(INV.DOCUMENTNO) LIKE UPPER(@search1)
+                OR CAST(CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC'))
+                THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))
+                WHEN(DT.DOCBASETYPE IN('API', 'ARC'))
+                THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1
+                END AS VARCHAR(255)) LIKE @search2)";
 
-                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search1", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search2", "%" + txtSearch + "%"));
                     }
                 }
                 //                //Check Schedule already mapped to payment
@@ -3868,10 +3883,12 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _sql += @" AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search)
-                OR CAST(ROUND(PAY.GrandTotal, NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search)";
+                        //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                        _sql += @" AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search1)
+                OR CAST(ROUND(PAY.GrandTotal, NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search2)";
 
-                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search1", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search2", "%" + txtSearch + "%"));
                     }
                 }
             }
@@ -3932,17 +3949,19 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER(@search) " +
-                                "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search)";
+                        //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER(@search1) " +
+                                "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search2)";
 
-                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search1", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search2", "%" + txtSearch + "%"));
                     }
                 }
                 _sql += " ORDER BY CS.NAME";
             }
             //Applied Check MRole
             _sql = MRole.GetDefault(ctx).AddAccessSQL(_sql, "PAY", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
-            _totalRecordCount = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+            _totalRecordCount = Util.GetValueOfInt(DB.ExecuteScalar(_sql, parameters.ToArray(), null));
             _totalPageCount = Util.GetValueOfInt(Math.Ceiling((decimal)_totalRecordCount / _PAGESIZE));
             return _totalPageCount;
         }
@@ -4110,11 +4129,13 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search) " +
+                        //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search1) " +
                                 "OR CAST(CASE WHEN(DT.DOCBASETYPE = 'ARR')  THEN ROUND(PAY.PAYAMT, NVL(BCURR.StdPrecision,2)) " +
-                                "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END AS VARCHAR(255)) LIKE @search)";
+                                "WHEN (DT.DOCBASETYPE='APP')  THEN ROUND(PAY.PAYAMT,NVL(BCURR.StdPrecision,2))*-1  END AS VARCHAR(255)) LIKE @search2)";
 
-                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search1", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search2", "%" + txtSearch + "%"));
                     }
                 }
                 //Order by DateAcct requirement given by ranvir
@@ -4241,11 +4262,13 @@ namespace VA012.Models
                 }
                 else
                 {
-                    _sql += " AND (UPPER(INV.DOCUMENTNO) LIKE UPPER(@search) " +
+                    //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                    _sql += " AND (UPPER(INV.DOCUMENTNO) LIKE UPPER(@search1) " +
                             "OR CAST(CASE WHEN(DT.DOCBASETYPE IN('ARI', 'APC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2)) " +
-                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END AS VARCHAR(255)) LIKE @search)";
+                            "WHEN(DT.DOCBASETYPE IN('API', 'ARC')) THEN ROUND(PAY.DUEAMT, NVL(BCURR.StdPrecision,2))*-1 END AS VARCHAR(255)) LIKE @search2)";
 
-                    parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+                    parameters.Add(new SqlParameter("@search1", "%" + txtSearch + "%"));
+                    parameters.Add(new SqlParameter("@search2", "%" + txtSearch + "%"));
                 }
                 //                //Check Schedule already mapped to payment
                 //                _sql += @" AND PAY.C_INVOICEPAYSCHEDULE_ID NOT IN (SELECT NVL(C_INVOICEPAYSCHEDULE_ID,0)
@@ -4358,10 +4381,12 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search) " +
-                                "OR CAST(ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search)";
+                        //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                        _sql += " AND (UPPER(PAY.DOCUMENTNO) LIKE UPPER(@search1) " +
+                                "OR CAST(ROUND(PAY.GrandTotal,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search2)";
 
-                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search1", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search2", "%" + txtSearch + "%"));
                     }
                 }
                 //Change required by Ranvir Order by Date Account
@@ -4472,10 +4497,12 @@ namespace VA012.Models
                     }
                     else
                     {
-                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER(@search) " +
-                                "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search)";
+                        //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                        _sql += " AND (UPPER(CS.DOCUMENTNO) LIKE UPPER(@search1) " +
+                                "OR CAST(ROUND(PAY.AMOUNT * -1,NVL(BCURR.StdPrecision,2)) AS VARCHAR(255)) LIKE @search2)";
 
-                        parameters.Add(new SqlParameter("@search", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search1", "%" + txtSearch + "%"));
+                        parameters.Add(new SqlParameter("@search2", "%" + txtSearch + "%"));
                     }
                 }
                 //change required by Ranvir
@@ -4739,20 +4766,26 @@ namespace VA012.Models
             }
             if (_SEARCHREQUEST)
             {
-                _sql += " AND (UPPER(BP.NAME) LIKE UPPER(@search)"
-                      + " OR UPPER(BSL.DESCRIPTION) LIKE UPPER(@search)"
-                      + " OR UPPER(BS.NAME) LIKE UPPER(@search)"
-                      + " OR UPPER(BSL.TRXNO) LIKE UPPER(@search)";
+                //ODP.NET binds by position (BindByName is not set), so every placeholder needs its own parameter
+                _sql += " AND (UPPER(BP.NAME) LIKE UPPER(@search1)"
+                      + " OR UPPER(BSL.DESCRIPTION) LIKE UPPER(@search2)"
+                      + " OR UPPER(BS.NAME) LIKE UPPER(@search3)"
+                      + " OR UPPER(BSL.TRXNO) LIKE UPPER(@search4)";
 
-                parameters.Add(new SqlParameter("@search", "%" + _txtSearch + "%"));
+                string _like = "%" + _txtSearch + "%";
+                parameters.Add(new SqlParameter("@search1", _like));
+                parameters.Add(new SqlParameter("@search2", _like));
+                parameters.Add(new SqlParameter("@search3", _like));
+                parameters.Add(new SqlParameter("@search4", _like));
 
                 //VIS_427 Checked if search value is number/Decimal then only added these field for searching
                 if (decimal.TryParse(_txtSearch, out result))
                 {
-                    _sql += " OR BSL.StmtAmt = @amt"
-                          + " OR BSL.TrxAmt = @amt";
+                    _sql += " OR BSL.StmtAmt = @amt1"
+                          + " OR BSL.TrxAmt = @amt2";
 
-                    parameters.Add(new SqlParameter("@amt", Util.GetValueOfDecimal(_txtSearch)));
+                    parameters.Add(new SqlParameter("@amt1", Util.GetValueOfDecimal(_txtSearch)));
+                    parameters.Add(new SqlParameter("@amt2", Util.GetValueOfDecimal(_txtSearch)));
                 }
 
                 _sql += ")";
@@ -4866,9 +4899,10 @@ namespace VA012.Models
                 FROM C_Charge 
                 WHERE IsActive='Y'
                 AND (UPPER(Name) LIKE UPPER(@search)
-                OR UPPER(Value) LIKE UPPER(@search))";
+                OR UPPER(Value) LIKE UPPER(@search2))";
 
             parameters.Add(new SqlParameter("@search", "%" + searchText + "%"));
+            parameters.Add(new SqlParameter("@search2", "%" + searchText + "%"));
 
             if (!string.IsNullOrEmpty(voucherType) && !voucherType.Equals("C"))
             {
