@@ -1,4 +1,4 @@
-﻿/*Version 2.2.3.0*/
+﻿/*Version 2.2.4.0*/
 body {
     margin: 0;
     padding: 0;
@@ -1408,9 +1408,16 @@ a:hover {
     font-weight: unset;
     color: #908989;
     margin-top: 1em;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
 }
 
 .VA012-paramdiv {
+    margin-top: 2px;
     margin-bottom: 3px;
 }
 
@@ -1441,7 +1448,7 @@ a:hover {
     background: rgba(var(--v-c-on-secondary), .0) !important;
     padding-left: 0.9em !important;
     left: 15px !important;
-    padding-top: 0.5em !important;
+    padding-top: 0.45em !important;
 }
 
 .VA012-arrow-right {
@@ -1613,7 +1620,7 @@ a:hover {
     }
 
     .VA012-labelTxt .VA012-fileSize {
-        display: block;
+        /*  display: block;*/
     }
 
 .VA012-files-label {
@@ -2049,5 +2056,3 @@ li.VA012-selectedAction {
     color: rgba(var(--v-c-on-secondary), 1) !important;
     width: 130px;
 }
-
-
