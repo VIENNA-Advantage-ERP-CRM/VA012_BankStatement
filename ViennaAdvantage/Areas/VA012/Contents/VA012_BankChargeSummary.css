@@ -1,89 +1,454 @@
-﻿/************************************************************
- * Module Name    : VA012
- * Purpose        : Bank charge Summary-Month wise widget css class
- * chronological  : Development
- * Created Date   : 7 Nov, 2024
- * Created by     : VIS103
+/************************************************************
+ * Module Name    : VA012
+ * Purpose        : Bank Charge Summary (month wise) widget - Onfinity
+ *                  design system
+ * Spec           : design.md > dashboard-widgets.md + foundations.md
+ * Target size    : 3x2 dashboard cell (works down to 2x2)
+ *
+ * Sizing model (dashboard-widgets.md > Widget Internal Sizing):
+ *   - ONE lever: the widget root font-size.
+ *   - Every internal size (type, padding, gap, icon) is em against it.
+ *   - Physical edges (border width, radius, shadow offset) stay in px.
+ *   The font-size media queries the previous version carried are gone;
+ *   the root anchor below replaces them.
+ *
+ * The chart canvas is the one element that cannot be em-sized - Chart.js
+ * needs numbers in px - so the script reads the resolved root font-size
+ * and derives the tick/tooltip sizes from it, keeping the canvas on the
+ * same lever as the rest of the widget.
  ***********************************************************/
-.VA012_rootBankCharge {
-    height: 100%;
-    width: 100%;
-}
-.VA012-bankcharge-heading {
-    margin-bottom: 0.8rem;
-    /*margin-top: 0.5rem;*/
-    margin-left: 0.5rem;
-}
-.VA012-bankchargePanelLbl {
-    /*font-weight: 600;
-    color: #908989;*/
-}
-.VA012-paramtersDiv {
-    display: flex;
-    /*padding: 0.3rem;*/
-}
-.VA012-cmbBankAcct {
-    padding: 0.3rem;
-}
-.VA012-cmbCharge {
-    padding: 0.3rem;
-}
-.VA012-input-wrap{
-    margin-bottom: unset !important;
-}
-.VA012_rootBankCharge {
-   /* background: rgba(235, 245, 250, 1) !important;*/
-    /*background: rgb(255 255 255) !important;*/
-}
-.VA012-ctrlLbl {
-    background: rgba(var(--v-c-on-secondary), .0) !important;
-    /*background: rgb(255 255 255) !important;*/
-}
-.VA012-selectCtrls {
-    margin-top: 0.35rem !important;
-}
-.VA012-bankCtrl {
-    background-color: rgb(255 255 255) !important;
-}
-.VA012-chargeCtrl {
-    background-color: rgba(var(--v-c-on-secondary), .0) !important;
-}
-@media screen and (max-width: 1366px) {
-    .VA012-bankcharge-heading {        
-        margin-left: 0.5rem;
-    } 
-}
-@media screen and (max-width: 1024px) {
-    .VA012-bankcharge-heading {
-        margin-bottom: 0rem !important;
-        margin-top: 0rem !important;
-        margin-left: 0.5rem !important;
-    }
-    .VA012-selectCtrls {
-        height:unset !important;
-    }
-}
-.va012-widget-bg {
-    background: linear-gradient(0deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 1) 100%);
+
+/* ============================================================
+   1. Widget root, measurement anchor and surface
+   ============================================================ */
+
+/*  The host dashboard (.vis-widget-container, HomeMgr2) publishes
+    --rowheight = (dashboardWidth - 25) / 9 and rewrites it on every
+    resize / edit-mode toggle. Inverting that recovers the dashboard's
+    inline size, which is the lever the header clamps hang off - this is
+    the --dash-inline-size contract in
+    dashboard-widgets.md > Widget Header > Measurement Setup, satisfied
+    in pure CSS with no ResizeObserver and no platform change.
+    The fallback keeps every clamp pinned to its floor when the widget is
+    rendered outside a dashboard.                                       */
+.VA012-bcs {
+    --dash-inline-size: calc(var(--rowheight, 100px) * 9 + 25px);
+
+    /* foundations.md > Color Palette */
+    --bcs-text: #102C3F;
+    --bcs-secondary: #41576A;
+    --bcs-muted: #5F7283;
+    --bcs-primary: #0083DA;
+    --bcs-action: #1F83FF;
+    --bcs-danger: #D14545;
+    /* windows-and-panels.md > Form Field > Structure */
+    --bcs-field-line: #D7D7D7;
+    /* Header stat pill, info tone - dashboard-widgets.md > Header Stat Pill */
+    --bcs-pill-bg: #EEF6FF;
+    --bcs-pill-text: #0F69AC;
+
+    /* Widget root anchor - 1.2cqi of the dashboard container.
+       dashboard-widgets.md > Widget Root Anchor */
+    font-size: clamp(16px, calc(var(--dash-inline-size) * 0.012), 20px);
+    font-family: 'Roboto', sans-serif;
+    color: var(--bcs-text);
+
+    /* Glass widget surface - foundations.md > Standard Gradients */
+    background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,0.6));
     border: 2px solid #FFFFFF;
-    border-radius: 0.875em;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(15,61,97,0.06);
+
+    /* The grid track owns the height; content adapts inside it and is
+       clipped rather than scrolled (dashboard-widgets.md >
+       No Inner Scrollbars). No min-height / height override here. */
+    width: 100%;
+    height: 100%;
+    /* The edge spacing lives on the content shell below - the element that
+       replaced the old .VA012-bankcharge-panel .VA012-BankChargeContainer -
+       so the root carries only the surface. */
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
-.va012-common-heading {
-    font-size: 1rem;
-    font-weight: 400;
+
+/* Form controls inherit the widget anchor instead of the UA default, so
+   every em value below resolves against one number. Colour is left alone
+   deliberately: VIS marks a mandatory VComboBox with
+   .vis-ev-col-mandatory { color: inherit !important }, so the selects
+   already take the widget's body colour through inheritance. */
+.VA012-bcs select,
+.VA012-bcs label {
+    font-family: inherit;
+    line-height: inherit;
+}
+
+/* The root is in the list on purpose: it is sized `width/height: 100%` of
+   the grid cell and then given padding and a 2px border, so under
+   content-box it would overrun its cell by the sum of both and the tile
+   would render clipped rather than padded. */
+.VA012-bcs,
+.VA012-bcs *,
+.VA012-bcs *::before,
+.VA012-bcs *::after {
+    box-sizing: border-box;
+}
+
+/* Header / filters / chart stack - the element that replaced the old
+   .VA012-bankcharge-panel .VA012-BankChargeContainer. Separate from the
+   root so the busy overlay can stay a sibling and cover the whole tile,
+   padding included.
+
+   0.85em on all sides is the canonical widget edge spacing
+   (dashboard-widgets.md > Widget Edge Spacing, and the 14px default in
+   Content Fit Budget). It is em, so it rides the widget root anchor:
+   14px on a small dashboard, 17px on the widest. */
+.VA012-bcs-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0.85em;
+}
+
+/* ============================================================
+   2. Widget header
+   ============================================================ */
+
+/* The host paints its own widget menu (the kebab) over the top-right corner
+   of the tile, so the header row keeps that corner clear. Without the
+   reserve the stat pill runs under it on a compact cell, where the header
+   is one line tall instead of icon-well tall. */
+.VA012-bcs-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.625em;
     margin-bottom: 0.5em;
-    /*font-family: 'Verdana';*/
+    padding-right: 1.25em;
 }
 
-    .va012-common-heading .vis-input-wrap {
-        margin: 0 !important
-    }
+.VA012_rootBankCharge {
+padding:0.85em;
+}
+/* Icon well - 2x the title clamp at every dashboard width.
+   dashboard-widgets.md > Widget Header. Suppressed on short cells, see
+   section 6. */
+.VA012-bcs-iconwell {
+    flex: none;
+    width: clamp(32px, calc(var(--dash-inline-size) * 0.022750), 40px);
+    height: clamp(32px, calc(var(--dash-inline-size) * 0.022750), 40px);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(232,244,255,0.96));
+    box-shadow: inset 0 0 0 1px rgba(31,131,255,0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bcs-primary);
+}
 
-    .va012-common-heading select {
-        font-size: 1rem !important
-    }
+.VA012-bcs-iconwell > i {
+    font-size: clamp(18px, calc(var(--dash-inline-size) * 0.012500), 22px);
+    line-height: 1;
+}
 
-.va012-removemandatory {
-    color: rgba(var(--v-c-on-secondary), 1) !important;
-    width: 130px;
+.VA012-bcs-titlewrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.VA012-bcs-title {
+    font-size: clamp(16px, calc(var(--dash-inline-size) * 0.011375), 17px);
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--bcs-text);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The financial year the chart covers - the one piece of context the
+   period labels on the x axis do not carry. */
+.VA012-bcs-subtitle {
+    font-size: clamp(12px, calc(var(--dash-inline-size) * 0.009625), 13px);
+    font-weight: 400;
+    line-height: 1.3;
+    color: #717182;
+    /* px - pairs the two lines identically at every width
+       (dashboard-widgets.md > Widget Header) */
+    margin: 2px 0 0 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.VA012-bcs-subtitle:empty {
+    display: none;
+}
+
+/* Year total beside the title - dashboard-widgets.md > Header Stat Pill,
+   info tone (a cost total is neutral information, not a warning). Sits on
+   the header row, so it costs the Content Fit Budget no height. */
+.VA012-bcs-pill {
+    flex: none;
+    max-width: 45%;
+    border-radius: 999px;
+    padding: 0.375em 0.75em;
+    background: var(--bcs-pill-bg);
+    color: var(--bcs-pill-text);
+    font-size: 0.75em;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.VA012-bcs-pill[hidden] {
+    display: none;
+}
+
+/* ============================================================
+   3. Filter row
+   ============================================================ */
+
+/* Two fields on one row. A single shared template, so the two labels and
+   the two underlines line up whatever the widget width.
+
+   Proportions follow column importance rather than content
+   (dashboard-widgets.md > Column Sizing And Truncation): the bank account
+   is the mandatory selector the whole chart hangs off and carries the
+   longest values, while Charge is an optional narrowing filter - so the
+   charge column takes the smaller share. minmax(0, Nfr) on both keeps
+   either cell from blowing the row out on a long value. */
+.VA012-bcs-filters {
+    flex: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 0.75em;
+    margin-bottom: 0.625em;
+}
+
+.VA012-bcs-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Label above the value - windows-and-panels.md > Form Field > Content.
+   font-weight is stated because Bootstrap sets `label { font-weight: 700 }`
+   at (0,0,1) and would otherwise bold every caption. */
+.VA012-bcs-label {
+    font-size: 0.6875em;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--bcs-muted);
+    margin: 0 0 0.375em 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.VA012-bcs-req {
+    color: var(--bcs-danger);
+    margin-left: 0.125em;
+}
+
+/* The row carries the rule. Flat and operational, not card-like: no box,
+   no radius, no fill - the underline is the whole chrome. */
+.VA012-bcs-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-width: 0;
+   /* padding: 0.375em 0;*/
+    border-bottom: 1px solid var(--bcs-field-line);
+}
+
+.VA012-bcs-fieldicon {
+    flex: none;
+    font-size: 0.875em;
+    line-height: 1;
+    color: var(--bcs-muted);
+}
+
+/* The value token is 0.8125em rather than the Form Field spec's 1em: this
+   field sits inside a widget, where nothing may reach the widget title
+   (dashboard-widgets.md > List / Grid Hierarchy Rule). It still reads a
+   step above its 0.6875em label, which is the contrast the pattern needs.
+
+   Specificity note: w2ui-1.4.3.css styles `input:not([type=button]),
+   select, textarea` with a white fill, a #bbb border, a 3px radius and 4px
+   of padding, and VIS paints a mandatory combo with
+   `.vis-ev-col-mandatory { background-color: rgba(236,63,63,.2) }`. Both
+   score (0,1,1) / (0,1,0); the selectors here are (0,2,0) and (0,2,1), so
+   they take the control back without !important. This is what the old
+   .va012-removemandatory class - and its hardcoded 130px width - was
+   working around. */
+.VA012-bcs .VA012-bcs-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    font-size: 0.8125em;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--bcs-text);
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    height: auto;
+    outline: none;
+}
+
+.VA012-bcs select.VA012-bcs-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    /* room for the chevron drawn below */
+    padding-right: 1em;
+    background-image: linear-gradient(45deg, transparent 50%, var(--bcs-secondary) 50%),
+                      linear-gradient(135deg, var(--bcs-secondary) 50%, transparent 50%);
+    /* the two halves must sit exactly 0.25em apart - their own width - or
+       they overlap into a blob instead of a chevron */
+    background-position: calc(100% - 0.5em) 50%, calc(100% - 0.25em) 50%;
+    background-size: 0.25em 0.25em, 0.25em 0.25em;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+/* Hover and focus both drive the underline to primary blue - the emphasis
+   direction the pattern asks for. Colour only, never weight, so the row
+   height cannot shift under the cursor. */
+.VA012-bcs-control:hover,
+.VA012-bcs-control:focus-within {
+    border-bottom-color: var(--bcs-primary);
+}
+
+.VA012-bcs-control:focus-within .VA012-bcs-fieldicon {
+    color: var(--bcs-primary);
+}
+
+/* ============================================================
+   4. Chart region
+   ============================================================ */
+
+/* Chart.js sizes its canvas from the parent box, so the parent must own a
+   definite height and the canvas must not feed back into it - hence
+   flex: 1 with min-height: 0 here and an absolutely positioned canvas.
+   No scrolling: the chart summarises rather than overflows
+   (dashboard-widgets.md > No Inner Scrollbars). */
+.VA012-bcs-chart {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.VA012-bcs-chart > canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Empty state replaces the canvas rather than sitting under it, so the
+   tile never shows an empty axis frame. */
+.VA012-bcs-empty {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375em;
+    text-align: center;
+    padding: 0.625em;
+}
+
+.VA012-bcs-empty[hidden] {
+    display: none;
+}
+
+.VA012-bcs-empty > i {
+    font-size: 1.5em;
+    line-height: 1;
+    color: #B8C6D2;
+}
+
+.VA012-bcs-empty > span {
+    font-size: 0.75em;
+    line-height: 1.3;
+    color: var(--bcs-muted);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============================================================
+   5. Busy indicator
+   ============================================================ */
+
+.VA012-bcs .vis-busyindicatorouterwrap {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.8);
+    border-radius: 12px;
+}
+
+/* ============================================================
+   6. Compact and narrow variants
+   ------------------------------------------------------------
+   .VA012-bcs-compact is applied by syncCellVariant() when the cell is
+   shorter than 18em, which is the case for the 3x2 and 2x2 targets at
+   every normal dashboard width. The icon well and the subtitle are the
+   first things to go: the Content Fit Budget spends that height on the
+   chart, which is the point of the widget. Driving this off the measured
+   cell rather than the row span means it also reacts to the dashboard
+   getting narrower, not just to a resize of the widget.
+   ============================================================ */
+
+.VA012-bcs-compact .VA012-bcs-iconwell,
+.VA012-bcs-compact .VA012-bcs-subtitle {
+    display: none;
+}
+
+.VA012-bcs-compact .VA012-bcs-header {
+    margin-bottom: 0.5em;
+}
+
+/* Narrow cells: two fields side by side would leave neither readable, and
+   the pill would squeeze the title off. Stack the fields, drop the pill -
+   pills are the most expendable header element
+   (dashboard-widgets.md > Header Stat Pill). */
+.VA012-bcs[data-bcs-cols="1"] .VA012-bcs-filters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.375em;
+}
+
+.VA012-bcs[data-bcs-cols="1"] .VA012-bcs-pill {
+    display: none;
+}
+
+/* Dashboard edit mode: the host shrinks the workspace to 70% and rewrites
+   --rowheight, so the whole widget rescales through the root anchor. Only
+   pointer affordances need muting here. */
+.vis-editModeWidget .VA012-bcs {
+    cursor: grab;
 }
