@@ -134,10 +134,10 @@ namespace VA012.Models
                 {
                     object classInstance = Activator.CreateInstance(type);
                     ParameterInfo[] parameters = methodInfo.GetParameters();
-                    if (parameters.Length == 12)
+                    if (parameters.Length == 13)
                     {
                         object[] parametersArray = new object[] { CurrrentPage, folderId,  Window_ID,  record_ID,  isAdvancedSearch,  isRecursive,  isSubscribeDoc,  folType,
-                        ctx,  pageSize,  AD_Table_ID ,  orderBy};
+                        ctx,  pageSize,  AD_Table_ID ,  orderBy, ""};
                         result = methodInfo.Invoke(classInstance, parametersArray);
                     }
                 }
