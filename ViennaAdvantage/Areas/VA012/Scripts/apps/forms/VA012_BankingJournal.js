@@ -36,6 +36,7 @@
         var _statementName = null;
         var isChecked = null;
         var $loadParaDiv = null;
+        var $paramFooterDiv = null;
         var _currencyId = null;
         var _selectedFiles = null;
         var _result = null;
@@ -48,6 +49,14 @@
         var strFolderIds = "";
         var isDMS = false;
         var C_BankStatement_ID = 0;
+
+        /* Step model - see showStep(). Two steps: pick the file, then fill in
+           the parameters. The parameter form always holds every control. */
+        var STEP_FILE = 1;
+        var STEP_PARAM = 2;
+        var currentStep = STEP_FILE;
+        var bodyDiv = null;
+        var fileFooter = null;
 
         var Batchsuccesspay = null;
         var $loadStatementResult = "";
@@ -85,8 +94,10 @@
 
         /*Create Busy Indicator */
         function createBusyIndicator() {
+            // No inline width - the stylesheet pins the overlay to all four
+            // edges of the widget.
             $bsyDiv = $('<div id="busyDivId_' + widgetID + '" class="vis-busyindicatorouterwrap"><div class="vis-busyindicatorinnerwrap">' +
-                '<i class= "vis_widgetloader"></i></div></div>').css({ 'width': 'calc(100% - 40px)' }).hide();
+                '<i class= "vis_widgetloader"></i></div></div>').hide();
             $root.append($bsyDiv);
         };
 
@@ -104,7 +115,7 @@
             if (widgetID == 0) {
                 widgetID = $self.windowNo;
             }
-            $root = $("<div id='WidMainRoot_" + widgetID + "' class='VA012_root va012-widget-bg'></div>");
+            $root = $("<div id='WidMainRoot_" + widgetID + "' class='VA012-bj'></div>");
             Design();
 
             //VIS_045: Get Bank Statement form ID
@@ -135,85 +146,135 @@
 
         //Create design
         function Design() {
-            dropContainer = $('<div class="VA012-bank-panel VA012-WidgetContainer">' +
-                '<div class="VA012-panel-heading va012-common-heading"><div class="VA012-headerPanelLbl">' + VIS.Msg.getMsg('VA012_BankingJournal') + '</div></div>' +
-                '<div class="VA012-fader-div VA012-folderFader d-none" id="VA012-folderFader_' + widgetID + '">' +
-                '<div class="p-2 VA012-folderContainer VA012-folderContainer_' + widgetID + '">' +
-                '<h6>' + VIS.Msg.getMsg('VA012_SelectFolder') + '</h6>' +
-                '<div class="VA012-folTreeArea" id="VA012-folTreeArea_' + widgetID + '">' +
+            // Accepted extensions, rendered as the drop-zone hint ("XLS · XLSX · CSV").
+            // Built from the constants above so it needs no translated message.
+            var acceptedTypes = (VA012.Common.XLS + ' ' + VA012.Common.XLSX + ' ' + VA012.Common.CSV)
+                .replace(/\./g, '').toUpperCase().replace(/ /g, ' · ');
+            var widgetTitle = VIS.Msg.getMsg('VA012_BankingJournal');
+
+            // The widget root is the panel; the header/body/footer bands below are
+            // the shared widget shell (dashboard-widgets.md > Widget Header).
+            dropContainer = $root;
+            $root.append('<div class="VA012-bj-header">' +
+                // fa-book, not fa-bank: the Bank field below owns that glyph.
+                '<div class="VA012-bj-iconwell"><i class="fa fa-book" aria-hidden="true"></i></div>' +
+                '<div class="VA012-bj-titlewrap">' +
+                '<div class="VA012-bj-title" title="' + widgetTitle + '">' + widgetTitle + '</div>' +
                 '</div>' +
-                '<div class="VA012-folTreeFooter">' +
-                '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Back') + '" class="btn ui-button ui-corner-all ui-widget VA012-treeCancelBtn" id="VA012-treeCancelBtn_' + widgetID + '">' +
-                '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Next') + '" disabled class="btn ui-button ui-corner-all ui-widget VA012-treeUploadBtn" id="VA012-treeUploadBtn_' + widgetID + '">' +
-                '</div > ' +
                 '</div>' +
-                '</div>' +
-                '<div class="VA012-widgetContentArea">' +
-                '<div class="VA012-shadow">' +
-                '<div class="VA012-upload-col">' +
-                '<input id="VA012-uploadFile_' + widgetID + '" class="VA012-input-file-field VA012-uploadFileWidget_' + widgetID
+
+                '<div class="VA012-bj-body" id="VA012-bj-body_' + widgetID + '">' +
+                '<div class="VA012-bj-step-pane" id="VA012-bj-paneFile_' + widgetID + '">' +
+                '<input id="VA012-uploadFile_' + widgetID + '" class="VA012-bj-fileinput VA012-uploadFileWidget_' + widgetID
                 + '" type="file" accept=".csv, .xls, .xlsx">' +
-                '<label for="VA012-uploadFile_' + widgetID + '" class="VA012-files-label">' +
-                '<i class="fa fa-cloud-upload VA012-uploadImg" id="VA012-uploadImg_' + widgetID + '" style="" aria-hidden="true"></i>' +
-                '<div class="VA012-labelTxt">' + VIS.Msg.getMsg('VA012_DragFiles') + '<span class="VA012-browse-link">'
-                + VIS.Msg.getMsg('VA012_Browse') + '</span>' +
-                '<span class="VA012-FileNamelbl VA012-fileSize" id="VA012-FileNamelbl_' + widgetID + '"></span></div>' +
+                '<label for="VA012-uploadFile_' + widgetID + '" class="VA012-bj-drop">' +
+                '<i class="fa fa-cloud-upload VA012-bj-drop-icon" id="VA012-uploadImg_' + widgetID + '" aria-hidden="true"></i>' +
+                '<div class="VA012-bj-drop-label">' + VIS.Msg.getMsg('VA012_DragFiles') + '<span class="VA012-bj-browse">'
+                + VIS.Msg.getMsg('VA012_Browse') + '</span></div>' +
+                '<div class="VA012-bj-drop-hint">' + acceptedTypes + '</div>' +
+                '<div class="VA012-bj-filechip" id="VA012-FileNamelbl_' + widgetID + '"></div>' +
                 '</label>' +
                 '</div>' +
                 '</div>' +
-                '<div class="VA012-links">' +
-                '<div class="VA012-DMS-folder">' +
-                '<div class="VA012-folder-link text-center">' +
-                '<i id="VA012-OpenDMSIcon_' + widgetID + '" class="fa fa-folder-open VA012-OpenDMS" aria-hidden="true"></i>' +
-                '<a class="VA012-OpenDMS_' + widgetID + '" href="javascript:void(0)">' + VIS.Msg.getMsg('VA012_OpenDMS') + '</a>' +
+
+                '<div class="VA012-bj-footer" id="VA012-bj-fileFooter_' + widgetID + '">' +
+                '<button type="button" class="VA012-bj-link" id="VA012-OpenDMSIcon_' + widgetID + '">' +
+                '<i class="fa fa-folder-open" aria-hidden="true"></i>' +
+                '<span>' + VIS.Msg.getMsg('VA012_OpenDMS') + '</span>' +
+                '</button>' +
+                '<div class="VA012-bj-actions">' +
+                '<button type="button" class="VA012-bj-btn VA012-bj-btn--primary" id="VA012_NextBtn_' + widgetID + '">'
+                + VIS.Msg.getMsg('VA012_Next') + '</button>' +
                 '</div>' +
-                '<div class="VA012-folder-link text-center">' +
-                '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Next') +
-                '" id="VA012_NextBtn_' + widgetID + '" class="btn ui-button ui-corner-all ui-widget VA012-NextBtn">' +
                 '</div>' +
-                '</div>' +
+
+                // DMS folder picker - an overlay over the whole tile, not a
+                // dialog. See the stylesheet for the scrolling exception.
+                '<div class="VA012-bj-fader" id="VA012-folderFader_' + widgetID + '" hidden>' +
+                '<div class="VA012-bj-fader-title">' + VIS.Msg.getMsg('VA012_SelectFolder') + '</div>' +
+                '<div class="VA012-bj-tree" id="VA012-folTreeArea_' + widgetID + '"></div>' +
+                '<div class="VA012-bj-footer VA012-bj-footer--split">' +
+                '<div class="VA012-bj-actions">' +
+                '<button type="button" class="VA012-bj-btn VA012-bj-btn--primary" id="VA012-treeCancelBtn_' + widgetID + '">'
+                + VIS.Msg.getMsg('VA012_Back') + '</button>' +
+                '<button type="button" class="VA012-bj-btn VA012-bj-btn--primary" id="VA012-treeUploadBtn_' + widgetID + '" disabled>'
+                + VIS.Msg.getMsg('VA012_Next') + '</button>' +
                 '</div>' +
                 '</div>' +
                 '</div>');
-            $root.append(dropContainer);
-            dragDiv = $root.find('.VA012-widgetContentArea');
-            uploadFile = dropContainer.find('#VA012-uploadFile_' + widgetID);
-            uploadImg = dropContainer.find('#VA012-uploadImg_' + widgetID);
-            nxtBtn = dropContainer.find('#VA012_NextBtn_' + widgetID);
-            selectedFileName = dropContainer.find('#VA012-selectedFileName_' + widgetID);
-            fileNameLabel = dropContainer.find('#VA012-FileNamelbl_' + widgetID);
-            openDMSBtn = dropContainer.find('#VA012-OpenDMSIcon_' + widgetID);
-            folTreeArea = dropContainer.find('#VA012-folTreeArea_' + widgetID);
-            folderFader = dropContainer.find('#VA012-folderFader_' + widgetID);
-            folTreeUpload = dropContainer.find('#VA012-treeUploadBtn_' + widgetID);
-            folTreeCancel = dropContainer.find('#VA012-treeCancelBtn_' + widgetID);
-            if (_selectedFiles == null) {
-                nxtBtn.attr("disabled", true);
-            }
-            else {
-                nxtBtn.attr("disabled", false);
-                nxtBtn.css("opacity", 1);
-            }
+
+            bodyDiv = $root.find('#VA012-bj-body_' + widgetID);
+            folderFader = $root.find('#VA012-folderFader_' + widgetID);
+            folTreeArea = $root.find('#VA012-folTreeArea_' + widgetID);
+            folTreeCancel = $root.find('#VA012-treeCancelBtn_' + widgetID);
+            folTreeUpload = $root.find('#VA012-treeUploadBtn_' + widgetID);
+            dragDiv = $root.find('#VA012-bj-paneFile_' + widgetID);
+            fileFooter = $root.find('#VA012-bj-fileFooter_' + widgetID);
+            uploadFile = $root.find('#VA012-uploadFile_' + widgetID);
+            uploadImg = $root.find('#VA012-uploadImg_' + widgetID);
+            nxtBtn = $root.find('#VA012_NextBtn_' + widgetID);
+            fileNameLabel = $root.find('#VA012-FileNamelbl_' + widgetID);
+            openDMSBtn = $root.find('#VA012-OpenDMSIcon_' + widgetID);
+
+            nxtBtn.prop("disabled", _selectedFiles == null);
+
             var modulePrefix = VIS.dataContext.getJSONRecord("ModulePrefix/GetModulePrefix", "VADMS_");
-            if (modulePrefix == null) {
-                openDMSBtn.css("display", "none");
-            }
-            else {
-                openDMSBtn.css("display", "block");
-            }
+            openDMSBtn.prop("hidden", modulePrefix == null);
+
+            showStep(STEP_FILE);
             Events();
         };
+
+        /**
+         * Widget step model. Step 1 picks the file, step 2 holds the whole
+         * parameter form.
+         */
+        function showStep(step) {
+            currentStep = step;
+            var onFile = (step === STEP_FILE);
+
+            dragDiv.prop('hidden', !onFile);
+            fileFooter.prop('hidden', !onFile);
+            if (paramDiv != null) {
+                paramDiv.prop('hidden', onFile);
+                paramFooter.prop('hidden', onFile);
+            }
+        }
+
+        /**
+         * Adapt the chrome to the cell we were actually given.
+         *
+         * The parameter form is always a single step holding every control -
+         * it is never paged. One field per line, and the form scrolls when the
+         * cell cannot show all six at once.
+         */
+        function syncCellVariant() {
+            var rootPx = parseFloat($root.css('font-size')) || 16;
+
+            // Short cells drop the icon well; the Content Fit Budget spends
+            // that height on form rows instead.
+            $root.toggleClass('VA012-bj-compact', $root.height() < (18 * rootPx));
+        }
 
         function Events() {
             // Preventing page from redirecting
             dropContainer.on("dragover", function (e) {
                 e.preventDefault();
                 e.stopPropagation();
+                if (currentStep === STEP_FILE) {
+                    $root.addClass('VA012-bj-dragover');
+                }
+            });
+            dropContainer.on('dragleave', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $root.removeClass('VA012-bj-dragover');
             });
             // Drop
             dropContainer.on('drop', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
+                $root.removeClass('VA012-bj-dragover');
                 isDMS = false;
                 files = e.originalEvent.dataTransfer.files;
                 var ctrl = $(dropContainer.find('.VA012-uploadFileWidget_' + widgetID)[0]);
@@ -256,41 +317,28 @@
                 }
             });
             nxtBtn.on('click', function (e) {
-                if (paramDiv == null) {
-                    //load parameter div
-                    loadParam();
-                }
-                else {
-                    //show parameter div
-                    paramDiv.show();
-                    paramFooter.show();
-                }
-                //  hide drag files div
-                dragDiv.hide();
+                goToParam();
             });
             openDMSBtn.on('click', function (e) {
-                $bsyDiv.show();
                 isDMS = true;
-                // Show folder tree
-                var folStruct = WidgetFolderTreeStruct();
-                $bsyDiv.hide();
+                openFolderPicker();
+            });
 
-            });
-            // Cancel Button Folder
+            // Folder picker - Back
             folTreeCancel.on('click', function (e) {
-                folderFader.addClass('d-none');
                 strFolderIds = "";
-                dragDiv.show();
-                $bsyDiv.hide();
                 isDMS = false;
-                folTreeUpload.attr("disabled", true);
+                closeFolderPicker();
             });
-            //next button click
+
+            // Folder picker - Next. Pull the selected document's path/name,
+            // then continue into the parameter form exactly as a dropped file
+            // does.
             folTreeUpload.on('click', function (e) {
                 e.stopPropagation();
-                fileNameLabel.text('');
-                fileNameLabel.attr("title", '');
-                nxtBtn.attr("disabled", true);
+                var documentID = folTreeArea.find(".VA012-selDoc").attr('data-documentid');
+                fileNameLabel.text('').attr("title", '').removeClass('VA012-bj-has-file');
+                nxtBtn.prop("disabled", true);
                 $bsyDiv.show();
                 $.ajax({
                     url: VIS.Application.contextUrl + "VA012_BankJournalWidget/GetMetaData",
@@ -299,26 +347,15 @@
                     dataType: "json",
                     contentType: "application/json; charset=utf-8",
                     data: ({
-                        documentID: $root.find(".VA012-selDoc").attr('data-documentid')
+                        documentID: documentID
                     }),
                     success: function (data) {
                         if (data != null && data != "") {
                             //return filename and file path
                             _result = JSON.parse(data);
-                            //hide folder div
-                            folderFader.addClass('d-none');
                             isDMS = true;
-                            if (paramDiv == null) {
-                                dragDiv.hide();
-                                //load parameter div
-                                loadParam();
-                            }
-                            else {
-                                dragDiv.hide();
-                                //show parameter div
-                                paramDiv.show();
-                                paramFooter.show();
-                            }
+                            closeFolderPicker();
+                            goToParam();
                         }
                         $bsyDiv.hide();
                     },
@@ -328,8 +365,39 @@
                         return false;
                     }
                 });
-
             });
+        }
+
+        /**
+         * Enter the parameter form, building it on first use.
+         */
+        function goToParam() {
+            if (paramDiv == null) {
+                loadParam();
+            }
+            syncCellVariant();
+            showStep(STEP_PARAM);
+        }
+
+        /**
+         * DMS folder picker - an overlay over the widget's own tile, refreshed
+         * on every open. Its buttons are bound once, in Events().
+         */
+        function openFolderPicker() {
+            folTreeUpload.prop('disabled', true);
+            folderFader.prop('hidden', false);
+            $bsyDiv.show();
+            WidgetFolderTreeStruct();
+            $bsyDiv.hide();
+        }
+
+        function closeFolderPicker() {
+            if (folderFader != null) {
+                folderFader.prop('hidden', true);
+            }
+            if (folTreeUpload != null) {
+                folTreeUpload.prop('disabled', true);
+            }
         }
 
         /**
@@ -379,84 +447,74 @@
                     return;
                 }
                 if (files.length > 0) {
-                    fileNameLabel.text(filename + "" + fileExt);
-                    fileNameLabel.val(filename + "" + fileExt);
-                    fileNameLabel.attr("title", filename + "" + fileExt);
+                    var displayName = filename + "" + fileExt;
+                    fileNameLabel.text(displayName).attr("title", displayName).addClass('VA012-bj-has-file');
+                    nxtBtn.prop("disabled", false);
                     var file = obj;
                     _result = $.parseJSON(VA012.UploadExcel(file, null, null));
-                    if (paramDiv == null) {
-                        //Display parameter div
-                        loadParam();
-                    }
-                    else {
-                        //If param div already in DOM then reset the controls values
-                        // resetControls();
-                        paramDiv.show();
-                        paramFooter.show();
-                    }
-                    dragDiv.hide();
+                    goToParam();
                 }
             }
         }
 
         function loadParam() {
-            $loadParaDiv = $('<div class="VA012_paramMainDiv" id="VA012_paramMainDiv_' + widgetID + '"><div class= "VA012-form-data">'
-                + '<div class="input-group vis-input-wrap VA012-paramdiv">'
-                + '<div class="vis-control-wrap VA012-controls">'
-                + '<select class="VA012-select VA012-selectCtrlsbankj" id="VA012_STAT_cmbBank_' + widgetID + '">'
-                + '</select>'
-                + '<label class="VA012-labels">' + VIS.Msg.getMsg("VA012_Bank") + '<sup style="color: red;">*</sup></label>'
+            // Underline field: label above, then an icon + control row carrying
+            // the rule (windows-and-panels.md > Form Field).
+            var required = '<span class="VA012-bj-req">*</span>';
+
+            function field(icon, labelKey, controlID, control, labelID) {
+                return '<div class="VA012-bj-field">'
+                    + '<label class="VA012-bj-label" for="' + controlID + '"'
+                    + (labelID ? ' id="' + labelID + '"' : '') + '>'
+                    + VIS.Msg.getMsg(labelKey) + required + '</label>'
+                    + '<div class="VA012-bj-control">'
+                    + '<i class="fa ' + icon + ' VA012-bj-fieldicon" aria-hidden="true"></i>'
+                    + control
+                    + '</div>'
+                    + '</div>';
+            }
+
+            $loadParaDiv = $('<div class="VA012-bj-step-pane" id="VA012_paramMainDiv_' + widgetID + '" hidden>'
+                + '<div class="VA012-bj-form">'
+
+                + field('fa-bank', "VA012_Bank", 'VA012_STAT_cmbBank_' + widgetID,
+                    '<select class="VA012-bj-input" id="VA012_STAT_cmbBank_' + widgetID + '"></select>')
+
+                + field('fa-credit-card', "VA012_BankAccount", 'VA012_STAT_cmbBankAccount_' + widgetID,
+                    '<select class="VA012-bj-input" id="VA012_STAT_cmbBankAccount_' + widgetID + '"></select>')
+
+                + field('fa-calendar', "VA012_StatementDate", 'VA012_STAT_statementDate_' + widgetID,
+                    '<input class="VA012-bj-input" type="date" max="9999-12-31" id="VA012_STAT_statementDate_' + widgetID + '">',
+                    'VA012_STAT_lblStatementDate_' + widgetID)
+
+                + field('fa-cogs', "VA012_ClassName", 'VA012_STAT_cmbBankAccountClassName_' + widgetID,
+                    '<select class="VA012-bj-input" id="VA012_STAT_cmbBankAccountClassName_' + widgetID + '"></select>')
+
+                + field('fa-file-text-o', "VA012_StatementNumber", 'VA012_STAT_txtStatementNo_' + widgetID,
+                    '<input class="VA012-bj-input" type="text" id="VA012_STAT_txtStatementNo_' + widgetID + '">')
+
+                + '<div class="VA012-bj-field">'
+                + '<label class="VA012-bj-check" for="VA012_CheckBox_' + widgetID + '">'
+                + '<input class="VA012-bj-checkbox" type="checkbox" value="checked" id="VA012_CheckBox_' + widgetID + '">'
+                + '<span title="' + VIS.Msg.getMsg("VA012_StatementDateAsAccountDate") + '">'
+                + VIS.Msg.getMsg("VA012_StatementDateAsAccountDate") + '</span>'
+                + '</label>'
                 + '</div>'
-                + '</div>'
-                + '</div>'
-                + '<div class= "VA012-form-data">'
-                + '<div class="input-group vis-input-wrap VA012-paramdiv">'
-                + '<div class="vis-control-wrap VA012-controls">'
-                + '<select class="VA012-select VA012-selectCtrlsbankj" id="VA012_STAT_cmbBankAccount_' + widgetID + '">'
-                + '</select>'
-                + '<label class="VA012-labels">' + VIS.Msg.getMsg("VA012_BankAccount") + '<sup style="color: red;">*</sup></label>'
-                + '</div>'
-                + '</div>'
-                + '</div > '
-                + '<div class=VA012-form-data>' + '<div class="input-group vis-input-wrap VA012-paramdiv VA012-margin-B0">'
-                + '<div class="vis-control-wrap VA012-controls">'
-                + '<input class="VA012-select VA012-Date VA012-selectCtrlsbankj" type="date" max="9999-12-31" id="VA012_STAT_statementDate_' + widgetID + '">'
-                + '<label class="VA012-labels" id="VA012_STAT_lblStatementDate_' + widgetID + '">' + VIS.Msg.getMsg("VA012_StatementDate") + '<sup style="color: red;">*</sup></label>'
-                + '</div>'
-                + '</div>'
-                + '</div>'
-                + '<div class="VA012-form-data">'
-                + '<div class="input-group vis-input-wrap VA012-paramdiv">'
-                + '<div class="vis-control-wrap VA012-controls">'
-                + '<select class="VA012-select VA012-selectCtrlsbankj" id="VA012_STAT_cmbBankAccountClassName_' + widgetID + '">'
-                + '</select>'
-                + '<label class="VA012-labels">' + VIS.Msg.getMsg("VA012_ClassName") + '<sup style="color: red;">*</sup></label>'
-                + '</div>'
-                + '</div>'
-                + '</div>'
-                + '<div class="VA012-form-data">'
-                + '<div class="input-group vis-input-wrap VA012-paramdiv">'
-                + '<div class="vis-control-wrap VA012-controls">'
-                + '<input class="VA012-select VA012-selectCtrlsbankj" type="text" id="VA012_STAT_txtStatementNo_' + widgetID + '" placeholder=" " data-placeholder="">'
-                + '<label class="VA012-nameLbl">' + VIS.Msg.getMsg("VA012_StatementNumber") + '<sup style="color: red;">*</sup></label>'
-                + '</div>'
-                + '</div>'
-                + '</div>'
-                + '<div class="VA012-form-data">'
-                + '<div class="input-group vis-input-wrap VA012-paramdiv">'
-                + '<div class="vis-control-wrap VA012-controls">'
-                + '<input type="checkbox" value="checked" id="VA012_CheckBox_' + widgetID + '">'
-                + '<label class="VA012-StatementDateAsAccountDate">' + VIS.Msg.getMsg("VA012_StatementDateAsAccountDate") + '</label>'
-                + '</div>'
-                + '</div>'
-                + '</div>'
-                + '</div>'
-                + '<div class="VA012-paramFooterDiv" id="VA012-paramFooterDiv_' + widgetID + '">'
-                + '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Back') + '" class="btn ui-button ui-corner-all VA012-CancelBtn">'
-                + '<input type="submit" value="' + VIS.Msg.getMsg('VA012_Upload') + '" class="btn ui-button ui-corner-all VA012-UploadBtn">'
+
                 + '</div>'
                 + '</div>');
-            dropContainer.append($loadParaDiv);
+            bodyDiv.append($loadParaDiv);
+
+            $paramFooterDiv = $('<div class="VA012-bj-footer VA012-bj-footer--split" id="VA012-paramFooterDiv_' + widgetID + '" hidden>'
+                + '<div class="VA012-bj-actions">'
+                + '<button type="button" class="VA012-bj-btn VA012-bj-btn--primary VA012-bj-back">'
+                + VIS.Msg.getMsg('VA012_Back') + '</button>'
+                + '<button type="button" class="VA012-bj-btn VA012-bj-btn--primary VA012-bj-upload">'
+                + VIS.Msg.getMsg('VA012_Upload') + '</button>'
+                + '</div>'
+                + '</div>');
+            $root.append($paramFooterDiv);
+
             getControls();
             loadFunctions.loadBank();
             loadFunctions.loadBankAccountCharges();
@@ -471,6 +529,27 @@
                     return false;
                 }
             });
+            // Clicking anywhere in the date control opens the picker. On WebKit
+            // the invisible native picker button covers the whole control (see
+            // the stylesheet), so the click never reaches here and the browser
+            // opens the picker itself. This is the fallback for engines without
+            // that pseudo-element.
+            _statementDate.closest('.VA012-bj-control')
+                .addClass('VA012-bj-control--date')
+                .on('click', function (e) {
+                    var input = _statementDate[0];
+                    try {
+                        if (input && typeof input.showPicker === 'function') {
+                            input.showPicker();
+                            return;
+                        }
+                    }
+                    catch (err) {
+                        // showPicker throws unless it is a user gesture on a
+                        // supported browser; fall through to focus.
+                    }
+                    _statementDate.focus();
+                });
             _cmbBank.on('click', function (e) {
                 if (_cmbBank.val() != "null") {
                     loadFunctions.loadBankAccount();
@@ -492,16 +571,15 @@
             });
             //Cancel button represnts back button
             cancelBtn.on('click', function (e) {
-                paramDiv.hide();
-                paramFooter.hide();
                 strFolderIds = "";
+                showStep(STEP_FILE);
                 if (!isDMS) {
-                    dragDiv.show();
-                    nxtBtn.attr("disabled", false);
-                    // nxtBtn.css("opacity", 1);
+                    nxtBtn.prop("disabled", _selectedFiles == null);
                 }
                 else {
-                    folderFader.removeClass('d-none');
+                    // Came in from DMS - go back to the folder picker, not the
+                    // drop zone.
+                    openFolderPicker();
                 }
                 //isDMS = false;
             });
@@ -599,13 +677,10 @@
 
                         $bsyDiv.hide();
                         resetControls();
-                        paramDiv.hide();
-                        paramFooter.hide();
-                        dragDiv.show();
+                        showStep(STEP_FILE);
                         dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
-                        fileNameLabel.text('');
-                        fileNameLabel.attr("title", '');
-                        nxtBtn.attr("disabled", true);
+                        fileNameLabel.text('').attr("title", '').removeClass('VA012-bj-has-file');
+                        nxtBtn.prop("disabled", true);
                         isDMS = false;
                         strFolderIds = "";
                         //VIS.ADialog.info("VA012_StatementUploadDone", null, "", "");
@@ -641,14 +716,13 @@
 
         /** VIS_045: This function is used to Open Dialog of Success */
         function ResponseDialog() {
-            $loadStatementResult = $("<div>"
-                + "<label class='mb-3' id='VA012_SuccessMsg_" + widgetID + "'></label>"
+            $loadStatementResult = $("<div class='VA012-bj-dialog'>"
+                + "<label id='VA012_SuccessMsg_" + widgetID + "'></label>"
                 + "</div>");
 
-            $resltbtns = $("<div class=''>" +
-                "<div class='d-flex align-items-center justify-content-end'>" +
-                "<input type=submit value=" + VIS.Msg.getMsg('VA012_ViewStatement') + " class='btn ui-button ui-corner-all ui-widget VA012-bs-ViewBtn mr-3' id='VA012_OpenBankStatementForm_" + widgetID + "'/>" +
-                "</div>" +
+            $resltbtns = $("<div class='VA012-bj-dialog-footer'>" +
+                "<button type='button' class='VA012-bj-btn VA012-bj-btn--primary' id='VA012_OpenBankStatementForm_" + widgetID + "'>" +
+                VIS.Msg.getMsg('VA012_ViewStatement') + "</button>" +
                 "</div>");
             $loadStatementResult.append($resltbtns);
 
@@ -791,13 +865,13 @@
         };
 
         function getControls() {
+            paramDiv = $loadParaDiv;
+            paramFooter = $paramFooterDiv;
             _cmbBank = $loadParaDiv.find("#VA012_STAT_cmbBank_" + widgetID);
             _cmbBankAccount = $loadParaDiv.find("#VA012_STAT_cmbBankAccount_" + widgetID);
             _cmbBankAccountClasses = $loadParaDiv.find("#VA012_STAT_cmbBankAccountClassName_" + widgetID);
-            paramDiv = dropContainer.find('#VA012_paramMainDiv_' + widgetID);
-            cancelBtn = $loadParaDiv.find('.VA012-CancelBtn');
-            uploadBtn = $loadParaDiv.find('.VA012-UploadBtn');
-            paramFooter = dropContainer.find('#VA012-paramFooterDiv_' + widgetID);
+            cancelBtn = $paramFooterDiv.find('.VA012-bj-back');
+            uploadBtn = $paramFooterDiv.find('.VA012-bj-upload');
             _statementDate = $loadParaDiv.find('#VA012_STAT_statementDate_' + widgetID);
             _statementName = $loadParaDiv.find('#VA012_STAT_txtStatementNo_' + widgetID);
             isChecked = $loadParaDiv.find('#VA012_CheckBox_' + widgetID);
@@ -846,8 +920,10 @@
                 success: function (data) {
                     if (data != null && data != "") {
                         folderArrayRes = JSON.parse(data);
-                        //SHow folder div
-                        folderFader.removeClass('d-none');
+                        if (folTreeArea == null) {
+                            // picker was closed while the folders were loading
+                            return;
+                        }
                         if (folderArrayRes.length > 0) {
                             var $folderUl = $('<ul id="folderUL_' + widgetID + '" class="list-unstyled w-100"></ul>');
                             strFolderIds = "";
@@ -886,7 +962,7 @@
                                         // Added folder in list
                                         $folderLI = $(
                                             '<li id="' + folderArrayRes[i].FolderID + '" folderName="' + VIS.Utility.encodeText(folderArrayRes[i].FolderName) + '" parentID="' + folderArrayRes[i].ParentFolderID + '" useraccess="' + folderArrayRes[i].UserAccessOnFolder + '" roleaccess="' + folderArrayRes[i].RoleAccessOnFolder + '" createdBy="' + folderArrayRes[i].CreateUser + '" inputType="' + folderArrayRes[i].InputType + '" folType="' + folderArrayRes[i].FolderType + '" IsSubscribe="' + folderArrayRes[i].IsSubscribedFolder + '" InitialCharacter="' + initialCharacter.toUpperCase() + '">' +
-                                            '<div class="VA012-leftTreeNode" title="' + folderArrayRes[i].FolderName + '">' +
+                                            '<div class="VA012-bj-treenode" title="' + folderArrayRes[i].FolderName + '">' +
                                             '<a id="a_' + folderArrayRes[i].FolderID + '" href="javascript:void(0);" val="' + VIS.Utility.encodeText(folderArrayRes[i].FolderPath) + '">' +
                                             folderImage +
                                             '<span>' + VIS.Utility.encodeText(folderName) + '</span>' +
@@ -918,22 +994,20 @@
                                         folderID: folRow.attr('id')
                                     }),
                                     success: function (data) {
+                                        if (folTreeArea == null) {
+                                            // picker closed while the check was in flight
+                                            return;
+                                        }
                                         if (data != null && data != "") {
                                             if (data == VA012.Common.Full_Access || data == VA012.Common.RWD_Access || data == VA012.Common.RW_Access) {
-                                                //Remove selected class
-                                                $('#folderUL_' + widgetID).find(".VA012-selected").removeClass('VA012-selected');
-                                                $('#folderUL_' + widgetID).find(".VA012-selectedTreeNode").css('background-color', 'inherit');
-                                                //Added selected class to selected file
-                                                folRow.find("div").eq(0).find('a span').addClass('VA012-selected');
-                                                if (!folRow.find("div").eq(0).hasClass('VA012-selectedTreeNode')) {
-                                                    folRow.find("div").eq(0).addClass('VA012-selectedTreeNode').css('background-color', 'rgba(var(--v-c-primary), .1)');
-                                                }
-                                                else if (folRow.find("div").eq(0).hasClass('VA012-selectedTreeNode')) {
-                                                    folRow.find("div").eq(0).addClass('VA012-selectedTreeNode').css('background-color', 'rgba(var(--v-c-primary), .1)');
-                                                }
-                                                else if (folRow.children("ul").length > 0) {
-                                                    folRow.find("div").eq(0).removeClass("VA012-selectedTreeNode");
-                                                }
+                                                // Selection is carried by classes only - the selected-row
+                                                // gradient lives in the stylesheet.
+                                                var $folderUL = $('#folderUL_' + widgetID);
+                                                $folderUL.find('.VA012-bj-selected').removeClass('VA012-bj-selected');
+                                                $folderUL.find('.VA012-bj-treenode-selected').removeClass('VA012-bj-treenode-selected');
+                                                folRow.children('div').first()
+                                                    .addClass('VA012-bj-treenode-selected')
+                                                    .find('a span').addClass('VA012-bj-selected');
                                                 var orderByColumn = [];
                                                 orderByColumn.push('Updated');
                                                 _scrollpage = 1;
@@ -998,7 +1072,7 @@
             for (var j = 0; j < row.length; j++) {
 
                 $innerLI = null;
-                var $innerUl = $('<ul class="list-unstyled VA012-leftSideSubTreeUl {"></ul>');
+                var $innerUl = $('<ul class="VA012-bj-subtree"></ul>');
 
                 for (var i = 0; i < data.length; i++) {
 
@@ -1028,7 +1102,7 @@
 
                         $innerLI = $(
                             '<li id="' + data[i].FolderID + '" folderName="' + VIS.Utility.encodeText(data[i].FolderName) + '" parentID="' + data[i].ParentFolderID + '" useraccess="' + data[i].UserAccessOnFolder + '" roleaccess="' + data[i].RoleAccessOnFolder + '" createdBy="' + data[i].CreateUser + '" inputType="' + data[i].InputType + '" folType="' + data[i].FolderType + '" IsSubscribe="' + data[i].IsSubscribedFolder + '" InitialCharacter="' + VIS.Utility.encodeText(initialCharacter.toUpperCase()) + '">' +
-                            '<div class="VA012-leftTreeNode" title="' + VIS.Utility.encodeText(data[i].FolderPath) + '">' +
+                            '<div class="VA012-bj-treenode" title="' + VIS.Utility.encodeText(data[i].FolderPath) + '">' +
                             '<a id=a_"' + data[i].FolderID + '" href="javascript:void(0);">' +
                             image +
                             '<span>' + VIS.Utility.encodeText(data[i].FolderName) + '</span>' +
@@ -1047,11 +1121,11 @@
                 if ($innerLI != null) {
                     row[j].root.append($innerUl);
                     if (row[j].root.find('a span i').length <= 0) {
-                        $(row[j].root.find('a span')[0]).append('<i class="vis vis-arrow-right VA012-arrow-right"></i>');
+                        $(row[j].root.find('a span')[0]).append('<i class="vis vis-arrow-right VA012-bj-arrow"></i>');
                     }
                 }
                 else if (row[j].row.HasChild > 0) {
-                    row[j].root.find('a span').append('<i class="vis vis-arrow-right VA012-arrow-right"></i>');
+                    row[j].root.find('a span').append('<i class="vis vis-arrow-right VA012-bj-arrow"></i>');
                 }
             }
             if (ArrayFolder.length > 0) {
@@ -1089,6 +1163,10 @@
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify(parameter),
                 success: function (documentData) {
+                    if (folTreeArea == null) {
+                        // picker closed while the documents were loading
+                        return;
+                    }
                     if (documentData !== null) {
                         documentData = JSON.parse(documentData);
                         documentData = documentData[0].LstDocument;
@@ -1106,13 +1184,13 @@
                                     docExtClass = 'vis-doc-excel';
                                     docExtColor = '#39b54a';
                                     var $docLI = $(
-                                        '<li class="VA012-docTreeNode VA012-folderDocs" data-documentid="' + DocumentID + '" data-versionNo="' + VersionNo +
+                                        '<li class="VA012-bj-docnode VA012-folderDocs" data-documentid="' + DocumentID + '" data-versionNo="' + VersionNo +
                                         '" data-parentfolderid="' + folderID + '" id="VA012-doclistingpanel_' + DocumentID + '">' +
-                                        '<div class="VA012-leftTreeNode">' +
+                                        '<div class="VA012-bj-treenode">' +
                                         '<a id="a_' + documentData[i].FolderID + '" href="javascript:void(0);" val="' + VIS.Utility.encodeText(documentData[i].DocumentName) + '">' +
                                         //folderImage +
                                         '<i class="vis ' + docExtClass + '" aria-hidden="true" style="color:' + docExtColor + '"></i>' +
-                                        '<span class="VA012-documentName" id="VA012_documentName_' + DocumentID + '">' + VIS.Utility.encodeText(documentData[i].DocumentName)
+                                        '<span class="VA012-bj-docname" id="VA012_documentName_' + DocumentID + '">' + VIS.Utility.encodeText(documentData[i].DocumentName)
                                         + '' + VIS.Utility.encodeText(documentData[i].FileType) + '</span>' +
                                         '</a>' +
                                         '</div>' +
@@ -1122,25 +1200,18 @@
                             };
                             $bsyDiv.hide();
                             //Added and remove selected class from selected folder or file
-                            folTreeArea.find(".VA012-docTreeNode").on('click', function (e) {
+                            folTreeArea.find(".VA012-bj-docnode").on('click', function (e) {
                                 e.stopPropagation();
-                                folTreeUpload.removeAttr('disabled');
+                                folTreeUpload.prop('disabled', false);
                                 folRow = $(this).closest('li');
-                                $('#folderUL_' + widgetID).find(".VA012-selected").removeClass('VA012-selected');
-                                $('#folderUL_' + widgetID).find(".VA012-selectedTreeNode").css('background-color', 'inherit');
-                                folTreeArea.find("#VA012-doclistingpanel_" + folRow.data('documentid')).find(".VA012-selected").removeClass('VA012-selected');
-                                folTreeArea.find("#VA012-doclistingpanel_" + folRow.data('documentid')).find(".VA012-selectedTreeNode").css('background-color', 'inherit');
-                                folRow.find("div").eq(0).find('a i span').addClass('VA012-selected');
-                                if (!folRow.find("div").eq(0).hasClass('VA012-selectedTreeNode')) {
-                                    folRow.find("div").eq(0).addClass('VA012-selectedTreeNode').css('background-color', 'rgba(var(--v-c-primary), .1)');
-                                }
-                                else if (folRow.find("div").eq(0).hasClass('VA012-selectedTreeNode')) {
-                                    folRow.find("div").eq(0).addClass('VA012-selectedTreeNode').css('background-color', 'rgba(var(--v-c-primary), .1)');
-                                }
-                                else if (folRow.children("ul").length > 0) {
-                                    folRow.find("div").eq(0).removeClass("VA012-selectedTreeNode");
-                                }
-                                $root.find(".VA012-folderDocs").removeClass("VA012-selDoc");
+                                // Only one node in the whole tree is selected at a time.
+                                var $folderUL = $('#folderUL_' + widgetID);
+                                $folderUL.find('.VA012-bj-selected').removeClass('VA012-bj-selected');
+                                $folderUL.find('.VA012-bj-treenode-selected').removeClass('VA012-bj-treenode-selected');
+                                folRow.children('div').first()
+                                    .addClass('VA012-bj-treenode-selected')
+                                    .find('a span').addClass('VA012-bj-selected');
+                                folTreeArea.find(".VA012-folderDocs").removeClass("VA012-selDoc");
                                 $(folRow[0]).addClass("VA012-selDoc");
 
                             });
@@ -1155,28 +1226,57 @@
             });
         };
 
+        /**
+         * Re-measure the cell. init() appends the root only after initialize()
+         * has run, so nothing is measurable until a tick later.
+         */
+        this.syncLayout = function () {
+            if ($root != null) {
+                syncCellVariant();
+            }
+        };
+
+        /**
+         * Host hook - called by HomeMgr2 whenever the dashboard is resized or
+         * edit mode is toggled. The span drives the narrow-cell variant in the
+         * stylesheet; the cell's own height drives the compact header.
+         */
+        this.widgetSizeChange = function (size) {
+            if ($root == null || size == null) {
+                return;
+            }
+            $root.attr('data-bj-rows', VIS.Utility.Util.getValueOfInt(size.rows) || 1);
+            $root.attr('data-bj-cols', VIS.Utility.Util.getValueOfInt(size.Cols) || 1);
+            syncCellVariant();
+        };
+
         /*this function is used to refresh design and data of widget*/
         this.refreshWidget = function () {
             $bsyDiv.hide();
-            if (!isDMS) {
-               resetControls();
+            closeFolderPicker();
+            if (paramDiv != null) {
+                resetControls();
             }
-            else {
-                folderFader.addClass('d-none');
-            }
-            paramDiv.hide();
-            paramFooter.hide();
-            dragDiv.show();
+            isDMS = false;
+            showStep(STEP_FILE);
             dropContainer.find('.VA012-uploadFileWidget_' + widgetID).val(null);
-            fileNameLabel.text('');
-            fileNameLabel.val('');
-            fileNameLabel.attr("title", '');
-            nxtBtn.attr("disabled", true);
+            fileNameLabel.text('').attr("title", '').removeClass('VA012-bj-has-file');
+            _selectedFiles = null;
+            nxtBtn.prop("disabled", true);
             strFolderIds = "";
             //this.initialize();
         };
 
         this.disposeComponents = function () {
+            closeFolderPicker();
+
+            // Unbind while the references are still live - the previous order
+            // nulled them first, so every .off() below threw.
+            if ($root != null) {
+                $root.find('*').off();
+                $root.off();
+            }
+
             $self = null;
             $root = null;
             this.frame = null;
@@ -1184,53 +1284,38 @@
             this.widgetInfo = null;
             dropContainer = null;
             uploadFile = null;
+            uploadImg = null;
             cancelBtn = null;
             uploadBtn = null;
             nxtBtn = null;
+            openDMSBtn = null;
             dragDiv = null;
+            bodyDiv = null;
+            fileFooter = null;
+            fileNameLabel = null;
             paramDiv = null;
             paramFooter = null;
-            selectedFileName = null;
             _cmbBank = null;
             _cmbBankAccount = null;
             _cmbBankAccountClasses = null;
-            C_BANK_ID = 0
-            C_BANKACCOUNT_ID = 0
+            C_BANK_ID = 0;
+            C_BANKACCOUNT_ID = 0;
             _statementDate = null;
             _statementName = null;
             isChecked = null;
             $loadParaDiv = null;
-            _file = null;
-            lstLatestFiles = [];
-            oldFiles = [];
-            currentchunk = 0;
-            currentFile = 0;
-            folder = Date.now().toString();
-            chunkSize = 1 * 1024 * 1024;
-            totalChunks = 0;
-            currentFileChunkNo = 0;
-            filesInfo = [];
+            $paramFooterDiv = null;
             _selectedFiles = null;
             _currencyId = null;
             _result = null;
             Bank_Charge_ID = null;
-            fileNameLabel.text('');
+            folderFader = null;
             folTreeArea = null;
             folTreeUpload = null;
             folTreeCancel = null;
-            folderFader = null;
             strFolderIds = "";
             isDMS = false;
-            _cmbBank.off('click');
-            _cmbBankAccount.off('click');
-            _cmbBankAccountClasses.off('click');
-            dropContainer.off('click');
-            cancelBtn.off('click');
-            uploadBtn.off('click');
-            nxtBtn.off('click');
-            openDMSBtn.off('click');
-            folTreeCancel.off('click');
-            folTreeUpload.off('click');
+            currentStep = STEP_FILE;
             C_BankStatement_ID = 0;
             Batchsuccesspay = null;
             $loadStatementResult = "";
@@ -1248,27 +1333,23 @@
         this.widgetInfo = frame.widgetInfo;
         this.initialize();
         this.frame.getContentGrid().append(this.getRoot);
-    };
-
-    // To change size of the form
-    VA012.VA012_BankingJournal.prototype.widgetSizeChange = function (size) {
-        // Widget info, we can save additional information in widget record
-        var x = size;
+        // Measure once the cell exists, so the header treatment and the number
+        // of parameter steps are right on first paint rather than on first use.
+        var self = this;
+        setTimeout(function () {
+            self.syncLayout();
+        }, 0);
     };
 
     // Must implement dispose
     VA012.VA012_BankingJournal.prototype.dispose = function () {
         /*CleanUp Code */
         //Dispose this component
-        this.disposeComponent();
+        this.disposeComponents();
         //Call frame dispose function
         if (this.frame)
             this.frame.dispose();
         this.frame = null;
-    };
-
-    VA012.VA012_BankingJournal.prototype.refreshWidget = function () {
-        this.refreshWidget();
     };
 
     // Fire window's event from widget

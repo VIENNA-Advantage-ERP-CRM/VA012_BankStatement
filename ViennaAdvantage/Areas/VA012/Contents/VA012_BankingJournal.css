@@ -1,587 +1,907 @@
-﻿.VA012_root {
-    height: 100%;
+/************************************************************
+ * Module Name    : VA012
+ * Purpose        : Banking Journal widget - Onfinity design system
+ * Spec           : design.md > dashboard-widgets.md + foundations.md
+ * Target size    : 2x2 dashboard cell
+ *
+ * Sizing model (dashboard-widgets.md > Widget Internal Sizing):
+ *   - ONE lever: the widget root font-size.
+ *   - Every internal size (type, padding, gap, icon) is em against it.
+ *   - Physical edges (border width, radius, shadow offset) stay in px.
+ *   There are deliberately NO font-size media queries in this file; the
+ *   root anchor below replaces them.
+ *
+ * Two scrolling regions are accepted here by decision, against
+ * dashboard-widgets.md > No Inner Scrollbars: the parameter form (every
+ * control stays on one step) and the DMS folder tree. Both use the slim
+ * scrollbar treatment so the tile still reads as a finished surface.
+ ***********************************************************/
+
+/* ============================================================
+   1. Widget root, measurement anchor and surface
+   ============================================================ */
+
+/*  The host dashboard (.vis-widget-container, HomeMgr2) publishes
+    --rowheight = (dashboardWidth - 25) / 9 and rewrites it on every
+    resize / edit-mode toggle. Inverting that recovers the dashboard's
+    inline size, which is the lever the header clamps hang off - this is
+    the --dash-inline-size contract in
+    dashboard-widgets.md > Widget Header > Measurement Setup, satisfied
+    in pure CSS with no ResizeObserver and no platform change.
+    The fallback keeps every clamp pinned to its floor when the widget is
+    rendered outside a dashboard.                                       */
+.VA012-bj {
+    --dash-inline-size: calc(var(--rowheight, 100px) * 9 + 25px);
+
+    /* foundations.md > Color Palette */
+    --bj-text: #102C3F;
+    --bj-secondary: #41576A;
+    --bj-muted: #5F7283;
+    --bj-placeholder: #9F9F9F;
+    --bj-primary: #0083DA;
+    --bj-primary-hover: #0069AE;
+    --bj-action: #1F83FF;
+    --bj-border: #E2EAF1;
+    /* windows-and-panels.md > Form Field > Structure */
+    --bj-field-line: #D7D7D7;
+    --bj-danger: #D14545;
+    --bj-disabled: #9AB0C0;
+    --bj-disabled-bg: #B8C6D2;
+    --bj-neutral-chip: #F1F4F8;
+
+    /* Widget root anchor - 1.2cqi of the dashboard container.
+       dashboard-widgets.md > Widget Root Anchor */
+    font-size: clamp(16px, calc(var(--dash-inline-size) * 0.012), 20px);
+    font-family: 'Roboto', sans-serif;
+    color: var(--bj-text);
+
+    /* Glass widget surface - foundations.md > Standard Gradients */
+    background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,0.6));
+    border: 2px solid #FFFFFF;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(15,61,97,0.06);
+
+    /* The grid track owns the height; content adapts inside it and is
+       clipped rather than scrolled (dashboard-widgets.md >
+       No Inner Scrollbars). No min-height / height override here. */
     width: 100%;
-}
-
-a:hover {
-    text-decoration: none;
-}
-
-.btn:focus,button:focus {
-    box-shadow: none;
-}
-
-.VA012_paramMainDiv {
-    /*background-color: #fcfcfc;*/
     height: 100%;
-    padding: 0.2em;
-    overflow-y: auto;
-    /* overflow: hidden;*/
-    /*border-radius: 1em;*/
+    padding: 0.85em;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
 
-.VA012-NextBtn {
-    border-radius: 1em !important;
-    font-size: 0.9em !important;
+/* Form controls inherit the widget anchor instead of the UA default,
+   so every em value below resolves against one number.
+   Colour is deliberately NOT reset here: this selector is (0,1,1) and would
+   outrank the single-class rules that colour the buttons and the DMS link,
+   forcing them to inherit the widget's dark body text. Each control states
+   its own colour instead. */
+.VA012-bj button,
+.VA012-bj input,
+.VA012-bj select,
+.VA012-bj label {
+    font-family: inherit;
+    line-height: inherit;
 }
 
-.VA012-CancelBtn {
-    border-radius: 1em !important;
-    font-size: 0.9em;
+.VA012-bj *,
+.VA012-bj *::before,
+.VA012-bj *::after {
+    box-sizing: border-box;
 }
 
-.VA012-UploadBtn {
-    border-radius: 1em !important;
-    font-size: 0.9em;
+/* ============================================================
+   2. Widget header
+   ============================================================ */
+
+.VA012-bj-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.625em;
+    margin-bottom: 0.75em;
 }
 
-.VA012-uploadImg {
-    color: rgba(var(--v-c-primary), 1);
-    font-size: 4em;
+/* Icon well - 2x the title clamp at every dashboard width.
+   dashboard-widgets.md > Widget Header. Suppressed on short cells, see
+   section 9. */
+.VA012-bj-iconwell {
+    flex: none;
+    width: clamp(32px, calc(var(--dash-inline-size) * 0.022750), 40px);
+    height: clamp(32px, calc(var(--dash-inline-size) * 0.022750), 40px);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(232,244,255,0.96));
+    box-shadow: inset 0 0 0 1px rgba(31,131,255,0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bj-primary);
 }
 
-.VA012-headerPanelLbl {
-    font-weight:400;
-   /* color: #908989;*/
+.VA012-bj-iconwell > i {
+    font-size: clamp(18px, calc(var(--dash-inline-size) * 0.012500), 22px);
+    line-height: 1;
 }
 
-.VA012-FileNamelbl {
-    font-weight: unset;
-    color: #908989;
-    margin-top: 1em;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
+.VA012-bj-titlewrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.VA012-bj-title {
+    font-size: clamp(16px, calc(var(--dash-inline-size) * 0.011375), 17px);
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--bj-text);
+    margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    word-break: break-word;
-}
-.VA012-paramdiv {
-    margin-top: 2px;
-    margin-bottom: 3px;
+    white-space: nowrap;
 }
 
-.VA012-controls {
-    padding: 0.5px;
-}
-.VA012-selectCtrlsbankj {
-    margin-top: 0.5rem !important;
-}
-.VA012-labels {
-    /*background: rgba(var(--v-c-secondary)) !important;*/
-    font-size: 11px !important;
-    background: rgba(var(--v-c-on-secondary), .0) !important;
+/* ============================================================
+   3. Body - one step visible at a time
+   ============================================================ */
+
+.VA012-bj-body {
+    flex: 1 1 auto;
+    min-height: 0; /* lets the body shrink to the cell instead of pushing
+                      the footer off-cell */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.vis-input-wrap .VA012-nameLbl {
-    /* background: rgba(var(--v-c-secondary)) !important;*/
-    background: rgba(var(--v-c-on-secondary), .0) !important;
-    top: 4px;
-    height: 86%;
-    left: 10px;
+.VA012-bj-step-pane {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.VA012-StatementDateAsAccountDate {
-    /* background: rgba(var(--v-c-secondary)) !important;*/
-    background: rgba(var(--v-c-on-secondary), .0) !important;
-    padding-left: 0.9em !important;
-    left: 15px !important;
-    padding-top: 0.45em !important;
-}
-.VA012-arrow-right {
-    padding: 0.2em;
-    font-size: 0.8em;
-}
-.VA012-select {
-    background-color: rgba(var(--v-c-on-primary), .1) !important;
-    /*    background-image: linear-gradient(45deg, transparent 50%, rgba(var(--v-c-primary), 1) 50%),
-        linear-gradient(135deg, rgba(var(--v-c-primary), 1) 50%, transparent 50%) !important;*/
+.VA012-bj-step-pane[hidden] {
+    display: none;
 }
 
-.VA012-form-data {
-    width: 100%;
-    float: left;
-    margin-bottom: 5px;
-    position: relative;
-}
+/* ============================================================
+   4. Step 1 - file drop zone
+   ============================================================ */
 
-.VA012-folderContainer {
-    background-color: rgba(var(--v-c-common), 1);
-    box-shadow: 0 3px 8px #cccccc;
-    width: 100%;
-    height: 100%;
-    /*display: flex;
+/* Dashed create-affordance, borrowed from the Quick Action Widget so the
+   "start something" language is the same across the dashboard. */
+.VA012-bj-drop {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;*/
+    justify-content: center;
+    gap: 0.25em;
+    text-align: center;
+    padding: 0.625em;
+    border: 2px dashed #9ED1FF;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(245,251,255,0.9), rgba(255,255,255,0.65));
+    cursor: pointer;
+    margin: 0;
+    overflow: hidden;
+    transition: border-color .15s ease, background .15s ease;
+}
+
+.VA012-bj-drop:hover,
+.VA012-bj.VA012-bj-dragover .VA012-bj-drop {
+    border-color: var(--bj-action);
+    background: linear-gradient(180deg, rgba(234,248,255,0.95), rgba(255,255,255,0.7));
+}
+
+.VA012-bj-drop-icon {
+    font-size: 1.5em;
+    line-height: 1;
+    color: var(--bj-action);
+}
+
+.VA012-bj-drop-label {
+    font-size: 0.75em;
+    line-height: 1.3;
+    color: var(--bj-secondary);
+}
+
+.VA012-bj-browse {
+    color: var(--bj-primary);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.VA012-bj-drop-hint {
+    font-size: 0.6875em;
+    line-height: 1.3;
+    color: var(--bj-muted);
+}
+
+/* Selected file name - neutral chip tier. */
+.VA012-bj-filechip {
+    display: none;
+    max-width: 100%;
+    border-radius: 999px;
+    padding: 0.3125em 0.625em;
+    font-size: 0.6875em;
+    font-weight: 500;
+    line-height: 1.2;
+    background: var(--bj-neutral-chip);
+    color: var(--bj-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.VA012-bj-filechip.VA012-bj-has-file {
+    display: block;
+}
+
+/* Native input kept in the DOM for the file dialog, visually removed. */
+.VA012-bj-fileinput {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+/* ============================================================
+   5. Step 2 - parameter form
+   ============================================================ */
+
+/* One field per line, full width. All six controls live on this single
+   step, so the form scrolls rather than paging - the second recorded
+   exception to dashboard-widgets.md > No Inner Scrollbars, alongside the
+   folder tree. align-content:start keeps rows at their natural height
+   rather than stretching them into the free space on a taller cell. */
+.VA012-bj-form {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 0.5em;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* keeps the underlines clear of the scrollbar */
+    padding-right: 0.375em;
+    scrollbar-width: thin;
+    scrollbar-color: #C5D2DD transparent;
+}
+
+.VA012-bj-form::-webkit-scrollbar {
+    width: 6px;
+}
+
+.VA012-bj-form::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.VA012-bj-form::-webkit-scrollbar-thumb {
+    background: #C5D2DD;
+    border-radius: 999px;
+}
+
+.VA012-bj-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.VA012-bj-field[hidden] {
+    display: none;
+}
+
+/* Label above the value - windows-and-panels.md > Form Field > Content.
+   The label-to-value gap is the spec's 6-8px, expressed in em so it rides
+   the widget anchor (6px at the 16px floor, 7.5px at the 20px ceiling). */
+.VA012-bj-label {
+    font-size: 0.6875em;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--bj-muted);
+    margin: 0 0 0.375em 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.VA012-bj-req {
+    color: var(--bj-danger);
+    margin-left: 0.125em;
+}
+
+/* The icon + control row carries the rule, so it spans the leading icon and
+   the value together the way the reference does. Flat and operational, not
+   card-like: no box, no radius, no fill - the underline is the whole
+   chrome. */
+.VA012-bj-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-width: 0;
+    padding: 0.375em 0;
+    border-bottom: 1px solid var(--bj-field-line);
+    /* containing block for the date picker button, see below */
     position: relative;
 }
 
-.VA012-fader-div {
+/* Leading icon - windows-and-panels.md > Form Field > Left Icon Variant,
+   as a plain glyph rather than the 34px bordered block: at a ~177px column
+   the bordered well would take a fifth of the field's width. */
+.VA012-bj-fieldicon {
+    flex: none;
+    font-size: 0.875em;
+    line-height: 1;
+    color: var(--bj-muted);
+}
+
+.VA012-bj-control--date:hover .VA012-bj-fieldicon {
+    color: var(--bj-primary);
+}
+
+/* The value token is 0.8125em rather than the Form Field spec's 1em: this
+   field sits inside a widget, where nothing may reach the widget title
+   (dashboard-widgets.md > List / Grid Hierarchy Rule). It still reads a
+   step above its 0.6875em label, which is the contrast the pattern needs. */
+.VA012-bj-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    font-size: 0.8125em;
+    line-height: 1.35;
+    color: var(--bj-text);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* The native calendar button is not hidden - hiding it takes away the only
+   dependable way to open the picker, and input.showPicker() is not
+   available in every browser this ships to. Instead it is made invisible
+   and stretched across the whole field, so a click anywhere in the date
+   control - icon or text - is a real click on the browser's own button and
+   opens the picker with no script at all. It is positioned against
+   .VA012-bj-control, the nearest positioned ancestor.
+   Trade-off: the click no longer places a caret in a date segment. Typing
+   still works, because the field takes focus at the same time and digits
+   go straight into it. */
+.VA012-bj-input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Whole row reads as clickable, matching what the invisible button covers. */
+.VA012-bj-control--date,
+.VA012-bj-control--date .VA012-bj-input {
+    cursor: pointer;
+}
+
+.VA012-bj-input[type="date"]::-webkit-inner-spin-button {
+    display: none;
+}
+
+/* w2ui-1.4.3.css styles `input:not([type=button]), select, textarea` with a
+   white fill, a #bbb border, a 3px radius and 4px of padding. The :not()
+   carries its argument's weight, so that selector scores (0,1,1) and
+   outranks a plain class - which is why the date and name fields kept a
+   white box while the selects went flat. These selectors are (0,2,0) and
+   (0,2,1), so they take it back. */
+.VA012-bj-control .VA012-bj-input {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+}
+
+.VA012-bj-control .VA012-bj-input {
+    line-height: 1.35;
+    color: var(--bj-text);
+}
+
+.VA012-bj-control select.VA012-bj-input {
+    /* room for the chevron drawn below */
+    padding-right: 1em;
+    background-image: linear-gradient(45deg, transparent 50%, var(--bj-secondary) 50%),
+                      linear-gradient(135deg, var(--bj-secondary) 50%, transparent 50%);
+    /* the two halves must sit exactly 0.25em apart - their own width - or
+       they overlap into a blob instead of a chevron */
+    background-position: calc(100% - 0.5em) 50%, calc(100% - 0.25em) 50%;
+    background-size: 0.25em 0.25em, 0.25em 0.25em;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.VA012-bj-input::placeholder {
+    color: var(--bj-placeholder);
+}
+
+/* Hover and focus both drive the underline to primary blue - the emphasis
+   direction the pattern asks for. Colour only, never weight, so the row
+   height cannot shift under the cursor. focus-within carries it because the
+   rule now lives on the row rather than on the control. */
+.VA012-bj-control:hover,
+.VA012-bj-control:focus-within {
+    border-bottom-color: var(--bj-primary);
+}
+
+.VA012-bj-control:focus-within .VA012-bj-fieldicon {
+    color: var(--bj-primary);
+}
+
+/* Toggle row is a standalone control and takes no underline
+   (windows-and-panels.md > Toggle And Switch Fields).
+   font-weight is stated because Bootstrap sets `label { font-weight: 700 }`
+   at (0,0,1) and would otherwise bold the caption. */
+.VA012-bj-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-width: 0;
+    margin: 0;
+    padding: 0.375em 0;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+/* Custom box rather than the native control: w2ui's input rule ties this
+   one on specificity, so the native border came and went depending on
+   stylesheet order. appearance:none takes the box away from the UA and the
+   browser theme entirely, so the border is always drawn by us.
+   The selector is (0,2,0) to clear w2ui's (0,1,1). */
+.VA012-bj-check .VA012-bj-checkbox {
+    flex: none;
+    position: relative;
+    width: 0.875em;
+    height: 0.875em;
+    margin: 0;
+    padding: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #FFFFFF;
+    border: 1px solid var(--bj-field-line);
+    border-radius: 3px; /* px - physical edge, does not scale with the anchor */
+    cursor: pointer;
+}
+
+.VA012-bj-check .VA012-bj-checkbox:hover {
+    border-color: var(--bj-primary);
+}
+
+.VA012-bj-check .VA012-bj-checkbox:checked {
+    border-color: var(--bj-primary);
+}
+
+/* Blue tick on white, not a filled blue block. */
+.VA012-bj-check .VA012-bj-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 32%;
+    top: 10%;
+    width: 26%;
+    height: 52%;
+    border: solid var(--bj-primary);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.VA012-bj-check .VA012-bj-checkbox:focus-visible {
+    outline: 2px solid var(--bj-action);
+    outline-offset: 1px;
+}
+
+.VA012-bj-check span {
+    font-size: 0.6875em;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--bj-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   6. Footer
+   ============================================================ */
+
+.VA012-bj-footer {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5em;
+    margin-top: 0.625em;
+}
+
+.VA012-bj-footer[hidden] {
+    display: none;
+}
+
+/* Secondary entry point on the left of step 1 (Open DMS): icon stacked
+   above its label, both in primary blue. */
+.VA012-bj-link {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.25em;
+    font-size: 0.75em;
+    line-height: 1.2;
+    color: var(--bj-primary);
+    background: none;
+    border: 0;
+    padding: 0.25em 0;
+    cursor: pointer;
+    min-width: 0;
+}
+
+.VA012-bj-link:hover,
+.VA012-bj-link:hover > i {
+    color: var(--bj-primary-hover);
+}
+
+.VA012-bj-link > i {
+    font-size: 1.5em;
+    line-height: 1;
+    color: var(--bj-primary);
+}
+
+.VA012-bj-link > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.VA012-bj-link:hover {
+    color: var(--bj-primary-hover);
+}
+
+.VA012-bj-link[hidden] {
+    display: none;
+}
+
+.VA012-bj-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-left: auto;
+}
+
+/* Action bar with no left-hand content: the two buttons split the footer
+   evenly instead of hugging the right edge. */
+.VA012-bj-footer--split .VA012-bj-actions {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.VA012-bj-footer--split .VA012-bj-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* -- Buttons: the two pill tiers, foundations.md > Chips And Pills ---- */
+.VA012-bj-btn {
+    border-radius: 999px;
+    padding: 0.5em 0.875em;
+    /* keeps a short label such as "Next" from rendering as a stub pill */
+    min-width: 4.5em;
+    font-size: 0.8125em;
+    font-weight: 400;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+/* Filled pill. Both buttons in an action bar carry it by request; note this
+   departs from foundations.md > Chips And Pills, which reserves the fill
+   for a single primary submit and gives the secondary action the outline
+   treatment - so Back and Upload read with equal weight here. */
+.VA012-bj-btn--primary {
+    border: 1px solid var(--bj-primary);
+    background: var(--bj-primary);
+    color: #FFFFFF;
+}
+
+.VA012-bj-btn--primary:hover:not(:disabled) {
+    background: var(--bj-primary-hover);
+    border-color: var(--bj-primary-hover);
+}
+
+.VA012-bj-btn--primary:disabled {
+    background: var(--bj-disabled-bg);
+    border-color: var(--bj-disabled-bg);
+    color: #FFFFFF;
+    cursor: not-allowed;
+}
+
+.VA012-bj-btn:focus-visible {
+    outline: 2px solid var(--bj-action);
+    outline-offset: 2px;
+}
+
+/* ============================================================
+   7. Busy indicator
+   ============================================================ */
+
+.VA012-bj .vis-busyindicatorouterwrap {
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
-    background-color: rgba(var(--v-c-common), .8);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.8);
+    border-radius: 12px;
+}
+
+/* ============================================================
+   8. DMS folder picker (in-cell overlay)
+   ------------------------------------------------------------
+   The picker stays inside the widget rather than moving to a dialog.
+   That makes the tree the one scrolling region in this widget, which is
+   a deliberate, recorded exception to dashboard-widgets.md >
+   No Inner Scrollbars: a folder tree has no sensible page or state
+   split, and the overlay is transient rather than the resting state of
+   the tile. The scroll region is confined to the tree - the overlay
+   itself, its title and its footer never move - and the scrollbar is
+   slimmed below so the surface still reads as part of the tile.
+   ============================================================ */
+
+.VA012-bj-fader {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 2;
     display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.VA012-folTreeArea {
-    height: 72%;
-    width: 100%;
-    overflow: auto;
-    padding-right: .3rem;
-    /*padding-top: .5rem;*/
-}
-
-.VA012-paramFooterDiv {
-    /*height: 14%;*/
-    /*width: 100%;*/
-    margin-top: 2%;
-    display: flex;
-    gap: 2%;
-    justify-content: center;
-    /*overflow-y: auto;*/
-}
-
-    .VA012-paramFooterDiv input {
-        height: 100%;
-        width: 50%;
-    }
-
-.VA012-widgetContentArea .vis-scandoc, .VA012-folder-link .fa-folder-open, .VA012-window-link .vis-upload-history {
-    color: rgba(var(--v-c-primary), 1);
-    cursor: pointer;
-}
-
-.VA012-widgetContentArea .vis-scandoc {
-    font-size: 1.25em;
-}
-
-.VA012-WidgetContainer {
-    color: rgba(var(--v-c-on-secondary), 1);
-}
-
-.VA012-folderFader {
-    padding: 5%;
-}
-
-.VA012-links {
-    display: flex;
-    width: 100%;
-    align-items: end;
-    justify-content: space-between;
-    margin-top: 1rem !important;
-}
-
-    .VA012-links span {
-        font-size: .75rem;
-    }
-
-.VA012-DMS-folder .vis, .VA012-DMS-folder .fa {
-    font-size: 1.4em;
-}
-
-.VA012-DMS-folder {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    justify-content: space-between;
-}
-
-    .VA012-DMS-folder a {
-        font-size: 0.875em;
-        color: rgba(var(--v-c-primary), 1);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-.VA012-widgetContentArea .vis-scandoc, .VA012-folder-link .fa-folder-open, .VA012-window-link .vis-upload-history {
-    color: rgba(var(--v-c-primary), 1);
-    cursor: pointer;
-}
-
-.VA012-widgetContentArea .vis-scandoc {
-    font-size: 1.25em;
-}
-
-.VA012-WidgetContainer {
-    color: rgba(var(--v-c-on-secondary), 1);
-}
-
-.VA012-folderFader {
-    padding: 5%;
-}
-
-.VA012-upload-col, .VA012-files-label {
-    height: 100%;
-}
-
-    .VA012-upload-col .VA012-input-file-field + .VA012-files-label {
-        border: 1px dashed #bbbbbb;
-        position: relative;
-        width: 100%;
-        border-radius: 0.25rem;
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-        padding: 1.25rem 0;
-        margin: 0;
-        cursor: pointer;
-    }
-
-    .VA012-upload-col .VA012-input-file-field {
-        width: 0.1px;
-        height: 0.1px;
-        opacity: 0;
-        overflow: hidden;
-        position: absolute;
-        z-index: -1;
-    }
-
-.VA012-labelTxt {
-    color: rgba(var(--v-c-on-secondary), .5);
-    font-size: 0.975em;
-    text-align: center;
-}
-
-    .VA012-labelTxt .VA012-browse-link {
-        cursor: pointer;
-        text-decoration: underline;
-        color: rgba(var(--v-c-primary),1);
-    }
-
-    .VA012-labelTxt .VA012-fileSize {
-      /*  display: block;*/
-    }
-
-.VA012-files-label {
-    justify-content: center;
-}
-
-    .VA012-files-label .vis-uploaddocument {
-        font-size: 1.875em;
-        color: rgba(var(--v-c-on-secondary), .5);
-        margin-bottom: 0.5em;
-    }
-
-.VA012-shadow {
-    /*box-shadow: 6px 6px 7px rgba(var(--v-c-on-secondary), .2);*/
-    padding: 1.4em;
-    height: calc(100% - 3.6em);
-}
-
-.VA012-file-listing {
-    display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    /*height: calc(100% - 17.5rem);*/
-    overflow: auto;
+    padding: 0.85em;
+    background: #FFFFFF;
+    border-radius: 12px;
 }
 
-.VA012-links {
-    display: flex;
-    width: 100%;
-    align-items: end;
-    justify-content: space-between;
-}
-
-    .VA012-links span {
-        font-size: .75rem;
-    }
-
-.VA012-bank-panel {
-   /* background-color: rgba(var(--v-c-secondary));*/
-    /*border-radius: 0.5rem;*/
-    padding: 1em;
-    display: flex;
-    flex-direction: column;
-    /*justify-content: space-between;*/
-    /*border: 1px solid #e3e3e3;*/
-    height: 100%;
-    position: relative;
-}
-
-.VA012-widgetContentArea {
-    height: 100%;
-}
-
-
-/**Open DMS CSS**/
-/*.d-none {
-    display: none !important;
-}
-.list-unstyled {
-    padding-left: 0;
-    list-style: none;
-}*/
-.VA012-leftTreeNode,
-.VA012-leftTreeNode a,
-.VA012-leftTreeNode a span {
-    display: flex;
-}
-
-    .VA012-leftTreeNode,
-    .VA012-leftTreeNode a,
-    .VA012-leftTreeNode a span {
-        align-items: center;
-    }
-
-        .VA012-leftSideHeader,
-        .VA012-leftTreeNode a,
-        .VA012-leftTreeNode a span,
-        .VA012-folderFoot {
-            justify-content: space-between;
-        }
-
-            .VA012-headerWrap h6,
-            .VA012-leftSideSearch input,
-            .VA012-leftSideTree,
-            .VA012-leftTreeNode a,
-            .VA012-leftTreeNode a span,
-            .VA012-folderInfo {
-                flex: 1;
-            }
-
-                .VA012-leftSideHeader,
-                .VA012-leftTreeNode a > i, .VA012-folderFoot i {
-                    color: rgba(var(--v-c-primary), 1);
-                }
-
-.VA012-leftSideTreeUl {
-    height: 100%;
-    overflow: auto;
-    margin: 0 !important;
-    padding: 0;
-}
-
-.VA012-leftTreeNode a > i {
-    font-size: 1.2rem;
-}
-
-.VA012-leftTreeNode a {
-    color: inherit;
-    font-size: .875rem;
-}
-
-.VA012-leftTreeNode {
-    padding: .3rem 0;
-}
-
-.VA012-docTreeNode {
-    padding-left: 2.0rem;
-}
-
-.VA012-documentName {
-    font-size: 0.87em;
-    padding-left: 0.4em;
-}
-
-.VA012-leftTreeNode a span {
-    /*font-size: .7rem;*/
-    transition: -webkit-transform .2s ease-in-out;
-    padding-left: .5rem;
-    word-break: break-word;
-}
-
-.VA012-folderContainer {
-    background-color: rgba(var(--v-c-common), 1);
-    box-shadow: 0 3px 8px #cccccc;
-    width: 100%;
-    height: 100%;
-    /*display: flex;
-    align-items: center;
-    justify-content: center;*/
-    position: relative;
-}
-
-    .VA012-folderContainer h6 {
-        font-weight: 600;
-        font-size: 1rem;
-        margin: 0;
-        height: 10%;
-    }
-
-.VA012-folTreeArea {
-    height: 72%;
-    width: 100%;
-    overflow: auto;
-    padding-right: .3rem;
-}
-
-.VA012-folTreeFooter {
-    margin-top: 5%;
-    display: flex;
-    gap: 2%;
-    justify-content: center;
-}
-
-    .VA012-folTreeFooter input {
-        height: 100%;
-        width: 50%;
-    }
-
-.VA012-treeCancelBtn, .VA012-treeUploadBtn {
-    border-radius: 1em !important;
-    font-size: 0.9em;
-}
-
-span.VA012-selected {
-    color: rgba(var(--v-c-primary), 1);
-}
-
-.VA012-selectedTreeNode span i {
-    color: rgba(var(--v-c-on-secondary), 1);
-    transform: rotate(90deg);
-}
-
-.VA012-leftTreeNode:not(.VA012-selectedTreeNode) + .VA012-leftSideSubTreeUl {
+.VA012-bj-fader[hidden] {
     display: none;
 }
 
-.VA012-leftSideSubTreeUl {
-    padding-left: 1rem;
+.VA012-bj-fader-title {
+    flex: none;
+    font-size: 0.75em;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--bj-secondary);
+    margin: 0 0 0.5em 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.VA012-selectedrow {
-    background: rgba(var(--v-c-primary), .05);
-    border-color: rgba(var(--v-c-primary), .5);
+.VA012-bj-tree {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid var(--bj-border);
+    border-radius: 8px;
+    padding: 0.375em;
+    background: #FFFFFF;
+    /* Slim, low-contrast scrollbar - the tile aesthetic the spec is
+       protecting survives the exception above. */
+    scrollbar-width: thin;
+    scrollbar-color: #C5D2DD transparent;
 }
 
-.VA012-selectedBtn {
-    background: rgba(var(--v-c-primary), 1) !important;
-    color: rgba(var(--v-c-on-primary), 1) !important;
+.VA012-bj-tree::-webkit-scrollbar {
+    width: 6px;
 }
 
-li.VA012-selectedAction {
-    background: rgba(var(--v-c-on-secondary), .05);
-    color: rgba(var(--v-c-on-secondary), 1);
-}
-.VA012-Date {
-    font-size: 14px !important;
+.VA012-bj-tree::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-.VA012-nameLbl {
-    font-size: 12px !important;
+.VA012-bj-tree::-webkit-scrollbar-thumb {
+    background: #C5D2DD;
+    border-radius: 999px;
 }
 
-.VA012-bs-ViewBtn {
-    border-radius: 1em !important;
-    font-size: 0.9em;
+.VA012-bj-tree ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
-
-
-
-
-@media screen and (max-width: 1920px) {
-    .vis-editModeWidget .VA012-widgetContentArea {
-        height: calc(100% - 10%);
-    }
-
-    .vis-editModeWidget .fa .fa-cloud-upload {
-        font-size: 2em;
-    }
-
-    .vis-editModeWidget .VA012-files-label {
-        font-weight: 600;
-        font-size: 0.8em;
-    }
-
-    .vis-editModeWidget .VA012-folder-link .VA012-CancelBtn .VA012-UploadBtn {
-        font-size: 0.8em;
-    }
-
-    .vis-editModeWidget .VA012-panel-heading {
-        font-size: 0.8em;
-    }
+.VA012-bj-subtree {
+    padding-left: 1em;
 }
 
-@media screen and (max-width: 1366px) {
-    .VA012-bank-panel {
-        font-size: 10px;
-    }
-
-    .VA012-links {
-        margin-top: 0.6rem !important;
-    }
-
-    .vis-editModeWidget .VA012-labels {
-        top: -6px !important;
-    }
+/* A branch stays collapsed until its own node is the selected one. */
+.VA012-bj-treenode:not(.VA012-bj-treenode-selected) + .VA012-bj-subtree {
+    display: none;
 }
 
-@media screen and (max-width: 1024px) {
-    .VA012-bank-panel {
-        font-size: 9px;
-    }
-
-    .VA012-links {
-        margin-top: 0.6rem !important;
-    }
-
-    .vis-editModeWidget .VA012-bank-panel {
-        font-size: 6px;
-    }
-
-    .vis-editModeWidget .VA012-links {
-        margin-top: 0.1rem !important;
-    }
-
-    .vis-editModeWidget .VA012-labels {
-        top: -6px !important;
-    }
+.VA012-bj-treenode {
+    display: flex;
+    align-items: center;
+    padding: 0.3125em 0.375em;
+    border-radius: 6px;
 }
 
-@media screen and (max-width: 768px) {
-    .VA012-bank-panel {
-        font-size: 10px;
-    }
-
-    .vis-editModeWidget .VA012-bank-panel {
-        font-size: 7px;
-    }
+/* Row text sits one step below the widget title - the tree is inside the
+   widget now, so the List / Grid Hierarchy Rule applies to it. */
+.VA012-bj-treenode a {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex: 1;
+    min-width: 0;
+    font-size: 0.75em;
+    line-height: 1.3;
+    color: inherit;
+    text-decoration: none;
 }
 
-@media screen and (max-width: 680px) {
-    .VA012-bank-panel {
-        font-size: 8px;
-        padding: 0.45em;
-    }
-
-    .VA012-links {
-        margin-top: 0.2rem !important;
-    }
-
-    .vis-editModeWidget .VA012-bank-panel {
-        font-size: 5.5px;
-    }
+.VA012-bj-treenode a:hover {
+    text-decoration: none;
 }
 
-@media screen and (max-width: 480px) {
-    .VA012-bank-panel {
-        font-size: 11.5px;
-    }
-
-    .vis-editModeWidget .VA012-bank-panel {
-        font-size: 9px;
-    }
+.VA012-bj-treenode a > i {
+    flex: none;
+    font-size: 1em;
+    color: #0083DA;
 }
 
-@media screen and (max-width: 320px) {
-    .VA012-bank-panel {
-        font-size: 8px;
-    }
+.VA012-bj-treenode a > span {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: break-word;
+}
 
-    .VA012-widgetContentArea {
-        padding-right: 2px;
-    }
+.VA012-bj-treenode:hover {
+    background: #F5FAFD;
+}
 
-    .vis-editModeWidget .VA012-bank-panel {
-        font-size: 5px;
-    }
+/* Selected row - foundations.md > Standard Gradients */
+.VA012-bj-tree .VA012-bj-treenode-selected {
+    background: linear-gradient(109deg, #EAF8FF 0%, #CAEDFF 100%);
+}
+
+.VA012-bj-tree .VA012-bj-selected {
+    color: #0083DA;
+    font-weight: 700;
+}
+
+.VA012-bj-arrow {
+    font-size: 0.75em;
+    color: #5F7283;
+    transition: transform .2s ease-in-out;
+}
+
+.VA012-bj-treenode-selected .VA012-bj-arrow {
+    transform: rotate(90deg);
+}
+
+.VA012-bj-docnode {
+    padding-left: 1.5em;
+}
+
+/* No font-size here on purpose: the row anchor is the <a> above, and a
+   second em value would compound below the 0.6875em token floor
+   (review-checklist.md > Row inheritance traps). */
+.VA012-bj-docname {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ------------------------------------------------------------
+   Upload-result dialog (VIS.ChildDialog). Chrome, so it anchors at the
+   document baseline rather than the widget root.
+   ------------------------------------------------------------ */
+
+.VA012-bj-dialog {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1rem;
+    color: #102C3F;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+}
+
+.VA012-bj-dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5em;
+    padding-top: 0.75em;
+    border-top: 1px solid #D9E2EB;
+}
+
+/* The dialog sits outside .VA012-bj, so the pill tiers need their tokens
+   restated here. */
+.VA012-bj-dialog .VA012-bj-btn {
+    font-family: inherit;
+    border: 1px solid #0083DA;
+    background: #0083DA;
+    color: #FFFFFF;
+}
+
+.VA012-bj-dialog .VA012-bj-btn:hover {
+    background: #0069AE;
+    border-color: #0069AE;
+}
+
+/* ============================================================
+   9. Compact variant
+   ------------------------------------------------------------
+   .VA012-bj-compact is applied by syncStepCapacity() when the cell is
+   shorter than 18em, which is the case for the 2x2 target at every
+   normal dashboard width. The icon well is the first thing to go: the
+   Content Fit Budget buys a form row with that height. Driving this off
+   the measured cell rather than the row span means it also reacts to the
+   dashboard getting narrower, not just to a resize of the widget.
+   ============================================================ */
+
+.VA012-bj-compact .VA012-bj-iconwell {
+    display: none;
+}
+
+.VA012-bj-compact .VA012-bj-header {
+    margin-bottom: 0.5em;
+}
+
+/* Narrow cells: the footer stacks so the pills keep their spec padding
+   instead of being squeezed. */
+.VA012-bj[data-bj-cols="1"] .VA012-bj-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.375em;
+}
+
+.VA012-bj[data-bj-cols="1"] .VA012-bj-actions {
+    margin-left: 0;
+    justify-content: flex-end;
+}
+
+/* Dashboard edit mode: the host shrinks the workspace to 70% and
+   rewrites --rowheight, so the whole widget rescales through the root
+   anchor. Only pointer affordances need muting here. */
+.vis-editModeWidget .VA012-bj {
+    cursor: grab;
 }
