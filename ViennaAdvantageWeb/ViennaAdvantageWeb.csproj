@@ -119,6 +119,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>DLL\KJS.dll</HintPath>
     </Reference>
+    <Reference Include="MarketSvc">
+      <HintPath>DLL\MarketSvc.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.2.4\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
     </Reference>
@@ -282,6 +285,12 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="VADMS">
+      <HintPath>DLL\VADMS.dll</HintPath>
+    </Reference>
+    <Reference Include="VADMSSvc">
+      <HintPath>DLL\VADMSSvc.dll</HintPath>
+    </Reference>
     <Reference Include="VAModelAD">
       <HintPath>DLL\VAModelAD.dll</HintPath>
     </Reference>

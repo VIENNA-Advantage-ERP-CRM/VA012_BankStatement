@@ -25,6 +25,121 @@ namespace VA012.Models
         /// <returns>returns Matched resposes</returns>
         public List<MatchResponse> MatchStatement(Ctx ctx, string _matchingBaseItemList, string _cmbMatchingCriteria, int _BankAccount, int _StatementNo)
         {
+            _candidateCache = new Dictionary<string, DataSet>();
+            _scalarCache = new Dictionary<string, object>();
+            BeginMatchTrx();
+            try
+            {
+                // VA012: skip the per-line header UPDATEs inside MBankStatementLine.AfterSave; recalculate once below
+                using (StatementHeaderSync.Suspend(ctx))
+                {
+                    return MatchStatementCore(ctx, _matchingBaseItemList, _cmbMatchingCriteria, _BankAccount, _StatementNo);
+                }
+            }
+            finally
+            {
+                _candidateCache = null;
+                _scalarCache = null;
+                EndMatchTrx();
+                StatementHeaderSync.Recalculate(_StatementNo);
+            }
+        }
+
+        // VA012: all line saves of one matching run share this transaction (one DB connection) instead of opening
+        // a connection per statement. Each line is still committed / rolled back on its own, as before.
+        [ThreadStatic]
+        private static Trx _matchTrx;
+
+        private static void BeginMatchTrx()
+        {
+            _matchTrx = Trx.GetTrx(Trx.CreateTrxName("VA012MATCH"));
+        }
+
+        private static void EndMatchTrx()
+        {
+            if (_matchTrx == null)
+            {
+                return;
+            }
+            try
+            {
+                _matchTrx.Rollback();   // nothing is pending: every line save is committed or rolled back in SaveLine
+            }
+            catch { }
+            _matchTrx.Close();
+            _matchTrx = null;
+        }
+
+        private static bool SaveLine(MBankStatementLine line)
+        {
+            bool saved = line.Save();
+            if (_matchTrx != null)
+            {
+                if (saved)
+                {
+                    _matchTrx.Commit();
+                }
+                else
+                {
+                    _matchTrx.Rollback();
+                }
+            }
+            return saved;
+        }
+
+        // VA012: candidate-payment / cash-line lookups return the same rows for every statement line of one
+        // run (they depend only on bank account, client and org), so they are queried once per run.
+        [ThreadStatic]
+        private static Dictionary<string, DataSet> _candidateCache;
+
+        [ThreadStatic]
+        private static Dictionary<string, object> _scalarCache;
+
+        // VA012: tax/charge lookups use run-wide constants (_SetTaxRate / _SetBankCharges) - one query per run
+        private static object CachedScalar(string sql)
+        {
+            if (_scalarCache == null)
+            {
+                return DB.ExecuteScalar(sql);
+            }
+            object v;
+            if (!_scalarCache.TryGetValue(sql, out v))
+            {
+                v = DB.ExecuteScalar(sql);
+                _scalarCache[sql] = v;
+            }
+            return v;
+        }
+        // VA012: Rate and Name of a tax from a single (cached) query
+        private static void GetTaxInfo(int taxID, out decimal rate, out string name)
+        {
+            rate = 0;
+            name = "";
+            DataSet ds = CachedCandidates("Select Rate, Name From C_Tax Where C_Tax_ID=" + taxID + " AND IsActive='Y'");
+            if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                rate = Util.GetValueOfDecimal(ds.Tables[0].Rows[0]["Rate"]);
+                name = Util.GetValueOfString(ds.Tables[0].Rows[0]["Name"]);
+            }
+        }
+
+        private static DataSet CachedCandidates(string sql)
+        {
+            if (_candidateCache == null)
+            {
+                return DB.ExecuteDataset(sql);
+            }
+            DataSet ds;
+            if (!_candidateCache.TryGetValue(sql, out ds))
+            {
+                ds = DB.ExecuteDataset(sql);
+                _candidateCache[sql] = ds;
+            }
+            return ds;
+        }
+
+        private List<MatchResponse> MatchStatementCore(Ctx ctx, string _matchingBaseItemList, string _cmbMatchingCriteria, int _BankAccount, int _StatementNo)
+        {
             if (!Directory.Exists(System.Web.HttpContext.Current.Server.MapPath("~/Areas/VA012/MatchLog")))
             {
                 Directory.CreateDirectory(System.Web.HttpContext.Current.Server.MapPath("~/Areas/VA012/MatchLog"));
@@ -276,7 +391,8 @@ namespace VA012.Models
                         {
                             _conditionTemp.Clear();
                             //added Org_Id to get Charge based  on BankAccount org_Id
-                            _chargeID = Charge(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
+                            _chargeID = Charge(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(),
+                                _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             if (_chargeID > 0)
                             {
                                 _conditionTemp.Append(_condition).Append(" AND PAY.C_CHARGE_ID=" + _chargeID);
@@ -301,7 +417,8 @@ namespace VA012.Models
                             else
                             {
                                 //added Org_Id to get Invoice_ID based on BankAccount org_Id
-                                _invoiceID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
+                                _invoiceID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), 
+                                    _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             }
                             if (_invoiceID > 0)
                             {
@@ -328,7 +445,8 @@ namespace VA012.Models
                             else
                             {
                                 //added Org_Id to Get Invoice_ID based on BankAccount org_Id
-                                _orderID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
+                                _orderID = Invoice(ctx, _BankAccount, _dsStatements.Tables[0].Rows[i]["DESCRIPTION"].ToString(), 
+                                    _dsStatements.Tables[0].Rows[i]["REFERENCENO"].ToString(), _dsStatements.Tables[0].Rows[i]["MEMO"].ToString(), ad_Org_Id);
                             }
                             if (_orderID > 0)
                             {
@@ -350,7 +468,7 @@ namespace VA012.Models
 
                         if (_dsPayments != null && _dsPayments.Tables.Count > 0 && _dsPayments.Tables[0].Rows.Count > 0 && _matchingCriteria == _matchingCount)
                         {
-                            MBankStatementLine _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
+                            MBankStatementLine _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), _matchTrx);
                             _bankStatementLine.SetC_Payment_ID(Util.GetValueOfInt(_dsPayments.Tables[0].Rows[0]["C_PAYMENT_ID"]));
                             _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
 
@@ -387,7 +505,7 @@ namespace VA012.Models
                                 _bankStatementLine.SetC_Order_ID(_orderID);
                             }
 
-                            if (!_bankStatementLine.Save())
+                            if (!SaveLine(_bankStatementLine))
                             {
                                 ValueNamePair vnp = null;
                                 vnp = VLogger.RetrieveError();
@@ -495,7 +613,7 @@ namespace VA012.Models
 
                                 if (_dsCashLine != null && _dsCashLine.Tables.Count > 0 && _dsCashLine.Tables[0].Rows.Count > 0 && _matchingCriteria == _matchingCount)
                                 {
-                                    MBankStatementLine _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
+                                    MBankStatementLine _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), _matchTrx);
                                     _bankStatementLine.SetC_CashLine_ID(Util.GetValueOfInt(_dsCashLine.Tables[0].Rows[0]["C_CASHLINE_ID"]));
                                     _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
 
@@ -504,7 +622,7 @@ namespace VA012.Models
                                     {
                                         _bankStatementLine.SetEftCheckNo(_checkNo);
                                     }
-                                    if (!_bankStatementLine.Save())
+                                    if (!SaveLine(_bankStatementLine))
                                     {
                                         ValueNamePair vnp = null;
                                         vnp = VLogger.RetrieveError();
@@ -602,13 +720,13 @@ namespace VA012.Models
         public static void LogEntry(string _path, string _str)
         {
 
-            FileStream fs1E = new FileStream(_path, FileMode.OpenOrCreate, FileAccess.Write);
-            StreamWriter sw1E = new StreamWriter(fs1E);
-            sw1E.BaseStream.Seek(0, SeekOrigin.End);
-            sw1E.WriteLine(_str);
-            sw1E.Flush();
-            sw1E.Close();
+            // VA012: serialised append; the old version leaked the file handle if WriteLine threw
+            lock (_logLock)
+            {
+                File.AppendAllText(_path, _str + Environment.NewLine);
+            }
         }
+        private static readonly object _logLock = new object();
 
         #region AuthenticationCode not in Use
         //private string AuthenticationCode(Ctx ctx, int _BankAccount, string _description)
@@ -704,7 +822,7 @@ namespace VA012.Models
                 _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_Id);
             }
 
-            _ds = DB.ExecuteDataset(_sql.ToString());
+            _ds = CachedCandidates(_sql.ToString());
             _sql.Clear();
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
@@ -776,7 +894,7 @@ namespace VA012.Models
                 _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_ID);
             }
 
-            _ds = DB.ExecuteDataset(_sql.ToString());
+            _ds = CachedCandidates(_sql.ToString());
             _sql.Clear();
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
@@ -856,7 +974,7 @@ namespace VA012.Models
             {
                 _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_Id);
             }
-            _ds = DB.ExecuteDataset(_sql.ToString());
+            _ds = CachedCandidates(_sql.ToString());
             _sql.Clear();
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
@@ -912,7 +1030,7 @@ namespace VA012.Models
                 _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_Id);
             }
 
-            _ds = DB.ExecuteDataset(_sql.ToString());
+            _ds = CachedCandidates(_sql.ToString());
             _sql.Clear();
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
@@ -976,7 +1094,7 @@ namespace VA012.Models
             {
                 _sql.Append(@" AND PAY.AD_ORG_ID=" + ad_Org_Id);
             }
-            _ds = DB.ExecuteDataset(_sql.ToString());
+            _ds = CachedCandidates(_sql.ToString());
             _sql.Clear();
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
@@ -1027,7 +1145,7 @@ namespace VA012.Models
             {
                 _sql.Append(@" AND PAY.AD_ORG_ID=" + ctx.GetAD_Org_ID());
             }
-            _ds = DB.ExecuteDataset(_sql.ToString());
+            _ds = CachedCandidates(_sql.ToString());
             _sql.Clear();
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
@@ -1185,7 +1303,7 @@ namespace VA012.Models
             {
                 _sql.Append(@" AND CS.AD_ORG_ID=" + ad_Org_Id);
             }
-            _ds = DB.ExecuteDataset(_sql.ToString());
+            _ds = CachedCandidates(_sql.ToString());
             _sql.Clear();
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
@@ -1236,7 +1354,7 @@ namespace VA012.Models
                 _sql.Append(@" AND CS.AD_ORG_ID=" + ad_Org_Id);
             }
 
-            _ds = DB.ExecuteDataset(_sql.ToString());
+            _ds = CachedCandidates(_sql.ToString());
             _sql.Clear();
             if (_ds != null && _ds.Tables[0].Rows.Count > 0)
             {
@@ -1324,6 +1442,27 @@ namespace VA012.Models
         /// <param name="_SetTaxRate">C_TaxRate_ID</param>
         /// <returns>returns Match Statement Response in List type</returns>
         public List<MatchStatementGridResponse> MatchStatementGridData(Ctx ctx, string _matchingBaseItemList, string _cmbMatchingCriteria, int _BankAccount, int _StatementNo, int _SetBankCharges, int _SetTaxRate)
+        {
+            _candidateCache = new Dictionary<string, DataSet>();
+            _scalarCache = new Dictionary<string, object>();
+            BeginMatchTrx();
+            try
+            {
+                using (StatementHeaderSync.Suspend(ctx))
+                {
+                    return MatchStatementGridDataCore(ctx, _matchingBaseItemList, _cmbMatchingCriteria, _BankAccount, _StatementNo, _SetBankCharges, _SetTaxRate);
+                }
+            }
+            finally
+            {
+                _candidateCache = null;
+                _scalarCache = null;
+                EndMatchTrx();
+                StatementHeaderSync.Recalculate(_StatementNo);
+            }
+        }
+
+        private List<MatchStatementGridResponse> MatchStatementGridDataCore(Ctx ctx, string _matchingBaseItemList, string _cmbMatchingCriteria, int _BankAccount, int _StatementNo, int _SetBankCharges, int _SetTaxRate)
         {
             if (!Directory.Exists(System.Web.HttpContext.Current.Server.MapPath("~/Areas/VA012/MatchLog")))
             {
@@ -1693,7 +1832,7 @@ namespace VA012.Models
 
                         if (_dsPayments != null && _dsPayments.Tables.Count > 0 && _dsPayments.Tables[0].Rows.Count > 0 && _matchingCriteria == _matchingCount)
                         {
-                            _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
+                            _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), _matchTrx);
                             _bankStatementLine.SetC_Payment_ID(Util.GetValueOfInt(_dsPayments.Tables[0].Rows[0]["C_PAYMENT_ID"]));
                             _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
 
@@ -1774,7 +1913,8 @@ namespace VA012.Models
                                     if (_SetTaxRate > 0)
                                     {
                                         _bankStatementLine.SetC_Tax_ID(_SetTaxRate);
-                                        var Rate = Util.GetValueOfDecimal(DB.ExecuteScalar("Select Rate From C_Tax Where C_Tax_ID=" + _SetTaxRate + " AND IsActive='Y'"));
+                                        decimal Rate;
+                                        GetTaxInfo(_SetTaxRate, out Rate, out taxRate);
                                         if (Rate > 0)
                                         {
                                             TaxAmt = Math.Round(Util.GetValueOfDecimal(_ChgAmt - (_ChgAmt / ((Rate / 100) + 1))), 2);
@@ -1784,13 +1924,12 @@ namespace VA012.Models
                                         {
                                             _bankStatementLine.SetTaxAmt(0);
                                         }
-                                        taxRate = Util.GetValueOfString(DB.ExecuteScalar("Select Name From C_Tax Where C_Tax_ID=" + _SetTaxRate + " AND IsActive='Y'"));
                                     }
-                                    chargeType = Util.GetValueOfString(DB.ExecuteScalar("Select Name From C_CHARGE Where C_CHARGE_ID=" + _SetBankCharges + " AND IsActive='Y'"));
+                                    chargeType = Util.GetValueOfString(CachedScalar("Select Name From C_CHARGE Where C_CHARGE_ID=" + _SetBankCharges + " AND IsActive='Y'"));
                                 }
                             }
 
-                            if (!_bankStatementLine.Save())
+                            if (!SaveLine(_bankStatementLine))
                             {
                                 ValueNamePair vnp = null;
                                 vnp = VLogger.RetrieveError();
@@ -1927,7 +2066,7 @@ namespace VA012.Models
 
                                 if (_dsCashLine != null && _dsCashLine.Tables.Count > 0 && _dsCashLine.Tables[0].Rows.Count > 0 && _matchingCriteria == _matchingCount)
                                 {
-                                    _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
+                                    _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), _matchTrx);
                                     _bankStatementLine.SetC_CashLine_ID(Util.GetValueOfInt(_dsCashLine.Tables[0].Rows[0]["C_CASHLINE_ID"]));
                                     _bankStatementLine.SetVA012_IsMatchingConfirmed(true);
                                     //Set ConversionType_Id
@@ -1952,7 +2091,8 @@ namespace VA012.Models
                                         if (_SetTaxRate > 0)
                                         {
                                             _bankStatementLine.SetC_Tax_ID(_SetTaxRate);
-                                            var Rate = Util.GetValueOfDecimal(DB.ExecuteScalar("Select Rate From C_Tax Where C_Tax_ID=" + _SetTaxRate + " AND IsActive='Y'"));
+                                            decimal Rate;
+                                            GetTaxInfo(_SetTaxRate, out Rate, out taxRate);
                                             if (Rate > 0)
                                             {
                                                 TaxAmt = Math.Round(Util.GetValueOfDecimal(_bankStatementLine.GetChargeAmt() - (_bankStatementLine.GetChargeAmt() / ((Rate / 100) + 1))), 2);
@@ -1962,13 +2102,12 @@ namespace VA012.Models
                                             {
                                                 _bankStatementLine.SetTaxAmt(0);
                                             }
-                                            taxRate = Util.GetValueOfString(DB.ExecuteScalar("Select Name From C_Tax Where C_Tax_ID=" + _SetTaxRate + " AND IsActive='Y'"));
                                         }
-                                        chargeType = Util.GetValueOfString(DB.ExecuteScalar("Select Name From C_CHARGE Where C_CHARGE_ID=" + _SetBankCharges + " AND IsActive='Y'"));
+                                        chargeType = Util.GetValueOfString(CachedScalar("Select Name From C_CHARGE Where C_CHARGE_ID=" + _SetBankCharges + " AND IsActive='Y'"));
                                     }
 
 
-                                    if (!_bankStatementLine.Save())
+                                    if (!SaveLine(_bankStatementLine))
                                     {
                                         ValueNamePair vnp = null;
                                         vnp = VLogger.RetrieveError();
@@ -2035,11 +2174,13 @@ namespace VA012.Models
                             if (Util.GetValueOfDecimal(_dsStatements.Tables[0].Rows[i]["CHARGEAMOUNT"]).Equals( Util.GetValueOfDecimal(_dsStatements.Tables[0].Rows[i]["NETAMOUNT"])))
                             {
                                 decimal TaxAmt = 0;
-                                _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), null);
+                                _bankStatementLine = new MBankStatementLine(ctx, Util.GetValueOfInt(_dsStatements.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]), _matchTrx);
                                 if (_SetTaxRate > 0)
                                 {
                                     _bankStatementLine.SetC_Tax_ID(_SetTaxRate);
-                                    var Rate = Util.GetValueOfDecimal(DB.ExecuteScalar("Select Rate From C_Tax Where C_Tax_ID=" + _SetTaxRate + " AND IsActive='Y'"));
+                                    decimal Rate;
+                                    string _unusedTaxName;
+                                    GetTaxInfo(_SetTaxRate, out Rate, out _unusedTaxName);
                                     if (Rate > 0)
                                     {
                                         TaxAmt = Math.Round(Util.GetValueOfDecimal(Util.GetValueOfDecimal(_dsStatements.Tables[0].Rows[i]["CHARGEAMOUNT"]) - (Util.GetValueOfDecimal(_dsStatements.Tables[0].Rows[i]["CHARGEAMOUNT"]) / ((Rate / 100) + 1))), 2);
@@ -2050,7 +2191,7 @@ namespace VA012.Models
                                         _bankStatementLine.SetTaxAmt(0);
                                     }
                                 }
-                                if (!_bankStatementLine.Save())
+                                if (!SaveLine(_bankStatementLine))
                                 {
                                     ValueNamePair vnp = null;
                                     vnp = VLogger.RetrieveError();
