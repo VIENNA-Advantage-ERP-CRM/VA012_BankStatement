@@ -32,6 +32,22 @@ namespace VA012.Models
         #endregion
         public StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges)
         {
+            // VA012: skip the per-line header UPDATEs in MBankStatementLine.AfterSave; recalculate once afterwards
+            using (StatementHeaderSync.Suspend(ctx))
+            {
+                try
+                {
+                    return ImportStatementCore(ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges);
+                }
+                finally
+                {
+                    StatementHeaderSync.RecalculateOpenStatements(ctx, _bankaccount);
+                }
+            }
+        }
+
+        private StatementResponse ImportStatementCore(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges)
+        {
             StatementResponse _obj = new StatementResponse();
             try
             {

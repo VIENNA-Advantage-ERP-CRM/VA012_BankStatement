@@ -60,10 +60,12 @@
       <HintPath>..\ViennaAdvantageWeb\DLL\Interop.Excel.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="MarketSvc">
+      <HintPath>..\ViennaAdvantageWeb\DLL\MarketSvc.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="ModelLibrary, Version=1.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\BreakageDLL\ModelLibrary.dll</HintPath>
+    <Reference Include="ModelLibrary">
+      <HintPath>..\ViennaAdvantageWeb\DLL\ModelLibrary.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -120,6 +122,12 @@
     <Reference Include="System.Web.Services" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="VADMS">
+      <HintPath>..\ViennaAdvantageWeb\DLL\VADMS.dll</HintPath>
+    </Reference>
+    <Reference Include="VADMSSvc">
+      <HintPath>..\ViennaAdvantageWeb\DLL\VADMSSvc.dll</HintPath>
+    </Reference>
     <Reference Include="VAModelAD, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ViennaAdvantageWeb\DLL\VAModelAD.dll</HintPath>
@@ -167,7 +175,12 @@
     <Content Include="Areas\VA012\Scripts\apps\forms\VA012_BankConnectWidget.js" />
     <Content Include="Areas\VA012\Scripts\model\callouts.js" />
     <Content Include="Areas\VA012\Scripts\uploadexcel.js" />
-    <Content Include="Areas\VA012\Scripts\VA012.all.min.js" />
+    <Content Include="Areas\VA012\Scripts\dist\VA012.all.min.js" />
+    <Content Include="Areas\VA012\Scripts\src\VA012js.js" />
+    <Content Include="Areas\VA012\Contents\src\VA012css.css" />
+    <Content Include="package.json" />
+    <Content Include="webpack.config.js" />
+    <Content Include="babel.config.json" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\Site.css" />
@@ -206,6 +219,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Areas\VA012\Models\MatchBankStatement.cs" />
+    <Compile Include="Areas\VA012\Models\StatementHeaderSync.cs" />
     <Compile Include="Areas\VA012\Models\StatementModel.cs" />
     <Compile Include="Areas\VA012\Models\VA012_BankChargeSummaryModel.cs" />
     <Compile Include="Areas\VA012\Models\VA012_BankingJournalWidgetModel.cs" />
@@ -257,6 +271,7 @@
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>
+    <PreBuildEvent>cd /d "$(ProjectDir)" &amp;&amp; npm run build</PreBuildEvent>
     <PostBuildEvent>xcopy /E /Y /I  "$(ProjectDir)Areas\*" "$(SolutionDir)\ViennaAdvantageWeb\Areas"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
