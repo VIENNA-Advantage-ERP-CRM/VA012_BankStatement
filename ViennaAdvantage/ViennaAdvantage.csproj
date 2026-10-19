@@ -136,7 +136,7 @@
       <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
     </Reference>
     <Reference Include="XModel">
-      <HintPath>..\..\..\..\BreakageDLL\XModel.dll</HintPath>
+      <HintPath>..\ViennaAdvantageWeb\DLL\XModel.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -271,7 +271,10 @@
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>
-    <PreBuildEvent>cd /d "$(ProjectDir)" &amp;&amp; npm run build</PreBuildEvent>
+    <PreBuildEvent>cd /d "$(ProjectDir)"
+if not exist "node_modules" call npm ci
+if errorlevel 1 exit /b 1
+call npm run build</PreBuildEvent>
     <PostBuildEvent>xcopy /E /Y /I  "$(ProjectDir)Areas\*" "$(SolutionDir)\ViennaAdvantageWeb\Areas"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

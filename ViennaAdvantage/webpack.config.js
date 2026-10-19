@@ -22,8 +22,8 @@ const deleteFilesByPattern = (directory, pattern) => {
 deleteFilesByPattern(path.resolve(__dirname, 'Areas/VA012/Contents'), /^VA012\.all\.min\.css$/);
 
 const versions = {
-    'VA012.all': '3.0.1.0',
-    'VA012': '3.0.1.0' // CSS Version
+    'VA012.all': '3.0.2.0',
+    'VA012': '3.0.2.0' // CSS Version
 };
 
 module.exports = {
