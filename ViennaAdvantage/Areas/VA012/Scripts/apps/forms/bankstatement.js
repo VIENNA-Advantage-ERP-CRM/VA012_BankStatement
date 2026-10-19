@@ -135,6 +135,7 @@
         var _btnOut = null;
         var _statementPageCount = 0;
         var _paymentPageCount = 0;
+        var _isPaymentPaging = false;   // VA012: guards async page-count check on scroll
         var _lookupOrder = null;
         var $_ctrlOrder = null;
         var _orderSelectedVal = null;
@@ -1723,7 +1724,7 @@
             SetBankAccountOrganizationInContext: function (orgId) {
                 VIS.Env.getCtx().setContext($self.windowNo, "BankAccount_Org_ID", orgId);
             },
-            LoadPaymentsPages: function (_accountID, _paymentMethodID, _transactionType) {
+            LoadPaymentsPages: function (_accountID, _paymentMethodID, _transactionType, _onDone) {
                 if (_txtSearch.val() != null && _txtSearch.val() != "") {
                     _SEARCHREQUEST = true;
                 }
@@ -1736,7 +1737,7 @@
                     type: "GET",
                     datatype: "json",
                     contentType: "application/json; charset=utf-8",
-                    async: false,
+                    async: typeof _onDone === "function",   // sync only for legacy callers without a callback
                     data: ({ _accountID: _accountID, _paymentPageNo: _paymentPageNo, _PAGESIZE: _paymentPAGESIZE, _paymentMethodID: _paymentMethodID, _transactionType: _transactionType, businessPartnerId: _BPSearchControl.value, txtSearch: _txtSearchPayment.val() }),
                     success: function (data) {
                         if (data != null && data != "") {
@@ -1744,6 +1745,11 @@
                             _paymentPageCount = JSON.parse(data);
                         }
                     },
+                    complete: function () {
+                        if (typeof _onDone === "function") {
+                            _onDone();
+                        }
+                    }
                 })
             },
             /**
@@ -1803,14 +1809,24 @@
                 }
                 function callbackloadPayments(data) {
                     data = $.parseJSON(data);
+                    var _prevCount = storepaymentdata.length;
                     if (data.length > 0) {
                         storepaymentdata = storepaymentdata.concat(data);
                     }
                     data = storepaymentdata;
                     var _PaymentsHTML = "";
-                    _lstPayments.html(""); //To Clear the Payment grid
+                    var _allPaymentsHTML = "";
+                    // VA012: render only the newly fetched page when the grid still holds the previous pages;
+                    // otherwise (grid cleared elsewhere) rebuild everything as before.
+                    var _startIdx = 0;
+                    if (_prevCount > 0 && _lstPayments.children().length === _prevCount) {
+                        _startIdx = _prevCount;
+                    }
+                    else {
+                        _lstPayments.html(""); //To Clear the Payment grid
+                    }
                     if (data != null && data.length > 0) {
-                        for (var i = 0; i < data.length; i++) {
+                        for (var i = _startIdx; i < data.length; i++) {
                             var dateAcc = new Date(data[i].DateAcct).toLocaleDateString();
                             var status = "va012-red-color";
 
@@ -1984,8 +2000,10 @@
                             //    + '</div>'
                             //    + '<!-- end of drag-no-drag -->';
 
-                            _lstPayments.append(_PaymentsHTML);
+                            _allPaymentsHTML += _PaymentsHTML;
                         }
+                        // VA012: single DOM write instead of one append (and reflow) per row
+                        _lstPayments.append(_allPaymentsHTML);
                     }
                     _sql = null;
                     loadFunctions.setPaymentListHeight();
@@ -2036,20 +2054,28 @@
                     //if (_paymentPageCount != 1) {
                     //_paymentPAGESIZE = _PAGESIZE * _paymentPageSizeInc;
 
-                    loadFunctions.LoadPaymentsPages(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val());
-                    if (_paymentPageNo < _paymentPageCount) {
-                        /*VIS_427 If New record is inserted and pageNo is not equal to 1 then
-                        changed page number to 1 so that records get refreshed properly*/
-                        if (IsNewRecordInserted && _paymentPageNo != 1) {
-                            _paymentPageNo = 1;
-                            IsNewRecordInserted = false;
-                        }
-                        else {
-                            _paymentPageNo++;
-                        }
-                        //_paymentPageSizeInc++;
-                        loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                    // VA012: page-count check is async and guarded, so repeated scroll events at the bottom
+                    // neither freeze the UI nor queue duplicate page loads
+                    if (_isPaymentPaging) {
+                        return;
                     }
+                    _isPaymentPaging = true;
+                    loadFunctions.LoadPaymentsPages(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), function () {
+                        _isPaymentPaging = false;
+                        if (_paymentPageNo < _paymentPageCount) {
+                            /*VIS_427 If New record is inserted and pageNo is not equal to 1 then
+                            changed page number to 1 so that records get refreshed properly*/
+                            if (IsNewRecordInserted && _paymentPageNo != 1) {
+                                _paymentPageNo = 1;
+                                IsNewRecordInserted = false;
+                            }
+                            else {
+                                _paymentPageNo++;
+                            }
+                            //_paymentPageSizeInc++;
+                            loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                        }
+                    });
                     //}
 
                 }
@@ -2067,7 +2093,8 @@
                 }
             },
             dragPayments: function () {
-                _lstPayments.find(".va012-mid-data-wrap").draggable({
+                // VA012: skip rows already initialised on earlier pages
+                _lstPayments.find(".va012-mid-data-wrap").not(".ui-draggable").draggable({
 
                     start: function (event, ui) {
                         ui.helper.addClass('va012-dragging');
@@ -3776,7 +3803,8 @@
                                         type: "GET",
                                         datatype: "json",
                                         contentType: "application/json; charset=utf-8",
-                                        async: false,
+                                        // VA012: async so the busy indicator animates and the browser stays responsive during import
+                                        async: true,
                                         data: ({ _path: _path, _filename: _filename, _bankaccount: _bankaccount, _bankAccountCurrency: _currencyId, _statementno: _statementno, _statementClassName: _statementClassName, _statementCharges: _statementCharges, statementDate: STAT_statementDate.val(), IsStatementDateAsAccountDate: _IsStatementDateAsAccountDate }),
                                         success: function (result) {
 
@@ -3983,6 +4011,7 @@
                     function callbackloadStatement(data) {
                         data = $.parseJSON(data);
                         var _StatementsHTML = "";
+                        var _allStatementsHTML = "";
 
 
                         if (data != null && data.length > 0) {
@@ -4164,9 +4193,11 @@
                                         + '</div>'
                                         + '<!-- end of right-data-wrap -->';
                                 }
-                                _lstStatement.append(_StatementsHTML);
+                                _allStatementsHTML += _StatementsHTML;
 
                             }
+                            // VA012: single DOM write instead of one append (and reflow) per row
+                            _lstStatement.append(_allStatementsHTML);
                         }
                         _sql = null;
 

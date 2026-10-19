@@ -43,6 +43,8 @@ namespace VA012.Models
         string _message = string.Empty, _date = string.Empty;
         MBankStatement _BnkStatm = null;
         MBankStatementLine _BnkStmtLine = null;
+        // VA012: transaction shared by the header and all line saves of one import (set by ImportStatement)
+        Trx _importTrx = null;
         //DataSet PyDS = null;
         //StringBuilder query = null;
         StringBuilder _Filenames = new StringBuilder();
@@ -66,6 +68,46 @@ namespace VA012.Models
         /// <returns>StatementResponse Object</returns>
         public VA012.Models.StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate, bool IsStatementDateAsAccountDate)
         {
+            // VA012: skip the per-line header UPDATEs in MBankStatementLine.AfterSave; recalculate once afterwards
+            // VA012: the whole import runs on ONE transaction/connection. Saving lines with a null transaction makes the
+            // framework open, use and commit a separate connection for every statement of every line save (~25 per row).
+            // All-or-nothing: any error rolls the import back, so a failed file leaves no partial lines behind.
+            Trx importTrx = Trx.GetTrx(Trx.CreateTrxName("VA012IMP"));
+            bool imported = false;
+            using (StatementHeaderSync.Suspend(ctx))
+            {
+                try
+                {
+                    _importTrx = importTrx;
+                    VA012.Models.StatementResponse result = ImportStatementCore(ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate, IsStatementDateAsAccountDate);
+                    imported = result != null && string.IsNullOrEmpty(result._error);
+                    return result;
+                }
+                finally
+                {
+                    try
+                    {
+                        if (imported)
+                        {
+                            importTrx.Commit();
+                        }
+                        else
+                        {
+                            importTrx.Rollback();
+                        }
+                    }
+                    finally
+                    {
+                        importTrx.Close();
+                        _importTrx = null;
+                    }
+                    StatementHeaderSync.RecalculateOpenStatements(ctx, _bankaccount);
+                }
+            }
+        }
+
+        private VA012.Models.StatementResponse ImportStatementCore(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate, bool IsStatementDateAsAccountDate)
+        {
             VA012.Models.StatementResponse _obj = new VA012.Models.StatementResponse();
             string _branchName = "";
             string _IBAN = "";
@@ -76,62 +118,12 @@ namespace VA012.Models
             {
                 CultureInfo cultureInfo = CultureInfo.CurrentCulture;
                 _log.Log(Level.INFO, " Culture Name --> " + cultureInfo.Name);
-                #region Period StartDate and End Date
-                //DateTime? _startdate = null;//not using this code so commented
-                //DateTime? _enddate = null;
-                ////Get Start Date and End Date (Finacial Year start and end date) from Login Client (Client Info tab where calender ID is located)
-                //string _sqlDate = @"SELECT STARTDATE
-                //                FROM C_PERIOD
-                //                WHERE C_YEAR_ID =
-                //                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                //                        FROM C_YEAR Y
-                //                        INNER JOIN C_PERIOD P
-                //                        ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                //                        WHERE Y.C_CALENDAR_ID =
-                //                          (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                //                          )
-                //                        AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
-                //                        AND P.ISACTIVE = 'Y'
-                //                        AND Y.ISACTIVE ='Y'
-                //                  )
-                //                AND PERIODNO=1";
-                //_startdate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
-                //_sqlDate = @"SELECT ENDDATE
-                //                FROM C_PERIOD
-                //                WHERE C_YEAR_ID =
-                //                  (SELECT (Y.C_YEAR_ID) AS C_YEAR_ID
-                //                            FROM C_YEAR Y
-                //                            INNER JOIN C_PERIOD P
-                //                            ON P.C_YEAR_ID        = Y.C_YEAR_ID
-                //                            WHERE Y.C_CALENDAR_ID =
-                //                              (SELECT C_CALENDAR_ID FROM AD_CLIENTINFO WHERE AD_CLIENT_ID=" + ctx.GetAD_Client_ID() + @"
-                //                              )
-                //                            AND TRUNC(SYSDATE) BETWEEN P.STARTDATE AND P.ENDDATE
-                //                            AND P.ISACTIVE = 'Y'
-                //                            AND Y.ISACTIVE ='Y'
-                //                  )
-                //                AND PERIODNO=12";
-                //_enddate = Util.GetValueOfDateTime(DB.ExecuteScalar(_sqlDate));
-                #endregion
-                //int _existingStatementID = 0;
-                //string _statementDocStatus = "";
+                
                 int pageno = 1;
                 int lineno = 10;
-                //DataSet _ds = new DataSet();
-                //_ds = DB.ExecuteDataset("SELECT C_BANKSTATEMENT_ID,DOCSTATUS FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND NAME='" + _statementno + "' AND STATEMENTDATE BETWEEN " + GlobalVariable.TO_DATE(_startdate, true) + " AND " + GlobalVariable.TO_DATE(_enddate, true), null);
                 //Statement Name is not Unique and Changed query to fetch the C_BANKSTATEMENT_ID which is drafted record for selected Bank
                 int _existingStatementID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_BANKSTATEMENT_ID FROM C_BANKSTATEMENT WHERE ISACTIVE='Y' AND DocStatus NOT IN('RE','VO','CO','CL') AND AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND C_BANKACCOUNT_ID=" + _bankaccount, null, null));
-                //if (_ds != null)// not required this code because '_ds' is commented
-                //{
-                //    if (_ds.Tables[0].Rows.Count > 0)
-                //    {
-                //_existingStatementID = Util.GetValueOfInt(_ds.Tables[0].Rows[0]["C_BANKSTATEMENT_ID"]);
-                //_statementDocStatus = Util.GetValueOfString(_ds.Tables[0].Rows[0]["DOCSTATUS"]);
-                //if (_statementDocStatus == "CO")
-                //{
-                //    _obj._error = "VA012_StatementAlreadyExist";
-                //    return _obj;
-                //}
+                
                 #region Get Max PageNo and based on that PageNo get Max LineNo 
                 string _sql = @"SELECT MAX(BSL.VA012_PAGE) AS PAGE, MAX(BSL.LINE)+10  AS LINE FROM C_BANKSTATEMENTLINE BSL
                     WHERE BSL.VA012_PAGE=(SELECT MAX(BL.VA012_PAGE) AS PAGE FROM C_BANKSTATEMENTLINE BL WHERE BL.C_BANKSTATEMENT_ID =" + _existingStatementID + @") 
@@ -142,24 +134,15 @@ namespace VA012.Models
                     pageno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["PAGE"]);
                     lineno = Util.GetValueOfInt(_data.Tables[0].Rows[0]["LINE"]);
                 }
-                //pageno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
                 if (pageno <= 0)
                 {
                     pageno = 1;
                 }
-                //Get Line Included in above query
-                //_sql = @"SELECT MAX(BSL.LINE)+10  AS LINE
-                //    FROM C_BANKSTATEMENTLINE BSL
-                //    INNER JOIN C_BANKSTATEMENT BS
-                //    ON BSL.C_BANKSTATEMENT_ID=BS.C_BANKSTATEMENT_ID WHERE BS.C_BANKSTATEMENT_ID =" + _existingStatementID + " AND BSL.VA012_PAGE='" + pageno + "'";
-
-                //lineno = Util.GetValueOfInt(DB.ExecuteScalar(_sql));
+                
                 if (lineno <= 0)
                     lineno = 10;
                 #endregion
-                //    }
-                //}
-                //_AD_Org_ID = Util.GetValueOfInt(ctx.GetAD_Org_ID());
+
                 _C_BankAccount_ID = _bankaccount;
                 string AccountNo = "";
                 string BankAccountType = "";
@@ -188,6 +171,9 @@ namespace VA012.Models
                                                      VA009_PaymentBaseType = 'W' AND AD_Client_ID IN (0," + ctx.GetAD_Client_ID() + ")" +
                                                     " AND IsActive='Y' AND AD_Org_ID IN (0," + _AD_Org_ID + ") ORDER BY AD_Org_ID DESC", null, null));
                 _message = _Filenames.ToString();
+                // VA012: per-import lookup caches (same partner/charge text repeats across statement rows)
+                var _bpCache = new Dictionary<string, int>();
+                var _chargeCache = new Dictionary<string, DataSet>();
                 string[] _filenamesall = _message.Split(',');
                 for (int K = 0; K < _filenamesall.Length; K++)
                 {
@@ -266,7 +252,7 @@ namespace VA012.Models
                                         if (_existingStatementID <= 0)
                                         {
                                             //VA0228:Replaced Env.GetCtx() with ctx
-                                            _BnkStatm = new MBankStatement(ctx, 0, null);
+                                            _BnkStatm = new MBankStatement(ctx, 0, _importTrx);
                                             _BnkStatm.SetAD_Client_ID(ctx.GetAD_Client_ID());
                                             _BnkStatm.SetAD_Org_ID(_AD_Org_ID);
                                             _BnkStatm.SetC_BankAccount_ID(_C_BankAccount_ID);
@@ -295,11 +281,12 @@ namespace VA012.Models
                                         }
                                         else
                                         {
-                                            _BnkStatm = new MBankStatement(ctx, _existingStatementID, null);
+                                            _BnkStatm = new MBankStatement(ctx, _existingStatementID, _importTrx);
                                             _stementID = _existingStatementID;
                                         }
                                     }
                                     #endregion
+
                                     #region Rest All Other Entries Which Contains Data
                                     else
                                     {
@@ -358,10 +345,15 @@ namespace VA012.Models
 
                                             if (Util.GetValueOfString(dt.Rows[i][6]) != "")
                                             {
-                                                _c_bpartner_id = Util.GetValueOfInt(DB.ExecuteScalar(@"SELECT C_BPartner_ID FROM C_BPartner
+                                                string _bpKey = Util.GetValueOfString(dt.Rows[i][6]);
+                                                if (!_bpCache.TryGetValue(_bpKey, out _c_bpartner_id))
+                                                {
+                                                    _c_bpartner_id = Util.GetValueOfInt(DB.ExecuteScalar(@"SELECT C_BPartner_ID FROM C_BPartner
                                                 WHERE AD_Client_ID = " + ctx.GetAD_Client_ID() +
-                                                @" AND ( LOWER(Value)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][6])) + @") 
-                                                   OR LOWER(Name)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][6])) + "))"));
+                                                    @" AND ( LOWER(Value)= LOWER(" + GetConvertedValue(_bpKey) + @") 
+                                                   OR LOWER(Name)= LOWER(" + GetConvertedValue(_bpKey) + "))"));
+                                                    _bpCache[_bpKey] = _c_bpartner_id;
+                                                }
                                                 _BnkStmtLine.SetC_BPartner_ID(_c_bpartner_id);
                                             }
                                             //set charge id if charge value is available in Bank Statement 7 column
@@ -370,9 +362,15 @@ namespace VA012.Models
                                                 int C_Tax_ID = 0;
                                                 //'Value' replaced with 'Name' - 'Name' contains string Value
                                                 //VIS_427 01/04/2025 Fixed query to get the tax id associated with charge
-                                                DataSet dsCharge = DB.ExecuteDataset(@"SELECT cc.C_Charge_ID,ct.C_Tax_ID FROM C_Charge cc INNER JOIN C_TaxCategory ct ON
+                                                string _chargeKey = Util.GetValueOfString(dt.Rows[i][7]);
+                                                DataSet dsCharge;
+                                                if (!_chargeCache.TryGetValue(_chargeKey, out dsCharge))
+                                                {
+                                                    dsCharge = DB.ExecuteDataset(@"SELECT cc.C_Charge_ID,ct.C_Tax_ID FROM C_Charge cc INNER JOIN C_TaxCategory ct ON
                                                     (ct.C_TaxCategory_ID=cc.C_TaxCategory_ID) WHERE cc.AD_Client_ID IN (0,  " + ctx.GetAD_Client_ID() +
-                                                    @") AND LOWER(cc.Name)= LOWER(" + GetConvertedValue(Util.GetValueOfString(dt.Rows[i][7])) + ")");
+                                                    @") AND LOWER(cc.Name)= LOWER(" + GetConvertedValue(_chargeKey) + ")");
+                                                    _chargeCache[_chargeKey] = dsCharge;
+                                                }
                                                 if(dsCharge != null && dsCharge.Tables[0].Rows.Count > 0)
                                                 {
                                                     _C_Charge_ID = Util.GetValueOfInt(dsCharge.Tables[0].Rows[0]["C_Charge_ID"]);

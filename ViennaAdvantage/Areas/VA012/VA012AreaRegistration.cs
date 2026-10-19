@@ -23,22 +23,24 @@ namespace VA012
             StyleBundle style = new StyleBundle("~/Areas/VA012/Contents/VA012Style");
             ScriptBundle script = new ScriptBundle("~/Areas/VA012/Scripts/VA012Js");
 
-            //style.Include("~/Areas/VA012/Contents/bankstatement.css");
-            //style.Include("~/Areas/VA012/Contents/BankConnectWidget.css");
-            //style.Include("~/Areas/VA012/Contents/VA012_BankingJournal.css");
-            //script.Include("~/Areas/VA012/Scripts/apps/forms/bankstatement.js");
-            //script.Include("~/Areas/VA012/Scripts/apps/forms/VA012_BankConnectWidget.js");
-            //script.Include("~/Areas/VA012/Scripts/apps/forms/VA012_BankingJournal.js");
-            //script.Include("~/Areas/VA012/Scripts/uploadexcel.js");
-            //script.Include("~/Areas/VA012/Scripts/model/callouts.js");
-            //style.Include("~/Areas/VA012/Contents/VA012_BankChargeSummary.css");
-            //script.Include("~/Areas/VA012/Scripts/apps/forms/VA012_BankChargeSummary.js");
-
+            // Built by webpack (npm run build) from Scripts/src/VA012js.js and Contents/src/VA012css.css
             style.Include("~/Areas/VA012/Contents/VA012.all.min.css");
-            script.Include("~/Areas/VA012/Scripts/VA012.all.min.js");
+            script.Include("~/Areas/VA012/Scripts/dist/VA012.all.min.js");
+
+            // already minified by webpack: keep the content as-is (no re-minify, no parse)
+            script.Transforms.Clear();
+            script.Transforms.Add(new NoTransform());
 
             VAdvantage.ModuleBundles.RegisterScriptBundle(script, "VA012", 10);
             VAdvantage.ModuleBundles.RegisterStyleBundle(style, "VA012", 10);
+        }
+    }
+
+    public sealed class NoTransform : IBundleTransform
+    {
+        public void Process(BundleContext context, BundleResponse response)
+        {
+            // Do nothing: keep content as-is (no minify, no parse)
         }
     }
 }

@@ -35,7 +35,37 @@ namespace VA012.Models
         StringBuilder query = null, _Filenames = new StringBuilder();
         string _Extension = string.Empty, _FileLocation = string.Empty;
         #endregion
+        // VA012: per-import cache so each distinct ISO code costs one query instead of one per row
+        private readonly Dictionary<string, int> _currencyCache = new Dictionary<string, int>();
+
+        private int GetCurrencyID(string isoCode)
+        {
+            int id;
+            if (!_currencyCache.TryGetValue(isoCode ?? string.Empty, out id))
+            {
+                id = Convert.ToInt32(DB.ExecuteScalar("Select C_Currency_ID from C_Currency Where iso_code= '" + isoCode + "'"));
+                _currencyCache[isoCode ?? string.Empty] = id;
+            }
+            return id;
+        }
+
         public StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate,bool IsStatementDateAsAccountDate)
+        {
+            // VA012: skip the per-line header UPDATEs in MBankStatementLine.AfterSave; recalculate once afterwards
+            using (StatementHeaderSync.Suspend(ctx))
+            {
+                try
+                {
+                    return ImportStatementCore(ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate, IsStatementDateAsAccountDate);
+                }
+                finally
+                {
+                    StatementHeaderSync.RecalculateOpenStatements(ctx, _bankaccount);
+                }
+            }
+        }
+
+        private StatementResponse ImportStatementCore(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate,bool IsStatementDateAsAccountDate)
         {
             StatementResponse _obj = new StatementResponse();
 
@@ -208,7 +238,7 @@ namespace VA012.Models
 
                                 if (i == 4)
                                 {
-                                    _C_Currency_ID = Convert.ToInt32(DB.ExecuteScalar("Select C_Currency_ID from C_Currency Where iso_code= '" + (dt.Rows[i][6]) + "'"));
+                                    _C_Currency_ID = GetCurrencyID(Convert.ToString(dt.Rows[i][6]));
                                     if (_C_Currency_ID != _bankAccountCurrency)
                                     {
                                         _obj._error = "VA012_DiffAccountAndStatementCurrency";
@@ -287,7 +317,7 @@ namespace VA012.Models
                                         _BnkStmtLine.SetDescription(Convert.ToString(dt.Rows[i][2]));// Set Transaction Purticular
                                         _BnkStmtLine.SetEftCheckNo(Convert.ToString(dt.Rows[i][4]));// Set Check Number
                                         _BnkStmtLine.SetMemo(Convert.ToString(dt.Rows[i][10]));// Set Deposite Branch
-                                        _C_Currency_ID = Convert.ToInt32(DB.ExecuteScalar("Select C_Currency_ID from C_Currency Where iso_code= '" + (dt.Rows[i][6]) + "'"));
+                                        _C_Currency_ID = GetCurrencyID(Convert.ToString(dt.Rows[i][6]));
                                         if (_C_Currency_ID > 0)
                                         {
                                             _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
@@ -423,7 +453,7 @@ namespace VA012.Models
                                         _BnkStmtLine.SetReferenceNo(Convert.ToString(dt.Rows[i][3]));// Set Transaction Remarks
                                         _BnkStmtLine.SetDescription(Convert.ToString(dt.Rows[i][2]));// Set Transaction Purticular
                                         _BnkStmtLine.SetMemo(Convert.ToString(dt.Rows[i][10]));// Set Deposite Branch
-                                        _C_Currency_ID = Convert.ToInt32(DB.ExecuteScalar("Select C_Currency_ID from C_Currency Where iso_code= '" + (dt.Rows[i][6]) + "'"));
+                                        _C_Currency_ID = GetCurrencyID(Convert.ToString(dt.Rows[i][6]));
                                         if (_C_Currency_ID > 0)
                                             _BnkStmtLine.SetC_Currency_ID(_C_Currency_ID);// Set Currency Type
                                         if ((Convert.ToString(dt.Rows[i][7]) != string.Empty) && (Convert.ToString(dt.Rows[i][7]) != "0"))
@@ -536,6 +566,7 @@ namespace VA012.Models
                                 }
                                 #endregion
 
+                                _BnkStatm.SetStatementDifference(StatementHeaderSync.SumLines(_BnkStatm.GetC_BankStatement_ID()));
                                 _BnkStatm.SetEndingBalance(_BnkStatm.GetBeginningBalance() + _BnkStatm.GetStatementDifference());
                                 if (!_BnkStatm.Save())
                                 {

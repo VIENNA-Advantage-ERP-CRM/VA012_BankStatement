@@ -42,6 +42,22 @@ namespace VA012.Models
 
         public StatementResponse ImportStatement(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate, bool IsStatementDateAsAccountDate)
         {
+            // VA012: skip the per-line header UPDATEs in MBankStatementLine.AfterSave; recalculate once afterwards
+            using (StatementHeaderSync.Suspend(ctx))
+            {
+                try
+                {
+                    return ImportStatementCore(ctx, FileName, _path, _bankaccount, _bankAccountCurrency, _statementno, _statementCharges, statementDate, IsStatementDateAsAccountDate);
+                }
+                finally
+                {
+                    StatementHeaderSync.RecalculateOpenStatements(ctx, _bankaccount);
+                }
+            }
+        }
+
+        private StatementResponse ImportStatementCore(Ctx ctx, string FileName, string _path, int _bankaccount, int _bankAccountCurrency, string _statementno, string _statementCharges, DateTime? statementDate, bool IsStatementDateAsAccountDate)
+        {
             StatementResponse _obj = new StatementResponse();
 
             #region Period StartDate and End Date
@@ -200,6 +216,9 @@ AND STATEMENTDATE BETWEEN @StartDate AND @EndDate";
 
                                 //int chargeID = Util.GetValueOfInt(DB.ExecuteScalar("SELECT C_Charge_ID FROM C_Charge WHERE DTD001_ChargeType = 'OTH' AND AD_CLIENT_ID =" + ctx.GetAD_Client_ID()));
                                 int chargeID = Util.GetValueOfInt(_statementCharges);
+                                // VA012: default tax id/rate do not change per row - look up once per import
+                                int? _cachedTaxID = null;
+                                decimal _cachedTaxRate = 0;
                                 for (int i = -1; i < dt.Rows.Count; i++)
                                 {
                                     #region Header
@@ -325,12 +344,18 @@ AND STATEMENTDATE BETWEEN @StartDate AND @EndDate";
                                                 _BnkStmtLine.SetC_Charge_ID(chargeID);
 
                                                 var _sql = "SELECT C_TAX_ID FROM C_TAX WHERE AD_Client_ID = " + ctx.GetAD_Client_ID() + " AND EXPORT_ID IS NOT NULL AND ISDEFAULT = 'Y' AND IsActive='Y'";
-                                                int _C_Tax_ID = Convert.ToInt32(DB.ExecuteScalar(_sql));
+                                                if (_cachedTaxID == null)
+                                                {
+                                                    _cachedTaxID = Convert.ToInt32(DB.ExecuteScalar(_sql));
+                                                    if (_cachedTaxID > 0)
+                                                        _cachedTaxRate = Util.GetValueOfDecimal(DB.ExecuteScalar("Select Rate From C_Tax Where C_Tax_ID=" + _cachedTaxID + " AND IsActive='Y'"));
+                                                }
+                                                int _C_Tax_ID = _cachedTaxID.Value;
 
                                                 if (_C_Tax_ID > 0)
                                                 {
                                                     _BnkStmtLine.SetC_Tax_ID(_C_Tax_ID);
-                                                    var Rate = Util.GetValueOfDecimal(DB.ExecuteScalar("Select Rate From C_Tax Where C_Tax_ID=" + _C_Tax_ID + " AND IsActive='Y'"));
+                                                    var Rate = _cachedTaxRate;
                                                     if (Rate > 0)
                                                     {
                                                         var TaxAmt = Math.Round(Util.GetValueOfDecimal(_BnkStmtLine.GetChargeAmt() - (_BnkStmtLine.GetChargeAmt() / ((Rate / 100) + 1))), 2);
@@ -367,6 +392,7 @@ AND STATEMENTDATE BETWEEN @StartDate AND @EndDate";
                                     }
                                     #endregion
 
+                                    _BnkStatm.SetStatementDifference(StatementHeaderSync.SumLines(_BnkStatm.GetC_BankStatement_ID()));
                                     _BnkStatm.SetEndingBalance(_BnkStatm.GetBeginningBalance() + _BnkStatm.GetStatementDifference());
                                     if (!_BnkStatm.Save())
                                     {

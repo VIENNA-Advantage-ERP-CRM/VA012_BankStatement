@@ -570,6 +570,7 @@ namespace VA012.Models
     /// </summary>
     public class StatementOperations
     {
+        private static VLogger _log = VLogger.GetVLogger(typeof(StatementOperations).FullName);
         //bool _isPaymentFromCash = false;
         /// <summary>
         /// Create or Update the Payment. BankStatement and BankStatement Line
@@ -2810,6 +2811,9 @@ namespace VA012.Models
             int status = 1;
             List<UnMatchResponse> _lstObj = new List<UnMatchResponse>();
             UnMatchResponse _unObj = new UnMatchResponse();
+            // VA012: skip per-line header UPDATEs in MBankStatementLine.AfterSave; headers are recalculated once in finally
+            IDisposable _headerSuspend = StatementHeaderSync.Suspend(ctx);
+            Dictionary<int, MBankStatement> _headerCache = new Dictionary<int, MBankStatement>();
             try
             {
                 string[] _statementLinesListArray = _statementLinesList.Split(',');
@@ -2835,7 +2839,13 @@ namespace VA012.Models
                             }
                         }
                         //replaced null with Transation
-                        MBankStatement _objSt = new MBankStatement(ctx, _obj.GetC_BankStatement_ID(), trx);
+                        // VA012: statement header is only read here - load each header once per call, not once per line
+                        MBankStatement _objSt;
+                        if (!_headerCache.TryGetValue(_obj.GetC_BankStatement_ID(), out _objSt))
+                        {
+                            _objSt = new MBankStatement(ctx, _obj.GetC_BankStatement_ID(), trx);
+                            _headerCache[_obj.GetC_BankStatement_ID()] = _objSt;
+                        }
                         if (_objSt.GetDocStatus() == "CO")
                         {
                             status = 0;
@@ -2966,6 +2976,11 @@ namespace VA012.Models
                 trx.Close();
                 trx = null;
                 return _lstObj;
+            }
+            finally
+            {
+                _headerSuspend.Dispose();
+                StatementHeaderSync.Recalculate(_headerCache.Keys.ToList());
             }
             if (status == 1)
             {
@@ -4793,6 +4808,7 @@ namespace VA012.Models
             //_sql += " ORDER BY BSL.StatementLineDate DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+')) DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
             _sql += " ORDER BY ( CASE  WHEN BS.DOCSTATUS='DR' THEN 1 ELSE 0 END) DESC, TO_NUMBER(REGEXP_SUBSTR(BS.NAME, '\\d+'), '999999999999') DESC , BSL.VA012_PAGE DESC , BSL.LINE DESC";
             List<StatementLineProp> _statements = new List<StatementLineProp>();
+            List<int> _confirmLineIDs = new List<int>();
             StatementLineProp _statement = null; // new StatementLineProp();//no use of this Object
             DataSet _ds = new DataSet();
             try
@@ -4829,9 +4845,7 @@ namespace VA012.Models
                         {
                             if (Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["TRXAMOUNT"]).Equals(Util.GetValueOfDecimal(_ds.Tables[0].Rows[i]["STMTAMT"])))
                             {
-                                DB.ExecuteScalar($@"UPDATE C_BANKSTATEMENTLINE SET VA012_ISMATCHINGCONFIRMED='Y' 
-                                WHERE C_BANKSTATEMENTLINE_ID = { Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"])} 
-                                AND NVL(TRXAMT, 0) = 0 AND NVL(C_Payment_ID , 0) = 0 AND NVL(C_CashLine_ID , 0) = 0");
+                                _confirmLineIDs.Add(Util.GetValueOfInt(_ds.Tables[0].Rows[i]["C_BANKSTATEMENTLINE_ID"]));
                             }
                         }
                         //not required 
@@ -4863,6 +4877,13 @@ namespace VA012.Models
                         //    _statement.imageurl = "";
                         //}
                         _statements.Add(_statement);
+                    }
+                    // VA012: one UPDATE per 500 ids instead of one UPDATE per row while reading the list
+                    for (int c = 0; c < _confirmLineIDs.Count; c += 500)
+                    {
+                        DB.ExecuteScalar(@"UPDATE C_BANKSTATEMENTLINE SET VA012_ISMATCHINGCONFIRMED='Y' 
+                                WHERE C_BANKSTATEMENTLINE_ID IN (" + string.Join(",", _confirmLineIDs.Skip(c).Take(500)) + @") 
+                                AND NVL(TRXAMT, 0) = 0 AND NVL(C_Payment_ID , 0) = 0 AND NVL(C_CashLine_ID , 0) = 0");
                     }
 
                 }
