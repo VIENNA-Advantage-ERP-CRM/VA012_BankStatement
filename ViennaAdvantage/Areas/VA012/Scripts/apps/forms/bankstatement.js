@@ -203,6 +203,8 @@
         //Rakesh(VA228):Varibales declared on 23/Sep/2021
         var _BPSearchControl = _txtSearchPayment = _btnSearchPayment = null;
         var _CountVA034 = 0;
+        //System config VA012_RESTRICT_CHARGE = Y: no Charge when the invoice schedule amount is more than the statement amount
+        var _restrictCharge = false;
         var _EftCheckNo = null, _DsPaymentMethod = null;
         //VA230:Trx Org variables
         var _divTrxOrg = null, _ctrlTrxOrg = null, $_ctrlTrxOrg = null, _trxOrgSelectedVal = null, _OverrideAutoCheck = false;
@@ -220,6 +222,7 @@
         this.Initialize = function () {
             //Rakesh:Get VA034 module
             _CountVA034 = VIS.dataContext.getJSONData(VIS.Application.contextUrl + "VA012/BankStatement/GetModulePrefix", { prefix: "VA034_" });
+            _restrictCharge = VIS.Utility.Util.getValueOfInt(VIS.dataContext.getJSONData(VIS.Application.contextUrl + "VA012/BankStatement/IsChargeRestricted", null)) > 0;
             loadRoot(loadFunctions.loadFormDesign());
             _txtTrxAmt.addVetoableChangeListener(this);
             _txtTaxAmount.addVetoableChangeListener(this);
@@ -5733,7 +5736,29 @@
                     _txtCurrency.trigger('change');
                 });
                 $_formNewRecord.hide();
-                _cmbVoucherMatch.on('change', function () {
+                /*Clear Contra type and the values that depend on it (cash book, transfer type, cheque no., cash journal line)*/
+                function clearContraValues() {
+                    _cmbContraType.prop('selectedIndex', 0);
+                    _cmbCashBook.prop('selectedIndex', 0);
+                    _cmbTransferType.prop('selectedIndex', 0);
+                    _txtCheckNo.val("");
+                    clearContraCashLine();
+                }
+                /*Clear the cash journal line selected for Contra (Cash to Bank)*/
+                function clearContraCashLine() {
+                    if (VIS.Utility.Util.getValueOfInt(_cashLineSelectedVal) != 0 || VIS.Utility.Util.getValueOfInt($_ctrlCashLine.value) != 0) {
+                        _cashLineSelectedVal = 0;
+                        $_ctrlCashLine.setValue();
+                    }
+                    $_ctrlCashLine.getControl().removeClass("va012-mandatory");
+                    $('#Ast_CashJournalLine_' + $self.windowNo).hide();
+                }
+
+                _cmbVoucherMatch.on('change', function (e) {
+                    //user changed Voucher/Match (not a trigger from the form): earlier Contra values no longer apply
+                    if (e && e.originalEvent) {
+                        clearContraValues();
+                    }
 
                     if (_cmbVoucherMatch.val() == "M") {
                         //after select or drag the transaction used if do change _cmbVoucherMatch as Voucher then reset the Values which are selected earlier
@@ -6060,7 +6085,22 @@
                     loadFunctions.setPaymentListHeight();
                 });
 
-                _cmbContraType.on('change', function () {
+                _cmbContraType.on('change', function (e) {
+                    //user changed Contra type (not a trigger from the form): clear the values of the earlier Contra type
+                    if (e && e.originalEvent) {
+                        if (_cmbContraType.val() != "CB") {
+                            //cash journal line belongs to Cash to Bank only
+                            clearContraCashLine();
+                        }
+                        if (_cmbContraType.val() != "BB" && _cmbDifferenceType.val() != "CH") {
+                            //charge and tax belong to Bank to Bank (or to a Charge difference)
+                            _cmbCharge.prop('selectedIndex', 0);
+                            _txtCharge.attr('chargeid', 0);
+                            _txtCharge.val("");
+                            _cmbTaxRate.prop('selectedIndex', 0);
+                            _txtTaxAmount.setValue(0);
+                        }
+                    }
                     //when change _cmbContraType as CB then remove mandatory class else mandatory
                     if (_cmbContraType.val() != null && _cmbContraType.val() != "" && _cmbContraType.val() != 0) {
                         _cmbContraType.removeClass("va012-mandatory");
@@ -6971,9 +7011,11 @@
                                         _cmbDifferenceType.val("0").prop('selected', true);
                                     }
                                 }
-                                /*VIS_427 Bug ID 6484 02/05/2025 if the statment amount is 
+                                /*VIS_427 Bug ID 6484 02/05/2025 if the statment amount is
                                  less then invoice schedule amount then disable the check option*/
-                                else if (_scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) > Math.abs(convertAmtCulture(_txtAmount.getControl().val()))) {
+                                /*Charge is allowed when the invoice schedule amount is more than the statement amount,
+                                 unless system config VA012_RESTRICT_CHARGE = Y restricts it*/
+                                else if (_restrictCharge && _scheduleList.length > 0 && $_formNewRecord.attr("data-uid") != 0 && Math.abs(convertAmtCulture(_txtTrxAmt.getControl().val())) > Math.abs(convertAmtCulture(_txtAmount.getControl().val()))) {
                                     _cmbDifferenceType.find("option[value=CH]").prop('disabled', true);
                                     _cmbDifferenceType.prop('selectedIndex', 0);
                                     _cmbCharge.prop('selectedIndex', 0);
