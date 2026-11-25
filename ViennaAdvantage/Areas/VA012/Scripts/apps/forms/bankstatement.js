@@ -5901,7 +5901,9 @@
                         //hide Payment Method
                         _divPaymentMethod.hide();
                         //get the Amount in standard format
-                        if (convertAmtCulture(_txtDifference.getControl().val()) == 0) {
+                        //Bank to Bank keeps Voucher No, Charge and Tax (they belong to it), e.g. when a saved line is opened with Edit
+                        if (convertAmtCulture(_txtDifference.getControl().val()) == 0
+                            && VIS.Utility.Util.getValueOfString(_cmbContraType.val()) != "BB") {
 
                             _divVoucherNo.find("*").prop("disabled", true);
                             _divCharge.find("*").prop("disabled", true);
