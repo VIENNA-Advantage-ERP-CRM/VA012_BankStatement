@@ -169,6 +169,7 @@
     <Content Include="Areas\VA012\Images\split-white.png" />
     <Content Include="Areas\VA012\Images\split.png" />
     <Content Include="Areas\VA012\Images\tick.png" />
+    <Content Include="Areas\VA012\Scripts\apps\forms\autoreconcile.js" />
     <Content Include="Areas\VA012\Scripts\apps\forms\bankstatement.js" />
     <Content Include="Areas\VA012\Scripts\apps\forms\VA012_BankChargeSummary.js" />
     <Content Include="Areas\VA012\Scripts\apps\forms\VA012_BankingJournal.js" />
@@ -178,6 +179,7 @@
     <Content Include="Areas\VA012\Scripts\dist\VA012.all.min.js" />
     <Content Include="Areas\VA012\Scripts\src\VA012js.js" />
     <Content Include="Areas\VA012\Contents\src\VA012css.css" />
+    <Content Include="Areas\VA012\Contents\autoreconcile.css" />
     <Content Include="package.json" />
     <Content Include="webpack.config.js" />
     <Content Include="babel.config.json" />
@@ -211,6 +213,12 @@
     <Compile Include="Areas\VA012\Controllers\VA012_BankChargeSummaryController.cs" />
     <Compile Include="Areas\VA012\Controllers\VA012_BankJournalWidgetController.cs" />
     <Compile Include="Areas\VA012\Controllers\WidgetController.cs" />
+    <Compile Include="Areas\VA012\Models\AutoReconcileAccept.cs" />
+    <Compile Include="Areas\VA012\Models\AutoReconcileCandidates.cs" />
+    <Compile Include="Areas\VA012\Models\AutoReconcileMatcher.cs" />
+    <Compile Include="Areas\VA012\Models\AutoReconcileModel.cs" />
+    <Compile Include="Areas\VA012\Models\AutoReconcilePoster.cs" />
+    <Compile Include="Areas\VA012\Models\AutoReconcileRules.cs" />
     <Compile Include="Areas\VA012\Models\BankStatementModel.cs" />
     <Compile Include="Areas\VA012\Models\CreatePaymentFromStatement.cs" />
     <Compile Include="Areas\VA012\Models\DataTable.cs" />

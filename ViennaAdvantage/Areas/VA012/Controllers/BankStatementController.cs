@@ -1319,5 +1319,301 @@ namespace VA012.Controllers
             }
             return Json(retJSON, JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// Auto reconciliation: runs the standard formula on the open lines of a statement
+        /// </summary>
+        /// <param name="bankAccountId">C_BankAccount_ID</param>
+        /// <param name="statementId">C_BankStatement_ID</param>
+        /// <param name="docType">PY, IS, PO or CO</param>
+        /// <param name="payMethodId">optional VA009_PaymentMethod_ID filter</param>
+        /// <param name="bpId">optional C_BPartner_ID filter</param>
+        /// <returns>run id, counts and timings, or an error</returns>
+        [HttpPost]
+        public JsonResult RunAutoReconcile(int bankAccountId, int statementId, string docType, int payMethodId = 0, int bpId = 0)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileModel().Run(ctx, bankAccountId, statementId, docType, payMethodId, bpId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto reconciliation: a chosen statement, its counts per status and the rules header's date window and defaults
+        /// </summary>
+        /// <param name="bankAccountId">C_BankAccount_ID</param>
+        /// <param name="statementId">C_BankStatement_ID</param>
+        /// <returns>counts, dateWindow, defaults, or an error</returns>
+        public JsonResult GetAutoReconcileStatement(int bankAccountId, int statementId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileModel().GetStatementView(ctx, bankAccountId, statementId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto reconciliation: counts per status of every line of a statement
+        /// </summary>
+        /// <param name="statementId">C_BankStatement_ID</param>
+        /// <returns>counts</returns>
+        public JsonResult GetAutoReconcileCounts(int statementId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileModel().GetCounts(ctx, statementId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto reconciliation: one page of a statement's lines with their status
+        /// </summary>
+        /// <param name="statementId">C_BankStatement_ID</param>
+        /// <param name="filter">"" all, C reconciled, S suggested, AU ready for automatic reconciliation, N no match, D declined, O not run</param>
+        /// <param name="pageNo">page number, from 1</param>
+        /// <returns>rows with their documents</returns>
+        public JsonResult GetAutoReconcilePage(int statementId, string filter, int pageNo)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileModel().GetPage(ctx, statementId, filter ?? "", pageNo));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto reconciliation: a document dragged onto a line without a match; the line becomes suggested with it
+        /// </summary>
+        /// <param name="suggestionId">VA012_MatchSuggestion_ID of the line</param>
+        /// <param name="kind">PY payment, IS invoice schedule, PO prepay order, CO contra (cash line)</param>
+        /// <param name="docId">the document's record id</param>
+        /// <returns>the line's row, or an error</returns>
+        [HttpPost]
+        public JsonResult AssignAutoReconcileDocument(int suggestionId, string kind, int docId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileModel().AssignDocument(ctx, suggestionId, kind, docId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto reconciliation: the × on a document dragged onto a line; the document leaves the line
+        /// </summary>
+        /// <param name="suggestionId">VA012_MatchSuggestion_ID of the line</param>
+        /// <param name="docRowId">VA012_MatchSuggestionDoc_ID of the document</param>
+        /// <returns>the line's row, or an error</returns>
+        [HttpPost]
+        public JsonResult UnassignAutoReconcileDocument(int suggestionId, int docRowId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileModel().UnassignDocument(ctx, suggestionId, docRowId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto reconciliation: declines suggested lines
+        /// </summary>
+        /// <param name="suggestionIds">comma-separated VA012_MatchSuggestion_ID values</param>
+        /// <returns>number declined, or an error</returns>
+        [HttpPost]
+        public JsonResult DeclineAutoReconcile(string suggestionIds)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileModel().Decline(ctx, suggestionIds));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile: accepts suggested lines (one or many) through the form's own save
+        /// </summary>
+        /// <param name="items">JSON list of ArAcceptItem: suggestion id, chosen candidate, difference type, charge, tax</param>
+        /// <returns>accepted ids and skipped lines with their reason</returns>
+        [HttpPost]
+        public JsonResult AcceptAutoReconcile(string items)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileAccept().Accept(ctx, JsonConvert.DeserializeObject<List<ArAcceptItem>>(items ?? "[]")));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile: Set method / type - payment method and conversion type for the payment Accept creates
+        /// (suggested invoice-schedule and prepay-order lines only)
+        /// </summary>
+        /// <param name="items">JSON list of ArPaymentItem: suggestion id, payment method, conversion type (0 = unchanged)</param>
+        /// <returns>number of lines updated and skipped</returns>
+        [HttpPost]
+        public JsonResult SetAutoReconcilePayment(string items)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileAccept().SetPayment(ctx, JsonConvert.DeserializeObject<List<ArPaymentItem>>(items ?? "[]")));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile: the cheque book's next number for a cheque method on the bank account (shown in Payment details)
+        /// </summary>
+        public JsonResult GetAutoReconcileChequeBook(int bankAccountId, int payMethodId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileAccept().ChequeBookNext(ctx, bankAccountId, payMethodId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile rules: the bank account's rules header, its rules and the editor's lookups
+        /// </summary>
+        /// <param name="bankAccountId">C_BankAccount_ID</param>
+        /// <returns>header, rules, other headers, conversion types, taxes, difference types</returns>
+        public JsonResult GetAutoReconcileSetup(int bankAccountId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileRules().GetSetup(ctx, bankAccountId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile rules: creates a blank rules header and links it to the bank account
+        /// </summary>
+        [HttpPost]
+        public JsonResult CreateAutoReconcileHeader(int bankAccountId, string name)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileRules().CreateHeader(ctx, bankAccountId, name));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile rules: links an existing header to the bank account (headerId 0 unlinks)
+        /// </summary>
+        [HttpPost]
+        public JsonResult LinkAutoReconcileHeader(int bankAccountId, int headerId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileRules().LinkHeader(ctx, bankAccountId, headerId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile rules: copies a header with its rules under a new name and links the copy to the bank account
+        /// </summary>
+        [HttpPost]
+        public JsonResult CopyAutoReconcileHeader(int bankAccountId, int fromHeaderId, string name)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileRules().CopyHeader(ctx, bankAccountId, fromHeaderId, name));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile rules: saves the header settings (JSON of ArHeaderDto)
+        /// </summary>
+        [HttpPost]
+        public JsonResult SaveAutoReconcileHeader(int headerId, string header)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileRules().SaveHeader(ctx, headerId, JsonConvert.DeserializeObject<ArHeaderDto>(header ?? "{}")));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile rules: inserts or updates a rule with its conditions and keys (JSON of ArRuleDto)
+        /// </summary>
+        [HttpPost]
+        public JsonResult SaveAutoReconcileRule(int headerId, string rule)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileRules().SaveRule(ctx, headerId, JsonConvert.DeserializeObject<ArRuleDto>(rule ?? "{}")));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile rules: deletes a rule with its conditions and keys
+        /// </summary>
+        [HttpPost]
+        public JsonResult DeleteAutoReconcileRule(int ruleId)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileRules().DeleteRule(ctx, ruleId));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Auto Reconcile rules: switches a rule on or off
+        /// </summary>
+        [HttpPost]
+        public JsonResult SetAutoReconcileRuleActive(int ruleId, bool active)
+        {
+            string retJSON = "";
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                retJSON = JsonConvert.SerializeObject(new AutoReconcileRules().SetRuleActive(ctx, ruleId, active));
+            }
+            return Json(retJSON, JsonRequestBehavior.AllowGet);
+        }
     }
 }

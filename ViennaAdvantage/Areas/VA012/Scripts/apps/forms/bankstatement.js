@@ -17,6 +17,8 @@
         var _statementDate = null;
         var _btnLoadStatement = null;
         var _btnMatchStatement = null;
+        var _btnAutoReconcile = null;
+        var _autoReconcilePage = null;
         var _cmbSearchPaymentMethod = null;
         var _cmbTransactionType = null;
         var _lstStatement = null;
@@ -366,6 +368,46 @@
                 //childDialogs.matchStatementGridDialog();
                 childDialogs.matchStatementDialog();
             });
+            // VA012 Auto Reconcile: a page of its own (autoreconcile.js), for the selected bank account and statement;
+            // one page per form, so a second click replaces the open page (the account may have changed)
+            _btnAutoReconcile.on(VIS.Events.onTouchStartOrClick, function () {
+                if (_cmbBankAccount.val() == null || _cmbBankAccount.val() == "" || _cmbBankAccount.val() == "0") {
+                    VIS.ADialog.info("VA012_SelectBankAccountFirst", null, "", "");
+                    return;
+                }
+                // the open page closes first: while its run is still going the user is asked, and keeping it opens nothing new
+                if (_autoReconcilePage) { _autoReconcilePage.close(openAutoReconcile); return; }
+                openAutoReconcile();
+            });
+            function openAutoReconcile() {
+                if (!_cmbBankAccount) return;                                        // the form was closed meanwhile
+                _autoReconcilePage = VA012.AutoReconcile.open({
+                    windowNo: $self.windowNo,
+                    bankAccountId: VIS.Utility.Util.getValueOfInt(_cmbBankAccount.val()),
+                    bankOrgId: VIS.Utility.Util.getValueOfInt($('option:selected', _cmbBankAccount).attr('orgid')),
+                    accountName: $('option:selected', _cmbBankAccount).text(),
+                    precision: VIS.Utility.Util.getValueOfInt($('option:selected', _cmbBankAccount).attr('stdprecision')) || 2,
+                    statementId: VIS.Utility.Util.getValueOfInt(_statementID),
+                    // the page reconciled lines: reload the statement lines, totals and documents, as after a Save
+                    onChanged: function () {
+                        if (!_lstStatement) return;                                  // the form was closed meanwhile
+                        _statementLinesList = [];
+                        _lstStatement.html("");
+                        _statementPageNo = 1;
+                        BankStatementLine_ID = [];
+                        // as after a Save: the list shows every open statement of the account, with or without a loaded statement
+                        childDialogs.loadStatement(_statementID);
+                        _lstPayments.html("");
+                        newRecordForm.scheduleRefresh();
+                        newRecordForm.prepayRefresh();
+                        IsNewRecordInserted = true;
+                        _paymentPageNo = 1;
+                        storepaymentdata = [];
+                        loadFunctions.loadPayments(_cmbBankAccount.val(), _cmbSearchPaymentMethod.val(), _cmbTransactionType.val(), _statementDate.val());
+                    },
+                    onClosed: function () { _autoReconcilePage = null; }
+                });
+            }
             _btnPaymentSchedule.on(VIS.Events.onTouchStartOrClick, function () {
 
                 childDialogs.paymentScheduleDialog();
@@ -813,6 +855,7 @@
                     + '                  <div class="va012-left-data">'
                     + '                      <a id="VA012_btnLoadStatement_' + $self.windowNo + '">' + VIS.Msg.getMsg("VA012_LoadStatement") + '</a>'
                     + '                      <a id="VA012_btnMatchStatement_' + $self.windowNo + '">' + VIS.Msg.getMsg("VA012_MatchStatement") + '</a>'
+                    + '                      <a id="VA012_btnAutoReconcile_' + $self.windowNo + '">' + VIS.Utility.encodeText(VA012.AutoReconcile.msg("VA012_AutoReconcile", "Auto Reconcile")) + '</a>'
                     + '                  </div>'
                     + '                  <!-- end of left-data -->'
                     + '              </div>'
@@ -1572,6 +1615,7 @@
                 _cmbTransactionType = $root.find("#VA012_cmbTransactionType_" + $self.windowNo);
                 _btnLoadStatement = $root.find("#VA012_btnLoadStatement_" + $self.windowNo);
                 _btnMatchStatement = $root.find("#VA012_btnMatchStatement_" + $self.windowNo);
+                _btnAutoReconcile = $root.find("#VA012_btnAutoReconcile_" + $self.windowNo);
                 _lstStatement = $root.find("#VA012_lstStatement_" + $self.windowNo);
                 _lstPayments = $root.find("#VA012_lstPayments_" + $self.windowNo);
                 //to handling busyIdicator for paymentList
@@ -8405,6 +8449,9 @@
             childDialogs.setStatementListHeight();
         };
         this.disposeComponents = function () {
+            // the Auto Reconcile page belongs to this form: close it with the form
+            if (_autoReconcilePage) _autoReconcilePage.close();
+            _autoReconcilePage = null;
             $self = null;
             $root = null;
             _cmbBank = null;
@@ -8416,6 +8463,7 @@
             _cmbTransactionType = null;
             _btnLoadStatement = null;
             _btnMatchStatement = null;
+            _btnAutoReconcile = null;
             _lstStatement = null;
             _lstPayments = null;
             _statementID = "";

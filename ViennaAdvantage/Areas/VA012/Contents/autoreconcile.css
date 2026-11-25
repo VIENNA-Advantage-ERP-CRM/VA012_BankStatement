@@ -1,0 +1,997 @@
+﻿/* VA012 Auto Reconcile dialog (Scripts/apps/forms/autoreconcile.js); everything is scoped under .va012-ar */
+.va012-ar {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 2px;
+    gap: 10px;
+    font-size: 13px;
+    color: rgba(var(--v-c-on-secondary), 1);
+}
+
+/* opened as a page of its own (VIS.CFrame): the page gets the frame's height in sizeChanged */
+.va012-ar.va012-ar-page {
+    padding: 10px 14px;
+    background: rgba(var(--v-c-secondary), 1);
+    overflow: hidden;
+}
+
+    .va012-ar *, .va012-ar *::before, .va012-ar *::after {
+        box-sizing: border-box;
+    }
+
+    .va012-ar [hidden] {
+        display: none !important;
+    }
+
+.va012-ar-params {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px 14px;
+}
+
+.va012-ar-fld {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+}
+
+    /* one label style for every field: the theme makes <label> bold and leaves <span> plain */
+    .va012-ar .va012-ar-fld > label, .va012-ar .va012-ar-fld > .va012-ar-lb {
+        display: block;
+        margin: 0;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 600 !important;
+        opacity: .85;
+    }
+
+    .va012-ar-fld sup {
+        color: #c62828;
+    }
+
+    .va012-ar-fld select {
+        min-width: 180px;
+    }
+
+/* every dropdown and text box on the page as high as the partner box: the run fields, the detail row (difference type,
+   tax rate, payment method, conversion type, cheque no. and date), Set method / type, the documents search and the rules
+   tab. The theme's own control style is shorter and wins over a plain height, hence !important */
+.va012-ar select,
+.va012-ar input[type="text"],
+.va012-ar input[type="search"],
+.va012-ar input[type="number"],
+.va012-ar input[type="date"] {
+    height: 32px !important;
+    min-height: 32px !important;
+    box-sizing: border-box;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* run parameters: the four fields on one grid row, every control 32px high and aligned at the bottom */
+.va012-ar-runparams {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr) minmax(200px, 1.3fr) auto;
+    align-items: end;
+    gap: 10px 16px;
+}
+
+    .va012-ar-runparams .va012-ar-fld {
+        min-width: 0;
+    }
+
+    .va012-ar-runparams .va012-ar-fld select {
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+    }
+
+    .va012-ar-runparams .va012-ar-bp {
+        min-width: 0;
+    }
+
+    /* the status chips in the fields row, where the type choice was: one line, as high as the controls */
+    .va012-ar-runparams .va012-ar-chips {
+        flex-wrap: nowrap;
+        min-height: 32px;
+    }
+
+    /* no statement chosen yet: the chips show 0 and do nothing */
+    .va012-ar-chip:disabled {
+        opacity: .55;
+        cursor: default;
+    }
+
+/* the run button closes the fields row, as high as the controls */
+.va012-ar-runparams .va012-ar-runfld .va012-ar-run {
+    height: 32px;
+}
+
+/* below the fields: the hint */
+.va012-ar-runbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.va012-ar-seg {
+    display: inline-flex;
+    height: 32px;
+    box-sizing: border-box;
+    border: 1px solid rgba(var(--v-c-primary), 1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+    .va012-ar-seg button {
+        border: 0;
+        border-right: 1px solid rgba(var(--v-c-primary), .4);
+        border-radius: 0;
+        margin: 0;
+        box-shadow: none;
+        background: transparent;
+        color: inherit;
+        padding: 0 12px;
+        height: 30px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+        .va012-ar-seg button:last-child {
+            border-right: 0;
+        }
+
+        .va012-ar-seg button[aria-checked="true"] {
+            background: rgba(var(--v-c-primary), 1);
+            color: rgba(var(--v-c-on-primary), 1);
+        }
+
+.va012-ar-bp {
+    display: flex;
+    min-width: 200px;
+}
+
+    .va012-ar-bp .va012-ar-bptext {
+        flex: 1;
+        min-width: 0;
+        height: 32px;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    .va012-ar-bp .va012-ar-bpbtn {
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+.va012-ar-btn {
+    height: 32px;
+    padding: 0 14px;
+    border: 1px solid rgba(var(--v-c-primary), 1);
+    border-radius: 4px;
+    background: transparent;
+    color: rgba(var(--v-c-primary), 1);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+    .va012-ar-btn.primary {
+        background: rgba(var(--v-c-primary), 1);
+        color: rgba(var(--v-c-on-primary), 1);
+    }
+
+    .va012-ar-btn:disabled, .va012-ar-sbtn:disabled {
+        opacity: .5;
+        cursor: default;
+    }
+
+.va012-ar-hint {
+    font-size: 12px;
+    opacity: .75;
+}
+
+.va012-ar-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.va012-ar-chips, .va012-ar-bulk {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+    /* the bar holds only the bulk actions now: on the right */
+    .va012-ar-bar .va012-ar-bulk {
+        margin-left: auto;
+    }
+
+.va012-ar-chip {
+    border: 1px solid rgba(var(--v-c-primary), .5);
+    border-radius: 14px;
+    background: transparent;
+    color: inherit;
+    padding: 3px 10px;
+    cursor: pointer;
+}
+
+    .va012-ar-chip.on {
+        background: rgba(var(--v-c-primary), 1);
+        border-color: rgba(var(--v-c-primary), 1);
+        color: rgba(var(--v-c-on-primary), 1);
+    }
+
+.va012-ar-selcount {
+    font-size: 12px;
+    opacity: .8;
+}
+
+.va012-ar-msg {
+    padding: 8px 10px;
+    border-radius: 4px;
+    background: rgba(var(--v-c-primary), .08);
+}
+
+    .va012-ar-msg.ok {
+        background: rgba(46, 125, 50, .12);
+    }
+
+    .va012-ar-msg.bad {
+        background: rgba(198, 40, 40, .12);
+    }
+
+/* the lines, and beside them the documents panel while it is open */
+.va012-ar-work {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+}
+
+.va012-ar-results {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+    border: 1px solid rgba(var(--v-c-primary), .25);
+    border-radius: 4px;
+}
+
+.va012-ar-docpanel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 360px;
+    min-height: 0;
+    padding: 8px;
+    border: 1px solid rgba(var(--v-c-primary), .25);
+    border-radius: 4px;
+}
+
+    .va012-ar-docpanel .va012-ar-seg button {
+        padding: 0 8px;
+        font-size: 12px;
+    }
+
+.va012-ar-dphead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.va012-ar-dpclose {
+    border: 0;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    color: inherit;
+}
+
+.va012-ar-docpanel .va012-ar-dpsearch {
+    height: 32px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.va012-ar-dplist {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.va012-ar-dploading {
+    padding: 6px 2px;
+}
+
+/* a document as the form lists it; top level, so the dragged copy (appended to the body) keeps its look */
+.va012-ar-doccard {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+    font-size: 12.5px;
+    color: rgba(var(--v-c-on-secondary), 1);
+    background: rgba(var(--v-c-secondary), 1);
+    border: 1px solid rgba(var(--v-c-primary), .3);
+    border-left: 3px solid rgba(var(--v-c-primary), 1);
+    border-radius: 4px;
+    cursor: move;
+}
+
+    .va012-ar-doccard.taken {
+        cursor: default;
+        opacity: .6;
+        border-left-color: #2e7d32;
+    }
+
+    .va012-ar-doccard .va012-ar-dcrow {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+.va012-ar-dragging {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+}
+
+/* the × on a document dragged onto a line */
+.va012-ar-undoc {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: 4px;
+    padding: 0;
+    border: 1px solid #c62828;
+    border-radius: 50%;
+    background: transparent;
+    color: #c62828;
+    font-size: 13px;
+    line-height: 1;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+    .va012-ar-undoc:hover, .va012-ar-undoc:focus-visible {
+        background: #c62828;
+        color: #fff;
+        outline: none;
+    }
+
+/* a line a document is dragged over */
+.va012-ar-results tr.va012-ar-dropping > td {
+    background: rgba(var(--v-c-primary), .18);
+    outline: 2px dashed rgba(var(--v-c-primary), 1);
+    outline-offset: -2px;
+}
+
+    .va012-ar-results table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .va012-ar-results thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: rgba(var(--v-c-secondary), 1);
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        padding: 8px;
+        border-bottom: 1px solid rgba(var(--v-c-primary), .25);
+    }
+
+    .va012-ar-results td {
+        padding: 8px;
+        vertical-align: top;
+        border-bottom: 1px solid rgba(var(--v-c-primary), .12);
+    }
+
+.va012-ar-chk {
+    width: 32px;
+}
+
+.va012-ar-row {
+    cursor: pointer;
+}
+
+    .va012-ar-row:hover, .va012-ar-row:focus-visible {
+        background: rgba(var(--v-c-primary), .06);
+        outline: none;
+    }
+
+    .va012-ar-row[aria-expanded="true"] {
+        background: rgba(var(--v-c-primary), .08);
+    }
+
+    .va012-ar-row.s-D {
+        opacity: .6;
+    }
+
+.va012-ar-empty {
+    padding: 24px;
+    text-align: center;
+    opacity: .7;
+}
+
+.va012-ar-loading td {
+    text-align: center;
+    opacity: .7;
+}
+
+.va012-ar-muted {
+    opacity: .7;
+    font-size: 12px;
+}
+
+.va012-ar-mono {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+}
+
+.va012-ar-amt {
+    font-weight: 600;
+}
+
+.va012-ar-narr {
+    font-size: 12px;
+    opacity: .75;
+    max-width: 320px;
+    word-break: break-word;
+}
+
+.va012-ar-reason {
+    margin-top: 4px;
+    max-width: 220px;
+}
+
+.va012-ar-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+    .va012-ar-pill.ok {
+        background: rgba(46, 125, 50, .15);
+        color: #2e7d32;
+    }
+
+    .va012-ar-pill.warn {
+        background: rgba(237, 108, 2, .15);
+        color: #b25000;
+    }
+
+    .va012-ar-pill.bad {
+        background: rgba(198, 40, 40, .15);
+        color: #c62828;
+    }
+
+    .va012-ar-pill.gray {
+        background: rgba(120, 120, 120, .15);
+    }
+
+.va012-ar-sbtn {
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background: transparent;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+    .va012-ar-sbtn.bad {
+        color: #c62828;
+    }
+
+.va012-ar-detailrow > td {
+    background: rgba(var(--v-c-primary), .04);
+}
+
+.va012-ar-detail {
+    padding: 4px 8px 8px 40px;
+}
+
+.va012-ar-results .va012-ar-cmp {
+    width: 100%;
+}
+
+    .va012-ar-results .va012-ar-cmp th:first-child, .va012-ar-results .va012-ar-cmp td:first-child {
+        width: 18%;
+    }
+
+    .va012-ar-results .va012-ar-cmp th:last-child, .va012-ar-results .va012-ar-cmp td:last-child {
+        width: 22%;
+    }
+
+/* busy overlay with the framework's indicator (vis-apanel-busy) */
+.va012-ar-busy {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    background: rgba(255, 255, 255, .6);
+}
+
+    .va012-ar-busy .vis-apanel-busy {
+        top: 0;
+        height: 100%;
+    }
+
+    .va012-ar-results .va012-ar-cmp th {
+        position: static;
+        background: transparent;
+    }
+
+    .va012-ar-results .va012-ar-cmp td {
+        padding: 4px 8px;
+    }
+
+.va012-ar-m-ok {
+    color: #2e7d32;
+}
+
+.va012-ar-m-no {
+    color: #c62828;
+}
+
+.va012-ar-m-near {
+    color: #b25000;
+}
+
+.va012-ar-m-na {
+    opacity: .6;
+}
+
+.va012-ar-docs, .va012-ar-note {
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.va012-ar-others {
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Accept: row buttons, the candidate chooser and the difference box in the detail row, the summary message */
+.va012-ar-acts-cell {
+    white-space: nowrap;
+}
+
+.va012-ar-sbtn.ok {
+    color: #2e7d32;
+}
+
+.va012-ar-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(var(--v-c-primary), .25);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, .6);
+}
+
+    .va012-ar-box.warn {
+        border-color: rgba(237, 108, 2, .6);
+    }
+
+.va012-ar-pick {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.va012-ar-sel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px 16px;
+}
+
+    /* every picker in the detail row boxes (difference type, tax rate, payment method, conversion type) has the same width */
+    .va012-ar-sel .va012-ar-fld select {
+        width: 240px;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .va012-ar-sel .va012-ar-chg,
+    .va012-ar-sel .va012-ar-chqno,
+    .va012-ar-sel .va012-ar-chqdt {
+        width: 240px;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+.va012-ar-chqdate {
+    line-height: 32px;
+}
+
+.va012-ar-reasons {
+    margin: 4px 0 0 18px;
+    padding: 0;
+}
+
+/* charge and tax split of a difference */
+.va012-ar-results .va012-ar-brk {
+    width: auto;
+    min-width: 360px;
+    border-collapse: collapse;
+    font-size: 12.5px;
+}
+
+    .va012-ar-results .va012-ar-brk td {
+        padding: 4px 10px;
+        border-bottom: 1px solid rgba(var(--v-c-primary), .12);
+    }
+
+    .va012-ar-brk .va012-ar-v {
+        text-align: right;
+        font-family: Consolas, "Courier New", monospace;
+        white-space: nowrap;
+    }
+
+    .va012-ar-results .va012-ar-brk .va012-ar-total td {
+        font-weight: 600;
+        border-bottom: 0;
+    }
+
+/* Set method / type panel under the toolbar */
+.va012-ar-paypanel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid rgba(var(--v-c-primary), .25);
+    border-radius: 4px;
+    background: rgba(var(--v-c-primary), .04);
+}
+
+    .va012-ar-paypanel select {
+        min-width: 200px;
+    }
+
+/* tabs: 1 Rules, 2 Auto reconcile */
+.va012-ar-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid rgba(var(--v-c-primary), .25);
+}
+
+/* plain text tabs: the ERP theme puts a border and shadow on focused buttons, and the dialog focuses the first tab on open */
+.va012-ar .va012-ar-tab,
+.va012-ar .va012-ar-tab:hover,
+.va012-ar .va012-ar-tab:focus,
+.va012-ar .va012-ar-tab:active {
+    border: 0 !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: transparent !important;
+    color: inherit;
+    padding: 6px 14px;
+    margin-bottom: -1px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+    .va012-ar .va012-ar-tab[aria-selected="true"] {
+        border-bottom-color: rgba(var(--v-c-primary), 1) !important;
+        color: rgba(var(--v-c-primary), 1);
+        font-weight: 600;
+    }
+
+.va012-ar-view {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+}
+
+.va012-ar-rulesview {
+    overflow: auto;
+}
+
+/* rules header */
+.va012-ar-hdr {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid rgba(var(--v-c-primary), .25);
+    border-radius: 4px;
+}
+
+.va012-ar-grow {
+    flex: 1 1 220px;
+}
+
+    .va012-ar-grow input {
+        width: 100%;
+    }
+
+.va012-ar-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 6px;
+}
+
+.va012-ar-acts {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.va012-ar-chg {
+    display: flex;
+    min-width: 200px;
+}
+
+    .va012-ar-chg .va012-ar-bptext {
+        flex: 1;
+        height: 32px;
+    }
+
+.va012-ar-setup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    border: 1px dashed rgba(var(--v-c-primary), .35);
+    border-radius: 4px;
+}
+
+.va012-ar-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+}
+
+.va012-ar-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid rgba(var(--v-c-primary), .25);
+    border-radius: 4px;
+}
+
+    .va012-ar-card h4 {
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .va012-ar-card p {
+        margin: 0;
+    }
+
+.va012-ar-newhdr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+/* rules: list and editor */
+.va012-ar-rulestitle {
+    margin: 4px 0;
+    font-size: 14px;
+}
+
+.va012-ar-split {
+    display: grid;
+    grid-template-columns: minmax(260px, 2fr) 3fr;
+    gap: 14px;
+    align-items: start;
+}
+
+.va012-ar-listcol {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.va012-ar-rulelist {
+    border: 1px solid rgba(var(--v-c-primary), .25);
+    border-radius: 4px;
+    overflow: auto;
+}
+
+    .va012-ar-rulelist table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .va012-ar-rulelist th {
+        text-align: left;
+        font-size: 12px;
+        padding: 6px 8px;
+        background: rgba(var(--v-c-secondary), 1);
+        border-bottom: 1px solid rgba(var(--v-c-primary), .25);
+    }
+
+    .va012-ar-rulelist td {
+        padding: 6px 8px;
+        border-bottom: 1px solid rgba(var(--v-c-primary), .12);
+        vertical-align: top;
+    }
+
+.va012-ar-rulerow {
+    cursor: pointer;
+}
+
+    .va012-ar-rulerow:hover, .va012-ar-rulerow:focus-visible {
+        background: rgba(var(--v-c-primary), .06);
+        outline: none;
+    }
+
+    .va012-ar-rulerow.sel {
+        background: rgba(var(--v-c-primary), .12);
+    }
+
+.va012-ar-pad {
+    padding: 12px;
+}
+
+.va012-ar-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid rgba(var(--v-c-primary), .25);
+    border-radius: 4px;
+}
+
+.va012-ar-erow {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 8px;
+    align-items: start;
+}
+
+.va012-ar-k {
+    font-size: 12px;
+    opacity: .8;
+    padding-top: 6px;
+}
+
+    .va012-ar-k sup {
+        color: #c62828;
+    }
+
+.va012-ar-ctl {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+}
+
+    .va012-ar-ctl input[type="number"] {
+        width: 90px;
+    }
+
+    .va012-ar-ctl label {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+.va012-ar-wide {
+    width: 100%;
+}
+
+.va012-ar-full {
+    width: 100%;
+}
+
+.va012-ar-cond {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    width: 100%;
+}
+
+.va012-ar-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 8px;
+}
+
+/* option labels (checkboxes, radio buttons) in normal weight; the theme makes labels bold */
+.va012-ar .va012-ar-opt {
+    font-weight: normal !important;
+}
+
+/* a setting on its own line inside a row (e.g. "If a number is not found") */
+.va012-ar-sub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    width: 100%;
+}
+
+    .va012-ar-sub select {
+        width: auto;
+        min-width: 260px;
+    }
+
+/* a narrow dialog: two fields per row, the status chips on their own row */
+@media (max-width: 1000px) {
+    .va012-ar-runparams {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* the documents panel below the lines */
+    .va012-ar-work.with-docs {
+        flex-direction: column;
+    }
+
+    .va012-ar-docpanel {
+        flex: 0 0 45%;
+    }
+
+        .va012-ar-runparams .va012-ar-chipfld {
+            grid-column: 1 / -1;
+        }
+
+        .va012-ar-runparams .va012-ar-chips {
+            flex-wrap: wrap;
+        }
+
+        .va012-ar-runparams .va012-ar-runfld {
+            grid-column: 1 / -1;
+            justify-self: end;
+        }
+}
+
+@media (max-width: 760px) {
+    .va012-ar-narr {
+        max-width: none;
+    }
+
+    .va012-ar-split {
+        grid-template-columns: 1fr;
+    }
+
+    .va012-ar-erow {
+        grid-template-columns: 1fr;
+    }
+}
