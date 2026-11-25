@@ -1,0 +1,25 @@
+{
+    "name":  "va012-bank-statement",
+    "version":  "1.0.0.0",
+    "description":  "VA012 Bank Statement module - front-end bundle",
+    "private":  true,
+    "scripts":  {
+                    "build":  "webpack",
+                    "buildPro":  "webpack --mode production",
+                    "process":  "webpack --progress"
+                },
+    "license":  "ISC",
+    "devDependencies":  {
+                            "@babel/core":  "^7.23.5",
+                            "babel-loader":  "^9.1.3",
+                            "babel-plugin-transform-remove-strict-mode":  "^0.0.2",
+                            "css-loader":  "^6.10.0",
+                            "css-minimizer-webpack-plugin":  "^6.0.0",
+                            "mini-css-extract-plugin":  "^2.8.1",
+                            "terser-webpack-plugin":  "^5.3.10",
+                            "webpack":  "^5.90.3",
+                            "webpack-cli":  "^5.1.4",
+                            "clean-webpack-plugin":  "^4.0.0"
+                        },
+    "main":  "index.js"
+}
