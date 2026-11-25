@@ -1187,16 +1187,22 @@ namespace VA012.Models
 
                 //_bankStatementLine.SetVA012_IsUseNextTime(_formData[0]._chkUseNextTime);
                 _bankStatementLine.SetVA012_VoucherType(_formData[0]._cmbVoucherMatch);
-                if (_formData[0]._cmbContraType != "0" && _formData[0]._cmbContraType != "")
+                //Contra type belongs to Contra only; any other voucher/match type clears it
+                if (_formData[0]._cmbVoucherMatch == "C" && _formData[0]._cmbContraType != "0" && !string.IsNullOrEmpty(_formData[0]._cmbContraType))
                 {
                     _bankStatementLine.SetVA012_ContraType(_formData[0]._cmbContraType);
+                }
+                else
+                {
+                    _bankStatementLine.SetVA012_ContraType(null);
                 }
                 if (_formData[0]._cmbDifferenceType != "0" && _formData[0]._cmbDifferenceType != "")
                 {
                     _bankStatementLine.SetVA012_DifferenceType(_formData[0]._cmbDifferenceType);
                 }
 
-                if (_formData[0]._cmbCashBook > 0)
+                //Cash book is a Contra (Cash to Bank) value only
+                if (_formData[0]._cmbCashBook > 0 && _formData[0]._cmbVoucherMatch == "C")
                 {
                     _bankStatementLine.SetC_CashBook_ID(_formData[0]._cmbCashBook);
 
@@ -2308,9 +2314,19 @@ namespace VA012.Models
                 statementDetail._reconciled = false;
             }
 
+            /*A payment, invoice schedule or prepay order dropped onto an unreconciled line: the dropped document decides
+             the line values, not a charge or voucher type saved on the line (the statement import saves a line with a
+             charge as Voucher)*/
+            bool _docDropped = payment_ID != 0 && !statementDetail._reconciled
+                && (_trxType.Equals("PY") || _trxType.Equals("IS") || _trxType.Equals("PO"));
+
             if (_bankStatementLine.GetC_Charge_ID() > 0)
             {
                 chrg = new MCharge(ctx, _bankStatementLine.GetC_Charge_ID(), null);
+            }
+
+            if (_bankStatementLine.GetC_Charge_ID() > 0 && !_docDropped)
+            {
                 statementDetail._txtTrxAmt = _bankStatementLine.GetTrxAmt();
 
                 if (statementDetail._txtAmount != statementDetail._txtTrxAmt)
@@ -2556,6 +2572,13 @@ namespace VA012.Models
             statementDetail._cmbContraType = _bankStatementLine.GetVA012_ContraType();
 
             statementDetail._cmbCashBook = _bankStatementLine.GetC_CashBook_ID();
+            //dropped payment / invoice schedule / prepay order: always Payment match, no contra values
+            if (_docDropped)
+            {
+                statementDetail._cmbVoucherMatch = "M";
+                statementDetail._cmbContraType = "";
+                statementDetail._cmbCashBook = 0;
+            }
             MBankStatement _bankStatement = new MBankStatement(ctx, _bankStatementLine.GetC_BankStatement_ID(), null);
             statementDetail._txtStatementNo = _bankStatement.GetName();
             //When bankStatementLine have C_CashLine_ID then the value set to _ctrlCashLine
@@ -2569,6 +2592,14 @@ namespace VA012.Models
                 statementDetail._txtVoucherNo = statementDetail._trxno;
             }
             statementDetail._txtDifference = Math.Abs(statementDetail._txtTrxAmt) - Math.Abs(statementDetail._txtAmount);
+            //dropped document with no difference: the charge saved on the line (e.g. by the import) does not apply
+            if (_docDropped && statementDetail._txtDifference == 0)
+            {
+                statementDetail._cmbCharge = 0;
+                statementDetail._txtCharge = "";
+                statementDetail._cmbTaxRate = 0;
+                statementDetail._txtTaxAmount = 0;
+            }
             //either Payment or Prepay Order or Contra by default diffrenceType select as Charge
             if (statementDetail._txtDifference != 0 && payment_ID != 0 && (_trxType.Equals("PY") || _trxType.Equals("PO") || _trxType.Equals("CO")))
             {
@@ -4777,6 +4808,33 @@ namespace VA012.Models
         }
 
         /// <summary>
+        /// Check whether Charge is restricted as difference type when the invoice schedule amount is more than
+        /// the statement amount. Reads system config VA012_RESTRICT_CHARGE (Y = restricted); the most specific
+        /// row (tenant, then organization) wins. No row or any other value = Charge allowed.
+        /// </summary>
+        /// <param name="ctx">Context</param>
+        /// <returns>true when restricted</returns>
+        public bool IsChargeRestricted(Ctx ctx)
+        {
+            string sql = @"SELECT Value FROM AD_SysConfig WHERE IsActive = 'Y' AND Name = @name
+                            AND AD_Client_ID IN (0, @clientID) AND AD_Org_ID IN (0, @orgID)";
+            sql = MRole.GetDefault(ctx).AddAccessSQL(sql, "AD_SysConfig", MRole.SQL_FULLYQUALIFIED, MRole.SQL_RO);
+            sql += " ORDER BY AD_Client_ID DESC, AD_Org_ID DESC";
+
+            SqlParameter[] param = new SqlParameter[3];
+            param[0] = new SqlParameter("@name", "VA012_RESTRICT_CHARGE");
+            param[1] = new SqlParameter("@clientID", ctx.GetAD_Client_ID());
+            param[2] = new SqlParameter("@orgID", ctx.GetAD_Org_ID());
+
+            DataSet ds = DB.ExecuteDataset(sql, param);
+            if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                return "Y".Equals(Util.GetValueOfString(ds.Tables[0].Rows[0]["Value"]).Trim().ToUpper());
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Get DocType_ID
         /// </summary>
         /// <param name="ctx">Context</param>
@@ -4953,8 +5011,12 @@ namespace VA012.Models
                         /*VIS_427 Bug ID 6484 02/05/2025 if transaction amount is smaller then set 
                          text amount with value of transaction amount in order to correct difference amount based
                         on difference tye selected by user*/
+                        /*Difference type Charge on an existing statement line with the schedule amount more than the statement
+                         amount: the payment settles the full schedule and the line charge (StmtAmt - TrxAmt) takes the difference*/
                         if (Math.Abs(_formData[0]._txtAmount) >
-                            Math.Abs(_formData[0]._txtTrxAmt))
+                            Math.Abs(_formData[0]._txtTrxAmt)
+                            || (_formData[0]._cmbDifferenceType == "CH" && _formData[0]._txtDifference != 0
+                                && _formData[0]._bankStatementLineID > 0))
                         {
                             _txtAmount = _txtTrxAmt;
                         }
