@@ -1180,6 +1180,23 @@ namespace VA012.Controllers
             int CountVA034 = Env.IsModuleInstalled(prefix) ? 1 : 0;
             return Json(JsonConvert.SerializeObject(CountVA034), JsonRequestBehavior.AllowGet);
         }
+
+        /// <summary>
+        /// Check whether Charge is restricted when the invoice schedule amount is more than the statement amount
+        /// (system config VA012_RESTRICT_CHARGE = Y)
+        /// </summary>
+        /// <returns>1 = restricted, 0 = Charge allowed</returns>
+        public JsonResult IsChargeRestricted()
+        {
+            int restricted = 0;
+            if (Session["ctx"] != null)
+            {
+                Ctx ctx = Session["ctx"] as Ctx;
+                StatementOperations _model = new StatementOperations();
+                restricted = _model.IsChargeRestricted(ctx) ? 1 : 0;
+            }
+            return Json(JsonConvert.SerializeObject(restricted), JsonRequestBehavior.AllowGet);
+        }
         /// <summary>
         /// Author: VA230
         /// Get List of Bank Accounts
